@@ -25,20 +25,12 @@ jobs:
         run: |
           rm -rf _site
           mkdir -p _site
-          if [ -f RATIOBOT_GitHub_Pages_v4.0.zip ]; then
-            unzip -q RATIOBOT_GitHub_Pages_v4.0.zip -d _site
-          elif [ -f index.html ]; then
-            cp -a index.html rings.html assets _site/ 2>/dev/null || true
-          else
-            echo "No deployable RATIOBOT files found."
-            exit 1
-          fi
+          cp index.html _site/index.html
+          cp rings.html _site/rings.html
           touch _site/.nojekyll
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
-        with:
-          enablement: true
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
