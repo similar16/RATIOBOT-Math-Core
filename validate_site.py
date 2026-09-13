@@ -5,7 +5,11 @@ p=root/'index.html'
 s=p.read_text('utf-8')
 checks={
  'account login button':'id="accountLoginBtn"',
- 'student register button':'id="cloudRegisterBtn"',
+ 'student username':'id="accountUsernameInput"',
+ 'student password':'id="accountPasswordInput"',
+ 'first password setup':'id="setFirstPasswordBtn"',
+ 'teacher bulk create':'id="bulkCreateStudentsBtn"',
+ 'teacher reset':'teacher_reset_password',
  'rules':'A 法则实验室',
  'training':'B 闯关训练',
  'rings':'C 数圈侦探',
@@ -14,7 +18,8 @@ checks={
  'browser supabase':'window.supabase',
 }
 missing=[name for name,needle in checks.items() if needle not in s]
-if 'global.supabase' in s: missing.append('invalid global.supabase reference remains')
+for stale in ['global.supabase','id="cloudRegisterBtn"','id="localLoginBtn"','id="accountClassInput"','id="accountStudentInput"','id="accountPinInput"']:
+    if stale in s: missing.append('stale '+stale)
 if missing: raise SystemExit('site validation failed: '+', '.join(missing))
 scripts=re.findall(r'<script(?:[^>]*)>(.*?)</script>',s,flags=re.S|re.I)
 with tempfile.TemporaryDirectory() as td:
