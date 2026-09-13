@@ -31,14 +31,11 @@ jobs:
             rm -rf _site/ratiobot_github_ready
           fi
           python deploy_patch.py _site
+          python browser_hotfix.py _site
+          python validate_site.py _site
           test -f _site/index.html
           test -f _site/rings.html
           test -d _site/assets
-          grep -q 'A 法则实验室' _site/index.html
-          grep -q 'B 闯关训练' _site/index.html
-          grep -q 'C 数圈侦探' _site/index.html
-          grep -q 'CLOUD_LOGIN_REQUIRED_PAGES' _site/index.html
-          grep -q '导入旧版 JSON' _site/index.html
           touch _site/.nojekyll
 
       - name: Configure Pages
