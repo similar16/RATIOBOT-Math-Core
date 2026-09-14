@@ -35,8 +35,8 @@ jobs:
           curl -fsSL --retry 3 --retry-delay 2 https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.min.js -o _site/assets/supabase.min.js
           test -s _site/assets/supabase.min.js
           python deploy_patch.py _site
-          python browser_hotfix.py _site
           python account_model_patch.py _site
+          python browser_hotfix.py _site
           python validate_site.py _site
           test -f _site/index.html
           test -f _site/rings.html
