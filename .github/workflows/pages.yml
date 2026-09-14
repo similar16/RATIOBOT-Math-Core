@@ -38,6 +38,7 @@ jobs:
           python account_model_patch.py _site
           python self_register_patch.py _site
           python browser_hotfix.py _site
+          python teacher_recovery_patch.py _site
           python validate_site.py _site
           test -f _site/index.html
           test -f _site/rings.html
