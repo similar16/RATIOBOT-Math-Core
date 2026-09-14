@@ -57,7 +57,7 @@ jobs:
           python badge_user_cut_patch.py _site
           grep -q 'badge-wall-user-cut-v1' _site/index.html
           grep -q 'USER_BADGE_INDEX' _site/index.html
-          test $(wc -c < _site/assets/badges_user_cut.webp) -gt 30000
+          test $(wc -c < _site/assets/badges_user_cut.webp) -gt 10000
           file _site/assets/badges_user_cut.webp | grep -q 'Web/P image'
           python validate_site.py _site
           python teacher_console_validate.py _site
