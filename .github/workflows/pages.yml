@@ -49,7 +49,14 @@ jobs:
             python badge_art_patch.py _site
             grep -q 'badge-wall-flat-v2' _site/index.html
             grep -q 'FLAT_BADGE_INDEX' _site/index.html
+            test $(wc -c < _site/assets/badges_flat.webp) -gt 20000
+            file _site/assets/badges_flat.webp | grep -q 'Web/P image'
           fi
+          python student_game_fix_patch.py _site
+          grep -q 'student-game-fix-v1' _site/index.html
+          grep -q 'topLogoutBtn' _site/index.html
+          grep -q 'rings-parent-score-fix-v1' _site/rings.html
+          grep -q '总部结算中' _site/rings.html
           python validate_site.py _site
           python teacher_console_validate.py _site
           test -f _site/index.html
