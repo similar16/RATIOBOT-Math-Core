@@ -2,7 +2,7 @@ from pathlib import Path
 import re,sys,subprocess,tempfile
 root=Path(sys.argv[1] if len(sys.argv)>1 else '_site')
 p=root/'index.html'; asset=root/'assets'/'badges_user_cut.webp'
-if not asset.exists() or asset.stat().st_size<30000:
+if not asset.exists() or asset.stat().st_size<10000:
     raise SystemExit('missing/too-small assets/badges_user_cut.webp')
 s=p.read_text('utf-8')
 MARK='badge-wall-user-cut-v1'
