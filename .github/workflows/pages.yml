@@ -35,6 +35,7 @@ jobs:
           curl -fsSL --retry 3 --retry-delay 2 https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.min.js -o _site/assets/supabase.min.js
           test -s _site/assets/supabase.min.js
 
+          # Stable badge source already stored as a valid binary WebP in the repository.
           test -s badges_user_cut.webp
           cp badges_user_cut.webp _site/assets/badges_user_cut.webp
           test $(wc -c < _site/assets/badges_user_cut.webp) -gt 10000
@@ -54,17 +55,18 @@ jobs:
           grep -q 'student-game-fix-v1' _site/index.html
           grep -q 'topLogoutBtn' _site/index.html
 
-          python progress_balance_patch.py _site
-          grep -q 'progress-balance-fix-v3' _site/index.html
+          python xp_v52_patch.py _site
+          grep -q 'xp-balance-v52' _site/index.html
           grep -q 'need=260' _site/index.html
 
-          python rings_v51_patch.py _site
-          grep -q 'rings-reliable-v51' _site/index.html
-          grep -q 'rings-reliable-child-v51' _site/rings.html
-          grep -q 'rings-score-v51' _site/rings.html
+          python rings_v52_patch.py _site
+          grep -q 'rings-parent-v52' _site/index.html
+          grep -q 'rings-reliable-child-v52' _site/rings.html
+          grep -q 'ratiobot-rings-v52' _site/rings.html
           grep -q 'abMistakes===0?8:(abMistakes===1?4:0)' _site/index.html
           grep -q 'A/B 判断错误' _site/index.html
           grep -q "game:'rings'" _site/index.html
+          grep -q '本局积分' _site/index.html
 
           python badge_v50_patch.py _site
           grep -q 'badge-wall-user-v50' _site/index.html
