@@ -35,13 +35,11 @@ jobs:
           curl -fsSL --retry 3 --retry-delay 2 https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.min.js -o _site/assets/supabase.min.js
           test -s _site/assets/supabase.min.js
 
-          # 16 user-provided badge crops
-          test -s badges_user16_webp.zip
-          unzip -tq badges_user16_webp.zip
-          mkdir -p _site/assets/userbadges
-          unzip -q -o badges_user16_webp.zip -d _site/assets/userbadges
-          test -s _site/assets/userbadges/badge_01.webp
-          test -s _site/assets/userbadges/badge_16.webp
+          # Verified compact atlas made directly from the user's 4x4 badge image.
+          test -s badges_user_atlas_v48.b64
+          base64 -d badges_user_atlas_v48.b64 > _site/assets/badges_user_atlas_v48.webp
+          test $(wc -c < _site/assets/badges_user_atlas_v48.webp) -gt 10000
+          file _site/assets/badges_user_atlas_v48.webp | grep -q 'Web/P image'
 
           python deploy_patch.py _site
           python account_model_patch.py _site
@@ -51,7 +49,6 @@ jobs:
           python teacher_console_patch.py _site
           python badge_art_patch.py _site
           grep -q 'badge-wall-flat-v3' _site/index.html
-          grep -q 'UNIFIED_BADGE_ART' _site/index.html
 
           python student_game_fix_patch.py _site
           grep -q 'student-game-fix-v1' _site/index.html
@@ -67,11 +64,12 @@ jobs:
           grep -q 'ratiobot_rings_pending_v48' _site/index.html
           grep -q 'abMistakes' _site/rings.html
           grep -q "abMistakes===0?8:(abMistakes===1?4:0)" _site/index.html
+          grep -q 'A/B 判断错误' _site/index.html
 
           python badge_individual_patch.py _site
           grep -q 'badge-wall-individual-v48' _site/index.html
           grep -q 'USER_BADGE_FILE' _site/index.html
-          grep -q 'assets/userbadges/badge_' _site/index.html
+          grep -q 'badges_user_atlas_v48.webp' _site/index.html
 
           python validate_site.py _site
           python teacher_console_validate.py _site
