@@ -50,10 +50,11 @@ jobs:
           grep -q 'topLogoutBtn' _site/index.html
           grep -q 'rings-parent-score-fix-v1' _site/rings.html
           python progress_balance_patch.py _site
-          grep -q 'progress-balance-fix-v2' _site/index.html
-          grep -q 'rings-direct-score-v2' _site/rings.html
+          grep -q 'progress-balance-fix-v3' _site/index.html
+          grep -q 'rings-direct-score-v3' _site/rings.html
           grep -q 'ratiobotAwardRings' _site/index.html
           grep -q 'need=260' _site/index.html
+          grep -q 'p.games=Number(p.games||0)+1' _site/index.html
           python badge_user_cut_patch.py _site
           grep -q 'badge-wall-user-cut-v1' _site/index.html
           grep -q 'USER_BADGE_INDEX' _site/index.html
