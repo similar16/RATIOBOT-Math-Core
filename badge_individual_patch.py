@@ -3,20 +3,19 @@ import re,sys,subprocess,tempfile
 root=Path(sys.argv[1] if len(sys.argv)>1 else '_site')
 p=root/'index.html'; s=p.read_text('utf-8')
 MARK='badge-wall-individual-v48'
-asset_dir=root/'assets'/'userbadges'
-missing=[str(asset_dir/f'badge_{i:02d}.webp') for i in range(1,17) if not (asset_dir/f'badge_{i:02d}.webp').exists()]
-if missing: raise SystemExit('missing individual badges: '+', '.join(missing[:4]))
+asset=root/'assets'/'badges_user_atlas_v48.webp'
+if not asset.exists() or asset.stat().st_size<10000: raise SystemExit('missing badge atlas')
 if MARK not in s:
     css=r'''<style id="badge-wall-individual-v48">
 .unified-badge .ub-icon{width:min(132px,100%);height:132px;aspect-ratio:1/1;border:0!important;border-radius:0!important;background:transparent!important;display:grid!important;place-items:center!important;overflow:visible!important}
-.unified-badge .ub-icon img.user-badge-img{display:block!important;width:100%!important;height:100%!important;object-fit:contain!important;opacity:1;filter:none;transition:.18s transform,.18s filter,.18s opacity}
-.unified-badge:not(.earned) .ub-icon img.user-badge-img{filter:grayscale(1);opacity:.28}
-.unified-badge.earned:hover .ub-icon img.user-badge-img{transform:translateY(-2px) scale(1.03)}
+.user-badge-crop{display:block;width:100%;height:100%;background-image:url('assets/badges_user_atlas_v48.webp?v=48');background-repeat:no-repeat;background-size:400% 400%;filter:none;transition:.18s transform,.18s filter,.18s opacity}
+.unified-badge:not(.earned) .user-badge-crop{filter:grayscale(1);opacity:.28}
+.unified-badge.earned:hover .user-badge-crop{transform:translateY(-2px) scale(1.03)}
 </style>'''
     if '</head>' not in s: raise SystemExit('missing head')
     s=s.replace('</head>',css+'\n</head>',1)
-    mapping="""  const USER_BADGE_FILE={'数圈新探':1,'零点守卫':2,'分类大师':3,'精准推理':4,'运算满贯':5,'S级破案':6,'双人擂主':7,'追平高手':8,'双核连携':9,'数学全徽章':10,'核心启动':11,'连击点火':12,'第一次就对':13,'修理大师':14,'稳定核心':15,'全系统在线':16};
-  function userBadgeImg(name){const i=USER_BADGE_FILE[name];if(!i)return '<span>★</span>';return `<img class=\"user-badge-img\" src=\"assets/userbadges/badge_${String(i).padStart(2,'0')}.webp?v=48\" alt=\"${name}\" loading=\"lazy\">`;}
+    mapping="""  const USER_BADGE_FILE={'数圈新探':0,'零点守卫':1,'分类大师':2,'精准推理':3,'运算满贯':4,'S级破案':5,'双人擂主':6,'追平高手':7,'双核连携':8,'数学全徽章':9,'核心启动':10,'连击点火':11,'第一次就对':12,'修理大师':13,'稳定核心':14,'全系统在线':15};
+  function userBadgeImg(name){const i=USER_BADGE_FILE[name];if(i===undefined)return '<span>★</span>';const c=i%4,r=Math.floor(i/4),x=(c*100/3).toFixed(4),y=(r*100/3).toFixed(4);return `<span class=\"user-badge-crop\" role=\"img\" aria-label=\"${name}\" style=\"background-position:${x}% ${y}%\"></span>`;}
 """
     pos=s.find('  function renderUnifiedBadges(p)')
     if pos<0: raise SystemExit('renderUnifiedBadges not found')
@@ -39,4 +38,4 @@ with tempfile.TemporaryDirectory() as td:
         if not js.strip(): continue
         f=Path(td)/f's{i}.js';f.write_text(js,'utf-8')
         subprocess.run(['node','--check',str(f)],check=True,stdout=subprocess.DEVNULL)
-print('individual badge patch v48 applied')
+print('badge atlas patch v48 applied')
