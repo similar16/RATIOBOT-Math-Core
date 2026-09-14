@@ -34,7 +34,9 @@ jobs:
           curl -fsSL --retry 3 --retry-delay 2 https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js -o _site/assets/supabase.min.js || \
           curl -fsSL --retry 3 --retry-delay 2 https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.min.js -o _site/assets/supabase.min.js
           test -s _site/assets/supabase.min.js
-          if [ -s badges_flat.webp ]; then
+          if [ -s badges_flat.b64 ]; then
+            base64 -d badges_flat.b64 > _site/assets/badges_flat.webp
+          elif [ -s badges_flat.webp ]; then
             cp badges_flat.webp _site/assets/badges_flat.webp
           fi
           python deploy_patch.py _site
