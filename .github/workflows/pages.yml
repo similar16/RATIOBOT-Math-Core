@@ -23,7 +23,7 @@ jobs:
 
       - name: Prepare full site
         run: |
-          rm -rf _site
+          rm -rf _site /tmp/ratiobot_badges
           mkdir -p _site
           unzip -q RATIOBOT_GitHub_Pages_v4.0.zip -d _site
           if [ -f _site/ratiobot_github_ready/index.html ]; then
@@ -35,11 +35,19 @@ jobs:
           curl -fsSL --retry 3 --retry-delay 2 https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.min.js -o _site/assets/supabase.min.js
           test -s _site/assets/supabase.min.js
 
-          # Verified compact atlas made directly from the user's 4x4 badge image.
-          test -s badges_user_atlas_v48.b64
-          base64 -d badges_user_atlas_v48.b64 > _site/assets/badges_user_atlas_v48.webp
-          test $(wc -c < _site/assets/badges_user_atlas_v48.webp) -gt 10000
-          file _site/assets/badges_user_atlas_v48.webp | grep -q 'Web/P image'
+          # Use the already committed binary ZIP of the user's exact 16 badge cuts.
+          test -s badges_user16_webp.zip
+          mkdir -p /tmp/ratiobot_badges _site/assets/badges_user16
+          unzip -q badges_user16_webp.zip -d /tmp/ratiobot_badges
+          n=0
+          while IFS= read -r f; do
+            n=$((n+1))
+            printf -v num '%02d' "$n"
+            cp "$f" "_site/assets/badges_user16/badge_${num}.webp"
+          done < <(find /tmp/ratiobot_badges -type f -iname '*.webp' | sort)
+          test "$(find _site/assets/badges_user16 -type f -name 'badge_*.webp' | wc -l)" -eq 16
+          file _site/assets/badges_user16/badge_01.webp | grep -q 'Web/P image'
+          file _site/assets/badges_user16/badge_16.webp | grep -q 'Web/P image'
 
           python deploy_patch.py _site
           python account_model_patch.py _site
@@ -47,6 +55,7 @@ jobs:
           python browser_hotfix.py _site
           python teacher_recovery_patch.py _site
           python teacher_console_patch.py _site
+
           python badge_art_patch.py _site
           grep -q 'badge-wall-flat-v3' _site/index.html
 
@@ -59,17 +68,17 @@ jobs:
           grep -q 'need=260' _site/index.html
 
           python rings_reliable_patch.py _site
-          grep -q 'rings-reliable-v48' _site/index.html
-          grep -q 'rings-reliable-child-v48' _site/rings.html
-          grep -q 'ratiobot_rings_pending_v48' _site/index.html
-          grep -q 'abMistakes' _site/rings.html
-          grep -q "abMistakes===0?8:(abMistakes===1?4:0)" _site/index.html
+          python rings_v49_hotfix.py _site
+          grep -q 'rings-reliable-v49' _site/index.html
+          grep -q 'rings-reliable-child-v49' _site/rings.html
+          grep -q 'abMistakes===0?8:(abMistakes===1?4:0)' _site/index.html
           grep -q 'A/B 判断错误' _site/index.html
+          grep -q "game:'rings'" _site/index.html
 
-          python badge_individual_patch.py _site
-          grep -q 'badge-wall-individual-v48' _site/index.html
-          grep -q 'USER_BADGE_FILE' _site/index.html
-          grep -q 'badges_user_atlas_v48.webp' _site/index.html
+          python badge_v49_patch.py _site
+          grep -q 'badge-wall-individual-v49' _site/index.html
+          grep -q 'USER_BADGE_V49' _site/index.html
+          grep -q 'assets/badges_user16/badge_' _site/index.html
 
           python validate_site.py _site
           python teacher_console_validate.py _site
