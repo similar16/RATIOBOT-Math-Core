@@ -1,92 +1,43 @@
 name: Deploy RATIOBOT to GitHub Pages
-
 on:
   push:
     branches: [main]
   workflow_dispatch:
-
 permissions:
   contents: read
   pages: write
   id-token: write
-
 concurrency:
   group: pages
   cancel-in-progress: true
-
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Prepare full site
-        run: |
-          rm -rf _site
-          mkdir -p _site
-          unzip -q RATIOBOT_GitHub_Pages_v4.0.zip -d _site
-          if [ -f _site/ratiobot_github_ready/index.html ]; then
-            cp -a _site/ratiobot_github_ready/. _site/
-            rm -rf _site/ratiobot_github_ready
-          fi
-          mkdir -p _site/assets
-          curl -fsSL --retry 3 --retry-delay 2 https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js -o _site/assets/supabase.min.js || \
-          curl -fsSL --retry 3 --retry-delay 2 https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.min.js -o _site/assets/supabase.min.js
-          test -s _site/assets/supabase.min.js
-
-          test -s badges_user_cut.webp
-          cp badges_user_cut.webp _site/assets/badges_user_cut.webp
-          test $(wc -c < _site/assets/badges_user_cut.webp) -gt 10000
-          file _site/assets/badges_user_cut.webp | grep -q 'Web/P image'
-
-          python deploy_patch.py _site
-          python account_model_patch.py _site
-          python self_register_patch.py _site
-          python browser_hotfix.py _site
-          python teacher_recovery_patch.py _site
-          python teacher_console_patch.py _site
-
-          python badge_art_patch.py _site
-          grep -q 'badge-wall-flat-v3' _site/index.html
-
-          python student_game_fix_patch.py _site
-          grep -q 'student-game-fix-v1' _site/index.html
-          grep -q 'topLogoutBtn' _site/index.html
-
-          python xp_v52_patch.py _site
-          grep -q 'xp-balance-v52' _site/index.html
-          grep -q 'need=260' _site/index.html
-
-          python rings_v53_patch.py _site
-          grep -q 'rings-parent-v53' _site/index.html
-          grep -q 'rings-reliable-child-v53' _site/rings.html
-          grep -q 'ratiobot-rings-v53' _site/rings.html
-          grep -q 'abMistakes===0?8:(abMistakes===1?4:0)' _site/index.html
-          grep -q 'A/B 判断错误' _site/index.html
-          grep -q "game:'rings'" _site/index.html
-          grep -q '本局积分' _site/index.html
-
-          python badge_v50_patch.py _site
-          grep -q 'badge-wall-user-v50' _site/index.html
-          grep -q 'USER_BADGE_V50' _site/index.html
-          grep -q 'badges_user_cut.webp' _site/index.html
-
-          python validate_site.py _site
-          python teacher_console_validate.py _site
-          test -f _site/index.html
-          test -f _site/rings.html
-          test -d _site/assets
-          touch _site/.nojekyll
-
-      - name: Configure Pages
-        uses: actions/configure-pages@v5
-
-      - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v3
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: npm ci
+      - run: pip install Pillow==11.3.0
+      - run: npm run build
+      - name: JavaScript behavior and regressions
+        run: npm test
+        env:
+          SITE_DIR: _site
+      - name: Decode all artwork and verify full original assets
+        run: python tests/assets.py
+        env:
+          SITE_DIR: _site
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
         with:
           path: _site
-
+          retention-days: 7
   deploy:
     environment:
       name: github-pages

@@ -1,0 +1,29 @@
+{
+  "name": "ratiobot-math-core",
+  "version": "1.0.0",
+  "description": "RATIOBOT \u4e03\u5e74\u7ea7\u6570\u5b66\u8bad\u7ec3\u4e0e\u6210\u957f\u7cfb\u7edf\uff08\u4e91\u7aef\u6559\u5ba4\u7248\uff09\u3002",
+  "main": "index.js",
+  "scripts": {
+    "build": "node build.cjs",
+    "test": "node tests/regression.cjs && node tests/rings.cjs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/similar16/RATIOBOT-Math-Core.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/similar16/RATIOBOT-Math-Core/issues"
+  },
+  "homepage": "https://github.com/similar16/RATIOBOT-Math-Core#readme",
+  "devDependencies": {
+    "jsdom": "26.1.0"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "2.116.0"
+  },
+  "private": true
+}

@@ -1,0 +1,34 @@
+const assert=require('node:assert/strict');
+const fs=require('node:fs'), vm=require('node:vm');
+const {JSDOM}=require('jsdom');
+const root=process.env.SITE_DIR||'_site';
+const html=fs.readFileSync(root+'/index.html','utf8');
+const failures=[],writes=[];let failTable='';
+const fixture={};
+const client={auth:{onAuthStateChange(){},getSession:async()=>({data:{session:null}}),signOut:async()=>({error:null})},from(table){let data=[];const q={select(){data=fixture[table]||[];return q},eq(){return q},in(){return q},gte(){return q},order(){return q},maybeSingle:async()=>({data:null}),upsert(row){q.row=row;return q},throwOnError:async()=>{if(failTable===table)throw Error('simulated rejected write');writes.push({table,row:structuredClone(q.row)});return {error:null}},then(resolve){return Promise.resolve({data,error:null}).then(resolve)}};return q}};
+const dom=new JSDOM(html,{url:'https://test.invalid/',runScripts:'outside-only',pretendToBeVisual:true});const w=dom.window;
+w.structuredClone=structuredClone;w.supabase={createClient:()=>client};w.scrollTo=()=>{};w.Element.prototype.animate=()=>({});w.alert=()=>{};w.confirm=()=>true;w.console.warn=()=>{};
+for(const script of w.document.scripts){if(script.src)continue;let code=script.textContent;new vm.Script(code);code=code.replace('    migrateLegacy();const initP=',`    window.__test={levelInfo,honorInfoFromProfile,cloudLevelBase,blankProfile,saveCurrentProfile,currentProfile,currentProfileKey,cloudState,cloudSyncProfile,renderGrowth,renderStats,go,openStudentGate,loadTeacherDashboard,teacherSwitchTab,rosterNameMap,ensureTodayRecord,calcQuestionXP};\n    migrateLegacy();const initP=`);w.eval(code)}
+const t=w.__test;assert.ok(t,'main closure reaches initialization');
+function student(){t.cloudState.user={id:'fixture-student'};t.cloudState.role='student';t.cloudState.mustChangePassword=false;t.saveCurrentProfile(t.blankProfile('TEST','1',''));}
+function xpAt(lv){let n=0;for(let i=1;i<lv;i++)n+=260+(i-1)*85;return n;}
+(async()=>{
+ student();
+ for(let lv=1;lv<=90;lv++){const p=t.currentProfile();p.xp=xpAt(lv);t.saveCurrentProfile(p);t.renderGrowth();const h=t.honorInfoFromProfile(p);assert.equal(h.currentBase,Math.floor((lv-1)/9)+1);assert.equal(h.phase,(lv-1)%9+1);assert.equal(t.cloudLevelBase(p).base,h.currentBase);assert.equal(w.document.querySelectorAll('#baseStageGallery article').length,9);assert.equal(w.document.querySelectorAll('#baseCompleteGallery article').length,Math.min(3,Math.floor(lv/9)));assert.equal(w.document.querySelector('#growthLevel').textContent,String(h.phase));assert.ok(!/BASE\s*0\b/.test(w.document.body.textContent));}
+ assert.equal(t.levelInfo(259).level,1);assert.equal(t.levelInfo(260).level,2);assert.equal(t.levelInfo(xpAt(90)+999999).level,90);
+ console.log('PASS 90 levels, BASE boundaries, retained completed collections and slow XP');
+ for(const [mistakes,gain] of [[0,8],[1,4],[2,0]]){student();const payload={profileKey:t.currentProfileKey(),runId:'run-'+mistakes,mode:'solo',abMistakes:mistakes,totalOps:20,totalFails:2,roundCount:3,grade:'A · 推理很稳',durationSeconds:120};const r=w.ratiobotAwardRingsV53(payload);const p=t.currentProfile();assert.equal(r.gain,gain);assert.equal(p.economy.credits,gain);assert.equal(p.history.length,1);assert.equal(p.history[0].rGain,gain);assert.equal(p.history[0].accuracy,90);assert.equal(p.history[0].durationSeconds,120);assert.equal(p.history[0].abMistakes,mistakes);assert.match(w.document.querySelector('#historyList').textContent,/数圈侦探 · 分类推理/);assert.match(w.document.querySelector('#historyList').textContent,/120 s/);assert.equal(w.ratiobotAwardRingsV53(payload).gain,gain);assert.equal(t.currentProfile().history.length,1);await t.cloudSyncProfile();const pr=writes.filter(x=>x.table==='profiles').at(-1).row,snap=writes.filter(x=>x.table==='progress_snapshots').at(-1).row;assert.equal(pr.r_points,gain);assert.equal(snap.economy.credits,gain);assert.equal(snap.game_stats.history[0].rGain,gain);assert.equal(t.currentProfile().pendingCloud,false);}
+ console.log('PASS 8/4/0: settlement, wallet, detailed record, snapshot payload, duplicate idempotency');
+ student();failTable='progress_snapshots';w.ratiobotAwardRingsV53({profileKey:t.currentProfileKey(),runId:'failed-sync',totalOps:10,roundCount:3});assert.equal(await t.cloudSyncProfile(),false);assert.equal(t.currentProfile().pendingCloud,true);assert.equal(t.currentProfile().economy.credits,8);failTable='';assert.equal(await t.cloudSyncProfile(),true);assert.equal(t.currentProfile().pendingCloud,false);
+ assert.equal(w.ratiobotAwardRingsV53({profileKey:'other-student',runId:'wrong'}).error,true);assert.equal(t.currentProfile().economy.credits,8);
+ console.log('PASS cloud error remains pending, retry succeeds, changed student rejected');
+ student();t.renderGrowth();assert.equal(w.document.querySelectorAll('#unifiedBadgeGrid article').length,16);assert.equal(w.document.querySelectorAll('#unifiedBadgeGrid img').length,16);
+ for(const id of ['rules','train','rings']){t.go(id);assert.ok(w.document.getElementById(id).classList.contains('active'),id+' route active');}
+ t.openStudentGate();assert.ok(w.document.querySelector('#studentView').classList.contains('hidden'));assert.ok(!w.document.querySelector('#gameView').classList.contains('hidden'));
+ console.log('PASS 16 badge image elements, A/B/C routes, logged-in training skips password');
+ t.cloudState.role='teacher';t.cloudState.user={id:'fixture-teacher'};fixture.class_roster=[{student_code:'1',student_name:'测试',user_id:'fixture-student'}];fixture.profiles=[{user_id:'fixture-student',r_points:8,xp:260}];fixture.progress_snapshots=[{user_id:'fixture-student',game_stats:{history:[{at:new Date().toISOString(),accuracy:90,avgTime:6}]}}];await t.loadTeacherDashboard('fixture-class');t.go('teacher');assert.match(w.document.querySelector('#teacherDataTable').textContent,/90%/);assert.match(w.document.querySelector('#teacherDataTable').textContent,/BASE 1 · Lv.2/);assert.equal(w.document.querySelectorAll('[data-reset-student]').length,1);assert.equal(t.rosterNameMap('1 张三\n2,李四',2)['2'],'李四');
+ console.log('PASS teacher dashboard, roster parser and password-reset action retained (mock backend)');
+ student();await w.document.querySelector('#logoutBtn').onclick();assert.equal(t.currentProfile(),null);assert.equal(t.cloudState.user,null);assert.equal(w.document.querySelector('#ringsFrame').getAttribute('src'),'about:blank');
+ console.log('PASS logout clears current identity and old game frame');
+ w.close();
+})().catch(e=>{console.error(e);w.close();process.exitCode=1});

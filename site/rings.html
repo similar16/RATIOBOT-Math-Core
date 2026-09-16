@@ -1,0 +1,625 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><script>if(window.top===window){location.replace("index.html#account");}window.addEventListener('message',e=>{if(e.source!==parent||e.origin!==location.origin||e.data?.type!=='ratiobot-sync-result'||e.data.runId!==sessionRunId)return;const el=document.querySelector('.hq-score-message');if(el)el.textContent=e.data.ok?'✓ 本局积分与详细记录已同步云端':'本机已保存，云端同步失败；联网后自动重试';});
+</script>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#35B8C8" />
+<title>RATIOBOT｜数圈侦探 · 成功交棒领奖台版</title>
+<style>
+:root{--bg:#FFF8ED;--panel:#FFFDF8;--ink:#3E3540;--muted:#786A72;--teal:#35B8C8;--teal-soft:#D8F2F3;--blue:#4EA7D8;--coral:#F0645D;--pink:#F58A77;--yellow:#F7D56B;--sage:#B9C58F;--lime:#68B99C;--danger:#D95158;--shadow:7px 7px 0 rgba(62,53,64,.16);--shadow-sm:4px 4px 0 rgba(62,53,64,.13)}
+*{box-sizing:border-box} html{scroll-behavior:smooth} body{margin:0;min-height:100vh;color:var(--ink);font-family:"Arial Rounded MT Bold","PingFang SC","Microsoft YaHei",system-ui,sans-serif;background:radial-gradient(circle at 10% 16%,rgba(247,213,107,.38) 0 2px,transparent 3px),radial-gradient(circle at 84% 12%,rgba(240,100,93,.16) 0 3px,transparent 4px),linear-gradient(180deg,#FFFDF8 0,#FFF7EA 100%)} body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.24;background-image:linear-gradient(rgba(62,53,64,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(62,53,64,.05) 1px,transparent 1px);background-size:28px 28px;mask-image:linear-gradient(to bottom,black,transparent 92%)}
+button,input{font:inherit;color:var(--ink)} button{cursor:pointer} button:focus-visible,input:focus-visible{outline:3px solid rgba(53,184,200,.35);outline-offset:3px} .hidden{display:none!important}
+.topbar{height:72px;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 clamp(12px,3.4vw,44px);border-bottom:3px solid var(--ink);position:sticky;top:0;background:rgba(255,253,248,.95);backdrop-filter:blur(12px);z-index:60} .brand{display:flex;align-items:center;gap:10px} .brand-mark{width:39px;height:39px;border:3px solid var(--ink);border-radius:10px;display:grid;place-items:center;font-weight:1000;background:var(--yellow);box-shadow:3px 3px 0 var(--coral)} .brand b{display:block;letter-spacing:.1em;font-size:13px} .brand small{display:block;color:var(--muted);font-size:9px;font-weight:800;margin-top:2px} .hud{display:flex;align-items:center;gap:7px;flex-wrap:wrap;justify-content:flex-end} .pill{border:2px solid var(--ink);background:#FFFDF8;padding:6px 9px;border-radius:999px;font-size:10px;font-weight:1000;box-shadow:2px 2px 0 rgba(62,53,64,.1)} .pill.ops{background:#FFF0B8} .pill.turn{background:#FFE0DC} .pill.round{background:var(--teal-soft)}
+main{width:min(1180px,calc(100% - 22px));margin:0 auto;padding:30px 0 70px} .screen{display:none} .screen.active{display:block} .eyebrow{font-size:10px;letter-spacing:.17em;color:var(--coral);font-weight:1000}
+.hero{display:grid;grid-template-columns:1.05fr .95fr;gap:34px;align-items:center;min-height:640px} .hero h1{font-size:clamp(48px,7vw,84px);line-height:.96;letter-spacing:-.055em;margin:14px 0 20px}.rings-main-title{white-space:nowrap;display:flex;align-items:baseline;gap:.08em} .hero h1 span{color:var(--teal);-webkit-text-stroke:1.4px var(--ink);text-shadow:3px 3px 0 rgba(247,213,107,.85)} .hero p{font-size:16px;line-height:1.75;color:var(--muted);font-weight:700;max-width:650px} .mode-card{margin-top:18px;border:3px solid var(--ink);background:#FFFDF8;border-radius:18px;padding:15px;box-shadow:var(--shadow-sm);max-width:700px} .mode-title{font-size:11px;font-weight:1000;margin-bottom:9px} .mode-options{display:flex;gap:9px;flex-wrap:wrap} .mode{border:3px solid var(--ink);background:#FFFDF8;border-radius:12px;padding:10px 13px;font-weight:1000} .mode.active{background:var(--teal-soft);box-shadow:3px 3px 0 var(--coral)} .name-row{display:flex;gap:9px;margin-top:11px;flex-wrap:wrap} .name-row input{border:3px solid var(--ink);border-radius:11px;background:#FFFDF8;padding:9px 11px;width:150px;font-weight:900} .primary,.ghost,.danger,.choice-btn{border:3px solid var(--ink);border-radius:13px;padding:11px 16px;font-weight:1000;box-shadow:var(--shadow-sm);transition:.12s} .primary{background:var(--coral)} .ghost{background:#FFFDF8} .danger{background:#FFE0DC} .primary:hover,.ghost:hover,.danger:hover,.choice-btn:hover{transform:translate(-1px,-1px);box-shadow:6px 6px 0 rgba(62,53,64,.16)} .primary:disabled,.ghost:disabled{opacity:.36;cursor:not-allowed;transform:none;box-shadow:none} .hero-actions{display:flex;gap:11px;flex-wrap:wrap;margin-top:23px} .mini-note{font-size:11px;color:var(--muted);font-weight:750;margin-top:14px;line-height:1.55}
+.hero-visual{height:500px;display:grid;place-items:center;position:relative} .arcade{width:min(455px,96%);height:410px;border:4px solid var(--ink);border-radius:22px;background:var(--teal);box-shadow:11px 11px 0 #FF8A91,14px 14px 0 var(--ink);position:relative;overflow:hidden;transform:rotate(-.5deg)} .arcade .cap{height:54px;border-bottom:3px solid var(--ink);display:flex;align-items:center;justify-content:space-between;padding:0 15px;background:#26A9BA;font-weight:1000;letter-spacing:.08em;font-size:11px} .hero-board{position:absolute;inset:72px 18px 18px;border:3px solid var(--ink);border-radius:14px;background:rgba(255,255,255,.17)} .mini-ring{position:absolute;width:190px;height:190px;border:10px solid rgba(255,253,248,.88);border-radius:50%;top:32px} .mini-ring.a{left:53px} .mini-ring.b{right:53px;border-color:rgba(240,100,93,.75)} .hero-mascot{position:absolute;width:210px;left:50%;bottom:1px;transform:translateX(-50%);z-index:4;filter:drop-shadow(0 7px 0 rgba(62,53,64,.12))} .float-chip{position:absolute;background:#FFFDF8;border:3px solid var(--ink);border-radius:11px;padding:7px 10px;font:900 10px ui-monospace,monospace;box-shadow:var(--shadow-sm);z-index:5} .fc1{left:4px;top:112px;background:#FFF0B8;transform:rotate(-4deg)} .fc2{right:2px;top:158px;background:#DCEAF7;transform:rotate(4deg)} .fc3{left:24px;bottom:20px;background:#FFE0DC;color:var(--coral)}
+.game-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:14px;margin-bottom:14px} .game-heading h2{font-size:34px;margin:7px 0 5px} .game-heading p{margin:0;color:var(--muted);font-weight:700} .game-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end} .game-actions button{font-size:11px;padding:8px 11px}
+.scoreboard{display:flex;gap:9px;flex-wrap:wrap;margin:10px 0 14px} .player-card{border:3px solid var(--ink);background:#FFFDF8;border-radius:14px;padding:10px 13px;min-width:180px;box-shadow:3px 3px 0 rgba(62,53,64,.11);font-size:11px;font-weight:900} .player-card.active{background:#FFF0B8;box-shadow:4px 4px 0 var(--coral)} .player-card b{font-size:15px} .player-card span{color:var(--muted);margin-left:7px}
+.game-shell{border:4px solid var(--ink);border-radius:23px;background:#FFFDF8;box-shadow:10px 10px 0 var(--teal);overflow:hidden} .board{position:relative;min-height:430px;background:linear-gradient(180deg,#FFFDF8,#FFF9ED);padding:84px 28px 115px} .ring-deco{position:absolute;width:470px;height:290px;border:10px solid;border-radius:50%;top:48px;opacity:.18;pointer-events:none} .ring-deco.a{left:calc(50% - 430px);border-color:var(--teal)} .ring-deco.b{right:calc(50% - 430px);border-color:var(--coral)} .ring-label{position:absolute;top:40px;border:3px solid var(--ink);background:#FFFDF8;border-radius:999px;padding:7px 11px;font-size:11px;font-weight:1000;z-index:4} .ring-label.a{left:12%;box-shadow:3px 3px 0 var(--teal)} .ring-label.b{right:12%;box-shadow:3px 3px 0 var(--coral)}
+.zone-grid{display:grid;grid-template-columns:1fr .84fr 1fr;gap:11px;position:relative;z-index:3;max-width:980px;margin:0 auto} .drop-zone{min-height:205px;border:3px dashed rgba(62,53,64,.38);border-radius:17px;background:rgba(255,255,255,.78);padding:45px 10px 10px;display:flex;gap:8px;flex-wrap:wrap;align-content:flex-start;position:relative;transition:.12s} .drop-zone:before{content:attr(data-label);position:absolute;left:10px;top:10px;font-size:10px;font-weight:1000;letter-spacing:.03em;color:var(--muted)} .drop-zone.a{border-top:8px solid var(--teal)} .drop-zone.b{border-top:8px solid var(--coral)} .drop-zone.both{border-top:8px solid var(--yellow);background:#FFFBEF} .drop-zone.outside{position:absolute;left:50%;transform:translateX(-50%);bottom:18px;width:min(940px,92%);min-height:86px;border-style:solid;border-color:rgba(62,53,64,.34);padding-top:36px;background:rgba(185,197,143,.09);z-index:3} .drop-zone.hover,.drop-zone.armed{background:#FFF0B8;border-color:var(--ink);transform:translateY(-2px)}
+.rule-row{border-top:3px solid var(--ink);display:grid;grid-template-columns:1fr auto;gap:14px;align-items:center;padding:14px 18px;background:#FFFDF8} .rule-status{display:flex;gap:8px;flex-wrap:wrap} .rule-chip{border:3px solid var(--ink);background:#FFFDF8;border-radius:12px;padding:8px 10px;font-size:11px;font-weight:1000} .rule-chip.a{box-shadow:3px 3px 0 var(--teal)} .rule-chip.b{box-shadow:3px 3px 0 var(--coral)} .rule-chip.found{background:#E1F4EA} .guess-actions{display:flex;gap:8px} .guess-actions button{font-size:11px;padding:8px 10px}
+.tray-wrap{border-top:3px solid var(--ink);padding:15px 18px 17px;background:#FFFDF8} .tray-head{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:10px} .tray-head b{font-size:13px} .tray-head span{font-size:10px;color:var(--muted);font-weight:800} .candidate-tray{display:flex;gap:10px;flex-wrap:wrap;min-height:64px;align-items:center} .num-card{display:inline-flex;align-items:center;justify-content:center;min-width:66px;min-height:50px;padding:8px 12px;border:3px solid var(--ink);border-radius:12px;background:#FFFDF8;font-size:21px;font-weight:1000;box-shadow:3px 3px 0 rgba(62,53,64,.13);user-select:none;-webkit-user-select:none;touch-action:none;position:relative} .num-card.candidate{background:#DDF3F3;cursor:grab} .num-card.key{background:#FFF0B8} .num-card.selected{outline:5px solid rgba(247,213,107,.62);transform:translateY(-2px)} .num-card .tag{position:absolute;top:-10px;right:-9px;font-size:8px;background:var(--coral);color:white;border:2px solid var(--ink);border-radius:999px;padding:2px 5px} .num-card .fails{position:absolute;left:3px;right:3px;bottom:-17px;font-size:8px;color:var(--danger);font-weight:900;white-space:nowrap} .fraction{display:inline-flex;flex-direction:column;align-items:center;line-height:1;font-size:.82em;min-width:1.2em} .fraction span:first-child{border-bottom:2px solid currentColor;padding:0 4px 2px} .fraction span:last-child{padding-top:2px} .minus{margin-right:2px}
+.feedbackbar{border-top:3px solid var(--ink);min-height:54px;padding:10px 18px;display:flex;align-items:center;justify-content:space-between;gap:12px;background:#FFFDF8;font-size:12px;font-weight:900} .feedbackbar.good{background:#E8F6EE} .feedbackbar.bad{background:#FFF0EC} .unlock{color:var(--muted);font-size:10px;margin-left:auto}
+.drag-ghost{position:fixed;z-index:9999;pointer-events:none;opacity:.9;transform:translate(-50%,-50%) scale(1.08);box-shadow:7px 7px 0 rgba(62,53,64,.16)} body.is-dragging{overflow:hidden}
+.intersection{border-top:3px solid var(--ink);padding:17px 18px;background:#FFFBEF} .intersection h3{margin:0 0 10px;font-size:16px} .answer-options{display:flex;gap:8px;flex-wrap:wrap} .answer-options button{border:3px solid var(--ink);border-radius:11px;background:#FFFDF8;padding:8px 11px;font-weight:1000}
+.round-archive{border-top:3px solid var(--ink);padding:18px;background:#F7FBF6} .round-archive h3{margin:4px 0 8px;font-size:20px} .round-archive p{margin:0 0 12px;color:var(--muted);font-size:12px;font-weight:750;line-height:1.55} .tag-grid{display:flex;flex-wrap:wrap;gap:8px} .tag-btn{border:3px solid var(--ink);background:#FFFDF8;border-radius:999px;padding:8px 11px;font-weight:1000} .tag-btn.on{background:var(--teal-soft);box-shadow:3px 3px 0 var(--coral)} .zero-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;max-width:720px} .zero-choice{border:3px solid var(--ink);border-radius:12px;background:#FFFDF8;padding:13px 10px;font-weight:1000}
+.archive-shell{border:4px solid var(--ink);border-radius:23px;background:#FFFDF8;box-shadow:10px 10px 0 var(--teal);overflow:hidden} .archive-head{padding:24px 24px 12px} .archive-head h2{font-size:36px;margin:7px 0} .archive-head p{margin:0;color:var(--muted);font-weight:700} .mission-tabs{display:flex;gap:8px;flex-wrap:wrap;padding:0 24px 16px} .mission-tab{border:3px solid var(--ink);border-radius:999px;padding:8px 11px;background:#FFFDF8;font-size:11px;font-weight:1000} .mission-tab.done{background:#E1F4EA} .mission-tab.active{background:#FFF0B8} .mission{border-top:3px solid var(--ink);padding:20px 24px} .tree-root{width:150px;margin:0 auto 17px;border:3px solid var(--ink);border-radius:13px;background:var(--yellow);padding:10px;text-align:center;font-weight:1000} .branch-row{display:grid;grid-template-columns:1.18fr .82fr;gap:18px} .branch{border:3px solid var(--ink);border-radius:17px;padding:14px;background:#F2FBFB} .branch.frac{background:#FFF3EF} .branch h3{text-align:center;margin:0 0 10px} .bucket-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px} .branch.frac .bucket-grid{grid-template-columns:repeat(2,1fr)} .bucket{border:3px dashed rgba(62,53,64,.42);min-height:105px;border-radius:13px;padding:34px 8px 8px;position:relative;background:#FFFDF8} .bucket strong{position:absolute;top:9px;left:8px;right:8px;text-align:center;font-size:10px} .bucket.armed{background:#FFF0B8;border-color:var(--ink)} .bucket-cards{display:flex;gap:6px;flex-wrap:wrap;justify-content:center} .archive-deck{display:flex;gap:9px;flex-wrap:wrap;justify-content:center;padding:16px} .archive-feedback{text-align:center;color:var(--muted);font-size:11px;font-weight:850;min-height:22px}
+.scan-card{max-width:720px;margin:0 auto;border:3px solid var(--ink);border-radius:17px;padding:18px;background:#FFFBEF;text-align:center} .scan-number{font-size:34px;font-weight:1000;margin:4px 0 12px} .scan-actions{margin-top:13px} .error-list{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;max-width:850px;margin:0 auto} .error-item{border:3px solid var(--ink);border-radius:14px;background:#FFFDF8;padding:13px;text-align:left;font-weight:900} .error-item:hover{background:#FFF0B8} .finish-panel{border-top:3px solid var(--ink);padding:24px;text-align:center;background:#FFFBEF} .finish-panel h3{font-size:30px;margin:8px 0} .score-row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:14px 0} .score-row span{border:3px solid var(--ink);border-radius:999px;background:#FFFDF8;padding:8px 12px;font-size:11px;font-weight:900}
+.modal{position:fixed;inset:0;background:rgba(62,53,64,.38);display:grid;place-items:center;padding:16px;z-index:200} .modal-card{width:min(560px,100%);max-height:86vh;overflow:auto;border:4px solid var(--ink);border-radius:20px;background:#FFFDF8;padding:22px;box-shadow:10px 10px 0 var(--coral)} .modal-card h3{font-size:25px;margin:8px 0} .modal-card p{color:var(--muted);font-weight:700;line-height:1.6} .choices{display:grid;grid-template-columns:repeat(2,1fr);gap:9px} .choice-btn{background:#FFFDF8;padding:11px}
+@media(max-width:850px){.hero{grid-template-columns:1fr;min-height:0}.hero-visual{height:420px}.game-heading{align-items:flex-start;flex-direction:column}.ring-deco{display:none}.board{padding:72px 12px 116px}.zone-grid{gap:7px}.drop-zone{min-height:190px;padding:40px 7px 7px}.num-card{min-width:58px;font-size:19px;padding:7px 9px}.rule-row{grid-template-columns:1fr}.guess-actions{justify-content:flex-start}.branch-row{grid-template-columns:1fr}}
+@media(max-width:580px){.topbar{height:auto;min-height:68px;padding-top:7px;padding-bottom:7px;align-items:flex-start}.brand small{display:none}main{width:min(100% - 12px,1180px);padding-top:18px}.hero h1{font-size:52px}.hero-visual{display:none}.zone-grid{grid-template-columns:1fr 1fr 1fr}.drop-zone{min-height:170px;border-radius:13px}.drop-zone:before{font-size:8px}.drop-zone.outside{width:94%;min-height:88px}.ring-label.a{left:6%}.ring-label.b{right:6%}.candidate-tray{gap:8px}.zero-grid{grid-template-columns:1fr 1fr}.bucket-grid,.branch.frac .bucket-grid{grid-template-columns:1fr 1fr}.error-list{grid-template-columns:1fr}.choices{grid-template-columns:1fr}}
+
+/* ===== v3: overlapping rounded rectangles + two-board duel ===== */
+.ring-deco{display:none!important}
+.set-stage{position:relative;min-height:330px;max-width:980px;margin:0 auto 104px;isolation:isolate}
+.set-outline{position:absolute;top:26px;width:60%;height:276px;border:5px solid var(--ink);border-radius:34px;background:rgba(255,255,255,.22);pointer-events:none;z-index:1}
+.set-outline.a{left:4%;box-shadow:8px 8px 0 rgba(53,184,200,.22);border-color:#2C7F8B}
+.set-outline.b{right:4%;box-shadow:8px 8px 0 rgba(240,100,93,.18);border-color:#B8524C}
+.set-title{position:absolute;top:4px;z-index:7;border:3px solid var(--ink);border-radius:999px;background:#FFFDF8;padding:6px 10px;font-size:10px;font-weight:1000}
+.set-title.a{left:8%;box-shadow:3px 3px 0 var(--teal)}
+.set-title.b{right:8%;box-shadow:3px 3px 0 var(--coral)}
+.set-zones{position:absolute;left:4%;right:4%;top:26px;height:276px;display:grid;grid-template-columns:39.13% 21.74% 39.13%;z-index:4}
+.set-zone{position:relative;min-width:0;padding:44px 9px 9px;display:flex;align-content:flex-start;align-items:flex-start;gap:7px;flex-wrap:wrap;transition:background-color .12s,box-shadow .12s,outline-color .12s;border-radius:22px}
+.set-zone:before{content:attr(data-label);position:absolute;top:16px;left:50%;transform:translateX(-50%);font-size:9px;white-space:nowrap;font-weight:1000;color:var(--muted);background:rgba(255,253,248,.82);padding:3px 6px;border-radius:999px}
+.set-zone.aonly{border-radius:28px 0 0 28px}.set-zone.bonly{border-radius:0 28px 28px 0}.set-zone.both{background:rgba(247,213,107,.14);border-left:2px dashed rgba(62,53,64,.16);border-right:2px dashed rgba(62,53,64,.16);border-radius:0}
+.set-zone.hover,.set-zone.armed,.outside-zone.hover,.outside-zone.armed{background:rgba(247,213,107,.28);box-shadow:inset 0 0 0 3px rgba(62,53,64,.23);outline:none;transform:none!important}
+.outside-zone{position:absolute;left:6%;right:6%;top:324px;min-height:82px;border:3px dashed rgba(62,53,64,.34);border-radius:18px;padding:34px 10px 9px;display:flex;gap:8px;flex-wrap:wrap;align-content:flex-start;background:rgba(185,197,143,.08);z-index:4;transition:background-color .12s,box-shadow .12s}
+.outside-zone:before{content:attr(data-label);position:absolute;top:9px;left:50%;transform:translateX(-50%);font-size:9px;font-weight:1000;color:var(--muted);white-space:nowrap}
+.board{padding:22px 22px 18px;min-height:0}.board.single-board{padding-bottom:16px}
+.board-panel{background:#FFFDF8;border:3px solid var(--ink);border-radius:20px;overflow:hidden;box-shadow:5px 5px 0 rgba(62,53,64,.12)}
+.board-panel.active-turn{box-shadow:7px 7px 0 var(--yellow);outline:3px solid rgba(247,213,107,.46);outline-offset:3px}
+.player-board-head{display:flex;justify-content:space-between;gap:8px;align-items:center;padding:10px 13px;border-bottom:3px solid var(--ink);background:#FFF9ED}
+.player-board-head strong{font-size:14px}.player-board-head span{font-size:9px;font-weight:1000;color:var(--muted)}
+.player-board-head .turn-badge{color:var(--ink);background:#FFF0B8;border:2px solid var(--ink);border-radius:999px;padding:4px 7px}
+.duel-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:15px;background:#FFF9ED}
+.duel-grid .board{padding:12px 10px 10px}.duel-grid .set-stage{min-height:258px;margin-bottom:82px}.duel-grid .set-outline{top:24px;height:210px;border-radius:26px;border-width:4px}.duel-grid .set-zones{top:24px;height:210px}.duel-grid .set-zone{padding:39px 5px 6px;gap:5px}.duel-grid .set-zone:before{font-size:7px;top:12px}.duel-grid .outside-zone{top:248px;min-height:64px;padding-top:29px}.duel-grid .outside-zone:before{font-size:7px;top:7px}.duel-grid .num-card{min-width:48px;min-height:40px;font-size:17px;padding:6px 7px;border-width:2px;border-radius:9px;box-shadow:2px 2px 0 rgba(62,53,64,.11)}.duel-grid .fraction span:first-child{border-bottom-width:1.5px}.duel-grid .tray-wrap{padding:11px}.duel-grid .tray-head{align-items:flex-start}.duel-grid .tray-head span{display:none}.duel-grid .candidate-tray{gap:7px;min-height:52px}.duel-grid .rule-row{grid-template-columns:1fr;padding:10px 11px;gap:9px}.duel-grid .guess-actions{justify-content:flex-start}.duel-grid .rule-chip{padding:6px 8px;font-size:9px}.duel-grid .unlock{font-size:8px}
+.num-card.candidate{touch-action:none;-webkit-touch-callout:none}.num-card .fails{bottom:-16px}.num-card.key{background:#DDF3F3}.num-card .tag{display:none!important}
+.round-winner{margin:14px;border:3px solid var(--ink);border-radius:16px;background:#E1F4EA;padding:13px 15px;font-weight:1000;box-shadow:4px 4px 0 var(--sage)}
+.archive-outside-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin-top:12px}.archive-outside-grid button{border:3px solid var(--ink);background:#FFFDF8;border-radius:12px;padding:10px;font-weight:1000}.archive-outside-grid button:hover{background:#FFF0B8}
+@media(max-width:900px){.duel-grid{grid-template-columns:1fr}.duel-grid .set-stage{min-height:300px;margin-bottom:92px}.duel-grid .set-outline{height:245px}.duel-grid .set-zones{height:245px}.duel-grid .outside-zone{top:282px}}
+@media(max-width:580px){.set-stage{min-height:300px;margin-bottom:96px}.set-outline{height:245px;border-radius:27px}.set-zones{height:245px}.outside-zone{top:284px}.set-zone{padding:42px 5px 7px}.set-zone:before{font-size:7px}.set-title{font-size:8px}.archive-outside-grid{grid-template-columns:1fr 1fr}}
+
+
+/* ===== v4: equal-width overlap + intel capture duel ===== */
+.set-outline{width:61.333333%}
+.set-zones{grid-template-columns:repeat(3,minmax(0,1fr))}
+.set-zone.both{border-radius:22px;background:rgba(247,213,107,.13);border-left:2px dashed rgba(62,53,64,.14);border-right:2px dashed rgba(62,53,64,.14)}
+.set-zone.aonly{border-radius:28px 10px 10px 28px}.set-zone.bonly{border-radius:10px 28px 28px 10px}
+.intel-badge{display:inline-flex;align-items:center;gap:3px;background:#FFF0B8;border:2px solid var(--ink);border-radius:999px;padding:3px 7px;font-size:9px;font-weight:1000;margin-left:6px}
+.first-badge{position:absolute;right:-7px;top:-8px;display:grid;place-items:center;width:18px;height:18px;border:2px solid var(--ink);border-radius:50%;background:var(--yellow);font-size:9px;box-shadow:2px 2px 0 rgba(62,53,64,.12)}
+.duel-crack-btn{background:var(--yellow)!important}
+.duel-rule-note{font-size:8px;color:var(--muted);font-weight:900;line-height:1.4;max-width:270px}
+.crack-grid{display:grid;grid-template-columns:1fr;gap:10px;margin:12px 0}
+.crack-field{display:grid;gap:5px;text-align:left}.crack-field span{font-size:10px;font-weight:1000;color:var(--muted)}
+.crack-field select{width:100%;border:3px solid var(--ink);border-radius:11px;background:#FFFDF8;padding:10px;font-weight:900}
+.crack-cost{border:2px solid var(--ink);border-radius:11px;background:#FFF0B8;padding:8px 10px;font-size:10px;font-weight:900;line-height:1.45;margin-top:8px}
+.board-panel.active-turn .player-board-head{background:#FFF0B8}
+@media(max-width:900px){.set-outline{width:61.333333%}}
+
+
+/* v4 hero preview uses the same rounded-frame language as the game board */
+.mini-ring{width:245px;height:190px;border-radius:30px;top:42px}
+.mini-ring.a{left:38px}.mini-ring.b{right:38px}
+
+
+/* ===== v5: random bank + fair duel + celebration ===== */
+.celebration-overlay{position:fixed;inset:0;z-index:9999;display:grid;place-items:center;background:rgba(62,53,64,.24);backdrop-filter:blur(3px);opacity:0;transition:opacity .22s ease;pointer-events:none}.celebration-overlay.show{opacity:1}.celebration-overlay.fade{opacity:0}.celebrate-card{position:relative;width:min(560px,88vw);min-height:330px;background:#FFF9ED;border:5px solid var(--ink);border-radius:30px;box-shadow:14px 14px 0 var(--teal);display:grid;place-items:center;align-content:center;gap:16px;overflow:hidden;animation:celebPop .55s cubic-bezier(.2,1.3,.4,1)}@keyframes celebPop{0%{transform:scale(.65) rotate(-3deg)}100%{transform:scale(1) rotate(0)}}.celeb-title{font-size:38px;font-weight:1000;letter-spacing:-1px}.celeb-sub{font-weight:950;color:var(--muted)}.confetti{position:absolute;inset:0;overflow:hidden}.confetti i{position:absolute;left:var(--x);top:-20px;width:10px;height:22px;border:2px solid var(--ink);border-radius:3px;background:var(--yellow);animation:confettiFall 1.9s var(--d) ease-in infinite}.confetti i:nth-child(3n){background:var(--teal)}.confetti i:nth-child(3n+1){background:var(--coral)}@keyframes confettiFall{to{transform:translateY(110vh) rotate(520deg)}}.solo-winner{position:relative;width:230px;height:190px}.trophy{position:absolute;left:50%;top:0;transform:translateX(-50%);font-size:78px;animation:trophyUp .7s .2s both cubic-bezier(.2,1.4,.3,1)}@keyframes trophyUp{from{transform:translate(-50%,70px) scale(.6)}to{transform:translate(-50%,0) scale(1)}}.bot-head{position:absolute;left:83px;top:92px;width:64px;height:52px;border:4px solid var(--ink);border-radius:18px;background:var(--coral);display:grid;place-items:center;font-size:25px;font-weight:1000}.bot-body{position:absolute;left:72px;top:138px;width:86px;height:48px;border:4px solid var(--ink);border-radius:18px;background:#FFFDF8}.arm{position:absolute;width:72px;height:12px;border:4px solid var(--ink);border-radius:99px;background:#F6C34A;top:125px}.arm.left{left:20px;transform:rotate(-48deg);transform-origin:right center}.arm.right{right:20px;transform:rotate(48deg);transform-origin:left center}.ref-scene{position:relative;width:360px;height:190px}.team{position:absolute;bottom:12px;width:75px;height:105px;border:4px solid var(--ink);border-radius:26px 26px 18px 18px;display:grid;place-items:center;font-size:32px;font-weight:1000}.team-a{left:24px;background:var(--coral)}.team-b{right:24px;background:#9ED9F1}.ref{position:absolute;left:143px;bottom:9px;width:74px;height:138px}.ref-head{position:absolute;left:17px;top:0;width:40px;height:40px;border:4px solid var(--ink);border-radius:50%;background:#F6C34A}.ref-body{position:absolute;left:5px;top:37px;width:64px;height:82px;border:4px solid var(--ink);border-radius:16px;background:repeating-linear-gradient(90deg,#FFF 0 10px,var(--ink) 10px 18px)}.ref-arm{position:absolute;top:54px;width:84px;height:12px;border:4px solid var(--ink);border-radius:99px;background:#F6C34A;transform-origin:6px center}.ref-arm.left{left:-63px}.ref-arm.right{right:-63px}.winner-left .ref-arm.left{transform:rotate(-58deg);animation:raiseLeft .55s .25s both}.winner-right .ref-arm.right{transform:rotate(58deg);animation:raiseRight .55s .25s both}@keyframes raiseLeft{from{transform:rotate(0)}to{transform:rotate(-58deg)}}@keyframes raiseRight{from{transform:rotate(0)}to{transform:rotate(58deg)}}.winner-left .team-a,.winner-right .team-b{animation:winnerBounce .55s .35s both}@keyframes winnerBounce{50%{transform:translateY(-18px)}100%{transform:translateY(-7px)}}.draw-hands{font-size:100px;animation:winnerBounce .7s infinite alternate}
+
+
+/* ===== v6: inline reasoning dock + stronger archive + RATIOBOT celebration ===== */
+.how-panel{margin-top:14px;border:3px solid var(--ink);border-radius:16px;background:#F2FBFB;padding:14px 16px;box-shadow:4px 4px 0 rgba(62,53,64,.12);max-width:700px;font-size:12px;font-weight:800;line-height:1.7}.how-panel b{color:var(--coral)}
+.decision-panel{border-top:4px solid var(--ink);border-bottom:3px solid var(--ink);background:#F2FBFB;padding:15px 18px;scroll-margin-top:86px}.decision-card{max-width:920px;margin:0 auto}.decision-card h3{font-size:22px;margin:5px 0 7px}.decision-card p{margin:0 0 10px;color:var(--muted);font-weight:750;line-height:1.55}.decision-card .choices{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.decision-close-row{margin-top:11px;text-align:right}.decision-panel .choice-btn{box-shadow:2px 2px 0 rgba(62,53,64,.11)}
+.game-shell.archive-active #soloArea,.game-shell.archive-active #duelArea{opacity:.28;filter:saturate(.55);pointer-events:none;transition:.25s}.game-shell.archive-active #roundWinner{opacity:.72}.round-archive{position:relative;border-top:6px solid var(--ink);background:#FFF4C9;padding:24px 20px 22px;scroll-margin-top:92px}.round-archive.archive-focus{animation:archivePulse 1.05s ease 2;box-shadow:inset 0 0 0 4px rgba(240,100,93,.22)}@keyframes archivePulse{50%{background:#FFE8A3;box-shadow:inset 0 0 0 7px rgba(240,100,93,.32)}}.archive-required-banner{display:flex;align-items:center;gap:10px;border:3px solid var(--ink);border-radius:14px;background:var(--coral);padding:10px 13px;margin:-4px 0 14px;font-size:13px;font-weight:1000;box-shadow:4px 4px 0 rgba(62,53,64,.14)}.archive-required-banner:before{content:"✦";display:grid;place-items:center;width:29px;height:29px;flex:0 0 auto;border:3px solid var(--ink);border-radius:9px;background:var(--yellow)}.round-archive.completed .archive-required-banner{background:#E1F4EA}.round-archive.completed .archive-required-banner:before{content:"✓";background:#BDE6CE}.round-archive h3{font-size:24px;margin:5px 0 8px}.round-archive .archive-feedback{font-size:13px;font-weight:950;color:var(--ink);margin-top:10px}
+/* replace emoji / rough figures with the same RATIOBOT visual language */
+.solo-winner{width:300px;height:220px;display:grid;place-items:end center;position:relative}.celeb-mascot{position:absolute;width:185px;bottom:0;left:50%;transform:translateX(-50%);filter:drop-shadow(0 7px 0 rgba(62,53,64,.12));z-index:2}.style-trophy{position:absolute;left:50%;top:-4px;transform:translateX(-50%);width:102px;height:118px;z-index:4;animation:trophyUp .72s .15s both cubic-bezier(.2,1.4,.3,1)}.cup-bowl{position:absolute;left:17px;top:8px;width:68px;height:54px;border:5px solid var(--ink);border-radius:10px 10px 29px 29px;background:var(--yellow);box-shadow:5px 5px 0 var(--coral)}.cup-bowl:before,.cup-bowl:after{content:"";position:absolute;top:7px;width:27px;height:31px;border:5px solid var(--ink);background:#FFF8ED;z-index:-1}.cup-bowl:before{left:-23px;border-radius:18px 0 0 18px;border-right:0}.cup-bowl:after{right:-23px;border-radius:0 18px 18px 0;border-left:0}.cup-badge{position:absolute;left:50%;top:19px;transform:translateX(-50%);width:27px;height:27px;border:3px solid var(--ink);border-radius:8px;background:var(--coral);display:grid;place-items:center;font-size:13px;font-weight:1000}.cup-stem{position:absolute;left:45px;top:61px;width:13px;height:31px;border:4px solid var(--ink);background:#FFF0B8}.cup-base{position:absolute;left:27px;top:89px;width:50px;height:18px;border:4px solid var(--ink);border-radius:7px;background:var(--teal)}
+.ref-scene{width:410px;height:210px}.team-bot{position:absolute;bottom:4px;width:128px;height:162px;display:grid;place-items:end center}.team-bot img{width:122px;filter:drop-shadow(0 5px 0 rgba(62,53,64,.12))}.team-bot.a{left:5px}.team-bot.b{right:5px}.team-badge{position:absolute;top:-3px;left:50%;transform:translateX(-50%);border:3px solid var(--ink);border-radius:999px;padding:5px 9px;font-size:11px;font-weight:1000;background:#FFFDF8;z-index:5}.team-bot.a .team-badge{box-shadow:3px 3px 0 var(--coral)}.team-bot.b .team-badge{box-shadow:3px 3px 0 var(--blue)}.block-ref{position:absolute;left:50%;bottom:4px;transform:translateX(-50%);width:92px;height:152px}.block-ref .rh{position:absolute;left:23px;top:0;width:48px;height:48px;border:4px solid var(--ink);border-radius:15px;background:var(--yellow)}.block-ref .rb{position:absolute;left:14px;top:44px;width:66px;height:85px;border:4px solid var(--ink);border-radius:16px;background:repeating-linear-gradient(90deg,#FFFDF8 0 11px,var(--ink) 11px 17px)}.block-ref .ra{position:absolute;top:59px;width:91px;height:13px;border:4px solid var(--ink);border-radius:99px;background:var(--yellow);transform-origin:7px center}.block-ref .ra.left{left:-71px}.block-ref .ra.right{right:-71px}.winner-left .block-ref .ra.left{animation:raiseLeft .55s .2s both}.winner-right .block-ref .ra.right{animation:raiseRight .55s .2s both}.winner-left .team-bot.a,.winner-right .team-bot.b{animation:winnerBounce .6s .28s both}
+@media(max-width:700px){.decision-card .choices{grid-template-columns:repeat(2,minmax(0,1fr))}.celeb-title{font-size:30px}.celebrate-card{min-height:310px}.ref-scene{transform:scale(.82);margin:-10px -35px}.round-archive{padding:20px 12px}}
+
+
+/* ===== v7: one-screen reasoning layout ===== */
+/* 破解时不滚动页面：推理台出现的同时压缩题面，保持整体高度基本不变 */
+.game-shell{transition:none}
+.game-shell.reasoning-open .board.single-board{padding:9px 14px 7px}
+.game-shell.reasoning-open .single-board .set-stage{min-height:218px;margin-bottom:66px;max-width:920px}
+.game-shell.reasoning-open .single-board .set-outline{top:20px;height:176px;border-width:4px;border-radius:27px}
+.game-shell.reasoning-open .single-board .set-zones{top:20px;height:176px}
+.game-shell.reasoning-open .single-board .set-zone{padding:34px 7px 5px;gap:5px;border-radius:17px}
+.game-shell.reasoning-open .single-board .set-zone:before{top:9px;font-size:8px}
+.game-shell.reasoning-open .single-board .set-title{top:0;padding:4px 8px;font-size:9px;border-width:2px}
+.game-shell.reasoning-open .single-board .outside-zone{top:210px;min-height:54px;padding:24px 8px 5px;border-width:2px;border-radius:14px}
+.game-shell.reasoning-open .single-board .outside-zone:before{top:5px;font-size:8px}
+.game-shell.reasoning-open .single-board .num-card{min-width:52px;min-height:38px;padding:5px 8px;font-size:17px;border-width:2px;border-radius:9px;box-shadow:2px 2px 0 rgba(62,53,64,.11)}
+.game-shell.reasoning-open .single-board .fraction span:first-child{border-bottom-width:1.5px}
+.game-shell.reasoning-open #soloArea .rule-row{padding:7px 12px;gap:8px}
+.game-shell.reasoning-open #soloArea .rule-chip{padding:5px 7px;font-size:9px;border-width:2px}
+.game-shell.reasoning-open #soloArea .unlock{font-size:9px}
+.game-shell.reasoning-open #soloArea .guess-actions button{padding:6px 8px;font-size:10px}
+.game-shell.reasoning-open #soloArea .tray-wrap{padding:7px 12px 9px}
+.game-shell.reasoning-open #soloArea .tray-head{margin-bottom:5px}
+.game-shell.reasoning-open #soloArea .tray-head b{font-size:11px}
+.game-shell.reasoning-open #soloArea .tray-head span{font-size:8px}
+.game-shell.reasoning-open #soloArea .candidate-tray{gap:7px;min-height:42px}
+.game-shell.reasoning-open #soloArea .candidate-tray .num-card{min-width:50px;min-height:38px;padding:5px 7px;font-size:17px}
+
+/* PK 破解时两块答题区也同步收紧，仍保留双方题面可见 */
+.game-shell.reasoning-open .duel-grid{gap:10px;padding:9px}
+.game-shell.reasoning-open .duel-grid .player-board-head{padding:6px 9px}
+.game-shell.reasoning-open .duel-grid .player-board-head strong{font-size:11px}
+.game-shell.reasoning-open .duel-grid .board{padding:6px 6px 4px}
+.game-shell.reasoning-open .duel-grid .set-stage{min-height:168px;margin-bottom:53px}
+.game-shell.reasoning-open .duel-grid .set-outline{top:17px;height:132px;border-width:3px;border-radius:21px}
+.game-shell.reasoning-open .duel-grid .set-zones{top:17px;height:132px}
+.game-shell.reasoning-open .duel-grid .set-zone{padding:28px 4px 4px;gap:3px}
+.game-shell.reasoning-open .duel-grid .set-zone:before{top:8px;font-size:6px}
+.game-shell.reasoning-open .duel-grid .set-title{top:0;padding:3px 6px;font-size:7px;border-width:2px}
+.game-shell.reasoning-open .duel-grid .outside-zone{top:158px;min-height:48px;padding:21px 5px 4px;border-width:2px;border-radius:12px}
+.game-shell.reasoning-open .duel-grid .outside-zone:before{top:4px;font-size:6px}
+.game-shell.reasoning-open .duel-grid .num-card{min-width:41px;min-height:31px;padding:4px 5px;font-size:14px;border-width:2px;border-radius:8px}
+.game-shell.reasoning-open .duel-grid .rule-row{padding:5px 7px;gap:5px}
+.game-shell.reasoning-open .duel-grid .rule-chip{padding:4px 6px;font-size:8px;border-width:2px}
+.game-shell.reasoning-open .duel-grid .duel-rule-note{font-size:7px;line-height:1.25}
+.game-shell.reasoning-open .duel-grid .guess-actions button{padding:5px 7px;font-size:8px}
+.game-shell.reasoning-open .duel-grid .tray-wrap{padding:5px 7px 7px}
+.game-shell.reasoning-open .duel-grid .tray-head{display:none}
+.game-shell.reasoning-open .duel-grid .candidate-tray{gap:4px;min-height:34px}
+
+/* 推理台本身改成低矮横向控制台 */
+.game-shell.reasoning-open .decision-panel{padding:8px 12px 9px;border-top-width:3px;border-bottom-width:3px}
+.game-shell.reasoning-open .decision-card{max-width:none;display:grid;grid-template-columns:150px minmax(0,1fr) auto;grid-template-areas:"head choices close" "text choices close";column-gap:12px;align-items:center}
+.game-shell.reasoning-open .decision-card .eyebrow{grid-area:head;font-size:8px;margin:0}
+.game-shell.reasoning-open .decision-card h3{grid-area:head;font-size:15px;margin:12px 0 0;align-self:start;line-height:1.15}
+.game-shell.reasoning-open .decision-card p{grid-area:text;font-size:9px;line-height:1.3;margin:3px 0 0;align-self:start}
+.game-shell.reasoning-open .decision-card .choices{grid-area:choices;display:grid;grid-template-columns:repeat(3,minmax(90px,1fr));gap:6px;align-items:stretch}
+.game-shell.reasoning-open .decision-panel .choice-btn{padding:7px 8px;font-size:10px;border-width:2px;border-radius:9px;box-shadow:1px 1px 0 rgba(62,53,64,.11)}
+.game-shell.reasoning-open .decision-close-row{grid-area:close;margin:0;align-self:center}
+.game-shell.reasoning-open .decision-close-row button{padding:6px 8px;font-size:9px;white-space:nowrap}
+
+/* PK 的三项破解横排，不把页面向下撑长 */
+.game-shell.reasoning-open .crack-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:0}
+.game-shell.reasoning-open .crack-field{gap:2px}
+.game-shell.reasoning-open .crack-field span{font-size:8px}
+.game-shell.reasoning-open .crack-field select{padding:6px 7px;border-width:2px;border-radius:8px;font-size:10px}
+.game-shell.reasoning-open .crack-cost{grid-column:1/-1;padding:5px 7px;margin-top:3px;font-size:8px;line-height:1.25;border-width:2px}
+.game-shell.reasoning-open #submitDuelCrack{grid-column:1/-1;margin-top:3px!important;padding:7px 9px;font-size:10px}
+
+/* iPad 横屏也维持双答题区；窄屏才改回纵向 */
+@media (min-width:760px) and (max-width:900px){
+  .duel-grid{grid-template-columns:1fr 1fr}
+  .duel-grid .set-stage{min-height:238px;margin-bottom:78px}
+  .duel-grid .set-outline,.duel-grid .set-zones{height:194px}
+  .duel-grid .outside-zone{top:231px}
+  .game-shell.reasoning-open .duel-grid .set-stage{min-height:162px;margin-bottom:52px}
+  .game-shell.reasoning-open .duel-grid .set-outline,.game-shell.reasoning-open .duel-grid .set-zones{height:128px}
+  .game-shell.reasoning-open .duel-grid .outside-zone{top:153px}
+}
+@media(max-width:759px){
+  .game-shell.reasoning-open .decision-card{display:block}
+  .game-shell.reasoning-open .decision-card h3{margin:4px 0 6px}
+  .game-shell.reasoning-open .decision-card .choices{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .game-shell.reasoning-open .decision-close-row{margin-top:7px;text-align:right}
+  .game-shell.reasoning-open .crack-grid{grid-template-columns:1fr}
+}
+
+
+/* ===== v8: solo right-side decoder + success-pass duel + podium celebration ===== */
+#soloArea{padding:12px;background:#FFF9ED}
+.solo-layout{display:grid;grid-template-columns:minmax(0,1fr) 286px;gap:12px;align-items:start}
+.solo-layout .solo-main{min-width:0}
+.solo-layout .board{padding:12px 10px 8px}
+.solo-layout .set-stage{min-height:300px;margin-bottom:92px}
+.solo-layout .set-outline{top:25px;height:245px}
+.solo-layout .set-zones{top:25px;height:245px}
+.solo-layout .outside-zone{top:286px;min-height:76px}
+.solo-layout .tray-wrap{padding:10px 12px 12px}
+.solo-layout .candidate-tray{gap:7px}
+.solo-decision-dock{position:sticky;top:86px;border:4px solid var(--ink);border-radius:18px;background:#F2FBFB;box-shadow:6px 6px 0 var(--teal);padding:14px;min-height:455px;max-height:calc(100vh - 105px);overflow:auto}
+.solo-decision-dock h3{font-size:23px;margin:5px 0 10px}.solo-decision-dock p{font-size:11px;line-height:1.55;color:var(--muted);font-weight:800}
+.solo-dock-status{display:grid;gap:7px;margin:10px 0}.solo-dock-status .rule-chip{font-size:10px;padding:7px 8px}
+.solo-dock-actions{display:grid;gap:7px;margin:11px 0}.solo-dock-actions button{width:100%;font-size:11px;padding:9px}
+.solo-choice-panel{margin-top:12px;padding-top:12px;border-top:2px dashed rgba(62,53,64,.24)}
+.solo-choice-panel h4{font-size:14px;margin:0 0 5px}.solo-choice-panel .hint{font-size:9px;color:var(--muted);font-weight:800;line-height:1.45;margin-bottom:8px}
+.solo-choice-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}.solo-choice-grid button{border:2px solid var(--ink);border-radius:9px;background:#FFFDF8;padding:7px 5px;font-size:10px;font-weight:1000;box-shadow:1px 1px 0 rgba(62,53,64,.12)}.solo-choice-grid button:hover{background:#FFF0B8}
+.solo-dock-message{margin-top:8px;min-height:30px;border:2px solid rgba(62,53,64,.22);border-radius:9px;background:#FFFDF8;padding:7px;font-size:9px;font-weight:850;line-height:1.4}
+/* PK stays below the two boards; no page overlay */
+#duelArea + #modal,.decision-panel{position:static}
+.duel-rule-note{max-width:none}.duel-crack-btn{background:var(--yellow)!important}
+.turn-rule{display:inline-flex;align-items:center;border:2px solid var(--ink);border-radius:999px;background:#FFF0B8;padding:3px 7px;font-size:8px;font-weight:1000;margin-left:5px}
+/* podium victory scene */
+.podium-scene{position:relative;width:420px;height:245px;margin:0 auto}.podium-base{position:absolute;left:50%;bottom:8px;transform:translateX(-50%);width:168px;height:72px;border:5px solid var(--ink);border-radius:14px 14px 7px 7px;background:var(--yellow);box-shadow:8px 8px 0 var(--coral);display:grid;place-items:center;font-size:38px;font-weight:1000}.podium-base.second{left:20%;width:118px;height:48px;background:#DCEAF7;box-shadow:5px 5px 0 var(--teal);font-size:24px}.podium-player{position:absolute;bottom:72px;width:150px;height:170px;display:flex;justify-content:center;align-items:flex-end}.podium-player.first{left:50%;transform:translateX(-50%)}.podium-player.second{left:5%;bottom:47px;transform:scale(.78);transform-origin:bottom center}.podium-player img{width:142px;max-height:155px;object-fit:contain;filter:drop-shadow(0 6px 0 rgba(62,53,64,.12))}.podium-player .team-badge{top:-12px}.podium-player .style-trophy{top:-42px;left:50%;transform:translateX(-50%) scale(.72);z-index:7}.podium-player.first{animation:winnerBounce .7s .2s both}.solo-podium .podium-base{width:180px}.solo-podium .podium-player.first{bottom:73px}.solo-podium .podium-player img{width:160px}
+@media(max-width:900px){.solo-layout{grid-template-columns:minmax(0,1fr) 245px;gap:8px}.solo-decision-dock{padding:10px}.solo-choice-grid{grid-template-columns:1fr}.solo-layout .set-stage{min-height:275px;margin-bottom:86px}.solo-layout .set-outline,.solo-layout .set-zones{height:220px}.solo-layout .outside-zone{top:260px}}
+@media(max-width:720px){.solo-layout{grid-template-columns:1fr}.solo-decision-dock{position:static;max-height:none;min-height:0}.solo-choice-grid{grid-template-columns:repeat(2,1fr)}}
+
+
+/* v8 podium scene overrides */
+.podium-award{position:relative;width:430px;height:250px;margin:0 auto}.podium-award .podium-step{position:absolute;bottom:5px;border:5px solid var(--ink);border-radius:14px 14px 7px 7px;display:grid;place-items:center;font-weight:1000}.podium-award .step1{left:50%;transform:translateX(-50%);width:170px;height:72px;background:var(--yellow);box-shadow:8px 8px 0 var(--coral);font-size:40px}.podium-award .step2{left:28px;width:120px;height:48px;background:#DCEAF7;box-shadow:5px 5px 0 var(--teal);font-size:25px}.award-player{position:absolute;display:flex;justify-content:center;align-items:flex-end}.award-player.winner{width:165px;height:176px;left:50%;bottom:73px;transform:translateX(-50%);animation:winnerBounce .65s .2s both}.award-player.runner{width:120px;height:135px;left:28px;bottom:49px;transform:scale(.82);transform-origin:bottom center}.award-player img{width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 5px 0 rgba(62,53,64,.12))}.award-player .team-badge{top:-8px}.award-player .style-trophy{top:-45px;left:50%;transform:translateX(-50%) scale(.68);z-index:8}.solo-award .award-player.winner{width:180px;height:188px}.solo-award .step1{width:185px}.solo-award .podium-step.step2,.solo-award .award-player.runner{display:none}
+
+
+.chase-locked .candidate-tray{opacity:.38;pointer-events:none;filter:grayscale(.25)}.chase-locked .tray-head b:after{content:" · 追平阶段已锁定";color:var(--coral)}
+.award-arm{position:absolute;top:31px;width:58px;height:12px;border:4px solid var(--ink);border-radius:99px;background:var(--yellow);z-index:6}.award-arm.left{left:18px;transform:rotate(-48deg);transform-origin:right center}.award-arm.right{right:18px;transform:rotate(48deg);transform-origin:left center}
+
+
+/* ===== v9: 破解时只缩区域，不缩字体/边框 ===== */
+/* PK 上方题面：维持破解前的字号与线宽 */
+.game-shell.reasoning-open .duel-grid .player-board-head strong{font-size:14px}
+.game-shell.reasoning-open .duel-grid .set-outline{border-width:4px}
+.game-shell.reasoning-open .duel-grid .set-title{font-size:10px;border-width:3px;padding:6px 10px}
+.game-shell.reasoning-open .duel-grid .set-zone:before{font-size:7px}
+.game-shell.reasoning-open .duel-grid .outside-zone{border-width:3px}
+.game-shell.reasoning-open .duel-grid .outside-zone:before{font-size:7px}
+.game-shell.reasoning-open .duel-grid .num-card{font-size:17px;border-width:2px;border-radius:9px;padding:5px 6px;min-height:34px;min-width:44px}
+.game-shell.reasoning-open .duel-grid .fraction span:first-child{border-bottom-width:1.5px}
+.game-shell.reasoning-open .duel-grid .rule-chip{font-size:9px;border-width:3px}
+.game-shell.reasoning-open .duel-grid .duel-rule-note{font-size:8px;line-height:1.35}
+.game-shell.reasoning-open .duel-grid .guess-actions button{font-size:11px;border-width:3px}
+
+/* 单人若未来进入 reasoning-open，也保持原字号与线宽 */
+.game-shell.reasoning-open .single-board .set-outline{border-width:5px}
+.game-shell.reasoning-open .single-board .set-title{font-size:10px;border-width:3px;padding:6px 10px}
+.game-shell.reasoning-open .single-board .set-zone:before{font-size:9px}
+.game-shell.reasoning-open .single-board .outside-zone{border-width:3px}
+.game-shell.reasoning-open .single-board .outside-zone:before{font-size:9px}
+.game-shell.reasoning-open .single-board .num-card{font-size:21px;border-width:3px;border-radius:12px}
+.game-shell.reasoning-open #soloArea .rule-chip{font-size:11px;border-width:3px}
+.game-shell.reasoning-open #soloArea .unlock{font-size:10px}
+.game-shell.reasoning-open #soloArea .guess-actions button{font-size:11px;border-width:3px}
+.game-shell.reasoning-open #soloArea .tray-head b{font-size:13px}
+.game-shell.reasoning-open #soloArea .tray-head span{font-size:10px}
+.game-shell.reasoning-open #soloArea .candidate-tray .num-card{font-size:21px;border-width:3px}
+
+/* 破解台压低高度，但文字独立成三行，避免红色英文与中文标题重叠 */
+.game-shell.reasoning-open .decision-panel{padding:7px 12px 8px;border-top-width:4px;border-bottom-width:3px}
+.game-shell.reasoning-open .decision-card{
+  max-width:none;display:grid;
+  grid-template-columns:180px minmax(0,1fr) auto;
+  grid-template-areas:"eyebrow choices close" "title choices close" "text choices close";
+  column-gap:12px;row-gap:1px;align-items:center
+}
+.game-shell.reasoning-open .decision-card .eyebrow{grid-area:eyebrow;font-size:10px;line-height:1.1;margin:0;align-self:end}
+.game-shell.reasoning-open .decision-card h3{grid-area:title;font-size:20px;line-height:1.12;margin:2px 0 0;align-self:center}
+.game-shell.reasoning-open .decision-card p{grid-area:text;font-size:11px;line-height:1.3;margin:2px 0 0;align-self:start}
+.game-shell.reasoning-open .decision-card .choices{grid-area:choices;display:grid;grid-template-columns:repeat(3,minmax(90px,1fr));gap:6px;align-items:stretch}
+.game-shell.reasoning-open .decision-panel .choice-btn{padding:7px 8px;font-size:11px;border-width:3px;border-radius:9px}
+.game-shell.reasoning-open .decision-close-row{grid-area:close;margin:0;align-self:center}
+.game-shell.reasoning-open .decision-close-row button{padding:6px 8px;font-size:11px;border-width:3px;white-space:nowrap}
+.game-shell.reasoning-open .crack-field span{font-size:10px}
+.game-shell.reasoning-open .crack-field select{padding:6px 7px;border-width:3px;border-radius:8px;font-size:11px}
+.game-shell.reasoning-open .crack-cost{padding:5px 7px;margin-top:3px;font-size:10px;line-height:1.3;border-width:2px}
+.game-shell.reasoning-open #submitDuelCrack{padding:7px 9px;font-size:11px;border-width:3px}
+
+@media(max-width:759px){
+  .game-shell.reasoning-open .decision-card{display:block}
+  .game-shell.reasoning-open .decision-card .eyebrow{font-size:10px;margin-bottom:3px}
+  .game-shell.reasoning-open .decision-card h3{font-size:20px;margin:2px 0 5px}
+  .game-shell.reasoning-open .decision-card p{font-size:11px;margin-bottom:7px}
+}
+
+
+/* ===== v10: overlap alignment + non-level score economy + static trophy art ===== */
+.pill.score{background:#E8F6EE}
+/* The dark overlap is now the ACTUAL inner intersection of the two rounded outlines.
+   The old middle-column background is disabled to avoid a 4–5px visual offset from borders. */
+.set-zone.both{background:transparent!important}
+.set-stage::after{content:"";position:absolute;pointer-events:none;z-index:2;left:calc(34.666667% + 5px);right:calc(34.666667% + 5px);top:31px;height:266px;border-radius:13px;background:rgba(247,213,107,.16)}
+.duel-grid .set-stage::after{left:calc(34.666667% + 4px);right:calc(34.666667% + 4px);top:28px;height:202px;border-radius:10px}
+.game-shell.reasoning-open .duel-grid .set-stage::after{top:28px;height:174px}
+@media(max-width:900px){.duel-grid .set-stage::after{top:28px;height:237px}.game-shell.reasoning-open .duel-grid .set-stage::after{top:28px;height:209px}}
+@media(max-width:580px){.set-stage::after{top:31px;height:235px}.duel-grid .set-stage::after{top:28px;height:237px}}
+.score-note{font-size:10px;font-weight:850;color:var(--muted);padding:7px 10px;border:2px dashed rgba(62,53,64,.24);border-radius:10px;background:#FFFDF8;display:inline-block;margin-top:8px}
+.victory-art{position:absolute;z-index:8;object-fit:contain;filter:drop-shadow(0 7px 0 rgba(62,53,64,.14))}
+.podium-award .victory-art.winner-art{width:220px;height:245px;left:50%;bottom:66px;transform:translateX(-50%)}
+.podium-award.solo-award .victory-art.winner-art{width:230px;height:258px;bottom:64px}
+.podium-award .award-player.runner{z-index:3}
+.podium-award .award-player.runner img{opacity:.86}
+/* old handmade arms/trophy are not used in v10 */
+
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand"><div class="brand-mark">R</div><div><b>RATIOBOT</b><small>NUMBER RINGS · 数圈侦探</small></div></div>
+  <div class="hud"><span class="pill round" id="hudRound">准备中</span><span class="pill ops">操作 <b id="hudOps">0</b></span><span class="pill score" title="R积分不再推动等级；用于后续商店、赛季和收藏系统">R积分 <b id="hudScore">0</b></span><span class="pill turn hidden" id="hudTurn">A队行动</span></div>
+</header>
+<main>
+<section id="start" class="screen active">
+  <div class="hero">
+    <div>
+      <div class="eyebrow">RATIOBOT · STRATEGY CLASSIFICATION LAB</div>
+      <h1 class="rings-main-title">数圈<span>侦探</span></h1>
+      <p>开局没有任何线索。你要从候选数字里挑一张，尝试把它放进“只属于 A”“同时属于 A 和 B”“只属于 B”或“两个类型都不属于”。每次投放都算一次操作；放错不会自动告诉你答案，只会排除一个位置。用尽可能少的操作找出两个隐藏规则。</p>
+      <div class="mode-card">
+        <div class="mode-title">选择玩法</div>
+        <div class="mode-options"><button class="mode active" data-play="solo">单人策略</button><button class="mode" data-play="duel">双人公平 PK</button></div>
+        <div id="duelNames" class="name-row hidden"><input id="p1Name" value="A队" maxlength="8" aria-label="玩家一名称"><input id="p2Name" value="B队" maxlength="8" aria-label="玩家二名称"></div>
+      </div>
+      <div class="hero-actions"><button id="startBtn" class="primary">启动挑战 →</button><button id="howBtn" class="ghost">怎么玩？</button></div><div id="howPanel" class="how-panel hidden"><b>玩法：</b>先从候选数字里挑一张，尝试放进四个位置之一。放错只留下排除线索，不自动公布答案；信息足够时再破解 A、B 和重叠部分。PK 双方题面相同并采用对等回合。<br><b>注意：</b>每局候选数字一定包含 0；每局胜利后还必须完成一项新的归档练习，才会出现“下一局”。总部统一记录游戏积分：普通完整通关计 8 分；少试错、少操作的高质量通关计 10 分；每天总上限 40 分。</div>
+      <div class="mini-note">支持鼠标与 iPad / 触屏真拖拽；也可以“点数字卡 → 点区域”。每次会从更大的题库随机抽题；每局都包含 0，只使用整数、分数、正数、负数、非负数、非正数。</div>
+    </div>
+    <div class="hero-visual"><div class="arcade"><div class="cap"><span>NUMBER RINGS / STRATEGY</span><span>READY</span></div><div class="hero-board"><div class="mini-ring a"></div><div class="mini-ring b"></div><div class="float-chip fc1">TRY · FAIL · INFER</div><div class="float-chip fc2">WATCH · PLAN · CRACK</div><div class="float-chip fc3">FIRST TO CRACK WINS</div></div><img class="hero-mascot" src="assets/rings_f3d2d6b03565.svg" alt="数牌小方"></div></div>
+  </div>
+</section>
+
+<section id="game" class="screen">
+  <div class="game-heading">
+    <div><div class="eyebrow" id="roundEyebrow">ROUND 1 · CLASSIFY</div><h2 id="roundTitle">边界侦查</h2><p id="roundDesc">从空场开始，用尽量少的尝试破解两种隐藏类型。</p></div>
+    <div class="game-actions"><button id="restartRoundBtn" class="ghost">↻ 重开本局</button><button id="exitBtn" class="danger">退出挑战</button></div>
+  </div>
+  <div id="scoreboard" class="scoreboard hidden"></div>
+  <div class="game-shell">
+    <div id="soloArea"></div>
+    <div id="duelArea" class="duel-grid hidden"></div>
+    <div id="roundWinner" class="round-winner hidden"></div>
+    <div id="modal" class="decision-panel hidden"><div class="decision-card"><div class="eyebrow" id="modalKicker">RULE DISCOVERY</div><h3 id="modalTitle">你认为 A 是哪一种类型？</h3><p id="modalText">根据目前桌面证据判断。</p><div id="modalChoices" class="choices"></div><div class="decision-close-row"><button id="closeModal" class="ghost">先再看看</button></div></div></div>
+    <div id="roundArchive" class="round-archive hidden"></div>
+    <div id="feedback" class="feedbackbar"><span>扫描已就绪。</span><button id="nextRoundBtn" class="primary hidden">下一局 →</button></div>
+  </div>
+</section>
+
+<section id="archive" class="screen">
+  <div class="game-heading"><div><div class="eyebrow">FINAL · ARCHIVE LAB</div><h2>最终归档实验室</h2><p>同一个数既有“正式分类”，也可能同时拥有多个标签；还要会判断它是否两个类型都不属于。</p></div><div class="game-actions"><button id="archiveExitBtn" class="danger">返回首页</button></div></div>
+  <div class="archive-shell">
+    <div class="archive-head"><div class="eyebrow">3 MINI MISSIONS</div><h2>三种归档，不只会一种</h2><p>完成分类树、多标签扫描和找错档案。</p></div>
+    <div class="mission-tabs"><span id="tab1" class="mission-tab active">① 分类树</span><span id="tab2" class="mission-tab">② 多标签</span><span id="tab3" class="mission-tab">③ 找错档案</span></div>
+    <div id="mission1" class="mission">
+      <div class="tree-root">有理数</div>
+      <div class="branch-row">
+        <div class="branch"><h3>整数</h3><div class="bucket-grid"><div class="bucket" data-bucket="posInt"><strong>正整数</strong><div class="bucket-cards"></div></div><div class="bucket" data-bucket="zero"><strong>0</strong><div class="bucket-cards"></div></div><div class="bucket" data-bucket="negInt"><strong>负整数</strong><div class="bucket-cards"></div></div></div></div>
+        <div class="branch frac"><h3>分数</h3><div class="bucket-grid"><div class="bucket" data-bucket="posFrac"><strong>正分数</strong><div class="bucket-cards"></div></div><div class="bucket" data-bucket="negFrac"><strong>负分数</strong><div class="bucket-cards"></div></div></div></div>
+      </div>
+      <div id="archiveDeck" class="archive-deck"></div><div id="archiveFeedback" class="archive-feedback">把每张卡送到正式分类树。</div>
+    </div>
+    <div id="mission2" class="mission hidden"><div class="scan-card"><div class="eyebrow">MULTI-TAG SCAN</div><div id="scanPrompt" class="scan-number">−3</div><p>选择这个数拥有的<strong>全部</strong>标签，然后提交。</p><div id="scanTags" class="tag-grid" style="justify-content:center"></div><div class="scan-actions"><button id="scanSubmit" class="primary">提交标签</button></div><div id="scanFeedback" class="archive-feedback"></div></div></div>
+    <div id="mission3" class="mission hidden"><div class="scan-card"><div class="eyebrow">FIND THE WRONG FILE</div><h3>下面只有一份档案归错了，找出来。</h3><div id="errorList" class="error-list"></div><div id="errorFeedback" class="archive-feedback"></div></div></div>
+    <div id="finishPanel" class="finish-panel hidden"><div class="eyebrow">CLASSIFICATION CORE ONLINE</div><h3 id="finishTitle">挑战完成！</h3><div id="finalScores" class="score-row"></div><button id="playAgainBtn" class="primary">再玩一次</button></div>
+  </div>
+</section>
+</main>
+<script>
+const $=s=>document.querySelector(s), $$=s=>Array.from(document.querySelectorAll(s));
+const RULE_NAMES=['整数','分数','正数','负数','非负数','非正数'];
+const ZONE_LABEL={a:'只属于 A',both:'同时属于 A 和 B',b:'只属于 B',outside:'两个类型都不属于'};
+const fmt=s=>{s=String(s);if(s.includes('/')){let neg=s.startsWith('-'),v=neg?s.slice(1):s.replace(/^\+/,''),[a,b]=v.split('/');return `${neg?'<span class="minus">−</span>':''}<span class="fraction"><span>${a}</span><span>${b}</span></span>`}return s.replace('-', '−')};
+const plain=s=>{s=String(s);if(s.includes('/'))s=s.replace(/^\+/,'');return s.replace('-', '−')};
+const val=s=>{s=String(s).replace('+','');if(s.includes('/')){let [a,b]=s.split('/').map(Number);return a/b}return Number(s)};
+const kind=s=>String(s).includes('/')?'frac':'int';
+const satisfies=(rule,s)=>{const v=val(s),k=kind(s);return rule==='整数'?k==='int':rule==='分数'?k==='frac':rule==='正数'?v>0:rule==='负数'?v<0:rule==='非负数'?v>=0:rule==='非正数'?v<=0:false};
+const zoneFor=(r,s)=>{let a=satisfies(r.aRule,s),b=satisfies(r.bRule,s);return a&&b?'both':a?'a':b?'b':'outside'};
+const shuffle=a=>{a=[...a];for(let i=a.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const sample=(a,n=1)=>shuffle(a).slice(0,n);
+
+const VALUE_POOLS={
+  negInt:['-2','-3','-4','-5','-6','-7','-8','-9','-10','-11','-12','-13','-14','-15','-16','-18','-20'],
+  zero:['0'],
+  posInt:['+2','+3','+4','+5','+6','+7','+8','+9','+10','+11','+12','+13','+14','+15','+16','+18','+20'],
+  negFrac:['-1/2','-2/3','-3/4','-4/5','-5/6','-7/8','-2/5','-3/7','-4/9','-5/8','-7/10','-8/11','-9/13','-11/12','-13/15','-5/12','-7/15'],
+  posFrac:['1/2','2/3','3/4','4/5','5/6','7/8','2/5','3/7','4/9','5/8','7/10','8/11','9/13','11/12','13/15','5/12','7/15']
+};
+const ALL_VALUES=Object.values(VALUE_POOLS).flat();
+const bucketOf=v=>{let x=val(v);if(x===0)return'zero';if(kind(v)==='int')return x>0?'posInt':'negInt';return x>0?'posFrac':'negFrac'};
+const INTERSECTIONS={
+ '整数|非负数':'非负整数（0 和正整数）','非负数|整数':'非负整数（0 和正整数）',
+ '整数|非正数':'非正整数（0 和负整数）','非正数|整数':'非正整数（0 和负整数）',
+ '整数|正数':'正整数','正数|整数':'正整数','整数|负数':'负整数','负数|整数':'负整数',
+ '分数|正数':'正分数','正数|分数':'正分数','分数|负数':'负分数','负数|分数':'负分数',
+ '分数|非负数':'正分数','非负数|分数':'正分数','分数|非正数':'负分数','非正数|分数':'负分数'
+};
+const ROUND_BANK=[
+ ['整数','非负数','边界侦查'],['非负数','整数','边界反转'],['整数','非正数','非正边界'],['非正数','整数','零点防线'],
+ ['整数','正数','正整数侦查'],['正数','整数','正向交叉'],['整数','负数','负整数侦查'],['负数','整数','负向交叉'],
+ ['分数','正数','正分数侦查'],['正数','分数','正数筛选'],['分数','负数','负分数侦查'],['负数','分数','负数筛选'],
+ ['分数','非负数','非负分数'],['非负数','分数','非负交叉'],['分数','非正数','非正分数'],['非正数','分数','非正交叉']
+];
+const wrongInterOptions=['正整数','负整数','正分数','负分数','非负整数（0 和正整数）','非正整数（0 和负整数）','所有整数','所有分数','0 和正数','0 和负数'];
+function buildRound(t,idx){
+  let [aRule,bRule,title]=t, base={id:`r${idx}_${aRule}_${bRule}`,aRule,bRule,title,eyebrow:`ROUND ${idx+1} · RANDOM LAB`,desc:'题型和数字会随机变化。先选择最有信息量的数，再决定放到哪里。'};
+  base.intersection=INTERSECTIONS[`${aRule}|${bRule}`];
+  // 0 is present in every round so 正数/非负数 and 负数/非正数 can always be distinguished.
+  let used=new Set(['0']),cards=['0'];
+  ['a','both','b','outside'].forEach(z=>{
+    let pool=ALL_VALUES.filter(v=>v!=='0'&&zoneFor(base,v)===z&&!used.has(v));
+    if(pool.length){let v=sample(pool,1)[0];used.add(v);cards.push(v)}
+  });
+  let remain=shuffle(ALL_VALUES.filter(v=>!used.has(v)));
+  while(cards.length<8&&remain.length){let v=remain.shift();used.add(v);cards.push(v)}
+  base.cards=shuffle(cards);
+  base.interOptions=shuffle([base.intersection,...wrongInterOptions.filter(x=>x!==base.intersection)]).slice(0,4);
+  if(!base.interOptions.includes(base.intersection))base.interOptions[0]=base.intersection;
+  base.archive=['outside','tags','quick'][idx%3];
+  makeArchiveData(base);
+  return base;
+}
+function freshValues(exclude=[]){let ex=new Set(exclude);return shuffle(ALL_VALUES.filter(v=>!ex.has(v)))}
+function makeArchiveData(r){
+  let pool=freshValues(r.cards);
+  if(r.archive==='outside'){
+    let correct=pool.find(v=>zoneFor(r,v)==='outside');
+    let others=sample(pool.filter(v=>v!==correct&&zoneFor(r,v)!=='outside'),3);
+    r.archiveAnswer=correct;r.archiveChoices=shuffle([correct,...others]);
+  }else if(r.archive==='tags'){
+    r.archiveValue=pool.find(v=>val(v)!==0)||pool[0];
+  }else{
+    let types=shuffle(['posInt','zero','negInt','posFrac','negFrac']).slice(0,3);
+    r.archiveItems=types.map(k=>{let v=freshValues(r.cards).find(x=>bucketOf(x)===k);return[v,k]});
+  }
+}
+
+let playMode='solo',rounds=[],ri=0,round=null,totalOps=0,totalFails=0,selected=null,pointerDrag=null,soloState=null;
+let duelPlayers=[{name:'A队',wins:0,ops:0,state:null},{name:'B队',wins:0,ops:0,state:null}],currentPlayer=0,roundStarter=0,roundWinnerIndex=null,roundSnapshot=null,pendingEqualizer=null;
+
+function newState(){return{cards:round.cards.map(v=>({v,placed:null,fails:[]})),foundA:false,foundB:false,successCount:0,occupied:[],localOps:0,turns:0,placeFails:0,crackFails:0,intersectionSolved:false}}
+function esc(t){return String(t).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
+function switchScreen(id){$$('.screen').forEach(s=>s.classList.toggle('active',s.id===id));window.scrollTo({top:0,behavior:'smooth'})}
+function stateFor(owner){return playMode==='solo'?soloState:duelPlayers[owner].state}
+function isActive(owner){return playMode==='solo'||(roundWinnerIndex===null&&owner===currentPlayer)}
+function ownerName(owner){return playMode==='solo'?'单人挑战':duelPlayers[owner].name}
+
+// ===== R积分：与旧 RATIOBOT 学生档案兼容，但不再推动等级 =====
+const SHARED_DB_KEY='ratiobot_student_db_v8';
+const RINGS_WALLET_KEY='ratiobot_number_rings_wallet_v1';
+const RINGS_DAILY_CAP=20;
+let sessionRPoints=0,roundPointAwarded=false,finishPointAwarded=false,abMistakes=0; /* rings-reliable-child-v53 */
+function dayStamp(){let d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
+function normalizeEconomy(e={}){e.credits=Number(e.credits||0);e.lifetimeCredits=Number(e.lifetimeCredits||0);e.daily=e.daily||{};if(e.daily.date!==dayStamp())e.daily={date:dayStamp(),earned:0};e.daily.earned=Number(e.daily.earned||0);e.modules=e.modules||{};e.modules.numberRings=e.modules.numberRings||{earned:0,clears:0};return e}
+function walletContext(){try{let db=JSON.parse(localStorage.getItem(SHARED_DB_KEY)||'null');if(db&&db.current&&db.profiles&&db.profiles[db.current]){let p=db.profiles[db.current];p.economy=normalizeEconomy(p.economy);return{kind:'profile',db,key:db.current,p,e:p.economy}}}catch(e){}let w={};try{w=JSON.parse(localStorage.getItem(RINGS_WALLET_KEY)||'{}')||{}}catch(e){}w.economy=normalizeEconomy(w.economy);return{kind:'local',w,e:w.economy}}
+function saveWallet(ctx){if(ctx.kind==='profile'){ctx.p.economy=ctx.e;ctx.db.profiles[ctx.key]=ctx.p;localStorage.setItem(SHARED_DB_KEY,JSON.stringify(ctx.db))}else{ctx.w.economy=ctx.e;localStorage.setItem(RINGS_WALLET_KEY,JSON.stringify(ctx.w))}}
+function currentRPoints(){return walletContext().e.credits||0}
+function updateScoreHud(){let el=$('#hudScore');if(el)el.textContent=currentRPoints()}
+function awardRPoints(requested,reason=''){return 0} /* rings-parent-score-fix-v1: parent is authoritative */
+function showDecision(){let p=$('#modal');$('.game-shell')?.classList.add('reasoning-open');p.classList.remove('hidden')}
+function hideDecision(){$('#modal').classList.add('hidden');$('.game-shell')?.classList.remove('reasoning-open')}
+
+$$('.mode').forEach(b=>b.addEventListener('click',()=>{$$('.mode').forEach(x=>x.classList.remove('active'));b.classList.add('active');playMode=b.dataset.play;$('#duelNames').classList.toggle('hidden',playMode!=='duel')}));
+$('#startBtn').addEventListener('click',startGame);$('#howBtn').addEventListener('click',openInfo);$('#closeModal').addEventListener('click',hideDecision);$('#restartRoundBtn').addEventListener('click',restartRound);$('#exitBtn').addEventListener('click',exitGame);$('#archiveExitBtn').addEventListener('click',exitGame);$('#playAgainBtn').addEventListener('click',exitGame);$('#nextRoundBtn').addEventListener('click',nextRound);
+
+let sessionStartedAt=0,sessionRunId='',sessionProfileKey='';
+function startGame(){window.__hqScoreSent=false;
+ sessionStartedAt=Date.now();sessionRunId='rings-'+Date.now()+'-'+Math.random().toString(36).slice(2,9);
+ try{sessionProfileKey=parent.ratiobotRingsIdentity?.()||'';}catch(e){sessionProfileKey='';}
+ if(!sessionProfileKey){alert('请先从总部登录学生账号，再进入数圈侦探。');return;}
+
+  rounds=sample(ROUND_BANK,3).map((t,i)=>buildRound(t,i));
+  duelPlayers=[{name:($('#p1Name').value||'A队').trim(),wins:0,ops:0,state:null},{name:($('#p2Name').value||'B队').trim(),wins:0,ops:0,state:null}];
+  ri=0;totalOps=0;totalFails=0;sessionRPoints=0;finishPointAwarded=false;abMistakes=0;roundStarter=0;currentPlayer=roundStarter;switchScreen('game');loadRound();
+}
+function exitGame(){cleanupDrag();selected=null;switchScreen('start');hideDecision();$('#hudOps').textContent='0';$('#hudRound').textContent='准备中';$('#hudTurn').classList.add('hidden');hideCelebration()}
+function loadRound(){
+  round=rounds[ri];roundWinnerIndex=null;selected=null;pendingEqualizer=null;roundPointAwarded=false;soloState=newState();duelPlayers.forEach(p=>p.state=newState());currentPlayer=roundStarter;
+  roundSnapshot={totalOps,totalFails,roundStarter,currentPlayer,wins:duelPlayers.map(p=>p.wins),ops:duelPlayers.map(p=>p.ops)};
+  $('#roundEyebrow').textContent=round.eyebrow;$('#roundTitle').textContent=round.title;$('#roundDesc').textContent=round.desc;
+  $('#roundWinner').classList.add('hidden');$('#roundWinner').textContent='';hideDecision();$('.game-shell')?.classList.remove('archive-active');$('#roundArchive').classList.add('hidden');$('#roundArchive').classList.remove('archive-focus','completed');$('#roundArchive').innerHTML='';$('#nextRoundBtn').classList.add('hidden');
+  renderGame();setFeedback(playMode==='duel'?`${duelPlayers[currentPlayer].name} 先行动。双方牌面完全相同；没有随机加分，只比推理与操作效率。`:'开局空场。自己决定先试哪一张数牌。');updateHud();
+}
+function restartRound(){if(!roundSnapshot)return;totalOps=roundSnapshot.totalOps;totalFails=roundSnapshot.totalFails;roundStarter=roundSnapshot.roundStarter;currentPlayer=roundSnapshot.currentPlayer;duelPlayers.forEach((p,i)=>{p.wins=roundSnapshot.wins[i];p.ops=roundSnapshot.ops[i]});loadRound()}
+function nextRound(){ri++;if(ri<rounds.length){if(playMode==='duel')roundStarter=1-roundStarter;loadRound()}else startFinalArchive()}
+function updateHud(){$('#hudRound').textContent=`${ri+1}/${rounds.length}`;$('#hudOps').textContent=totalOps;updateScoreHud();$('#hudTurn').classList.toggle('hidden',playMode!=='duel');if(playMode==='duel')$('#hudTurn').textContent=roundWinnerIndex===null?`${duelPlayers[currentPlayer].name} 行动${pendingEqualizer?' · 追平机会':''}`:`${duelPlayers[roundWinnerIndex]?.name||'本局'} 胜`}
+function renderScoreboard(){let s=$('#scoreboard');s.classList.toggle('hidden',playMode!=='duel');if(playMode!=='duel')return;s.innerHTML=duelPlayers.map((p,i)=>`<div class="player-card ${i===currentPlayer&&roundWinnerIndex===null?'active':''}"><b>${esc(p.name)}</b><span>胜局 ${p.wins} · 总尝试 ${p.ops}</span><span class="intel-badge">放对 ${p.state?.successCount||0} · 试错 ${p.state?.placeFails||0}</span></div>`).join('')}
+function setFeedback(text,type=''){let f=$('#feedback');f.className='feedbackbar'+(type?' '+type:'');f.querySelector('span').textContent=text}
+
+function buildBoard(owner,state,duel=false){
+  let active=isActive(owner),placed={a:[],both:[],b:[],outside:[]};state.cards.forEach(c=>{if(c.placed)placed[c.placed].push(c)});
+  let zone=z=>placed[z].map(c=>cardHTML(c,false,owner)).join(''),candidates=state.cards.filter(c=>!c.placed).map(c=>cardHTML(c,true,owner)).join('');
+  let soloUnlocked=state.successCount>=3,duelUnlocked=state.successCount>=2;
+  let boardCore=`<div class="board ${duel?'':'single-board'}"><div class="set-stage"><div class="set-outline a"></div><div class="set-outline b"></div><div class="set-title a">A · ${state.foundA?round.aRule:'？'}</div><div class="set-title b">B · ${state.foundB?round.bRule:'？'}</div><div class="set-zones"><div class="set-zone aonly drop-target" data-owner="${owner}" data-zone="a" data-label="只属于 A">${zone('a')}</div><div class="set-zone both drop-target" data-owner="${owner}" data-zone="both" data-label="同时属于 A 和 B">${zone('both')}</div><div class="set-zone bonly drop-target" data-owner="${owner}" data-zone="b" data-label="只属于 B">${zone('b')}</div></div><div class="outside-zone drop-target" data-owner="${owner}" data-zone="outside" data-label="两个类型都不属于">${zone('outside')}</div></div></div>`;
+  let chaseLocked=duel&&pendingEqualizer&&pendingEqualizer.chaser===owner;let tray=`<div class="tray-wrap ${chaseLocked?'chase-locked':''}"><div class="tray-head"><b>候选数字</b><span>${chaseLocked?'追平阶段只允许破解，不再放牌。':'拖到上面的圆角框区域；也可以先点卡片，再点目标位置。'}</span></div><div class="candidate-tray" data-owner="${owner}">${candidates}</div></div>`;
+  if(duel){
+    let chase=pendingEqualizer&&pendingEqualizer.chaser===owner;
+    let who=`<div class="player-board-head"><strong>${esc(ownerName(owner))}</strong><span class="${active?'turn-badge':''}">${active?(chase?'追平破解':'现在行动'):'可观察对方线索'}</span></div>`;
+    let note=chase?'只允许一次追平破解。':`成功放对 1 张才交棒；放错继续由本队尝试。放对 2 张后，下次轮到本队时可破解。`;
+    let ruleControls=`<div class="rule-row"><div class="rule-status"><span class="rule-chip a">A：？</span><span class="rule-chip b">B：？</span><span class="duel-rule-note">${note}</span></div><div class="guess-actions"><button class="primary duel-crack-btn" data-owner="${owner}" ${!duelUnlocked||!active?'disabled':''}>⚑ ${chase?'追平破解':'发起破解'}</button></div></div>`;
+    return `<div class="board-panel ${active?'active-turn':''}" data-owner="${owner}">${who}${boardCore}${ruleControls}${tray}</div>`;
+  }
+  let actions=`${!state.foundA?`<button class="ghost guess-btn" data-owner="${owner}" data-which="a" ${!soloUnlocked?'disabled':''}>破解 A</button>`:''}${!state.foundB?`<button class="ghost guess-btn" data-owner="${owner}" data-which="b" ${!soloUnlocked?'disabled':''}>破解 B</button>`:''}${state.foundA&&state.foundB&&!state.intersectionSolved?`<button class="primary intersection-btn" data-owner="${owner}">破解重叠部分</button>`:''}`;
+  let sidebar=`<aside class="solo-decision-dock"><div class="eyebrow">DECODE · 单人破解台</div><h3>规则破解</h3><p>题面始终保留在左侧。选数、观察、破解都不需要缩放或滚出当前区域。</p><div class="solo-dock-status"><span class="rule-chip a ${state.foundA?'found':''}">A：${state.foundA?round.aRule:'？'}</span><span class="rule-chip b ${state.foundB?'found':''}">B：${state.foundB?round.bRule:'？'}</span><span class="unlock">${state.intersectionSolved?'已完整破解':soloUnlocked?'证据足够，可以破解':'成功放 3 张后解锁'}</span></div><div class="solo-dock-actions">${actions||'<button class="ghost" disabled>等待归档</button>'}</div><div id="soloDecisionContent" class="solo-choice-panel"><h4>观察区</h4><div class="hint">选择上方“破解 A / 破解 B / 重叠部分”，答案会直接出现在这里。</div><div id="soloDockMessage" class="solo-dock-message">数字区不会被遮挡。</div></div></aside>`;
+  return `<div class="solo-layout"><div class="board-panel solo-main" data-owner="${owner}">${boardCore}${tray}</div>${sidebar}</div>`;
+}
+function renderGame(){renderScoreboard();if(playMode==='solo'){$('#soloArea').classList.remove('hidden');$('#duelArea').classList.add('hidden');$('#soloArea').innerHTML=buildBoard(0,soloState,false)}else{$('#soloArea').classList.add('hidden');$('#duelArea').classList.remove('hidden');$('#duelArea').innerHTML=buildBoard(0,duelPlayers[0].state,true)+buildBoard(1,duelPlayers[1].state,true)}bindBoardEvents();updateHud()}
+function cardHTML(c,candidate,owner){let fails=candidate&&c.fails.length?`<span class="fails">排除：${c.fails.map(z=>shortZone(z)).join(' · ')}</span>`:'';return `<div class="num-card ${candidate?'candidate':''}" data-value="${c.v}" data-owner="${owner}">${fmt(c.v)}${fails}</div>`}
+function shortZone(z){return z==='a'?'A':z==='b'?'B':z==='both'?'A+B':'都不属于'}
+function renderGame(){renderScoreboard();if(playMode==='solo'){$('#soloArea').classList.remove('hidden');$('#duelArea').classList.add('hidden');$('#soloArea').innerHTML=buildBoard(0,soloState,false)}else{$('#soloArea').classList.add('hidden');$('#duelArea').classList.remove('hidden');$('#duelArea').innerHTML=buildBoard(0,duelPlayers[0].state,true)+buildBoard(1,duelPlayers[1].state,true)}bindBoardEvents();updateHud()}
+function bindBoardEvents(){$$('.candidate-tray .num-card.candidate').forEach(bindPointerDrag);$$('.drop-target').forEach(z=>z.addEventListener('click',()=>{if(!selected)return;let owner=Number(z.dataset.owner);if(selected.owner!==owner)return;attemptPlace(owner,selected.value,z.dataset.zone)}));$$('.guess-btn').forEach(b=>b.addEventListener('click',()=>openGuess(Number(b.dataset.owner),b.dataset.which)));$$('.intersection-btn').forEach(b=>b.addEventListener('click',()=>openIntersection(Number(b.dataset.owner))));$$('.duel-crack-btn').forEach(b=>b.addEventListener('click',()=>openDuelCrack(Number(b.dataset.owner))))}
+function findCard(owner,v){return stateFor(owner).cards.find(c=>c.v===v&&!c.placed)}
+function selectCard(el){let owner=Number(el.dataset.owner);if(!isActive(owner)){setFeedback('现在是对方行动；可以观察对方答题区，但不能替对方操作。','bad');return}selected={owner,value:el.dataset.value};$$('.num-card.candidate').forEach(c=>c.classList.toggle('selected',Number(c.dataset.owner)===owner&&c.dataset.value===selected.value));$$(`.drop-target[data-owner="${owner}"]`).forEach(z=>z.classList.add('armed'));setFeedback(`已选中 ${plain(selected.value)}。选择它应该出现的位置。`)}
+function bindPointerDrag(card){card.addEventListener('click',()=>{if(pointerDrag&&pointerDrag.moved)return;selectCard(card)});card.addEventListener('pointerdown',e=>{let owner=Number(card.dataset.owner);if(!isActive(owner))return;if(e.pointerType==='mouse'&&e.button!==0)return;pointerDrag={card,owner,id:e.pointerId,startX:e.clientX,startY:e.clientY,moved:false,ghost:null};card.setPointerCapture?.(e.pointerId)});card.addEventListener('pointermove',e=>{if(!pointerDrag||pointerDrag.card!==card||pointerDrag.id!==e.pointerId)return;let dx=e.clientX-pointerDrag.startX,dy=e.clientY-pointerDrag.startY;if(!pointerDrag.moved&&Math.hypot(dx,dy)>7){pointerDrag.moved=true;pointerDrag.ghost=card.cloneNode(true);pointerDrag.ghost.classList.add('drag-ghost');pointerDrag.ghost.classList.remove('selected');pointerDrag.ghost.querySelector('.fails')?.remove();document.body.appendChild(pointerDrag.ghost);document.body.classList.add('is-dragging')}if(pointerDrag.moved){e.preventDefault();pointerDrag.ghost.style.left=e.clientX+'px';pointerDrag.ghost.style.top=e.clientY+'px';highlightAt(pointerDrag.owner,e.clientX,e.clientY)}});card.addEventListener('pointerup',e=>{if(!pointerDrag||pointerDrag.card!==card)return;let wasMoved=pointerDrag.moved,owner=pointerDrag.owner,value=card.dataset.value;if(wasMoved){let target=dragTargetFor(owner,e.clientX,e.clientY);cleanupDrag();if(target)attemptPlace(owner,value,target.dataset.zone);else selectCard(card)}else cleanupDrag()});card.addEventListener('pointercancel',cleanupDrag)}
+function dragTargetFor(owner,x,y){let el=document.elementFromPoint(x,y),z=el?.closest('.drop-target');return z&&Number(z.dataset.owner)===owner?z:null}
+function highlightAt(owner,x,y){$$('.drop-target').forEach(z=>z.classList.remove('hover'));let z=dragTargetFor(owner,x,y);if(z)z.classList.add('hover')}
+function cleanupDrag(){if(pointerDrag?.ghost)pointerDrag.ghost.remove();pointerDrag=null;document.body.classList.remove('is-dragging');$$('.drop-target').forEach(z=>z.classList.remove('hover','armed'))}
+function finishDuelAction(owner){stateFor(owner).turns++;selected=null;switchTurn()}
+function attemptPlace(owner,v,zone){
+  if(!isActive(owner))return;
+  if(playMode==='duel'&&pendingEqualizer&&pendingEqualizer.chaser===owner){setFeedback('这是追平破解机会，只能提交规则，不能再放牌。','bad');return}
+  let st=stateFor(owner),card=findCard(owner,v);if(!card)return;
+  if(card.fails.includes(zone)){setFeedback('这个位置已经试过，不重复计操作。','bad');return}
+  let correct=zoneFor(round,v);st.localOps++;totalOps++;if(playMode==='duel')duelPlayers[owner].ops++;selected=null;
+  if(zone===correct){
+    card.placed=zone;card.fails=[];st.successCount++;if(!st.occupied.includes(zone))st.occupied.push(zone);
+    setFeedback(`${ownerName(owner)}：${plain(v)} 放置成功，成功交棒给对方。`,'good');
+    if(playMode==='duel')finishDuelAction(owner);else renderGame();
+  }else{
+    card.fails.push(zone);st.placeFails++;totalFails++;setFeedback(`${ownerName(owner)}：${plain(v)} 不在“${ZONE_LABEL[zone]}”。本回合不换人，继续尝试直到放对 1 张。`,'bad');
+    renderGame();
+  }
+}
+function switchTurn(){if(roundWinnerIndex!==null)return;currentPlayer=1-currentPlayer;selected=null;renderGame()}
+
+function duelReady(owner){let st=stateFor(owner);return st.successCount>=2}
+function openDuelCrack(owner){
+  if(playMode!=='duel'||!isActive(owner))return;
+  if(!duelReady(owner)){setFeedback('还需要更多有效证据：至少放对 2 张。','bad');return}
+  let chasing=pendingEqualizer&&pendingEqualizer.chaser===owner;
+  $('#modalKicker').textContent=chasing?'EQUALIZER':'SUCCESS-PASS CRACK';
+  $('#modalTitle').textContent=`${ownerName(owner)}：${chasing?'追平破解':'发起破解'}`;
+  $('#modalText').textContent=chasing?'对方已经破解成功。你只有这一次直接破解机会；答对后比较试错次数。':'破解会结束本队当前回合。三项一次提交；答错换人，答对后若对方也具备破解资格，对方获得一次直接追平破解。';
+  let opts=RULE_NAMES.map(x=>`<option value="${x}">${x}</option>`).join(''),inter=round.interOptions.map(x=>`<option value="${esc(x)}">${esc(x)}</option>`).join('');
+  $('#modalChoices').innerHTML=`<div class="crack-grid"><label class="crack-field"><span>A 是哪一种类型？</span><select id="crackA"><option value="">请选择</option>${opts}</select></label><label class="crack-field"><span>B 是哪一种类型？</span><select id="crackB"><option value="">请选择</option>${opts}</select></label><label class="crack-field"><span>重叠部分是什么？</span><select id="crackI"><option value="">请选择</option>${inter}</select></label></div><div class="crack-cost">公平机制：放错不换人；放对一张才交棒。追平阶段只允许破解，不允许再拿新线索。</div><button id="submitDuelCrack" class="primary" style="width:100%;margin-top:12px">⚑ 提交破解</button>`;
+  $('#submitDuelCrack').onclick=()=>resolveDuelCrack(owner);showDecision();
+}
+function resolveDuelCrack(owner){
+  let a=$('#crackA').value,b=$('#crackB').value,i=$('#crackI').value;if(!a||!b||!i){$('#modalText').textContent='三项都要选择后才能提交。';return}
+  let st=stateFor(owner),ok=a===round.aRule&&b===round.bRule&&i===round.intersection;hideDecision();st.turns++;
+  if(!ok){
+    st.crackFails++;
+    if(pendingEqualizer&&owner===pendingEqualizer.chaser){let leader=pendingEqualizer.leader;pendingEqualizer=null;setFeedback(`${ownerName(owner)} 追平破解未成功，${ownerName(leader)} 赢得本局。`,'bad');winDuelRound(leader);return}
+    setFeedback(`${ownerName(owner)} 的破解至少有一项不匹配，破解回合结束，换对方。`,'bad');switchTurn();return;
+  }
+  if(pendingEqualizer&&owner===pendingEqualizer.chaser){resolveEqualizerSuccess(owner);return}
+  let opponent=1-owner;
+  if(duelReady(opponent)){
+    pendingEqualizer={leader:owner,chaser:opponent,crackOnly:true};currentPlayer=opponent;
+    setFeedback(`${ownerName(owner)} 已破解成功！${ownerName(opponent)} 也已有足够证据，获得一次“追平破解”机会。`,'good');renderGame();return;
+  }
+  winDuelRound(owner);
+}
+function resolveEqualizerSuccess(owner){let leader=pendingEqualizer.leader,a=duelPlayers[leader].state,b=duelPlayers[owner].state;pendingEqualizer=null;let af=a.placeFails+a.crackFails,bf=b.placeFails+b.crackFails;if(bf<af)winDuelRound(owner);else if(af<bf)winDuelRound(leader);else drawDuelRound()}
+function drawDuelRound(){roundWinnerIndex=-1;duelPlayers.forEach(p=>{p.state.foundA=true;p.state.foundB=true;p.state.intersectionSolved=true});$('#roundWinner').classList.remove('hidden');$('#roundWinner').textContent=`双方在同等有效线索下完成破解，且试错次数相同：本局平局。`;setFeedback('本局平局。进入归档。','good');renderGame();showCelebration('draw','平局');setTimeout(showRoundArchive,1500)}
+
+function openGuess(owner,which){
+  if(playMode!=='solo'||!isActive(owner))return;
+  let answer=which==='a'?round.aRule:round.bRule,box=$('#soloDecisionContent');if(!box)return;
+  box.innerHTML=`<h4>破解 ${which.toUpperCase()}</h4><div class="hint">选择一个能解释左侧所有成功与失败记录的规则。</div><div class="solo-choice-grid"></div><div id="soloDockMessage" class="solo-dock-message">题面保持可见，可以边看边选。</div>`;
+  let grid=box.querySelector('.solo-choice-grid');RULE_NAMES.forEach(name=>{let b=document.createElement('button');b.textContent=name;b.onclick=()=>resolveGuess(owner,which,name,answer);grid.appendChild(b)});
+}
+function resolveGuess(owner,which,name,answer){
+  let st=stateFor(owner),ok=name===answer;
+  if(ok){which==='a'?st.foundA=true:st.foundB=true;setFeedback(`破解成功：${which.toUpperCase()} = ${answer}。`,'good');renderGame()}
+  else{abMistakes++;let m=$('#soloDockMessage');if(m)m.textContent=`“${name}”还不能解释全部数字。A/B 判断错误累计 ${abMistakes} 次。`;setFeedback(abMistakes===1?'第一次判断错误：本局积分减半。':'第二次判断错误：本局 R积分变为 0。','bad')}
+}
+function openIntersection(owner){
+  if(playMode!=='solo'||!isActive(owner))return;let box=$('#soloDecisionContent');if(!box)return;
+  box.innerHTML=`<h4>破解重叠部分</h4><div class="hint">A = ${round.aRule}，B = ${round.bRule}。重叠部分必须同时满足两种条件。</div><div class="solo-choice-grid"></div><div id="soloDockMessage" class="solo-dock-message">同时满足 A 与 B。</div>`;
+  let grid=box.querySelector('.solo-choice-grid');round.interOptions.forEach(o=>{let b=document.createElement('button');b.textContent=o;b.onclick=()=>resolveIntersection(owner,o);grid.appendChild(b)});
+}
+function resolveIntersection(owner,choice){if(choice===round.intersection){let st=stateFor(owner);st.intersectionSolved=true;setFeedback(`完整破解：重叠部分是 ${round.intersection}。`,'good');renderGame();showCelebration('solo','单人挑战');setTimeout(showRoundArchive,1500)}else{let m=$('#soloDockMessage');if(m)m.textContent='再想一次：必须同时满足 A 和 B，不是只满足其中一个。';setFeedback('重叠部分判断还不对。','bad')}}
+
+function winDuelRound(owner){roundWinnerIndex=owner;pendingEqualizer=null;duelPlayers[owner].wins++;duelPlayers.forEach(p=>{p.state.foundA=true;p.state.foundB=true;p.state.intersectionSolved=true});$('#roundWinner').classList.remove('hidden');$('#roundWinner').textContent=`🏁 ${duelPlayers[owner].name} 本局获胜：A = ${round.aRule}，B = ${round.bRule}，重叠部分 = ${round.intersection}。`;setFeedback(`${duelPlayers[owner].name} 完成公平破解，本局获胜。`,'good');renderGame();showCelebration('duel',duelPlayers[owner].name,owner);setTimeout(showRoundArchive,1700)}
+
+function showRoundArchive(){hideDecision();$('#nextRoundBtn').classList.add('hidden');let box=$('#roundArchive');box.classList.remove('hidden','completed');box.classList.add('archive-focus');$('.game-shell')?.classList.add('archive-active');if(round.archive==='outside')renderOutsideArchive(box);else if(round.archive==='tags')renderTagArchive(box,round.archiveValue);else renderQuickArchive(box,round.archiveItems);setFeedback('本局还未结束：请完成下面的归档练习。','good');setTimeout(()=>box.scrollIntoView({behavior:'smooth',block:'center'}),80)}
+function completeRoundArchive(msg){let box=$('#roundArchive');box.classList.add('completed');box.classList.remove('archive-focus');let banner=box.querySelector('.archive-required-banner');let gain=0;if(!roundPointAwarded){gain=awardRPoints(2,'归档完成');roundPointAwarded=true}if(banner)banner.innerHTML='归档完成 · 可以进入下一局'+(gain?` · +${gain} R积分`:'');setFeedback(msg+' 本局完成。'+(gain?` +${gain} R积分。`:''),'good');$('#nextRoundBtn').classList.remove('hidden')}
+function renderOutsideArchive(box){let correct=round.archiveAnswer,pool=[...round.archiveChoices];box.innerHTML=`<div class="archive-required-banner">本局还未结束 · 完成这题才能进入下一局</div><div class="eyebrow">ROUND ARCHIVE · OUTSIDE</div><h3>哪个数两个类型都不属于？</h3><p>换一组没有在本局出现过的数：A = <strong>${round.aRule}</strong>，B = <strong>${round.bRule}</strong>。</p><div class="archive-outside-grid" id="outsideChoices"></div><div class="archive-feedback" id="roundArchiveFeedback"></div>`;pool.forEach(v=>{let b=document.createElement('button');b.innerHTML=fmt(v);b.onclick=()=>{if(v===correct){$('#roundArchiveFeedback').textContent=`✓ ${plain(v)} 两种类型都不属于。`;$$('#outsideChoices button').forEach(x=>x.disabled=true);completeRoundArchive('判断完成')}else $('#roundArchiveFeedback').textContent='这个数至少满足其中一种类型，再找。'};$('#outsideChoices').appendChild(b)})}
+function labelsFor(v){return RULE_NAMES.filter(r=>satisfies(r,v))}
+function setEq(a,b){return a.size===b.size&&[...a].every(x=>b.has(x))}
+function renderTagArchive(box,v){let target=new Set(labelsFor(v));box.innerHTML=`<div class="archive-required-banner">本局还未结束 · 完成这题才能进入下一局</div><div class="eyebrow">ROUND ARCHIVE · MULTI TAG</div><h3>一张新牌，多种身份</h3><p><strong>${plain(v)}</strong> 拥有哪些标签？可以多选。</p><div class="tag-grid" id="roundTags"></div><div style="margin-top:12px"><button id="roundTagSubmit" class="primary">提交标签</button></div><div class="archive-feedback" id="roundArchiveFeedback"></div>`;RULE_NAMES.forEach(r=>{let b=document.createElement('button');b.className='tag-btn';b.textContent=r;b.onclick=()=>b.classList.toggle('on');$('#roundTags').appendChild(b)});$('#roundTagSubmit').onclick=()=>{let got=new Set($$('#roundTags .on').map(b=>b.textContent));if(setEq(got,target)){$('#roundArchiveFeedback').textContent=`✓ ${plain(v)}：${[...target].join('、')}。`;$$('#roundTags button').forEach(x=>x.disabled=true);$('#roundTagSubmit').disabled=true;completeRoundArchive('多标签扫描完成')}else $('#roundArchiveFeedback').textContent='还不完整。再检查它是整数还是分数、正负以及边界身份。'}}
+function renderQuickArchive(box,items){box.innerHTML=`<div class="archive-required-banner">本局还未结束 · 完成这题才能进入下一局</div><div class="eyebrow">ROUND ARCHIVE · QUICK SORT</div><h3>三张全新数字快速归档</h3><p>这些数字都没有在本局题面出现。</p><div id="quickCards" class="archive-deck"></div><div id="quickChoices" class="answer-options"></div><div id="roundArchiveFeedback" class="archive-feedback"></div>`;let qi=0,map={posInt:'正整数',zero:'0',negInt:'负整数',posFrac:'正分数',negFrac:'负分数'};function render(){if(qi>=items.length){completeRoundArchive('快速归档完成');return}let [v,ans]=items[qi];$('#quickCards').innerHTML=`<div class="num-card">${fmt(v)}</div>`;$('#quickChoices').innerHTML='';Object.entries(map).forEach(([k,label])=>{let b=document.createElement('button');b.textContent=label;b.onclick=()=>{if(k===ans){$('#roundArchiveFeedback').textContent='✓ 正确';qi++;setTimeout(render,220)}else $('#roundArchiveFeedback').textContent='再看它是整数还是分数，以及正负。'};$('#quickChoices').appendChild(b)})}render()}
+function openInfo(){let p=$('#howPanel');p.classList.toggle('hidden');$('#howBtn').textContent=p.classList.contains('hidden')?'怎么玩？':'收起说明'}
+
+/* ===== final archive ===== */
+let archiveSelected=null,archivePlaced=0,scanIndex=0,scanChosen=new Set(),finalMission=1,archiveCards=[],scanCases=[];
+function makeFinalArchiveData(){let used=new Set(rounds.flatMap(r=>r.cards.concat(r.archiveChoices||[],r.archiveValue?[r.archiveValue]:[],(r.archiveItems||[]).map(x=>x[0]))));let pool=shuffle(ALL_VALUES.filter(v=>!used.has(v)));let types=['negInt','zero','posFrac','negFrac','posInt'];archiveCards=[];types.forEach(k=>{let v=pool.find(x=>bucketOf(x)===k&&!archiveCards.some(y=>y[0]===x));if(v)archiveCards.push([v,k])});let extra=pool.find(x=>bucketOf(x)==='posFrac'&&!archiveCards.some(y=>y[0]===x));if(extra)archiveCards.push([extra,'posFrac']);scanCases=sample(pool.filter(v=>!archiveCards.some(x=>x[0]===v)&&val(v)!==0),3)}
+function makeArchiveCard(v,bucket){let d=document.createElement('div');d.className='num-card candidate';d.innerHTML=fmt(v);d.dataset.value=v;d.dataset.bucket=bucket;bindArchivePointer(d);d.addEventListener('click',()=>{archiveSelected=d;$$('#archiveDeck .num-card').forEach(x=>x.classList.remove('selected'));d.classList.add('selected');$$('.bucket').forEach(x=>x.classList.add('armed'))});return d}
+function startFinalArchive(){makeFinalArchiveData();switchScreen('archive');$('#hudRound').textContent='归档';$('#hudTurn').classList.add('hidden');$('#finishPanel').classList.add('hidden');$$('.mission-tab').forEach(t=>t.classList.remove('done'));finalMission=1;initMission1();showMission(1)}
+function showMission(n){finalMission=n;[1,2,3].forEach(i=>{$('#mission'+i).classList.toggle('hidden',i!==n);$('#tab'+i).classList.toggle('active',i===n)})}
+function initMission1(){archiveSelected=null;archivePlaced=0;$('#archiveDeck').innerHTML='';$$('.bucket-cards').forEach(x=>x.innerHTML='');$('#archiveFeedback').textContent='把每张卡送到正式分类树。';archiveCards.forEach(([v,b])=>$('#archiveDeck').appendChild(makeArchiveCard(v,b)))}
+function bindArchivePointer(card){card.addEventListener('pointerdown',e=>{if(e.pointerType==='mouse'&&e.button!==0)return;pointerDrag={card,owner:-1,id:e.pointerId,startX:e.clientX,startY:e.clientY,moved:false,ghost:null};card.setPointerCapture?.(e.pointerId)});card.addEventListener('pointermove',e=>{if(!pointerDrag||pointerDrag.card!==card)return;let dx=e.clientX-pointerDrag.startX,dy=e.clientY-pointerDrag.startY;if(!pointerDrag.moved&&Math.hypot(dx,dy)>7){pointerDrag.moved=true;pointerDrag.ghost=card.cloneNode(true);pointerDrag.ghost.classList.add('drag-ghost');document.body.appendChild(pointerDrag.ghost)}if(pointerDrag.moved){e.preventDefault();pointerDrag.ghost.style.left=e.clientX+'px';pointerDrag.ghost.style.top=e.clientY+'px';$$('.bucket').forEach(b=>b.classList.remove('hover'));document.elementFromPoint(e.clientX,e.clientY)?.closest('.bucket')?.classList.add('hover')}});card.addEventListener('pointerup',e=>{if(!pointerDrag||pointerDrag.card!==card)return;let moved=pointerDrag.moved,target=document.elementFromPoint(e.clientX,e.clientY)?.closest('.bucket');cleanupDrag();if(moved&&target)attemptArchiveDrop(card,target)});card.addEventListener('pointercancel',cleanupDrag)}
+function attemptArchiveDrop(card,b){if(card.dataset.bucket===b.dataset.bucket){let c=card.cloneNode(true);c.classList.remove('candidate','selected');c.style.touchAction='auto';b.querySelector('.bucket-cards').appendChild(c);card.remove();archiveSelected=null;archivePlaced++;$('#archiveFeedback').textContent='✓ 归档正确';$$('.bucket').forEach(x=>x.classList.remove('armed','hover'));if(archivePlaced===archiveCards.length){$('#tab1').classList.add('done');setTimeout(()=>{initMission2();showMission(2)},320)}}else{$('#archiveFeedback').textContent='这个位置不对。先看它是整数还是分数，再看正负。';card.classList.remove('selected');archiveSelected=null;$$('.bucket').forEach(x=>x.classList.remove('armed','hover'))}}
+$$('.bucket').forEach(b=>b.addEventListener('click',()=>{if(archiveSelected)attemptArchiveDrop(archiveSelected,b)}));
+function initMission2(){scanIndex=0;renderScanCase()}
+function renderScanCase(){let v=scanCases[scanIndex];scanChosen=new Set();$('#scanPrompt').innerHTML=fmt(v);$('#scanTags').innerHTML='';$('#scanFeedback').textContent=`第 ${scanIndex+1} / ${scanCases.length} 张`;RULE_NAMES.forEach(r=>{let b=document.createElement('button');b.className='tag-btn';b.textContent=r;b.onclick=()=>{b.classList.toggle('on');b.classList.contains('on')?scanChosen.add(r):scanChosen.delete(r)};$('#scanTags').appendChild(b)})}
+$('#scanSubmit').addEventListener('click',()=>{let v=scanCases[scanIndex],target=new Set(labelsFor(v));if(setEq(scanChosen,target)){$('#scanFeedback').textContent=`✓ ${plain(v)}：${[...target].join('、')}`;scanIndex++;if(scanIndex<scanCases.length)setTimeout(renderScanCase,320);else{$('#tab2').classList.add('done');setTimeout(()=>{initMission3();showMission(3)},350)}}else $('#scanFeedback').textContent='还不完整或多选了一个。'});
+function initMission3(){let pool=freshValues(rounds.flatMap(r=>r.cards).concat(archiveCards.map(x=>x[0]),scanCases));let good1=pool.find(v=>bucketOf(v)==='negFrac'),good2=pool.find(v=>bucketOf(v)==='negInt'),bad=pool.find(v=>bucketOf(v)==='posInt'),zero='0';let items=[{text:`${plain(zero)} → 整数、非负数、非正数`,wrong:false},{text:`${plain(good1)} → 分数、负数、非正数`,wrong:false},{text:`${plain(bad)} → 分数、正数、非负数`,wrong:true},{text:`${plain(good2)} → 整数、负数、非正数`,wrong:false}];$('#errorList').innerHTML='';$('#errorFeedback').textContent='';items.forEach(it=>{let b=document.createElement('button');b.className='error-item';b.textContent=it.text;b.onclick=()=>{if(it.wrong){$('#errorFeedback').textContent='✓ 找到了：这张正整数档案被错归成了分数。';$$('#errorList button').forEach(x=>x.disabled=true);$('#tab3').classList.add('done');setTimeout(finishGame,330)}else $('#errorFeedback').textContent='这份档案是正确的，再找。'};$('#errorList').appendChild(b)})}
+function finishGame(){
+ $('#finishPanel').classList.remove('hidden');
+ if(playMode==='solo'&&!window.__hqScoreSent){window.__hqScoreSent=true;const runId=sessionRunId,payload={type:'ratiobot-rings-v53',profileKey:sessionProfileKey,durationSeconds:(Date.now()-sessionStartedAt)/1000,game:'rings',mode:'solo',playMode:'solo',runId,challenge:(totalFails<=3&&totalOps<=16),roundCount:rounds.length,totalOps,totalFails,abMistakes,grade:(totalOps<=14?'S · 很会选线索':totalOps<=19?'A · 推理很稳':totalOps<=25?'B · 已掌握':'继续优化策略')};let direct=false;try{if(parent&&parent!==window&&typeof parent.ratiobotAwardRingsV53==='function'){const res=parent.ratiobotAwardRingsV53(payload);if(res){sessionRPoints=Number(res.gain||0);setTimeout(()=>window.postMessage(res,location.origin),0)}direct=true}}catch(e){}if(!direct){try{parent.postMessage(payload,location.origin)}catch(e){}}}
+ if(playMode==='duel'){let a=duelPlayers[0],b=duelPlayers[1],winner=a.wins===b.wins?null:(a.wins>b.wins?0:1);$('#finishTitle').textContent=winner===null?'PK 平局！':`${duelPlayers[winner].name} 获胜！`;$('#finalScores').innerHTML=`<span>${esc(a.name)}：<b>${a.wins}</b> 局 / ${a.ops} 次投放</span><span>${esc(b.name)}：<b>${b.wins}</b> 局 / ${b.ops} 次投放</span><span>总失败投放：<b>${totalFails}</b></span><span>机制：成功交棒 + 追平破解</span>`;showCelebration(winner===null?'draw':'duel',winner===null?'平局':duelPlayers[winner].name,winner)}else{let grade=totalOps<=14?'S · 很会选线索':totalOps<=19?'A · 推理很稳':totalOps<=25?'B · 已掌握':'继续优化策略';$('#finishTitle').textContent='挑战完成！';$('#finalScores').innerHTML=`<span>总操作：<b>${totalOps}</b></span><span>失败投放：<b>${totalFails}</b></span><span>A/B 判断错误：<b>${abMistakes}</b></span><span>策略评级：<b>${grade}</b></span><span>总用时：<b>${Math.round((Date.now()-sessionStartedAt)/1000)} s</b></span><span id="sessionRPointLine">本次获得：<b>结算中…</b></span>`;showCelebration('solo','单人挑战')}
+}
+
+const VICTORY_ART='assets/rings_9fc6deaafc7a.webp';
+function showCelebration(type,name,owner=0){
+  hideCelebration();
+  let o=document.createElement('div');o.id='celebrationOverlay';o.className='celebration-overlay';
+  let conf=Array.from({length:20},(_,i)=>`<i style="--i:${i};--x:${(i*37)%100}%;--d:${(i%7)*.08}s"></i>`).join('');
+  let mascotSrc=document.querySelector('.hero-mascot')?.src||'';
+  if(type==='solo'){
+    o.innerHTML=`<div class="confetti">${conf}</div><div class="celebrate-card"><div class="celeb-title">挑战成功！</div><div class="podium-award solo-award"><div class="podium-step step1">1</div><img class="victory-art winner-art" src="${VICTORY_ART}" alt="数牌小方举奖杯"></div><div class="celeb-sub">冠军领奖台 · 本次 +${sessionRPoints} R积分</div></div>`;
+  }else if(type==='duel'){
+    let loser=owner===0?1:0;
+    o.innerHTML=`<div class="confetti">${conf}</div><div class="celebrate-card"><div class="celeb-title">${esc(name)} 获胜！</div><div class="podium-award"><div class="podium-step step1">1</div><div class="podium-step step2">2</div><img class="victory-art winner-art" src="${VICTORY_ART}" alt="胜利队举奖杯"><div class="award-player runner"><span class="team-badge">${esc(duelPlayers[loser]?.name||'另一队')}</span><img src="${mascotSrc}" alt="另一队数牌小方"></div></div><div class="celeb-sub">${esc(duelPlayers[owner]?.name||'胜利队')}站上冠军领奖台</div></div>`;
+  }else{
+    o.innerHTML=`<div class="confetti">${conf}</div><div class="celebrate-card"><div class="celeb-title">势均力敌！</div><div style="display:flex;gap:18px;align-items:flex-end"><img style="width:145px" src="${mascotSrc}" alt="A队数牌小方"><img style="width:145px" src="${mascotSrc}" alt="B队数牌小方"></div><div class="celeb-sub">双方本局平局</div></div>`;
+  }
+  document.body.appendChild(o);requestAnimationFrame(()=>o.classList.add('show'));setTimeout(()=>o.classList.add('fade'),2400);setTimeout(()=>o.remove(),3000)
+}
+function hideCelebration(){document.querySelector('#celebrationOverlay')?.remove()}
+updateHud();
+
+window.addEventListener('message',e=>{if(e.data&&e.data.type==='ratiobot-score-result'){if(e.origin!==location.origin||(e.source!==parent&&e.source!==window)||e.data.runId!==sessionRunId)return;sessionRPoints=Number(e.data.gain||0);let line=document.querySelector('#sessionRPointLine');if(line)line.innerHTML=e.data.error?'本局未结算：身份已变化':`本次获得：<b>+${sessionRPoints} R积分</b>`;let box=document.querySelector('#finalScores');if(box){let old=box.querySelector('.hq-score-message');if(old)old.remove();let span=document.createElement('span');span.className='hq-score-message';span.textContent=e.data.message;box.appendChild(span)}updateScoreHud()}});
+</script>
+</body></html>
