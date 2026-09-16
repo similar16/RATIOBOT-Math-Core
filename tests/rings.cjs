@@ -4,9 +4,13 @@ w.alert=()=>{};w.scrollTo=()=>{};w.Element.prototype.animate=()=>({});w.ratiobot
 for(const s of w.document.scripts){if(!s.src&&s.textContent.includes('function startGame')){new vm.Script(s.textContent);w.eval(s.textContent+`;window.rtest={wrong:()=>resolveGuess(0,'a','测试错误规则',round.aRule),mistakes:()=>abMistakes,runId:()=>sessionRunId,finish:()=>{totalOps=20;totalFails=2;finishGame()}};`)}}
 for(let mistakes=0;mistakes<3;mistakes++){
  w.eval("startGame();");
+ w.eval("showCelebration('solo','单人挑战')");
+ assert.match(w.document.querySelector('.celeb-sub').textContent,/完成整局后统一结算/);
+ assert.ok(!w.document.querySelector('.celeb-sub').textContent.includes('+0'));
  for(let i=0;i<mistakes;i++)w.rtest.wrong();
  assert.equal(w.rtest.mistakes(),mistakes);
  w.rtest.finish();
+ assert.match(w.document.querySelector('.celeb-sub').textContent,/积分请查看下方结算结果/);
  const runId=w.rtest.runId(),gain=[8,4,0][mistakes];
  w.dispatchEvent(new w.MessageEvent('message',{origin:'https://test.invalid',source:w,data:{type:'ratiobot-score-result',runId,gain,message:'fixture settlement'}}));
  assert.equal(w.document.querySelector('#sessionRPointLine').textContent,`本次获得：+${gain} R积分`);

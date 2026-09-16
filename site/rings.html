@@ -608,7 +608,7 @@ function showCelebration(type,name,owner=0){
   let conf=Array.from({length:20},(_,i)=>`<i style="--i:${i};--x:${(i*37)%100}%;--d:${(i%7)*.08}s"></i>`).join('');
   let mascotSrc=document.querySelector('.hero-mascot')?.src||'';
   if(type==='solo'){
-    o.innerHTML=`<div class="confetti">${conf}</div><div class="celebrate-card"><div class="celeb-title">挑战成功！</div><div class="podium-award solo-award"><div class="podium-step step1">1</div><img class="victory-art winner-art" src="${VICTORY_ART}" alt="数牌小方举奖杯"></div><div class="celeb-sub">冠军领奖台 · 本次 +${sessionRPoints} R积分</div></div>`;
+    o.innerHTML=`<div class="confetti">${conf}</div><div class="celebrate-card"><div class="celeb-title">${window.__hqScoreSent?'挑战完成！':'规则破解成功！'}</div><div class="podium-award solo-award"><div class="podium-step step1">1</div><img class="victory-art winner-art" src="${VICTORY_ART}" alt="数牌小方举奖杯"></div><div class="celeb-sub">${window.__hqScoreSent?'整局已完成 · 积分请查看下方结算结果':'请继续归档 · 完成整局后统一结算积分'}</div></div>`;
   }else if(type==='duel'){
     let loser=owner===0?1:0;
     o.innerHTML=`<div class="confetti">${conf}</div><div class="celebrate-card"><div class="celeb-title">${esc(name)} 获胜！</div><div class="podium-award"><div class="podium-step step1">1</div><div class="podium-step step2">2</div><img class="victory-art winner-art" src="${VICTORY_ART}" alt="胜利队举奖杯"><div class="award-player runner"><span class="team-badge">${esc(duelPlayers[loser]?.name||'另一队')}</span><img src="${mascotSrc}" alt="另一队数牌小方"></div></div><div class="celeb-sub">${esc(duelPlayers[owner]?.name||'胜利队')}站上冠军领奖台</div></div>`;
