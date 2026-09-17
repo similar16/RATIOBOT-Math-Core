@@ -1,4 +1,6 @@
 -- Public projection of existing progress; raw snapshots remain self/teacher only.
+-- Registration uses service_role; schema USAGE is needed by the invoker trigger.
+grant usage on schema private to service_role;
 alter table public.profiles add column if not exists public_training jsonb not null default '{}'::jsonb;
 create or replace function private.peer_training_summary(c jsonb,b jsonb,e jsonb,g jsonb)
 returns jsonb language sql immutable set search_path = '' as $$
