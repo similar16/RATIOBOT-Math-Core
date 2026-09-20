@@ -13,3 +13,5 @@ A区为知识点库，包含法则实验室与知识点回顾两个分支。教�
 测试：npm run build && npm test && python tests/assets.py。
 数据库权限验证：db/test-review-progress.sql（回滚事务，不保留测试数据）。
 数据库安全检查没有新增RLS问题；已有Auth泄露密码保护关闭提示，不属于本次功能修改。参考 https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection 。
+
+填空框统一18rem并随窄屏缩小，关闭自动大写/自动纠错。中英按钮切换网页英文按键与设备中文输入辅助，不强制切换系统IME。英文按键默认小写，支持大小写切换、选择区替换和删除；数学符号含大于、小于。提交后通过查看正确答案逐空对照，查看不增加积分或补签连对次数。
