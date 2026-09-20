@@ -18,3 +18,6 @@ console.log('PASS review: all 47 cards, random 2–6 blanks, locked/future exclu
 const manifest=require('./review-source-manifest.json'),{createHash}=require('node:crypto');
 for(const expected of manifest){const card=E.bank.find(x=>x.id===expected.id);assert.equal(card.page,expected.page);assert.equal(createHash('sha256').update(card.parts.join('')).digest('hex'),expected.sha256,'Exact DOCX wording and punctuation: '+card.id);}
 console.log('PASS all 47 reconstructed prompts match DOCX source hashes and textbook pages');
+
+for(const [expected,answer] of [['零','0'],['0','零'],['不等于0','不等于零'],['零','０']]){const q={item:{parts:['',expected,'']},blanks:[1]};assert.equal(E.grade(q,[answer]).ok,true);assert.equal(E.grade(q,['00']).ok,false);}
+console.log('PASS zero aliases in both directions and phrases; wrong numeric answers remain rejected');

@@ -289,7 +289,7 @@ const rows=[
 ];
 const bank=rows.map(([lesson,title,text,page],i)=>({id:'ch2-'+(i+1),order:i+1,chapter:2,lesson,title,text,page,parts:text.split(/\{([^{}]+)\}/g)}));
 const day=(d=new Date())=>new Intl.DateTimeFormat('sv-SE',{timeZone:'Asia/Shanghai'}).format(d);
-const normalize=s=>String(s??'').replace(/ⁿ/g,'^n').normalize('NFKC').trim().replace(/\s/g,'').replace(/[−–]/g,'-').replace(/\*/g,'×').replace(/<=/g,'≤').replace(/>=/g,'≥').replace(/!=/g,'≠').replace(/ⁿ/g,'^n');
+const normalize=s=>String(s??'').replace(/ⁿ/g,'^n').normalize('NFKC').trim().replace(/\s/g,'').replace(/零/g,'0').replace(/[−–]/g,'-').replace(/\*/g,'×').replace(/<=/g,'≤').replace(/>=/g,'≥').replace(/!=/g,'≠').replace(/ⁿ/g,'^n');
 function eligible(progress,all=bank,today=day()){return all.filter(x=>x.order<=Number(progress?.through||0)&&progress?.dates?.[x.id]&&progress.dates[x.id]<=today);}
 function batch(progress,all=bank,rng=Math.random,today=day(),previous=''){
  const pool=eligible(progress,all,today);if(!pool.length)return [];
