@@ -579,12 +579,12 @@ footer{text-align:center;padding:30px;color:#8C7E82;font:900 10px ui-monospace;l
       <span><b>RATIOBOT</b><small>有理数运算核心训练</small></span>
     </button>
     <nav>
-      <button data-go="rules">A 法则实验室</button>
+      <button data-go="knowledge">A 知识点库</button>
       <button data-go="train">B 闯关训练</button>
       <button data-go="rings">C 数圈侦探</button>
       <button data-go="growth">我的核心</button>
       <button data-go="stats">训练记录</button>
-      <button data-go="review">知识点回顾</button><button data-go="classmates">同班挑战墙</button>
+      <button data-go="classmates">同班挑战墙</button>
     </nav>
     <div class="top-actions"><button id="playerBtn" data-go="account" class="player-pill" title="切换学生">未登录</button><button id="topLogoutBtn" class="icon-btn top-logout hidden" title="退出当前学生">退出</button><button id="soundBtn" class="icon-btn" title="声音">♪</button></div>
   </header>
@@ -598,7 +598,7 @@ footer{text-align:center;padding:30px;color:#8C7E82;font:900 10px ui-monospace;l
           <p>先理解规则，再进入 10 题极速闯关。连续答对让机器人充能；做错不会 Game Over，而是马上定位法则、再打一题。</p>
           <div class="hero-actions">
             <button class="primary big" data-go="train">开始挑战 <span>→</span></button>
-            <button class="ghost big" data-go="rules">先看法则</button>
+            <button class="ghost big" data-go="knowledge">进入知识点库</button>
           </div>
           <div class="mini-specs">
             <span>双游戏总部</span><span>7 个运算核心</span><span>数的分类推理</span><span>10 BASE × 9 LEVELS</span>
@@ -616,16 +616,16 @@ footer{text-align:center;padding:30px;color:#8C7E82;font:900 10px ui-monospace;l
         </div>
       </div>
       <div class="portal-grid v8">
-        <button class="portal-card" data-go="rules"><span class="portal-num">A</span><div><h3>法则实验室</h3><p>把符号、绝对值和运算顺序拆成固定动作。</p></div><span class="arrow">↗</span></button>
+        <button class="portal-card" data-go="knowledge"><span class="portal-num">A</span><div><h3>知识点库</h3><p>法则实验室理解方法，知识点回顾巩固定义与法则。</p></div><span class="arrow">↗</span></button>
         <button class="portal-card hot" data-go="train"><span class="portal-num">B</span><div><h3>核心挑战</h3><p>10 题一局，Combo、BOSS 与即时修复。</p></div><span class="arrow">↗</span></button>
         <button class="portal-card rings-hot" data-go="rings"><span class="portal-num">C</span><div><h3>数圈侦探</h3><p>用重叠类型、0 的边界和试错线索做分类推理。</p></div><span class="arrow">↗</span></button>
         <button class="portal-card" id="homeGrowthBtn" data-go="growth"><span class="portal-num">D</span><div><h3>我的核心</h3><p>BASE1–10，每个 BASE 9 级成长，配合 7 个能力核心与徽章柜。</p></div><span class="arrow">↗</span></button>
-        <button class="portal-card" data-go="review"><span class="portal-num">F</span><div><h3>知识点回顾</h3><p>按已学进度随机填空，巩固定义与法则；连续5题全对完成补签。</p></div><span class="arrow">↗</span></button>
         <button class="portal-card" id="homeStatsBtn" data-go="stats"><span class="portal-num">E</span><div><h3>训练记录</h3><p>两个游戏共享同一学生档案与 R积分。</p></div><span class="arrow">↗</span></button>
       </div>
     </section>
 
-    <section id="rules" class="page">
+    <section id="knowledge" class="page"><div class="page-heading"><div><div class="eyebrow">PART A · KNOWLEDGE</div><h2>知识点库</h2><p>先理解方法，再回顾知识。选择一个分支开始学习。</p></div></div><div class="knowledge-options"><button class="portal-card" data-go="rules"><span class="portal-num">A1</span><div><h3>法则实验室</h3><p>通过互动演示理解符号、绝对值和运算步骤。</p></div><span class="arrow">↗</span></button><button class="portal-card" data-go="review"><span class="portal-num">A2</span><div><h3>知识点回顾</h3><p>按老师开放的进度随机填空。每空1 R，连续5题全对可补签。</p></div><span class="arrow">↗</span></button></div></section>
+<section id="rules" class="page"><nav class="knowledge-branches" aria-label="知识点库分支"><button class="ghost" data-go="knowledge">← 知识点库</button><button class="ghost" data-go="rules">法则实验室</button><button class="ghost" data-go="review">知识点回顾</button></nav>
       <div class="page-heading"><div><div class="eyebrow">PART A</div><h2>机器人法则实验室</h2><p>每次只记一个判断动作：先判断，再运算。</p></div></div>
       <div class="lab-layout">
         <div id="ruleTabs" class="rule-tabs"></div>
@@ -732,7 +732,7 @@ footer{text-align:center;padding:30px;color:#8C7E82;font:900 10px ui-monospace;l
       </div>
     </section>
 
-<section id="review" class="page"><div class="page-heading"><div><div class="eyebrow">KNOWLEDGE REVIEW</div><h2>知识点回顾</h2><p>先巩固最近所学，再复习已学内容。每题随机2–6空，全部正确才合格。</p></div><button class="ghost" data-go="account">学生入口</button></div>
+<section id="review" class="page"><nav class="knowledge-branches" aria-label="知识点库分支"><button class="ghost" data-go="knowledge">← 知识点库</button><button class="ghost" data-go="rules">法则实验室</button><button class="ghost" data-go="review">知识点回顾</button></nav><div class="page-heading"><div><div class="eyebrow">KNOWLEDGE REVIEW</div><h2>知识点回顾</h2><p>先巩固最近所学，再复习已学内容。每题随机2–6空，全部正确才合格。</p></div><button class="ghost" data-go="account">学生入口</button></div>
 <div class="review-layout"><details class="review-directory" open><summary>第2章 · 知识点目录</summary><nav id="reviewNav" aria-label="知识点目录"></nav></details><div class="review-card"><div id="reviewMode" class="review-mode">按教学进度开放</div><h3 id="reviewTitle">准备回顾</h3><div id="reviewStatus" class="review-status" role="status"></div><div id="reviewPrompt" class="review-prompt"></div><div id="reviewSymbols" class="review-symbols" aria-label="数学符号"><button type="button">×</button><button type="button">÷</button><button type="button">≤</button><button type="button">≥</button><button type="button">≠</button><button type="button">|</button><button type="button">^</button><button type="button">(</button><button type="button">)</button><button type="button">/</button></div><div class="review-actions"><button id="reviewSubmit" class="primary" disabled>提交答案</button><button id="reviewNext" class="ghost" disabled>下一题</button><button id="reviewRecommended" class="ghost">推荐复习</button><button id="reviewRefresh" class="ghost">刷新进度</button></div><div id="reviewResult" class="review-result" role="status"></div><div id="reviewAnswer" class="review-answer"></div><button id="reviewSync" class="ghost small">同步状态</button></div></div></section>
     <section id="growth" class="page">
       <div class="page-heading"><div><div class="eyebrow">PLAYER GROWTH</div><h2>我的核心</h2><p>XP负责长期主题成长；BASE1–10 每个都有 9 个成长级别。打卡换装与 BASE 收藏并行，能力核心负责“真正会不会”。</p></div><button id="growthSwitchBtn" data-go="account" class="ghost small">切换学生</button></div>
@@ -836,7 +836,7 @@ footer{text-align:center;padding:30px;color:#8C7E82;font:900 10px ui-monospace;l
         <div id="teacherLoginSuccess" class="teacher-login-success">✓ 教师登录成功，已进入专属控制台。</div>
         <div class="teacher-console-bar"><b>当前班级</b><select id="teacherClassSelect"><option value="">尚未创建班级</option></select><button id="teacherRefreshBtn" class="ghost small">刷新数据</button></div>
         <div class="teacher-tabs"><button class="teacher-tab" data-teacher-tab="review">教学进度</button><button class="teacher-tab active" data-teacher-tab="publish">发布账号</button><button class="teacher-tab" data-teacher-tab="data">数据查看</button><button class="teacher-tab" data-teacher-tab="accounts">账号管理</button></div>
-        <div id="teacherPanelReview" class="teacher-panel"><div class="teacher-box review-teacher"><h3>知识点回顾 · 教学进度</h3><p>按第2章2.1–2.7的教学顺序开放。未开放内容不进入测试。每组5题，前2题优先最近3天内容，至少4题来自当前章；章内优先最新小节。当前题库为第2章。</p><label for="reviewThrough">本班已学到</label><select id="reviewThrough"></select><label for="reviewLearnedDate">本次新开放内容的学习日期</label><input type="date" id="reviewLearnedDate"><p>初次设置较长范围时，请在下方调整各知识点的实际学习日期，避免旧知识被当作最近所学。</p><button id="saveReviewProgress" class="primary" disabled>保存教学进度</button><div id="teacherReviewStatus" role="status"></div><details><summary>调整已开放知识点的学习日期</summary><div id="reviewDates"></div></details></div></div>
+        <div id="teacherPanelReview" class="teacher-panel"><div class="teacher-box review-teacher"><h3>开放知识点进度</h3><p>选好学到哪一节，点击开放即可。此前内容一并开放，未学内容不会进入知识点回顾测试。</p><div class="review-release"><label for="reviewLesson">本班学到哪一节</label><select id="reviewLesson"></select><button id="saveReviewProgress" class="primary" disabled>开放至所选进度</button></div><div id="teacherReviewStatus" role="status"></div><details id="reviewAdvanced"><summary>精细调整（可选）</summary><label for="reviewThrough">只开放到某个知识点</label><select id="reviewThrough"></select><label for="reviewLearnedDate">新开放内容的学习日期</label><input type="date" id="reviewLearnedDate"><p>默认按今天记录新开放内容；已有学习日期保留。补录过去进度时可修改日期。</p><details><summary>调整已开放知识点的学习日期</summary><div id="reviewDates"></div></details></details></div></div>
 <div id="teacherPanelPublish" class="teacher-panel active">
           <div class="teacher-grid">
             <div class="teacher-box"><h3>① 班级设置</h3><p>先创建班级用户名。这个用户名会和学号一起成为学生登录身份，例如 ZY2901 + 17。</p><div class="teacher-form-grid"><div><label>班级名称</label><input id="tcNewClassName" placeholder="七年级29班"></div><div><label>班级用户名</label><input id="tcNewClassCode" maxlength="12" placeholder="如 ZY2901"></div></div><div class="cloud-actions" style="margin-top:10px"><button id="tcCreateClassBtn" class="primary">创建班级</button></div><div id="tcClassMsg" class="cloud-msg"></div></div>
@@ -1476,7 +1476,7 @@ setTimeout(()=>{try{renderHonorGrowth();updateRingsProfileHint();}catch(e){}},50
       setTimeout(()=>{cloudMsg?.('#accountError',`请先云端登录学生账号，登录后会自动进入${id==='rules'?'法则实验室':id==='train'?'闯关训练':id==='classmates'?'同班挑战墙':'数圈侦探'}。`,'bad');$('#accountClassInput')?.focus();},0);
       window.scrollTo({top:0,behavior:'smooth'});return;
     }
-    $$('.page').forEach(x=>x.classList.toggle('active',x.id===id));$$('[data-go]').forEach(x=>x.classList.toggle('active',x.dataset.go===id));if(id==='growth')renderGrowth?.();if(id==='stats')renderStats?.();if(id==='account')renderAccount?.();if(id==='rings')ensureRingsLoaded?.();if(id==='classmates')loadStudentClassWall();if(id==='review')window.reviewUI?.open(opts.reviewMode);window.scrollTo({top:0,behavior:'smooth'});
+    $$('.page').forEach(x=>x.classList.toggle('active',x.id===id));$$('[data-go]').forEach(x=>x.classList.toggle('active',(x.dataset.go===id||(x.dataset.go==='knowledge'&&['rules','review'].includes(id)))));if(id==='growth')renderGrowth?.();if(id==='stats')renderStats?.();if(id==='account')renderAccount?.();if(id==='rings')ensureRingsLoaded?.();if(id==='classmates')loadStudentClassWall();if(id==='review')window.reviewUI?.open(opts.reviewMode);window.scrollTo({top:0,behavior:'smooth'});
   }
   $$('[data-go]').forEach(b=>b.addEventListener('click',()=>go(b.dataset.go)));
 
