@@ -1,11 +1,11 @@
 {
   "name": "ratiobot-math-core",
   "version": "1.0.0",
-  "description": "RATIOBOT \u4e03\u5e74\u7ea7\u6570\u5b66\u8bad\u7ec3\u4e0e\u6210\u957f\u7cfb\u7edf\uff08\u4e91\u7aef\u6559\u5ba4\u7248\uff09\u3002",
+  "description": "RATIOBOT 七年级数学训练与成长系统（云端教室版）。",
   "main": "index.js",
   "scripts": {
     "build": "node build.cjs",
-    "test": "node tests/regression.cjs && node tests/rings.cjs"
+    "test": "node tests/regression.cjs && node tests/rings.cjs && node tests/review.cjs"
   },
   "repository": {
     "type": "git",
