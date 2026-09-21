@@ -1,0 +1,49 @@
+/* RATIOBOT secret room and its quiet corner companion. */
+.daily-room{max-width:920px;margin:auto;color:var(--ink,#3E3540)}
+.daily-hero{background:#FFF0B8;border:3px solid var(--ink);border-radius:22px;padding:22px;margin-bottom:18px}
+.daily-hero h2{margin:6px 0;font-size:28px}.daily-hero p{line-height:1.7}
+.daily-toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:14px 0}
+.daily-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.daily-card{padding:20px;border:3px solid var(--ink);border-radius:20px;background:#FFFDF8;min-width:0}
+.daily-card h3{margin:0 0 14px}.daily-card p,.daily-pre{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.8}
+.daily-card label{display:block;font-weight:800;margin:14px 0 7px}
+.daily-card textarea{display:block;width:100%;resize:vertical;min-height:85px;border:2px solid var(--ink);border-radius:12px;background:#fff;color:var(--ink);padding:10px;font:inherit;box-sizing:border-box}
+.daily-card textarea.daily-body{min-height:150px}.daily-hint{padding:12px;background:#FFF0B8;border-radius:12px;margin:10px 0;white-space:pre-wrap}
+.daily-status{min-height:24px;line-height:1.6;margin:10px 0;overflow-wrap:anywhere}.daily-status[data-error="true"]{color:#9B342C}
+.daily-empty{border:3px dashed var(--ink);border-radius:20px;padding:32px;background:#FFFDF8;text-align:center}
+.daily-submission{padding:14px;border-bottom:2px solid #E8DECE}.daily-submission summary{cursor:pointer;font-weight:800}
+.daily-card button{margin-top:10px}.daily-note{font-size:12px;color:var(--muted);line-height:1.7}
+#ratioCompanion{position:fixed;right:max(12px,env(safe-area-inset-right));bottom:max(16px,env(safe-area-inset-bottom));width:132px;height:166px;z-index:80;pointer-events:none}
+#ratioCompanion[hidden]{display:none}#ratioCompanion button{pointer-events:auto;border:0;background:none;padding:0;width:100%;height:100%;box-shadow:none;color:var(--ink);cursor:pointer;transform:none}
+#ratioCompanion button:focus-visible{outline:3px solid var(--ink);border-radius:18px;outline-offset:3px}
+#ratioCompanion svg{width:128px;height:136px;overflow:visible;display:block}
+.companion-label{display:inline-block;background:#FFF5DF;border:2px solid var(--ink);border-radius:20px;padding:3px 10px;font-size:11px;font-weight:900;white-space:nowrap}
+.companion-actor{transform-origin:100px 150px}.robot-left{transform-origin:53px 91px}.robot-right{transform-origin:146px 96px}.robot-foot{transform-box:fill-box;transform-origin:center}
+.robot-extra{display:none}.robot-face-sleep,.robot-face-wink{display:none}
+[data-pose="wave"] .robot-left,[data-pose="cheer"] .robot-right{animation:robot-wave .7s ease-in-out infinite alternate}
+[data-pose="walk"] .robot-foot{animation:robot-step .5s ease-in-out infinite alternate}[data-pose="walk"] .robot-foot.right{animation-delay:-.5s}
+[data-pose="burger"] .robot-burger,[data-pose="idea"] .robot-bulb,[data-pose="cheer"] .robot-flag,[data-pose="sleep"] .robot-zzz,[data-pose="dance"] .robot-notes{display:block}
+[data-pose="burger"] .robot-left{transform:rotate(-28deg)}[data-pose="burger"] .robot-right{transform:rotate(28deg)}
+[data-pose="idea"] .robot-bulb{animation:robot-glow 1.5s ease-in-out infinite alternate}
+[data-pose="wink"] .robot-eye-right{display:none}[data-pose="wink"] .robot-face-wink{display:block}
+[data-pose="dance"] .companion-actor{animation:robot-dance 1s ease-in-out infinite alternate}
+[data-pose="spin"] .companion-actor{animation:robot-spin 2.4s ease-in-out infinite}
+[data-pose="jump"] .companion-actor{animation:robot-jump 1.4s ease-in-out infinite}
+[data-pose="sleep"] .robot-eyes{display:none}[data-pose="sleep"] .robot-face-sleep{display:block}[data-pose="sleep"] .companion-actor{animation:robot-breathe 3s ease-in-out infinite}
+.companion-door{opacity:0;transform-origin:150px 110px}.door-leaf{transform-origin:127px 110px}
+#ratioCompanion[data-transition] .companion-door{opacity:1}#ratioCompanion[data-transition] .door-leaf{animation:door-open 1s ease-in-out both}
+#ratioCompanion[data-transition="enter"] .companion-actor{animation:robot-enter 1s ease-out both}
+#ratioCompanion[data-transition="exit"] .companion-actor{animation:robot-exit 1s ease-in both}
+#ratioCompanion[data-transition="exit"] button{pointer-events:none}#ratioCompanion[data-transition] .companion-label{visibility:hidden}
+@keyframes robot-wave{from{transform:rotate(0)}to{transform:rotate(65deg)}}
+@keyframes robot-step{to{transform:translateY(-7px) rotate(-12deg)}}
+@keyframes robot-dance{from{transform:rotate(-9deg)}to{transform:rotate(9deg) translateY(-3px)}}
+@keyframes robot-spin{0%,100%{transform:scaleX(1)}50%{transform:scaleX(-1)}}
+@keyframes robot-jump{0%,70%,100%{transform:translateY(0)}35%{transform:translateY(-18px) rotate(-4deg)}}
+@keyframes robot-glow{to{opacity:.5;transform:translateY(-4px)}}
+@keyframes robot-breathe{50%{transform:translateY(3px) rotate(3deg)}}
+@keyframes door-open{0%,100%{transform:scaleX(1)}25%,75%{transform:scaleX(.12)}}
+@keyframes robot-enter{0%,15%{opacity:0;transform:translate(52px,-12px) scale(.25)}45%{opacity:1;transform:translate(28px,0) scale(.65) rotate(-6deg)}70%{transform:translate(12px,-5px) scale(.85) rotate(5deg)}100%{opacity:1;transform:none}}
+@keyframes robot-exit{0%{opacity:1;transform:none}40%{transform:translate(20px,-5px) scale(.8) rotate(-5deg)}80%,100%{opacity:0;transform:translate(52px,-12px) scale(.25)}}
+@media(max-width:650px){.daily-grid{grid-template-columns:1fr}#ratioCompanion{width:96px;height:132px;right:8px;bottom:10px}#ratioCompanion svg{width:96px;height:102px}.companion-label{font-size:10px;padding:2px 6px}body.companion-visible .page.active{padding-bottom:140px}}
+@media(prefers-reduced-motion:reduce){#ratioCompanion *{animation:none!important;transition:none!important}}

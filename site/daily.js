@@ -1,0 +1,90 @@
+(function(){
+'use strict';
+const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const today=()=>new Intl.DateTimeFormat('sv-SE',{timeZone:'Asia/Shanghai',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+const poses=['wave','walk','burger','idea','wink','dance','spin','jump','cheer','sleep'];
+const robot=`<svg viewBox="0 0 200 210" aria-hidden="true"><g stroke="#3E3540" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
+<g class="companion-door"><rect x="126" y="42" width="66" height="132" rx="9" fill="#3E3540"/><path class="door-leaf" d="M128 45H190V172H128Z" fill="#F5CF53"/><circle cx="175" cy="112" r="3" fill="#3E3540"/></g>
+<ellipse cx="100" cy="186" rx="60" ry="7" fill="#3E3540" opacity=".12" stroke="none"/>
+<g class="companion-actor"><path d="M81 155L75 174M118 155L126 174M103 48L101 29" stroke="#3B7772" stroke-width="13"/>
+<ellipse class="robot-foot left" cx="71" cy="176" rx="23" ry="13" fill="#28B7C5"/><ellipse class="robot-foot right" cx="128" cy="176" rx="23" ry="13" fill="#28B7C5"/>
+<g class="robot-left"><path d="M52 98L34 96"/><circle cx="31" cy="94" r="14" fill="#FFDE69"/></g><g class="robot-right"><path d="M145 102L158 107"/><circle cx="163" cy="109" r="14" fill="#FFDE69"/></g>
+<rect x="48" y="49" width="105" height="111" rx="28" fill="#FFDD64"/><path d="M61 76V127Q61 145 80 145" stroke="#F6CB4E" stroke-width="8" fill="none"/>
+<rect x="70" y="120" width="62" height="24" rx="8" fill="#FFF4D7" stroke="none"/>
+<circle cx="101" cy="23" r="17" fill="#FF756B"/><ellipse cx="95" cy="17" rx="6" ry="4" fill="#FFA098" stroke="none" transform="rotate(-35 95 17)"/>
+<g class="robot-eyes" fill="#3E3540" stroke="none"><circle cx="80" cy="87" r="6"/><circle class="robot-eye-right" cx="125" cy="87" r="6"/></g>
+<path class="robot-face-wink" d="M130 81L121 87L130 92" fill="none" stroke-width="5"/><path class="robot-face-sleep" d="M74 86Q80 95 87 86M119 86Q126 95 132 86" fill="none" stroke-width="5"/>
+<path d="M93 101Q101 114 111 100" fill="none" stroke-width="5"/><g fill="#FF8C86" stroke="none"><circle cx="67" cy="105" r="7"/><circle cx="137" cy="105" r="7"/></g>
+<g class="robot-extra robot-burger" stroke-width="4"><path d="M70 129Q100 94 132 129Z" fill="#F7BA61"/><path d="M70 135L82 139L96 134L113 141L132 135" stroke="#81AE69"/><path d="M71 143H132" stroke="#965747" stroke-width="9"/><path d="M72 148Q100 169 131 148Z" fill="#F7BA61"/><path d="M90 120L92 120M105 115L107 115M116 123L118 123" stroke="#FFF4D7"/></g>
+<g class="robot-extra robot-bulb" stroke-width="4"><path d="M148 36C126 14 164 -2 168 19Q170 28 158 36V43H148Z" fill="#FFDF70"/><path d="M148 44H158M153 35V25" stroke="#28B7C5"/><path d="M127 17L120 14M177 11L182 6M149 2V-5" stroke="#F4C44D"/></g>
+<g class="robot-extra robot-flag" stroke-width="5"><path d="M157 108L174 48"/><path d="M174 48L200 59L185 84L164 76Z" fill="#FF8278"/><path d="M178 60Q171 54 174 65L180 72L187 66Q192 57 184 61L180 64Z" fill="#FFF4D7" stroke="none"/></g>
+<g class="robot-extra robot-notes" stroke="#28B7C5" stroke-width="5"><path d="M18 66V45L29 48M169 76V57L180 60"/><circle cx="13" cy="68" r="5" fill="#28B7C5"/><circle cx="164" cy="78" r="5" fill="#28B7C5"/></g>
+<g class="robot-extra robot-zzz" fill="#3E3540" stroke="none" font-size="22" font-weight="900"><text x="153" y="65">z</text><text x="171" y="45">Z</text></g></g></g></svg>`;
+window.mountDailyChallenges=function(a){
+const $=s=>document.querySelector(s), root=$('#dailyContent'), teacher=$('#teacherDailyContent');
+let request=0,teacherRequest=0,teacherClass='',currentSet=null,transitionTimer,poseTimer,visible=false,poseIndex=0;
+const companion=document.createElement('div');companion.id='ratioCompanion';companion.hidden=true;
+companion.innerHTML=`<button type="button" aria-label="跟随机器人进入每日挑战">${robot}<span class="companion-label">发现秘密房间 ↗</span></button>`;document.body.append(companion);
+companion.querySelector('button').onclick=()=>a.go('daily');
+function status(el,msg,error=false){el.textContent=msg;el.dataset.error=String(error);}
+function identityKey(){const i=a.identity();return `${i.user?.id||''}:${i.classId||''}:${i.role||''}`;}
+function studentReady(){const i=a.identity();return !!(i.user&&i.classId&&i.role==='student'&&!i.mustChangePassword);}
+function mascot(show){
+ if(show===visible)return;visible=show;clearTimeout(transitionTimer);clearInterval(poseTimer);document.body.classList.toggle('companion-visible',show);
+ const reduced=window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+ if(show){companion.hidden=false;companion.inert=false;companion.dataset.pose='wave';companion.dataset.transition='enter';
+ transitionTimer=setTimeout(()=>{delete companion.dataset.transition;},reduced?0:1000);
+ if(!reduced)poseTimer=setInterval(()=>{companion.dataset.pose=poses[(++poseIndex)%poses.length];},6500);
+ }else{companion.inert=true;companion.dataset.transition='exit';transitionTimer=setTimeout(()=>{companion.hidden=true;delete companion.dataset.transition;},reduced?0:1000);}
+}
+function route(id){mascot(['home','growth','stats','classmates'].includes(id)&&a.identity().role!=='teacher');if(id==='daily')open();}
+function refresh(){const id=$('.page.active')?.id;mascot(['home','growth','stats','classmates'].includes(id)&&a.identity().role!=='teacher');}
+async function open(){
+ const seq=++request,key=identityKey();currentSet=null;root.replaceChildren();
+ if(!studentReady()){root.innerHTML='<div class="daily-empty">请先登录学生账号，再来发现今日两道挑战题。</div>';return;}
+ const i=a.identity(),day=today();$('#dailyDate').textContent=day+' · 每天两题';root.innerHTML='<div class="daily-empty">正在打开秘密房间…</div>';
+ try{const r=await a.client().from('daily_challenge_sets').select('*').eq('class_id',i.classId).eq('challenge_date',day).eq('published',true).maybeSingle();if(r.error)throw r.error;
+ if(seq!==request||key!==identityKey())return;
+ if(!r.data){root.innerHTML='<div class="daily-empty"><h3>今日房间还在准备中</h3><p>老师发布两道题后，会出现在这里。</p><button id="dailyReload" class="ghost">刷新看看</button></div>';$('#dailyReload').onclick=open;return;}
+ const result=await a.client().from('daily_challenge_answers').select('*').eq('set_id',r.data.id).eq('user_id',i.user.id);if(result.error)throw result.error;
+ if(seq!==request||key!==identityKey())return;currentSet=r.data;
+ root.innerHTML='<div class="daily-grid">'+r.data.questions.map((q,slot)=>{
+ const old=(result.data||[]).find(x=>x.slot===slot);return `<article class="daily-card" data-slot="${slot}"><h3>挑战 ${slot+1} · ${esc(q.title||'动动脑筋')}</h3><p>${esc(q.body)}</p><button class="ghost daily-hint-btn" ${q.hints?.filter(Boolean).length?'':'disabled'}>${q.hints?.filter(Boolean).length?'给我一点提示':'老师未设置提示'}</button><div class="daily-hints" aria-live="polite"></div><form><label for="dailyAnswer${slot}">我的答案</label><textarea id="dailyAnswer${slot}" maxlength="4000" required placeholder="写下你的答案">${esc(old?.answer||'')}</textarea><label for="dailyReason${slot}">解题过程</label><textarea id="dailyReason${slot}" maxlength="8000" placeholder="可以写算式，也可以写你的思考过程">${esc(old?.reasoning||'')}</textarea><button class="primary" type="submit">${old?'更新作答':'提交作答'}</button><div class="daily-status" role="status">${old?'已提交，老师可以查看。':''}</div></form></article>`;
+ }).join('')+'</div>';
+ root.querySelectorAll('.daily-card').forEach(card=>{
+ const slot=Number(card.dataset.slot),hints=currentSet.questions[slot].hints?.filter(Boolean)||[];let shown=0;const btn=card.querySelector('.daily-hint-btn');
+ btn.onclick=()=>{if(shown>=hints.length)return;const p=document.createElement('div');p.className='daily-hint';p.textContent=`提示 ${shown+1}：${hints[shown++]}`;card.querySelector('.daily-hints').append(p);btn.textContent=shown===hints.length?'提示已全部展开':'再给一点提示';btn.disabled=shown===hints.length;};
+ card.querySelector('form').onsubmit=async e=>{e.preventDefault();const button=e.currentTarget.querySelector('button'),message=card.querySelector('.daily-status');const answer=card.querySelector(`#dailyAnswer${slot}`).value.trim(),reasoning=card.querySelector(`#dailyReason${slot}`).value.trim();if(!answer)return status(message,'请先填写答案。',true);
+ if(key!==identityKey()||!studentReady())return status(message,'登录状态已变化，请重新打开页面。',true);
+ button.disabled=true;status(message,'正在保存…');try{const saved=await a.client().from('daily_challenge_answers').upsert({set_id:r.data.id,user_id:i.user.id,slot,answer,reasoning,submitted_at:new Date().toISOString()},{onConflict:'set_id,user_id,slot'}).select('slot');if(saved.error)throw saved.error;if(!saved.data?.length)throw Error('保存未成功，请重试');if(seq!==request||key!==identityKey())return;status(message,'✓ 已提交，老师可以查看。');button.textContent='更新作答';}catch(err){if(seq===request&&key===identityKey())status(message,'保存失败，答案仍保留在输入框。请重试。',true);}finally{button.disabled=false;}};
+ });
+ }catch(err){if(seq!==request||key!==identityKey())return;root.innerHTML='<div class="daily-empty">加载失败，请检查网络后重试。<br><button id="dailyReload" class="ghost">重新加载</button></div>';$('#dailyReload').onclick=open;}
+}
+async function loadTeacher(classId){
+ teacherClass=classId;++teacherRequest;teacher.innerHTML='';if(!classId||a.identity().role!=='teacher')return;
+ teacher.innerHTML=`<div class="daily-toolbar"><label for="teacherDailyDate">发布日期（北京时间）</label><input id="teacherDailyDate" type="date" value="${today()}"><button id="teacherDailyLoad" class="ghost">查看日期</button></div><p class="daily-note">每天两道题，可提前安排。草稿只对老师可见；发布后题目锁定，到指定日期自动开放。</p><div id="dailyEditor"></div><div id="dailyTeacherStatus" class="daily-status" role="status"></div><div id="dailyAnswers"></div>`;
+ $('#teacherDailyLoad').onclick=loadDate;$('#teacherDailyDate').onchange=loadDate;await loadDate();
+}
+async function loadDate(){
+ const seq=++teacherRequest,cls=teacherClass,key=identityKey(),date=$('#teacherDailyDate')?.value,editor=$('#dailyEditor'),msg=$('#dailyTeacherStatus');
+ if(!date)return status(msg,'请选择日期。',true);editor.innerHTML='';$('#dailyAnswers').innerHTML='';status(msg,'正在读取…');
+ const valid=()=>seq===teacherRequest&&key===identityKey()&&cls===teacherClass;
+ try{const r=await a.client().from('daily_challenge_sets').select('*').eq('class_id',cls).eq('challenge_date',date).maybeSingle();if(r.error)throw r.error;if(!valid())return;
+ const set=r.data,locked=!!set?.published;editor.innerHTML='<div class="daily-grid">'+[0,1].map(slot=>{const q=set?.questions?.[slot]||{};return `<article class="daily-card"><h3>第 ${slot+1} 题</h3><label for="dailyTitle${slot}">标题（可选）</label><input id="dailyTitle${slot}" maxlength="80" value="${esc(q.title||'')}" ${locked?'disabled':''}><label for="dailyBody${slot}">题目</label><textarea class="daily-body" id="dailyBody${slot}" maxlength="8000" ${locked?'disabled':''}>${esc(q.body||'')}</textarea>${[0,1,2].map(h=>`<label for="dailyHint${slot}_${h}">提示 ${h+1}（可选）</label><textarea id="dailyHint${slot}_${h}" maxlength="2000" ${locked?'disabled':''}>${esc(q.hints?.[h]||'')}</textarea>`).join('')}</article>`;}).join('')+'</div>'+(!locked?'<div class="daily-toolbar"><button id="dailySaveDraft" class="ghost">保存草稿</button><button id="dailyPublish" class="primary">发布这两题</button></div>':'');
+ status(msg,locked?'✓ 已发布 · '+(date>today()?'到日期后学生可见':'学生现在可见'):'草稿 · 学生暂不可见');
+ if(!locked){async function save(publish){if(!valid())return;const questions=[0,1].map(slot=>({title:$('#dailyTitle'+slot).value.trim(),body:$('#dailyBody'+slot).value.trim(),hints:[0,1,2].map(h=>$('#dailyHint'+slot+'_'+h).value.trim())}));if(publish&&questions.some(q=>!q.body))return status(msg,'请填写完整两道题再发布。',true);
+ const buttons=editor.querySelectorAll('button');buttons.forEach(b=>b.disabled=true);status(msg,'正在保存…');try{const payload={class_id:cls,challenge_date:date,questions,published:publish};const q=set?a.client().from('daily_challenge_sets').update(payload).eq('id',set.id).eq('published',false):a.client().from('daily_challenge_sets').insert(payload);const result=await q.select('id');if(result.error)throw result.error;if(!result.data?.length)throw Error('题目状态已变化，请重新读取');if(valid())await loadDate();}catch(err){if(valid())status(msg,'保存失败：'+(err.message||'请重试')+'。输入内容已保留。',true);}finally{buttons.forEach(b=>b.disabled=false);}}
+ $('#dailySaveDraft').onclick=()=>save(false);$('#dailyPublish').onclick=()=>save(true);
+ }
+ if(locked){const [answers,roster]=await Promise.all([a.client().from('daily_challenge_answers').select('*').eq('set_id',set.id),a.client().from('class_roster').select('user_id,student_code,student_name').eq('class_id',cls)]);if(!valid())return;if(answers.error||roster.error)throw answers.error||roster.error;
+ const names=new Map((roster.data||[]).map(x=>[x.user_id,x]));const rows=(answers.data||[]).sort((x,y)=>Number(names.get(x.user_id)?.student_code||9999)-Number(names.get(y.user_id)?.student_code||9999)||x.slot-y.slot);
+ $('#dailyAnswers').innerHTML=`<h3>学生作答 · ${rows.length} 份</h3><button id="dailyRefreshAnswers" class="ghost">刷新作答</button>`+(rows.length?rows.map(x=>{const n=names.get(x.user_id);return `<details class="daily-submission"><summary>${esc(n?n.student_code+'号 '+(n.student_name||''):'班级成员')} · 第 ${x.slot+1} 题</summary><p class="daily-pre">答案：${esc(x.answer)}</p><p class="daily-pre">过程：${esc(x.reasoning||'未填写')}</p></details>`;}).join(''):'<p>还没有学生提交作答。</p>');$('#dailyRefreshAnswers').onclick=loadDate;
+ }
+ }catch(err){if(valid())status(msg,'读取失败，请点击“查看日期”重试。',true);}
+}
+function reset(){++request;++teacherRequest;teacherClass='';currentSet=null;root.replaceChildren();teacher.replaceChildren();mascot(false);}
+const onVisibility=()=>{if(document.hidden){clearInterval(poseTimer);poseTimer=null;}else{const was=visible;visible=false;if(was)refresh();if($('.page.active')?.id==='daily'&&$('#dailyDate').textContent.slice(0,10)!==today())open();}};
+document.addEventListener('visibilitychange',onVisibility);
+refresh();return {route,refresh,open,loadTeacher,reset,destroy(){reset();clearTimeout(transitionTimer);clearInterval(poseTimer);document.removeEventListener('visibilitychange',onVisibility);companion.remove();}};
+};
+})();
