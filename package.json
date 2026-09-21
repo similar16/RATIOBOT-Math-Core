@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "build": "node build.cjs",
-    "test": "node tests/regression.cjs && node tests/rings.cjs && node tests/review.cjs && node tests/daily.cjs"
+    "test": "node tests/regression.cjs && node tests/rings.cjs && node tests/review.cjs && node tests/daily.cjs && node tests/question-bank.cjs && node tests/ocr.cjs"
   },
   "repository": {
     "type": "git",
@@ -23,7 +23,12 @@
     "jsdom": "26.1.0"
   },
   "dependencies": {
-    "@supabase/supabase-js": "2.116.0"
+    "@supabase/supabase-js": "2.116.0",
+    "@tesseract.js-data/chi_sim": "1.0.0",
+    "@tesseract.js-data/eng": "1.0.0",
+    "jszip": "3.10.2",
+    "katex": "0.18.7",
+    "tesseract.js": "6.0.1"
   },
   "private": true
 }

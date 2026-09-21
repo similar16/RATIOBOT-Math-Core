@@ -1,0 +1,26 @@
+(function(){
+'use strict';
+const W='http://schemas.openxmlformats.org/wordprocessingml/2006/main',M='http://schemas.openxmlformats.org/officeDocument/2006/math';
+const children=n=>Array.from(n.children||[]),part=(n,name)=>children(n).find(x=>x.localName===name),all=n=>children(n).map(math).join('');
+function math(n){if(!n)return '';let k=n.localName;if(k.endsWith('Pr'))return '';if(k==='t')return n.textContent.replace(/[{}$#%&_]/g,'\\$&');
+ if(k==='f')return `\\frac{${math(part(n,'num'))}}{${math(part(n,'den'))}}`;
+ if(k==='sSup')return `{${math(part(n,'e'))}}^{${math(part(n,'sup'))}}`;
+ if(k==='sSub')return `{${math(part(n,'e'))}}_{${math(part(n,'sub'))}}`;
+ if(k==='sSubSup')return `{${math(part(n,'e'))}}_{${math(part(n,'sub'))}}^{${math(part(n,'sup'))}}`;
+ if(k==='rad'){const deg=math(part(n,'deg'));return `\\sqrt${deg?'['+deg+']':''}{${math(part(n,'e'))}}`;}
+ if(k==='d'){const p=part(n,'dPr'),val=(name,fallback)=>part(p||{},name)?.getAttributeNS(M,'val')??fallback;return val('begChr','(')+children(n).filter(x=>x.localName==='e').map(math).join(',')+val('endChr',')');}
+ return all(n);
+}
+function readXml(xml){const doc=new DOMParser().parseFromString(xml,'application/xml');if(doc.querySelector('parsererror'))throw Error('Word 文档内容无法解析');let warning=false;
+ function text(n){if(n.namespaceURI===M&&n.localName==='oMath'){if(n.getElementsByTagNameNS(M,'m').length||n.getElementsByTagNameNS(M,'nary').length)warning=true;return '\\('+math(n)+'\\)';}if(n.namespaceURI===W&&n.localName==='t')return n.textContent;if(n.localName==='br')return '\n';if(n.localName==='tab')return ' ';return children(n).map(text).join('');}
+ const result=Array.from(doc.getElementsByTagNameNS(W,'p')).map(text).filter(x=>x.trim()).join('\n');
+ return {text:result,warning};
+}
+const loaders=new Map();
+function script(path,ready){if(ready())return Promise.resolve();if(loaders.has(path))return loaders.get(path);const p=new Promise((resolve,reject)=>{const s=document.createElement('script');s.src=path;s.onload=()=>ready()?resolve():reject(Error('导入组件未就绪'));s.onerror=()=>{loaders.delete(path);s.remove();reject(Error('导入组件加载失败，请重试'));};document.head.append(s);});loaders.set(path,p);return p;}
+async function imageData(blob){const url=URL.createObjectURL(blob);try{const img=await new Promise((resolve,reject)=>{const x=new Image();x.onload=()=>resolve(x);x.onerror=()=>reject(Error('图片无法读取，请使用 PNG、JPG 或 WebP'));x.src=url;});const ratio=Math.min(1,1800/Math.max(img.naturalWidth,img.naturalHeight));const c=document.createElement('canvas');c.width=Math.round(img.naturalWidth*ratio);c.height=Math.round(img.naturalHeight*ratio);const ctx=c.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,c.width,c.height);ctx.drawImage(img,0,0,c.width,c.height);return c.toDataURL('image/jpeg',.86);}finally{URL.revokeObjectURL(url);}}
+async function docx(file){await script('assets/import/jszip.min.js',()=>window.JSZip);const zip=await window.JSZip.loadAsync(await file.arrayBuffer());const entries=Object.values(zip.files);if(entries.length>3000)throw Error('文档过大，请拆分后导入');const size=entries.reduce((n,e)=>n+(e._data?.uncompressedSize||0),0);if(size>40000000)throw Error('文档解压后过大，请拆分后导入');const item=zip.file('word/document.xml');if(!item)throw Error('这不是有效的 .docx 文档');const result=readXml(await item.async('string'));const media=entries.filter(e=>/^word\/media\/.*\.(png|jpe?g|webp)$/i.test(e.name));const images=[];for(const e of media.slice(0,3)){images.push(await imageData(new Blob([await e.async('uint8array')])));}return {...result,images,note:`已读取 Word 正文${images.length?'及配图':''}。${media.length>3?'仅保留前3张配图；其余请单独导入。':''}${result.warning?'复杂公式需对照原文校对。':''}`};}
+async function ocr(file,onProgress,cancel){await script('assets/import/tesseract.min.js',()=>window.Tesseract);let worker;try{worker=await window.Tesseract.createWorker('chi_sim+eng',1,{workerPath:new URL('assets/import/worker.min.js',location.href).href,corePath:new URL('assets/import/core/',location.href).href,langPath:new URL('assets/import/lang/',location.href).href,logger:m=>onProgress(m.status==='recognizing text'?`正在识别文字 ${Math.round(m.progress*100)}%`:'正在准备中文识别组件…')});cancel.stop=()=>worker.terminate();if(cancel.cancelled)throw Error('已取消导入');const data=await imageData(file);const r=await worker.recognize(data);return {text:r.data.text,images:[data],note:`识别完成，请对照原图校对公式与符号（识别置信度 ${Math.round(r.data.confidence)}%）。`};}finally{if(worker)await worker.terminate();}}
+function parse(text){const result={title:'',body:'',hints:[],steps:[],answer:''};let field='body',index=-1;for(const line of text.replace(/\r/g,'').split('\n')){const m=line.match(/^\s*(?:【|\[)?(标题|题目|题干|思考提示|提示|关键步骤|步骤|参考答案|答案)(?:\s*\d+)?\s*(?:(?:】|\])\s*[:：]?\s*|[:：]\s*|$)(.*)$/);if(m){field=/标题/.test(m[1])?'title':/题目|题干/.test(m[1])?'body':/提示/.test(m[1])?'hints':/步骤/.test(m[1])?'steps':'answer';if(Array.isArray(result[field])){result[field].push(m[2]);index=result[field].length-1;}else result[field]+=(result[field]?'\n':'')+m[2];}else if(Array.isArray(result[field]))result[field][index]+='\n'+line;else result[field]+=(result[field]?'\n':'')+line;}for(const key of ['title','body','answer'])result[key]=result[key].trim();for(const key of ['hints','steps'])result[key]=result[key].map(x=>x.trim()).filter(Boolean);return result;}
+window.QuestionImport={parse,readXml,docx,ocr,imageData};
+})();

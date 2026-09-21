@@ -16,9 +16,12 @@ const ui=w.mountDailyChallenges({client:()=>client,identity:()=>who,go:id=>route
  for(let i=0;i<2;i++){$('#dailyBody'+i).value='第'+i+'题 <img src=x onerror=alert(1)>';$('#dailyHint'+i+'_0').value='先观察';$('#dailyHint'+i+'_1').value='再计算';}
  $('#dailySaveDraft').click();await tick();assert.equal(sets.length,1);assert.equal(sets[0].published,false);
  $('#dailyPublish').click();await tick();assert.equal(sets[0].published,true);assert.equal($('#dailyPublish'),null);
+ sets[0].questions[0].steps=['第一步','第二步'];sets[0].questions[0].has_solution=true;
  who={...who,role:'student'};await ui.open();assert.equal(d.querySelectorAll('#dailyContent .daily-card').length,2);assert.equal($('#dailyContent img'),null);
+ assert.equal($('.daily-answer-btn').disabled,true);$('.daily-step-btn').click();assert.match($('.daily-steps').textContent,/第一步/);assert.doesNotMatch($('.daily-steps').textContent,/第二步/);$('.daily-step-btn').click();assert.equal($('.daily-step-btn').disabled,true);
  let h=$('.daily-hint-btn');h.click();assert.match($('.daily-hints').textContent,/先观察/);assert.doesNotMatch($('.daily-hints').textContent,/再计算/);h.click();assert.equal(h.disabled,true);
  $('#dailyAnswer0').value='42';$('#dailyReason0').value='推理过程';await $('form').onsubmit({preventDefault(){},currentTarget:$('form')});assert.equal(answers.length,1);assert.match($('.daily-status').textContent,/已提交/);
+ assert.equal($('.daily-answer-btn').disabled,false);
  $('#dailyAnswer0').value='43';await $('form').onsubmit({preventDefault(){},currentTarget:$('form')});assert.equal(answers.length,1);assert.equal(answers[0].answer,'43');
  fail=true;$('#dailyAnswer0').value='44';await $('form').onsubmit({preventDefault(){},currentTarget:$('form')});assert.match($('.daily-status').textContent,/保存失败/);assert.equal($('#dailyAnswer0').value,'44');fail=false;
  who={...who,user:{id:'s2'}};await ui.open();assert.equal($('#dailyAnswer0').value,'');
