@@ -13,7 +13,8 @@ function math(n){if(!n)return '';let k=n.localName;if(k.endsWith('Pr'))return ''
 }
 function readXml(xml){const doc=new DOMParser().parseFromString(xml,'application/xml');if(doc.querySelector('parsererror'))throw Error('Word 文档内容无法解析');let warning=false;
  function text(n){if(n.namespaceURI===M&&n.localName==='oMath'){if(n.getElementsByTagNameNS(M,'m').length||n.getElementsByTagNameNS(M,'nary').length)warning=true;return '\\('+math(n)+'\\)';}if(n.namespaceURI===W&&n.localName==='t')return n.textContent;if(n.localName==='br')return '\n';if(n.localName==='tab')return ' ';return children(n).map(text).join('');}
- const result=Array.from(doc.getElementsByTagNameNS(W,'p')).map(text).filter(x=>x.trim()).join('\n');
+ function block(n){if(n.localName==='p')return text(n);if(n.localName==='tbl'){const rows=children(n).filter(x=>x.localName==='tr').map(row=>children(row).filter(x=>x.localName==='tc').map(cell=>children(cell).filter(x=>x.localName==='p').map(text).join(' ').replace(/\|/g,'\\|')));if(!rows.length)return '';if(n.getElementsByTagNameNS(W,'gridSpan').length||n.getElementsByTagNameNS(W,'vMerge').length)warning=true;const width=Math.max(...rows.map(x=>x.length));const formatted=rows.map(row=>'| '+Array.from({length:width},(_,i)=>row[i]||'').join(' | ')+' |');formatted.splice(1,0,'| '+Array(width).fill('---').join(' | ')+' |');return '\n'+formatted.join('\n')+'\n';}return children(n).map(block).filter(Boolean).join('\n');}
+ const result=block(doc.getElementsByTagNameNS(W,'body')[0]||doc.documentElement);
  return {text:result,warning};
 }
 const loaders=new Map();
