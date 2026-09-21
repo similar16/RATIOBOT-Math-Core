@@ -1,9 +1,9 @@
 const {JSDOM}=require('jsdom'),fs=require('fs'),assert=require('node:assert/strict');
-const dom=new JSDOM('<section id="home" class="page active"></section><div id="dailyDate"></div><div id="dailyContent"></div><div id="teacherDailyContent"></div>',{runScripts:'outside-only',url:'https://test.local'}),w=dom.window,d=w.document;
+const dom=new JSDOM('<section id="home" class="page active"></section><div id="dailyDate"></div><div id="dailyArchive"></div><div id="dailyContent"></div><div id="teacherDailyContent"></div>',{runScripts:'outside-only',url:'https://test.local'}),w=dom.window,d=w.document;
 w.matchMedia=()=>({matches:true});w.eval(fs.readFileSync('site/daily.js','utf8'));
 let who={user:{id:'s1'},classId:'c1',role:'student'},sets=[],answers=[],fail=false,route='';
-const client={from(table){let rows,mode='read',payload,filters=[];const q={select(){return q},eq(k,v){filters.push([k,v]);return q},insert(v){mode='insert';payload=v;return q},update(v){mode='update';payload=v;return q},upsert(v){mode='upsert';payload=v;return q},maybeSingle(){return run(true)},then(ok,bad){return run(false).then(ok,bad)}};
-async function run(single){if(fail)return {data:null,error:Error('offline')};rows=table==='daily_challenge_sets'?sets:table==='class_roster'?[{class_id:'c1',user_id:'s1',student_code:'2',student_name:'测试学生'}]:answers;
+const client={from(table){let rows,mode='read',payload,filters=[];const q={select(){return q},eq(k,v){filters.push([k,v]);return q},order(){return q},insert(v){mode='insert';payload=v;return q},update(v){mode='update';payload=v;return q},upsert(v){mode='upsert';payload=v;return q},maybeSingle(){return run(true)},then(ok,bad){return run(false).then(ok,bad)}};
+async function run(single){if(fail)return {data:null,error:Error('offline')};rows=table==='daily_challenge_rewards'?[]:table==='daily_challenge_sets'?sets:table==='class_roster'?[{class_id:'c1',user_id:'s1',student_code:'2',student_name:'测试学生'}]:answers;
 if(mode==='insert'){payload={id:'set1',...payload};rows.push(payload)}if(mode==='update'){rows=rows.filter(x=>filters.every(([k,v])=>x[k]===v));rows.forEach(x=>Object.assign(x,payload));filters=[]}if(mode==='upsert'){let old=rows.find(x=>x.set_id===payload.set_id&&x.slot===payload.slot&&x.user_id===payload.user_id);if(old)Object.assign(old,payload);else rows.push(payload)}
 let result=mode==='insert'||mode==='upsert'?[payload]:rows.filter(x=>filters.every(([k,v])=>x[k]===v));return {data:single?result[0]||null:result,error:null};}return q;}};
 const ui=w.mountDailyChallenges({client:()=>client,identity:()=>who,go:id=>route=id}),$=s=>d.querySelector(s),tick=()=>new Promise(r=>setTimeout(r,15));
@@ -26,6 +26,7 @@ const ui=w.mountDailyChallenges({client:()=>client,identity:()=>who,go:id=>route
  fail=true;$('#dailyAnswer0').value='44';await $('form').onsubmit({preventDefault(){},currentTarget:$('form')});assert.match($('.daily-status').textContent,/保存失败/);assert.equal($('#dailyAnswer0').value,'44');fail=false;
  who={...who,user:{id:'s2'}};await ui.open();assert.equal($('#dailyAnswer0').value,'');
  who={...who,role:'teacher'};await ui.loadTeacher('c1');assert.match($('#dailyAnswers').textContent,/2号/);assert.match($('#dailyAnswers').textContent,/43/);
+ who={...who,role:'student'};sets.push({...sets[0],id:'old-set',challenge_date:'2020-01-01'});await ui.open('2020-01-01');assert.match($('#dailyDate').textContent,/2020-01-01/);assert.equal($('#dailyDateSelect').value,'2020-01-01');assert.match($('#dailyContent').textContent,/往期练习/);assert.equal($('.companion-label'),null);
  ui.reset();assert.equal($('#dailyContent').textContent,'');assert.equal($('#teacherDailyContent').textContent,'');ui.destroy();w.close();
  console.log('PASS daily: route visibility, gated empty state, 2-question publish, draft, locked publication, progressive hints, escaped text, answer upsert/retry/isolation, teacher responses and reset');
 })().catch(e=>{console.error(e);ui.destroy();w.close();process.exitCode=1});

@@ -1,0 +1,31 @@
+begin;
+select set_config('bonus.student',(select user_id::text from public.class_members where role='student' limit 1),true);
+select set_config('bonus.teacher',(select user_id::text from public.class_members where role='teacher' limit 1),true);
+insert into public.classes(name,join_code,created_by) values('rollback-test',substr(gen_random_uuid()::text,1,8),current_setting('bonus.teacher')::uuid);
+select set_config('bonus.class',(select id::text from public.classes where name='rollback-test' and created_by=current_setting('bonus.teacher')::uuid order by created_at desc limit 1),true);
+insert into public.class_members(class_id,user_id,role) values(current_setting('bonus.class')::uuid,current_setting('bonus.student')::uuid,'student'),(current_setting('bonus.class')::uuid,current_setting('bonus.teacher')::uuid,'teacher') on conflict do nothing;
+insert into public.daily_challenge_sets(class_id,challenge_date,questions,published) select current_setting('bonus.class')::uuid,(now() at time zone 'Asia/Shanghai')::date+delta,'[{"body":"test1"},{"body":"test2"}]',true from generate_series(-1,1) delta;
+select set_config('bonus.today',(select id::text from public.daily_challenge_sets where class_id=current_setting('bonus.class')::uuid and challenge_date=(now() at time zone 'Asia/Shanghai')::date),true);
+select set_config('bonus.points',(select r_points::text from public.profiles where user_id=current_setting('bonus.student')::uuid),true);
+select set_config('bonus.economy',(select economy::text from public.progress_snapshots where user_id=current_setting('bonus.student')::uuid),true);
+select set_config('bonus.applied',(select daily_bonus_applied::text from public.profiles where user_id=current_setting('bonus.student')::uuid),true);
+select set_config('request.jwt.claim.sub',current_setting('bonus.student'),true);
+set local role authenticated;
+insert into public.daily_challenge_answers(set_id,user_id,slot,answer) values(current_setting('bonus.today')::uuid,auth.uid(),0,'first');
+insert into public.daily_challenge_answers(set_id,user_id,slot,answer) values(current_setting('bonus.today')::uuid,auth.uid(),0,'retry') on conflict(set_id,user_id,slot) do update set answer=excluded.answer;
+insert into public.daily_challenge_answers(set_id,user_id,slot,answer) values(current_setting('bonus.today')::uuid,auth.uid(),1,'second');
+insert into public.daily_challenge_answers(set_id,user_id,slot,answer) select id,auth.uid(),0,'past' from public.daily_challenge_sets where class_id=current_setting('bonus.class')::uuid and challenge_date<(now() at time zone 'Asia/Shanghai')::date;
+-- A stale local snapshot must not erase server-issued bonuses.
+update public.profiles set r_points=current_setting('bonus.points')::integer,daily_bonus_applied=current_setting('bonus.applied')::integer where user_id=auth.uid();
+update public.progress_snapshots set economy=current_setting('bonus.economy')::jsonb where user_id=auth.uid();
+do $$ declare e jsonb;old_e jsonb:=current_setting('bonus.economy')::jsonb;begin
+ if (select count(*) from public.daily_challenge_rewards where set_id=current_setting('bonus.today')::uuid)<>2 then raise exception 'reward idempotency failed';end if;
+ if (select r_points from public.profiles where user_id=auth.uid())<>current_setting('bonus.points')::integer+10 then raise exception 'profile reward overwritten';end if;
+ select economy into e from public.progress_snapshots where user_id=auth.uid();
+ if (e->>'credits')::integer<>coalesce((old_e->>'credits')::integer,0)+10 then raise exception 'snapshot bonus missing';end if;
+ if e->'daily' is distinct from old_e->'daily' then raise exception 'ordinary cap changed';end if;
+ if exists(select 1 from public.daily_challenge_rewards r join public.daily_challenge_sets s on s.id=r.set_id where s.class_id=current_setting('bonus.class')::uuid and s.challenge_date<(now() at time zone 'Asia/Shanghai')::date) then raise exception 'past reward';end if;
+ begin insert into public.daily_challenge_rewards(user_id,set_id,slot) values(auth.uid(),current_setting('bonus.today')::uuid,0);raise exception 'client forged reward';exception when insufficient_privilege then null;end;
+end $$;
+rollback;
+select 'PASS two daily rewards +10, duplicate no extra, past no reward, ordinary cap unchanged, stale profile/snapshot protected, forged ledger rejected; rolled back' result;
