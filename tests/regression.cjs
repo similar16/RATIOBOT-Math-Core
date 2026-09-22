@@ -8,7 +8,7 @@ const fixture={};
 const client={auth:{onAuthStateChange(){},getSession:async()=>({data:{session:null}}),signOut:async()=>({error:null})},from(table){let data=[];const q={select(){data=fixture[table]||[];return q},eq(){return q},in(){return q},gte(){return q},order(){return q},maybeSingle:async()=>({data:null}),update(row){fixture[table]=(fixture[table]||[]).map(x=>({...x,...row}));return q},upsert(row){q.row=row;return q},throwOnError:async()=>{if(failTable===table)throw Error('simulated rejected write');writes.push({table,row:structuredClone(q.row)});return {error:null}},then(resolve){return Promise.resolve({data,error:null}).then(resolve)}};return q}};
 const dom=new JSDOM(html,{url:'https://test.invalid/',runScripts:'outside-only',pretendToBeVisual:true});const w=dom.window;
 w.structuredClone=structuredClone;w.supabase={createClient:()=>client};w.scrollTo=()=>{};w.Element.prototype.animate=()=>({});w.alert=()=>{};w.confirm=()=>true;w.console.warn=()=>{};
-for(const script of w.document.scripts){if(script.src&&!/(review-(engine|ui)|daily|question-(content|import|bank))\.js$/.test(script.src))continue;let code=script.src?fs.readFileSync(root+'/'+new URL(script.src).pathname.split('/').pop(),'utf8'):script.textContent;new vm.Script(code);code=code.replace('    migrateLegacy();const initP=',`    window.__test={levelInfo,honorInfoFromProfile,cloudLevelBase,blankProfile,saveCurrentProfile,currentProfile,currentProfileKey,cloudState,cloudSyncProfile,renderGrowth,renderStats,go,openStudentGate,loadTeacherDashboard,teacherSwitchTab,rosterNameMap,loadStudentClassWall,peerState,ensureTodayRecord,calcQuestionXP};\n    migrateLegacy();const initP=`);w.eval(code)}
+for(const script of w.document.scripts){if(script.src&&!/(review-(engine|ui)|daily|question-(content|import|bank))\.js$/.test(new URL(script.src).pathname))continue;let code=script.src?fs.readFileSync(root+'/'+new URL(script.src).pathname.split('/').pop(),'utf8'):script.textContent;new vm.Script(code);code=code.replace('    migrateLegacy();const initP=',`    window.__test={levelInfo,honorInfoFromProfile,cloudLevelBase,blankProfile,saveCurrentProfile,currentProfile,currentProfileKey,cloudState,cloudSyncProfile,renderGrowth,renderStats,go,openStudentGate,loadTeacherDashboard,teacherSwitchTab,rosterNameMap,loadStudentClassWall,peerState,ensureTodayRecord,calcQuestionXP,recordGameClear,gameSignatureArithmetic,state,renderConfig};\n    migrateLegacy();const initP=`);w.eval(code)}
 const t=w.__test;assert.ok(t,'main closure reaches initialization');
 function student(){t.cloudState.user={id:'fixture-student'};t.cloudState.role='student';t.cloudState.mustChangePassword=false;t.saveCurrentProfile(t.blankProfile('TEST','1',''));}
 function xpAt(lv){let n=0;for(let i=1;i<lv;i++)n+=260+(i-1)*85;return n;}
@@ -18,6 +18,34 @@ function xpAt(lv){let n=0;for(let i=1;i<lv;i++)n+=260+(i-1)*85;return n;}
  assert.equal(t.levelInfo(259).level,1);assert.equal(t.levelInfo(260).level,2);assert.equal(t.levelInfo(xpAt(90)+999999).level,90);
  for(const [id,target] of [['homeGrowthBtn','growth'],['homeStatsBtn','stats'],['playerBtn','account'],['growthSwitchBtn','account'],['statsSwitchBtn','account']]){t.go('home');w.document.getElementById(id).click();assert.ok(w.document.getElementById(target).classList.contains('active'),id+' click routes to '+target);}
  console.log('PASS 90 levels, BASE boundaries, retained completed collections and slow XP');
+ student();let scoreProfile=t.currentProfile();
+ for(const [brackets,expected] of [['auto',2],['1',2],['2',0],['3',0],['0',0]]){
+  const result=t.recordGameClear(scoreProfile,'arithmetic','power|integer|easy|'+brackets,false,'easy','power','integer');
+  assert.equal(result.gain,expected,'bracket-only change cannot restart rewards');
+ }
+ student();scoreProfile=t.currentProfile();
+ t.ensureTodayRecord(scoreProfile).runs.arithmetic={'power|integer|easy|auto':1,'power|integer|easy|2':1};
+ assert.equal(t.recordGameClear(scoreProfile,'arithmetic','power|integer|easy|3',false,'easy','power','integer').gain,0,'legacy counts merge');
+ assert.equal(t.recordGameClear(scoreProfile,'arithmetic','power|intfrac|easy|3',false,'easy','power','intfrac').gain,4,'real number-type change counts separately');
+ for(const numberType of ['integer','intfrac','intdec','fracdec']){
+  t.state.config={stage:'power',numberType,difficulty:'easy',brackets:'3'};t.renderConfig();
+  assert.equal(t.state.config.numberType,numberType);
+  assert.equal(w.document.querySelectorAll('#numberOptions button:disabled').length,0);
+  t.openStudentGate();
+  const kinds=new Set(t.state.questions.map(q=>q.operands[0].baseOperand?.kind||'integer'));
+  for(const kind of w.RationalEngine.NUMBER_TYPES[numberType].kinds)assert(kinds.has(kind));
+  for(let i=0;i<100;i++){
+   const q=w.RationalEngine.generateQuestion({stage:'power',numberType,difficulty:'hard'});
+   const o=q.operands[0],b=o.baseOperand;
+   if(b){assert(q.answer.eq(new w.RationalEngine.Fraction(b.value.n**o.exponent,b.value.d**o.exponent)));assert(w.RationalEngine.checkAnswer(q.answer.n+'/'+q.answer.d,q.answer));}
+   if(b?.kind==='decimal'){assert(Math.abs(o.base)<10);assert.match(b.display,/^[−]?[0-9][.][0-9]$/);}
+   if(b?.kind==='fraction')assert.match(q.html,/class="frac"/);
+   assert.equal(q.numberType,numberType);
+  }
+ }
+ console.log('PASS bracket reward bypass, legacy aggregation, enabled numeric types, full rounds with fractions/decimals and exact rational powers');
+ student();
+
  for(const [mistakes,gain] of [[0,8],[1,4],[2,0]]){student();const payload={profileKey:t.currentProfileKey(),runId:'run-'+mistakes,mode:'solo',abMistakes:mistakes,totalOps:20,totalFails:2,roundCount:3,grade:'A · 推理很稳',durationSeconds:120};const r=w.ratiobotAwardRingsV53(payload);const p=t.currentProfile();assert.equal(r.gain,gain);assert.equal(p.economy.credits,gain);assert.equal(p.history.length,1);assert.equal(p.history[0].rGain,gain);assert.equal(p.history[0].accuracy,90);assert.equal(p.history[0].durationSeconds,120);assert.equal(p.history[0].abMistakes,mistakes);assert.match(w.document.querySelector('#historyList').textContent,/数圈侦探 · 分类推理/);assert.match(w.document.querySelector('#historyList').textContent,/120 s/);assert.equal(w.ratiobotAwardRingsV53(payload).gain,gain);assert.equal(t.currentProfile().history.length,1);await t.cloudSyncProfile();const pr=writes.filter(x=>x.table==='profiles').at(-1).row,snap=writes.filter(x=>x.table==='progress_snapshots').at(-1).row;assert.equal(pr.r_points,gain);assert.equal(Object.hasOwn(pr,'display_name'),false,'progress sync must not overwrite corrected roster names');assert.equal(snap.economy.credits,gain);assert.equal(snap.game_stats.history[0].rGain,gain);assert.equal(t.currentProfile().pendingCloud,false);}
  console.log('PASS 8/4/0: settlement, wallet, detailed record, snapshot payload, duplicate idempotency');
  student();failTable='progress_snapshots';w.ratiobotAwardRingsV53({profileKey:t.currentProfileKey(),runId:'failed-sync',totalOps:10,roundCount:3});assert.equal(await t.cloudSyncProfile(),false);assert.equal(t.currentProfile().pendingCloud,true);assert.equal(t.currentProfile().economy.credits,8);failTable='';assert.equal(await t.cloudSyncProfile(),true);assert.equal(t.currentProfile().pendingCloud,false);

@@ -15,6 +15,15 @@ for(const name of fs.readdirSync('node_modules/tesseract.js-core'))if(name.endsW
 for(const lang of ['chi_sim','eng'])fs.copyFileSync('node_modules/@tesseract.js-data/'+lang+'/4.0.0_best_int/'+lang+'.traineddata.gz',vendor+'/lang/'+lang+'.traineddata.gz');
 fs.cpSync('node_modules/katex/dist',vendor+'/katex',{recursive:true});
 for(const [pkg,name] of [['jszip','LICENSE.markdown'],['tesseract.js','LICENSE.md'],['tesseract.js-core','LICENSE'],['katex','LICENSE']]){const source='node_modules/'+pkg+'/'+name;if(fs.existsSync(source))fs.copyFileSync(source,vendor+'/'+pkg+'-LICENSE.txt');}
+// Tie local JS/CSS requests to their contents so old browser caches cannot mix releases.
+const {createHash}=require('crypto');
+let entry=fs.readFileSync('_site/index.html','utf8');
+entry=entry.replace(/(src|href)="([^":?]+\.(?:js|css))"/g,(all,attr,file)=>{
+ const target='_site/'+file;if(!fs.existsSync(target))return all;
+ const hash=createHash('sha256').update(fs.readFileSync(target)).digest('hex').slice(0,12);
+ return attr+'="'+file+'?v='+hash+'"';
+});
+fs.writeFileSync('_site/index.html',entry);
 fs.writeFileSync('_site/.nojekyll','');
 fs.writeFileSync('_site/build-info.json',JSON.stringify({commit:process.env.GITHUB_SHA||'local',version:'integrated-1'}));
 console.log('Complete site prepared');

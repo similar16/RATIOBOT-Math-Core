@@ -965,7 +965,12 @@ footer{text-align:center;padding:30px;color:#8C7E82;font:900 10px ui-monospace;l
     return small?{base:-2,exponent:3,result:-8}:{base:5,exponent:3,result:125};
   }
 
-  function makePowerOperand(){
+  function makePowerOperand(kind='integer',difficulty='easy'){
+    if(kind!=='integer'){
+      const exponent=randInt(2,difficulty==='hard'?3:2);
+      const b=kind==='fraction'?makeFraction({fracDen:[2,3,4,5]}):makeDecimal({decAbs:9});
+      return {kind:'power',baseOperand:b,base:b.value.toNumber(),exponent,value:new Fraction(b.value.n**exponent,b.value.d**exponent)};
+    }
     const p=makePowerSpec();
     return {kind:'power',base:p.base,exponent:p.exponent,value:new Fraction(p.result,1)};
   }
@@ -1119,7 +1124,7 @@ footer{text-align:center;padding:30px;color:#8C7E82;font:900 10px ui-monospace;l
   function operandHtml(o){
     if(o.kind==='fraction') return fracHtml(o.value);
     if(o.kind==='power'){
-      const base=o.base<0?`(−${Math.abs(o.base)})`:String(o.base);
+      const base=o.baseOperand?`(${operandHtml(o.baseOperand)})`:(o.base<0?`(−${Math.abs(o.base)})`:String(o.base));
       return `<span class="power-expr"><span>${base}</span><sup>${o.exponent}</sup></span>`;
     }
     return `<span>${o.display}</span>`;
@@ -1141,7 +1146,8 @@ footer{text-align:center;padding:30px;color:#8C7E82;font:900 10px ui-monospace;l
       if(t.type==='operand'){
         const f=t.operand.value;
         if(t.operand.kind==='power'){
-          const base=t.operand.base<0?`(${t.operand.base})`:String(t.operand.base);
+          const b=t.operand.baseOperand;
+          const base=b?`(${b.kind==='fraction'?b.value.n+'/'+b.value.d:b.display.replace('−','-')})`:(t.operand.base<0?`(${t.operand.base})`:String(t.operand.base));
           return `${base}^${t.operand.exponent}`;
         }
         const raw=t.operand.kind==='fraction'?`${f.n}/${f.d}`:t.operand.display.replace('−','-');
@@ -1206,12 +1212,14 @@ footer{text-align:center;padding:30px;color:#8C7E82;font:900 10px ui-monospace;l
     const cfg=DIFFICULTY[difficulty];
 
     if(stage==='power'){
-      const op=makePowerOperand();
+      const kinds=NUMBER_TYPES[numberType].kinds;
+      const kind=kinds.includes(options.powerKind)?options.powerKind:pick(kinds);
+      const op=makePowerOperand(kind,difficulty);
       const tokens=[{type:'operand',operand:op}], answer=op.value;
       return {
         id:`q_${Date.now()}_${Math.random().toString(36).slice(2,8)}`,
-        stage,numberType:'integer',difficulty,bracketCount:0,operands:[op],ops:[],spans:[],tokens,
-        answer,answerDisplay:resultDisplay(answer),html:tokenHtml(tokens),text:tokenText(tokens),tags:['power']
+        stage,numberType,difficulty,bracketCount:0,operands:[op],ops:[],spans:[],tokens,
+        answer,answerDisplay:resultDisplay(answer),html:tokenHtml(tokens),text:tokenText(tokens),tags:['power',...(kind==='fraction'?['fraction_operation']:kind==='decimal'?['decimal_operation']:[])]
       };
     }
 
@@ -1540,7 +1548,8 @@ setTimeout(()=>{try{renderHonorGrowth();updateRingsProfileHint();}catch(e){}},50
   function ensureTodayRecord(p){p=ensureProfileShape(p);let c=p.economy.checkin,k=dateKey();c.days[k]=c.days[k]||{points:0,checked:false,full:false,makeup:false,runs:{},challenge:false};let r=c.days[k];r.points=Number(r.points||0);r.runs=r.runs||{};return r}
   function checkinMetrics(p){p=ensureProfileShape(p);let c=p.economy.checkin,days=c.days||{},today=new Date();today.setHours(0,0,0,0);let start=days[dateKey(today)]?.checked?today:addDays(today,-1),streak=0;for(let i=0;i<400;i++){let k=dateKey(addDays(start,-i)),r=days[k];if(r&&r.checked)streak++;else break}let best=0,run=0;let keys=Object.keys(days).sort();let prev=null;for(let k of keys){let d=parseDateKey(k);if(days[k].checked){if(prev&&Math.round((d-prev)/86400000)===1)run++;else run=1;best=Math.max(best,run);prev=d}else{run=0;prev=null}}c.unlockedOutfits=Math.max(c.unlockedOutfits||0,Math.min(10,Math.floor(best/10)));return{streak,best,unlocked:c.unlockedOutfits}}
   function currentWeekInfo(p){p=ensureProfileShape(p);let c=p.economy.checkin,wk=weekKey(),monday=parseDateKey(wk),checked=0,challenge=false;for(let i=0;i<7;i++){let r=c.days[dateKey(addDays(monday,i))];if(r?.checked)checked++;if(r?.challenge)challenge=true}c.weekly[wk]=c.weekly[wk]||{awarded:false};let rec=c.weekly[wk];return{wk,checked,challenge,awarded:false,cores:c.constructionCores||0}}
-  function gameSignatureArithmetic(){return [state.config.stage,state.config.numberType,state.config.difficulty,state.config.brackets].join('|')}
+  function normalizeArithmeticSignature(signature){const parts=signature.split('|');if(!RationalEngine.STAGES[parts[0]]?.allowBrackets)parts[3]='0';return parts.join('|');}
+  function gameSignatureArithmetic(){return normalizeArithmeticSignature([state.config.stage,state.config.numberType,state.config.difficulty,state.config.brackets].join('|'))}
   function arithmeticRScore(stage,numberType,difficulty){
     const diffIndex={easy:0,normal:1,hard:2}[difficulty]??1;
     const baseTable={
@@ -1554,18 +1563,22 @@ setTimeout(()=>{try{renderHonorGrowth();updateRingsProfileHint();}catch(e){}},50
     };
     const typeBonus={integer:0,intfrac:2,intdec:2,fracdec:4};
     const base=(baseTable[stage]||[4,6,8])[diffIndex];
-    const bonus=stage==='power'?0:(typeBonus[numberType]??0);
+    const bonus=typeBonus[numberType]??0;
     return {base,bonus,total:base+bonus};
   }
   function arithmeticScoreLabel(stage,numberType,difficulty){
     const s=arithmeticRScore(stage,numberType,difficulty);
     const stageLabel=RationalEngine?.STAGES?.[stage]?.label||stage;
     const diffLabel=RationalEngine?.DIFFICULTY?.[difficulty]?.label||difficulty;
-    const typeLabel=stage==='power'?'乘方底数规则':(RationalEngine?.NUMBER_TYPES?.[numberType]?.label||numberType);
+    const typeLabel=(RationalEngine?.NUMBER_TYPES?.[numberType]?.label||numberType);
     return `${stageLabel} · ${typeLabel} · ${diffLabel}（${s.base}${s.bonus?`+${s.bonus}`:''}）`;
   }
   function recordGameClear(p,gameId,signature,challenge=false,difficulty='normal',stage='',numberType='integer'){
     p=ensureProfileShape(p);let e=p.economy,r=ensureTodayRecord(p);r.runs[gameId]=r.runs[gameId]||{};
+    if(gameId==='arithmetic'){
+      signature=normalizeArithmeticSignature(signature);
+      const merged={};for(const [key,value] of Object.entries(r.runs[gameId])){const normalized=normalizeArithmeticSignature(key);merged[normalized]=(merged[normalized]||0)+Number(value||0);}r.runs[gameId]=merged;
+    }
     let count=Number(r.runs[gameId][signature]||0),room=Math.max(0,HQ_R_DAILY_CAP-r.points),gain=0,reason='';
     if(room<=0){reason='今日 40 分已满。'}
     else if(count>=2){reason='同一设置今天已计分 2 次；请更换设置 / 难度 / 题型组合后再得分。'}
@@ -1967,23 +1980,22 @@ setTimeout(()=>{try{renderHonorGrowth();updateRingsProfileHint();}catch(e){}},50
     el.querySelectorAll('button').forEach(b=>b.onclick=()=>{state.config[key]=b.dataset.value; renderConfig();});
   }
   function renderConfig(){
-    if(state.config.stage==='power') state.config.numberType='integer';
     makeOptions($('#stageOptions'),'stage','stage');makeOptions($('#numberOptions'),'numberType','numberType');makeOptions($('#difficultyOptions'),'difficulty','difficulty');makeOptions($('#bracketOptions'),'brackets','brackets');
     const allow=E.STAGES[state.config.stage].allowBrackets, powerOnly=state.config.stage==='power';
     $('#bracketOptions').querySelectorAll('button').forEach(b=>b.disabled=!allow);
-    $('#numberOptions').querySelectorAll('button').forEach(b=>b.disabled=powerOnly && b.dataset.value!=='integer');
-    let note=allow?'可选 0–3 对结构括号；超级混合“自动”时优先 1–2 对。负数自身的括号不计。':(powerOnly?'乘方底数固定按整数规则生成：|底数|≤10，指数 2–6。':'这个阶段不出现结构括号。');
+    $('#numberOptions').querySelectorAll('button').forEach(b=>b.disabled=false);
+    let note=allow?'可选 0–3 对结构括号；超级混合“自动”时优先 1–2 对。负数自身的括号不计。':(powerOnly?'可选整数、分数和一位小数底数；小数绝对值小于10。分数、小数练习指数为2，挑战可到3。括号不改变计分次数。':'这个阶段不出现结构括号，括号设置不改变计分次数。');
     if(state.config.stage==='addsub') note+=' 约 45% 题目使用非负原始数，题面完全不出现负数括号。';
     if((state.config.stage==='mul'||state.config.stage==='muldiv') && E.NUMBER_TYPES[state.config.numberType].kinds.includes('fraction')) note+=' 含分数时优先生成可交叉约分的题。';
     $('#bracketNote').textContent=note;
     const c=state.config;
-    {const score=arithmeticRScore(c.stage,c.numberType,c.difficulty);$('#configSummary').textContent=`${E.STAGES[c.stage].label} · ${powerOnly?'乘方底数规则':E.NUMBER_TYPES[c.numberType].label} · ${E.DIFFICULTY[c.difficulty].label}${allow?' · 括号 '+(c.brackets==='auto'?'自动':c.brackets+' 对'):''} · 本配置通关 ${score.total} R积分`; }
+    {const score=arithmeticRScore(c.stage,c.numberType,c.difficulty);$('#configSummary').textContent=`${E.STAGES[c.stage].label} · ${E.NUMBER_TYPES[c.numberType].label} · ${E.DIFFICULTY[c.difficulty].label}${allow?' · 括号 '+(c.brackets==='auto'?'自动':c.brackets+' 对'):''} · 本配置通关 ${score.total} R积分`; }
   }
 
   // Game lifecycle
   function configText(c=state.config){
     const allow=E.STAGES[c.stage].allowBrackets, powerOnly=c.stage==='power';
-    return `${E.STAGES[c.stage].label} · ${powerOnly?'乘方底数规则':E.NUMBER_TYPES[c.numberType].label} · ${E.DIFFICULTY[c.difficulty].label}${allow?' · 括号 '+(c.brackets==='auto'?'自动':c.brackets+' 对'):''}`;
+    return `${E.STAGES[c.stage].label} · ${E.NUMBER_TYPES[c.numberType].label} · ${E.DIFFICULTY[c.difficulty].label}${allow?' · 括号 '+(c.brackets==='auto'?'自动':c.brackets+' 对'):''}`;
   }
   function openStudentGate(configOverride){
     if(configOverride) state.config={...state.config,...configOverride};
@@ -2004,6 +2016,7 @@ setTimeout(()=>{try{renderHonorGrowth();updateRingsProfileHint();}catch(e){}},50
     state.questions=[];state.index=0;state.combo=0;state.bestCombo=0;state.firstCorrect=0;state.times=[];state.roundTagStats={};state.roundXP=0;state.roundRepairs=0;state.lastGrowth=null;
     for(let i=0;i<10;i++){
       const cfg={...state.config};
+      if(cfg.stage==='power'){const kinds=E.NUMBER_TYPES[cfg.numberType].kinds;cfg.powerKind=kinds[i%kinds.length];}
       if(i===9 && cfg.difficulty!=='hard') cfg.difficulty=cfg.difficulty==='easy'?'normal':'hard';
       try{state.questions.push(E.generateQuestion(cfg));}catch(err){ alert(err.message);return; }
     }
@@ -2026,7 +2039,7 @@ setTimeout(()=>{try{renderHonorGrowth();updateRingsProfileHint();}catch(e){}},50
   function renderQuestion(){
     const q=state.questions[state.index];state.questionWrong=false;state.wrongAttempts=0;state.hints=0;state.locked=false;state.startedAt=performance.now();
     $('#qIndex').textContent=String(state.index+1).padStart(2,'0')+' / 10';
-    $('#gameModeLabel').textContent=`${E.STAGES[q.stage].label} · ${q.stage==='power'?'乘方底数规则':E.NUMBER_TYPES[q.numberType].label}`;
+    $('#gameModeLabel').textContent=`${E.STAGES[q.stage].label} · ${E.NUMBER_TYPES[q.numberType].label}`;
     $('#progressBar').style.width=`${(state.index+1)*10}%`;$('#combo').textContent=state.combo;
     $('#bossBadge').classList.toggle('hidden',state.index!==9);$('#expression').innerHTML=q.html;
     $('#answerInput').value='';$('#answerInput').disabled=false;$('#submitBtn').disabled=false;$('#submitBtn').textContent='确认答案';
@@ -2137,7 +2150,7 @@ setTimeout(()=>{try{renderHonorGrowth();updateRingsProfileHint();}catch(e){}},50
     const p=currentProfile(),no=$('#statsNoProfile'),body=$('#statsBody'),head=$('#statsProfileHead');if(!p){no.classList.remove('hidden');body.classList.add('hidden');head.innerHTML='';return;}no.classList.add('hidden');body.classList.remove('hidden');const li=levelInfo(p.xp);head.innerHTML=`<span>${p.classCode}</span><span>学号 ${p.studentId}</span><span>${growthLabel(li.level)} · ${levelTitle(li.level)}</span><span>${p.xp} XP</span>`;
     $('#statGames').textContent=p.games;$('#statQuestions').textContent=p.questions;$('#statBestCombo').textContent=p.bestCombo;
     const entries=Object.entries(p.tags||{});$('#tagStats').innerHTML=entries.length?entries.sort((a,b)=>(a[1].correct/a[1].attempts)-(b[1].correct/b[1].attempts)).map(([k,v])=>{const pct=Math.round(v.correct/v.attempts*100);return `<div class="tag-row"><span>${TAG_LABELS[k]||k}</span><div class="tag-bar"><i style="width:${pct}%"></i></div><b>${pct}%</b></div>`;}).join(''):'<div class="empty">完成第一局后，这里会显示各类法则的首次正确率。</div>';
-    const h=(p.history||[]).slice(0,10);$('#historyCount').textContent=h.length?`已保存 ${h.length} / 10 次`:'最多保留 10 次';$('#historyList').innerHTML=h.length?h.map((r,i)=>{const isKnowledge=r.game==='knowledge',isRings=r.game==='rings'||r.stage==='rings',stage=isKnowledge?'知识点回顾':isRings?'数圈侦探':(E.STAGES[r.stage]?.label||r.stage),nt=isKnowledge?teacherEsc(r.numberType||'定义与法则'):isRings?'分类推理':(r.stage==='power'?'乘方底数规则':(E.NUMBER_TYPES[r.numberType]?.label||r.numberType)),diff=isRings?'单人闯关':(E.DIFFICULTY[r.difficulty]?.label||r.difficulty);const bracket=!isRings&&E.STAGES[r.stage]?.allowBrackets?` · 括号${r.brackets==='auto'?'自动':r.brackets+'对'}`:'';const extra=isKnowledge?`<div><small>本题积分</small><b>+${r.rGain||0} R</b></div><div><small>正确填空</small><b>${r.correctBlanks||0}/${r.totalBlanks||0}</b></div><div><small>合格状态</small><b>${r.qualified?'合格':'待巩固'}</b></div><div><small>补签</small><b>${r.repairDate||'—'}</b></div>`:isRings?`<div><small>本局积分</small><b>+${r.rGain||0} R</b></div><div><small>A/B 判断错误</small><b>${r.abMistakes||0}</b></div><div><small>总操作 / 失败</small><b>${r.totalOps||0} / ${r.totalFails||0}</b></div><div><small>策略评级</small><b>${r.grade||'—'}</b></div><div><small>总用时</small><b>${r.durationSeconds==null?'—':r.durationSeconds+' s'}</b></div>`:`<div><small>本局成长</small><b>+${r.xp||0} XP</b></div><div><small>最高连击</small><b>${r.bestCombo}</b></div><div><small>平均用时</small><b>${Number(r.avgTime||0).toFixed(1)} s</b></div>`;return `<div class="history-item"><div class="history-item-head"><div class="history-student">${p.classCode}<br>学号 ${p.studentId}</div><div class="history-main"><b>${stage} · ${nt}</b><span>${diff}${bracket}</span></div><div class="history-result"><b>${r.accuracy}%</b><span>${isRings?'投放准确率':'首次正确率'}</span></div></div><div class="history-extra">${extra}</div><div class="history-time">${displayDate(r.at)} · 完成后 ${growthLabel(r.level||1)} · 最近第 ${i+1} 条</div></div>`;}).join(''):'<div class="empty">还没有详细训练记录。完成运算或数圈侦探后都会保存记录。</div>';
+    const h=(p.history||[]).slice(0,10);$('#historyCount').textContent=h.length?`已保存 ${h.length} / 10 次`:'最多保留 10 次';$('#historyList').innerHTML=h.length?h.map((r,i)=>{const isKnowledge=r.game==='knowledge',isRings=r.game==='rings'||r.stage==='rings',stage=isKnowledge?'知识点回顾':isRings?'数圈侦探':(E.STAGES[r.stage]?.label||r.stage),nt=isKnowledge?teacherEsc(r.numberType||'定义与法则'):isRings?'分类推理':(E.NUMBER_TYPES[r.numberType]?.label||r.numberType),diff=isRings?'单人闯关':(E.DIFFICULTY[r.difficulty]?.label||r.difficulty);const bracket=!isRings&&E.STAGES[r.stage]?.allowBrackets?` · 括号${r.brackets==='auto'?'自动':r.brackets+'对'}`:'';const extra=isKnowledge?`<div><small>本题积分</small><b>+${r.rGain||0} R</b></div><div><small>正确填空</small><b>${r.correctBlanks||0}/${r.totalBlanks||0}</b></div><div><small>合格状态</small><b>${r.qualified?'合格':'待巩固'}</b></div><div><small>补签</small><b>${r.repairDate||'—'}</b></div>`:isRings?`<div><small>本局积分</small><b>+${r.rGain||0} R</b></div><div><small>A/B 判断错误</small><b>${r.abMistakes||0}</b></div><div><small>总操作 / 失败</small><b>${r.totalOps||0} / ${r.totalFails||0}</b></div><div><small>策略评级</small><b>${r.grade||'—'}</b></div><div><small>总用时</small><b>${r.durationSeconds==null?'—':r.durationSeconds+' s'}</b></div>`:`<div><small>本局成长</small><b>+${r.xp||0} XP</b></div><div><small>最高连击</small><b>${r.bestCombo}</b></div><div><small>平均用时</small><b>${Number(r.avgTime||0).toFixed(1)} s</b></div>`;return `<div class="history-item"><div class="history-item-head"><div class="history-student">${p.classCode}<br>学号 ${p.studentId}</div><div class="history-main"><b>${stage} · ${nt}</b><span>${diff}${bracket}</span></div><div class="history-result"><b>${r.accuracy}%</b><span>${isRings?'投放准确率':'首次正确率'}</span></div></div><div class="history-extra">${extra}</div><div class="history-time">${displayDate(r.at)} · 完成后 ${growthLabel(r.level||1)} · 最近第 ${i+1} 条</div></div>`;}).join(''):'<div class="empty">还没有详细训练记录。完成运算或数圈侦探后都会保存记录。</div>';
   }
   function renderGrowth(){
     const p=currentProfile(),guard=$('#growthGuard'),content=$('#growthContent');if(!p){guard.classList.remove('hidden');content.classList.add('hidden');return;}guard.classList.add('hidden');content.classList.remove('hidden');const li=levelInfo(p.xp);$('#growthClass').textContent=`班级 ${p.classCode}`;$('#growthStudent').textContent=`学号 ${p.studentId}`;$('#growthGames').textContent=`${p.games} 局`;$('#growthLevel').textContent=((li.level-1)%9)+1;$('#growthTitle').textContent=`BASE ${Math.floor((li.level-1)/9)+1} · ${levelTitle(li.level)}`;$('#growthTotalXP').textContent=`累计 ${p.xp} XP`;$('#growthXPBar').style.width=li.pct+'%';$('#growthXPNow').textContent=li.capped?'Lv90 已完成':`${li.into} / ${li.need} XP`;$('#growthNext').textContent=li.capped?'十个 BASE 主题全部集齐':`距离 ${growthLabel(li.level+1)} 还差 ${li.toNext} XP`;let defaultGrowthAvatar=avatarSrcByLevel(li.level,false,blankEquip(),true);$('#growthRobot').src=checkinAvatarForProfile(p,defaultGrowthAvatar);renderCheckin(p);
