@@ -8,7 +8,7 @@ const fixture={};
 const client={auth:{onAuthStateChange(){},getSession:async()=>({data:{session:null}}),signOut:async()=>({error:null})},from(table){let data=[];const q={select(){data=fixture[table]||[];return q},eq(){return q},in(){return q},gte(){return q},order(){return q},maybeSingle:async()=>({data:null}),update(row){fixture[table]=(fixture[table]||[]).map(x=>({...x,...row}));return q},upsert(row){q.row=row;return q},throwOnError:async()=>{if(failTable===table)throw Error('simulated rejected write');writes.push({table,row:structuredClone(q.row)});return {error:null}},then(resolve){return Promise.resolve({data,error:null}).then(resolve)}};return q}};
 const dom=new JSDOM(html,{url:'https://test.invalid/',runScripts:'outside-only',pretendToBeVisual:true});const w=dom.window;
 w.structuredClone=structuredClone;w.supabase={createClient:()=>client};w.scrollTo=()=>{};w.Element.prototype.animate=()=>({});w.alert=()=>{};w.confirm=()=>true;w.console.warn=()=>{};
-for(const script of w.document.scripts){if(script.src&&!/(review-(engine|ui)|daily|question-(content|import|bank))\.js$/.test(new URL(script.src).pathname))continue;let code=script.src?fs.readFileSync(root+'/'+new URL(script.src).pathname.split('/').pop(),'utf8'):script.textContent;new vm.Script(code);code=code.replace('    migrateLegacy();const initP=',`    window.__test={levelInfo,honorInfoFromProfile,cloudLevelBase,blankProfile,saveCurrentProfile,currentProfile,currentProfileKey,cloudState,cloudSyncProfile,renderGrowth,renderStats,go,openStudentGate,loadTeacherDashboard,teacherSwitchTab,rosterNameMap,loadStudentClassWall,peerState,ensureTodayRecord,calcQuestionXP,recordGameClear,gameSignatureArithmetic,state,renderConfig};\n    migrateLegacy();const initP=`);w.eval(code)}
+for(const script of w.document.scripts){if(script.src&&!/(review-(engine|ui)|daily|question-(content|import|bank))\.js$/.test(new URL(script.src).pathname))continue;let code=script.src?fs.readFileSync(root+'/'+new URL(script.src).pathname.split('/').pop(),'utf8'):script.textContent;new vm.Script(code);code=code.replace('    migrateLegacy();const initP=',`    window.__test={levelInfo,honorInfoFromProfile,cloudLevelBase,blankProfile,saveCurrentProfile,currentProfile,currentProfileKey,cloudState,cloudSyncProfile,renderGrowth,renderStats,go,openStudentGate,loadTeacherDashboard,teacherSwitchTab,rosterNameMap,loadStudentClassWall,peerState,ensureTodayRecord,calcQuestionXP,recordGameClear,gameSignatureArithmetic,state,renderConfig,avatarSrcByLevel,peerAvatarSrc,refreshPlayerUI,CHECKIN_OUTFITS};\n    migrateLegacy();const initP=`);w.eval(code)}
 const t=w.__test;assert.ok(t,'main closure reaches initialization');
 function student(){t.cloudState.user={id:'fixture-student'};t.cloudState.role='student';t.cloudState.mustChangePassword=false;t.saveCurrentProfile(t.blankProfile('TEST','1',''));}
 function xpAt(lv){let n=0;for(let i=1;i<lv;i++)n+=260+(i-1)*85;return n;}
@@ -18,6 +18,21 @@ function xpAt(lv){let n=0;for(let i=1;i<lv;i++)n+=260+(i-1)*85;return n;}
  assert.equal(t.levelInfo(259).level,1);assert.equal(t.levelInfo(260).level,2);assert.equal(t.levelInfo(xpAt(90)+999999).level,90);
  for(const [id,target] of [['homeGrowthBtn','growth'],['homeStatsBtn','stats'],['playerBtn','account'],['growthSwitchBtn','account'],['statsSwitchBtn','account']]){t.go('home');w.document.getElementById(id).click();assert.ok(w.document.getElementById(target).classList.contains('active'),id+' click routes to '+target);}
  console.log('PASS 90 levels, BASE boundaries, retained completed collections and slow XP');
+ for(let level=10;level<=27;level++){
+  student();const p=t.currentProfile();p.xp=xpAt(level);p.equip={hat:'old-hat'};t.saveCurrentProfile(p);t.renderGrowth();t.refreshPlayerUI();
+  const source='assets/base'+(Math.floor((level-1)/9)+1)+'-'+((level-1)%9+1)+'.png';
+  for(const selector of ['#growthRobot','#heroRobot','#playerBtn img','#checkinAvatarPreview'])assert.equal(w.document.querySelector(selector).getAttribute('src'),source,selector+' level '+level);
+  assert.equal(t.peerAvatarSrc({level}),source);
+  assert.equal(t.avatarSrcByLevel(level,true,null,true),source);
+ }
+ student();const avatarP=t.currentProfile();avatarP.xp=xpAt(12);avatarP.economy.checkin.equippedOutfit=t.CHECKIN_OUTFITS[0].id;t.saveCurrentProfile(avatarP);t.renderGrowth();t.refreshPlayerUI();
+ assert.equal(w.document.querySelector('#playerBtn img').getAttribute('src'),t.CHECKIN_OUTFITS[0].src,'explicit outfit remains selected');
+ w.document.querySelector('#followBaseAvatar').click();
+ assert.equal(w.document.querySelector('#playerBtn img').getAttribute('src'),'assets/base2-3.png');
+ assert.equal(t.currentProfile().economy.checkin.equippedOutfit,'base');
+ console.log('PASS all 18 BASE2/3 avatar stages across growth, header, hero, checkin and peers; custom outfit retained and follow-BASE button works');
+ student();
+
  student();let scoreProfile=t.currentProfile();
  for(const [brackets,expected] of [['auto',2],['1',2],['2',0],['3',0],['0',0]]){
   const result=t.recordGameClear(scoreProfile,'arithmetic','power|integer|easy|'+brackets,false,'easy','power','integer');
