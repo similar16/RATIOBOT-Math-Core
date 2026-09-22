@@ -2237,7 +2237,10 @@ setTimeout(()=>{try{renderHonorGrowth();updateRingsProfileHint();}catch(e){}},50
     if(candidate&&!pr?.migrated_from_local){
       cloudMsg('#cloudMigrationMsg',candidate.kind==='exact'?'检测到本机旧进度，正在首次迁移到云端…':'检测到旧版/LOCAL 进度，正在合并到当前学生并迁移…');
       let base=cloudHas?cloudApplySnapshot(local||blankProfile(cls,id,''),pr,snap):(local||blankProfile(cls,id,''));let merged=mergeProfilesForMigration(base,candidate.profile,cls,id);saveMigratedLocalProfile(merged);await cloudSyncProfile(merged,true);cloudMsg('#cloudMigrationMsg','✓ 旧 XP、R积分、打卡、头像、徽章与训练记录已合并到云端。','good');
-    }else if(local?.pendingCloud){saveMigratedLocalProfile(local);await cloudSyncProfile(local,true);
+    }else if(local?.pendingCloud){
+      // Pending local work must not replace a newer cloud XP grant with an older total.
+      local.xp=Math.max(Number(local.xp||0),Number(pr?.xp||0));
+      saveMigratedLocalProfile(local);await cloudSyncProfile(local,true);renderGrowth();renderStats();renderAccount();
     }else if(cloudHas){
       let base=local||blankProfile(cls,id,'');cloudState.applying=true;let pulled=cloudApplySnapshot(base,pr,snap);pulled.classCode=normalizeClass(cls);pulled.studentId=String(id);saveMigratedLocalProfile(pulled);cloudState.applying=false;renderGrowth();renderStats();renderAccount();cloudMsg('#cloudMigrationMsg','✓ 已从云端恢复学生进度。','good');
     }else{
