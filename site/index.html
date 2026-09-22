@@ -954,9 +954,11 @@ footer{text-align:center;padding:30px;color:#8C7E82;font:900 10px ui-monospace;l
   }
 
   function makePowerSpec(){
+    // Pick special bases before rejection sampling so the result-size filter cannot inflate their frequency.
+    if(Math.random()<0.03){const base=pick([0,1,-1]),exponent=randInt(2,6);return {base,exponent,result:base**exponent};}
     const small=Math.random()<0.80;
     for(let i=0;i<500;i++){
-      const abs=randInt(0,10), exponent=randInt(2,6);
+      const abs=randInt(2,10), exponent=randInt(2,6);
       const sign=(abs===0?1:(Math.random()<0.5?-1:1));
       const base=abs*sign, result=Math.pow(base,exponent), mag=Math.abs(result);
       if(small && mag<=100) return {base,exponent,result};
@@ -1213,7 +1215,8 @@ footer{text-align:center;padding:30px;color:#8C7E82;font:900 10px ui-monospace;l
 
     if(stage==='power'){
       const kinds=NUMBER_TYPES[numberType].kinds;
-      const kind=kinds.includes(options.powerKind)?options.powerKind:pick(kinds);
+      const defaults=numberType==='integer'?(difficulty==='hard'?['integer','integer','integer','decimal','fraction']:difficulty==='normal'?['integer','integer','integer','integer','decimal']:kinds):kinds;
+      const kind=['integer','decimal','fraction'].includes(options.powerKind)?options.powerKind:pick(defaults);
       const op=makePowerOperand(kind,difficulty);
       const tokens=[{type:'operand',operand:op}], answer=op.value;
       return {
@@ -1984,18 +1987,20 @@ setTimeout(()=>{try{renderHonorGrowth();updateRingsProfileHint();}catch(e){}},50
     const allow=E.STAGES[state.config.stage].allowBrackets, powerOnly=state.config.stage==='power';
     $('#bracketOptions').querySelectorAll('button').forEach(b=>b.disabled=!allow);
     $('#numberOptions').querySelectorAll('button').forEach(b=>b.disabled=false);
+    if(powerOnly)$('#numberOptions [data-value="integer"]').textContent='按难度递进（推荐）';
     let note=allow?'可选 0–3 对结构括号；超级混合“自动”时优先 1–2 对。负数自身的括号不计。':(powerOnly?'可选整数、分数和一位小数底数；小数绝对值小于10。分数、小数练习指数为2，挑战可到3。括号不改变计分次数。':'这个阶段不出现结构括号，括号设置不改变计分次数。');
     if(state.config.stage==='addsub') note+=' 约 45% 题目使用非负原始数，题面完全不出现负数括号。';
+    if(powerOnly && state.config.numberType==='integer')note='每轮10题：轻松以整数为主；标准8道整数＋2道小数；挑战6道整数＋2道小数＋2道分数。顺序随机。0、1、−1合计约占整数底数的3%。小数仅含个位和十分位。';
     if((state.config.stage==='mul'||state.config.stage==='muldiv') && E.NUMBER_TYPES[state.config.numberType].kinds.includes('fraction')) note+=' 含分数时优先生成可交叉约分的题。';
     $('#bracketNote').textContent=note;
     const c=state.config;
-    {const score=arithmeticRScore(c.stage,c.numberType,c.difficulty);$('#configSummary').textContent=`${E.STAGES[c.stage].label} · ${E.NUMBER_TYPES[c.numberType].label} · ${E.DIFFICULTY[c.difficulty].label}${allow?' · 括号 '+(c.brackets==='auto'?'自动':c.brackets+' 对'):''} · 本配置通关 ${score.total} R积分`; }
+    {const score=arithmeticRScore(c.stage,c.numberType,c.difficulty);$('#configSummary').textContent=`${E.STAGES[c.stage].label} · ${c.stage==='power'&&c.numberType==='integer'?'按难度递进':E.NUMBER_TYPES[c.numberType].label} · ${E.DIFFICULTY[c.difficulty].label}${allow?' · 括号 '+(c.brackets==='auto'?'自动':c.brackets+' 对'):''} · 本配置通关 ${score.total} R积分`; }
   }
 
   // Game lifecycle
   function configText(c=state.config){
     const allow=E.STAGES[c.stage].allowBrackets, powerOnly=c.stage==='power';
-    return `${E.STAGES[c.stage].label} · ${E.NUMBER_TYPES[c.numberType].label} · ${E.DIFFICULTY[c.difficulty].label}${allow?' · 括号 '+(c.brackets==='auto'?'自动':c.brackets+' 对'):''}`;
+    return `${E.STAGES[c.stage].label} · ${c.stage==='power'&&c.numberType==='integer'?'按难度递进':E.NUMBER_TYPES[c.numberType].label} · ${E.DIFFICULTY[c.difficulty].label}${allow?' · 括号 '+(c.brackets==='auto'?'自动':c.brackets+' 对'):''}`;
   }
   function openStudentGate(configOverride){
     if(configOverride) state.config={...state.config,...configOverride};
@@ -2014,9 +2019,19 @@ setTimeout(()=>{try{renderHonorGrowth();updateRingsProfileHint();}catch(e){}},50
   function startRound(configOverride){
     if(configOverride) state.config={...state.config,...configOverride};
     state.questions=[];state.index=0;state.combo=0;state.bestCombo=0;state.firstCorrect=0;state.times=[];state.roundTagStats={};state.roundXP=0;state.roundRepairs=0;state.lastGrowth=null;
+    let powerPlan=[];
+    if(state.config.stage==='power'){
+      const kinds=E.NUMBER_TYPES[state.config.numberType].kinds;
+      powerPlan=Array.from({length:10},(_,i)=>kinds[i%kinds.length]);
+      if(state.config.numberType==='integer'){
+        if(state.config.difficulty==='normal')powerPlan.splice(8,2,'decimal','decimal');
+        if(state.config.difficulty==='hard')powerPlan.splice(6,4,'decimal','decimal','fraction','fraction');
+      }
+      for(let i=powerPlan.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[powerPlan[i],powerPlan[j]]=[powerPlan[j],powerPlan[i]];}
+    }
     for(let i=0;i<10;i++){
       const cfg={...state.config};
-      if(cfg.stage==='power'){const kinds=E.NUMBER_TYPES[cfg.numberType].kinds;cfg.powerKind=kinds[i%kinds.length];}
+      if(cfg.stage==='power')cfg.powerKind=powerPlan[i];
       if(i===9 && cfg.difficulty!=='hard') cfg.difficulty=cfg.difficulty==='easy'?'normal':'hard';
       try{state.questions.push(E.generateQuestion(cfg));}catch(err){ alert(err.message);return; }
     }
@@ -2039,7 +2054,7 @@ setTimeout(()=>{try{renderHonorGrowth();updateRingsProfileHint();}catch(e){}},50
   function renderQuestion(){
     const q=state.questions[state.index];state.questionWrong=false;state.wrongAttempts=0;state.hints=0;state.locked=false;state.startedAt=performance.now();
     $('#qIndex').textContent=String(state.index+1).padStart(2,'0')+' / 10';
-    $('#gameModeLabel').textContent=`${E.STAGES[q.stage].label} · ${E.NUMBER_TYPES[q.numberType].label}`;
+    $('#gameModeLabel').textContent=`${E.STAGES[q.stage].label} · ${q.stage==='power'&&q.numberType==='integer'?'按难度递进':E.NUMBER_TYPES[q.numberType].label}`;
     $('#progressBar').style.width=`${(state.index+1)*10}%`;$('#combo').textContent=state.combo;
     $('#bossBadge').classList.toggle('hidden',state.index!==9);$('#expression').innerHTML=q.html;
     $('#answerInput').value='';$('#answerInput').disabled=false;$('#submitBtn').disabled=false;$('#submitBtn').textContent='确认答案';

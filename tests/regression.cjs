@@ -44,6 +44,20 @@ function xpAt(lv){let n=0;for(let i=1;i<lv;i++)n+=260+(i-1)*85;return n;}
   }
  }
  console.log('PASS bracket reward bypass, legacy aggregation, enabled numeric types, full rounds with fractions/decimals and exact rational powers');
+ for(const [difficulty,expected] of [['easy',[10,0,0]],['normal',[8,2,0]],['hard',[6,2,2]]]){
+  for(let repeat=0;repeat<12;repeat++){
+   t.state.config={stage:'power',numberType:'integer',difficulty,brackets:'auto'};t.renderConfig();t.openStudentGate();
+   const counts=['integer','decimal','fraction'].map(kind=>t.state.questions.filter(q=>(q.operands[0].baseOperand?.kind||'integer')===kind).length);
+   assert.deepEqual(counts,expected,'difficulty round quotas');
+  }
+ }
+ const oldRandom=w.Math.random;let seed=75231;
+ w.Math.random=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;};
+ let special=0;
+ try{for(let i=0;i<10000;i++){const p=w.RationalEngine.makePowerSpec();if(Math.abs(p.base)<=1)special++;assert.equal(p.result,p.base**p.exponent);}}finally{w.Math.random=oldRandom;}
+ assert(special>200&&special<400,'0 and ±1 together stay near 3%, got '+special);
+ console.log('PASS progressive power round quotas 10/0/0, 8/2/0, 6/2/2; seeded special-base rate '+special+'/10000');
+
  student();
 
  for(const [mistakes,gain] of [[0,8],[1,4],[2,0]]){student();const payload={profileKey:t.currentProfileKey(),runId:'run-'+mistakes,mode:'solo',abMistakes:mistakes,totalOps:20,totalFails:2,roundCount:3,grade:'A · 推理很稳',durationSeconds:120};const r=w.ratiobotAwardRingsV53(payload);const p=t.currentProfile();assert.equal(r.gain,gain);assert.equal(p.economy.credits,gain);assert.equal(p.history.length,1);assert.equal(p.history[0].rGain,gain);assert.equal(p.history[0].accuracy,90);assert.equal(p.history[0].durationSeconds,120);assert.equal(p.history[0].abMistakes,mistakes);assert.match(w.document.querySelector('#historyList').textContent,/数圈侦探 · 分类推理/);assert.match(w.document.querySelector('#historyList').textContent,/120 s/);assert.equal(w.ratiobotAwardRingsV53(payload).gain,gain);assert.equal(t.currentProfile().history.length,1);await t.cloudSyncProfile();const pr=writes.filter(x=>x.table==='profiles').at(-1).row,snap=writes.filter(x=>x.table==='progress_snapshots').at(-1).row;assert.equal(pr.r_points,gain);assert.equal(Object.hasOwn(pr,'display_name'),false,'progress sync must not overwrite corrected roster names');assert.equal(snap.economy.credits,gain);assert.equal(snap.game_stats.history[0].rGain,gain);assert.equal(t.currentProfile().pendingCloud,false);}
