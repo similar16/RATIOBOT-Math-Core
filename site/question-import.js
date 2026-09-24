@@ -22,7 +22,7 @@ function cleanOcrText(value){return String(value||'').replace(/\u3000/g,' ').rep
  s=s.replace(/([\u3400-\u9fff])[ \t]+(?=[\u3400-\u9fff])/g,'$1');
  s=s.replace(/([\u3400-\u9fff])[ \t]+([，。；：！？、）》】])/g,'$1$2');
  s=s.replace(/([（《【])[ \t]+([\u3400-\u9fff])/g,'$1$2');
- s=s.replace(/[ \t]+([，。；：！？、）》】])/g,'$1').replace(/([（《【])[ \t]+/g,'$1');
+ s=s.replace(/[ \t]+([，。；：！？、）》】])/g,'$1').replace(/([，。；：！？、）》】])[ \t]+(?=[\u3400-\u9fff])/g,'$1').replace(/([（《【])[ \t]+/g,'$1');
  s=s.replace(/[ \t]*([=＋+−×÷<>≤≥])[ \t]*/g,'$1');
  s=s.replace(/(\d)[ \t]+([%％°])/g,'$1$2');
  return s;
