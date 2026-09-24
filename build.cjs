@@ -5,7 +5,9 @@ import zipfile
 with zipfile.ZipFile('RATIOBOT_GitHub_Pages_v4.0.zip') as z:
  for n in z.namelist():
   if '/assets/' in n and not n.endswith('/'):
-   p=Path('_site/assets')/n.split('/assets/',1)[1];p.parent.mkdir(parents=True,exist_ok=True);p.write_bytes(z.read(n))`]);
+   rel=n.split('/assets/',1)[1]
+   if rel.startswith(('base2-','base3-')) and rel.endswith('.png'):continue
+   p=Path('_site/assets')/rel;p.parent.mkdir(parents=True,exist_ok=True);p.write_bytes(z.read(n))`]);
 fs.copyFileSync('node_modules/@supabase/supabase-js/dist/umd/supabase.js','_site/assets/supabase.min.js');
 // Recognition resources stay on the same origin and load only when importing.
 const vendor='_site/assets/import';fs.mkdirSync(vendor+'/core',{recursive:true});fs.mkdirSync(vendor+'/lang',{recursive:true});

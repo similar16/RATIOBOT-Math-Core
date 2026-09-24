@@ -24,7 +24,7 @@ function xpAt(lv){let n=0;for(let i=1;i<lv;i++)n+=260+(i-1)*85;return n;}
  await t.cloudLoadStudentData('TEST','1');
  assert.equal(t.currentProfile().xp,5400,'pending local profile adopts newer cloud XP');
  assert.equal(t.currentProfile().economy.credits,219,'pending wallet retained');
- assert.equal(w.document.querySelector('#playerBtn img').getAttribute('src'),'assets/base2-1.png');
+ assert.equal(w.document.querySelector('#playerBtn img').getAttribute('src'),'assets/base2-1.png?v=20260925');
  assert.equal(writes.filter(x=>x.table==='profiles').at(-1).row.xp,5400,'upload cannot undo cloud grant');
  delete fixture.profiles;delete fixture.progress_snapshots;
  console.log('PASS pending login preserves cloud XP grant, local work and BASE2 avatar');
@@ -32,7 +32,7 @@ function xpAt(lv){let n=0;for(let i=1;i<lv;i++)n+=260+(i-1)*85;return n;}
 
  for(let level=10;level<=27;level++){
   student();const p=t.currentProfile();p.xp=xpAt(level);p.equip={hat:'old-hat'};t.saveCurrentProfile(p);t.renderGrowth();t.refreshPlayerUI();
-  const source='assets/base'+(Math.floor((level-1)/9)+1)+'-'+((level-1)%9+1)+'.png';
+  const source='assets/base'+(Math.floor((level-1)/9)+1)+'-'+((level-1)%9+1)+'.png?v=20260925';
   for(const selector of ['#growthRobot','#heroRobot','#playerBtn img','#checkinAvatarPreview'])assert.equal(w.document.querySelector(selector).getAttribute('src'),source,selector+' level '+level);
   assert.equal(t.peerAvatarSrc({level}),source);
   assert.equal(t.avatarSrcByLevel(level,true,null,true),source);
@@ -40,7 +40,7 @@ function xpAt(lv){let n=0;for(let i=1;i<lv;i++)n+=260+(i-1)*85;return n;}
  student();const avatarP=t.currentProfile();avatarP.xp=xpAt(12);avatarP.economy.checkin.equippedOutfit=t.CHECKIN_OUTFITS[0].id;t.saveCurrentProfile(avatarP);t.renderGrowth();t.refreshPlayerUI();
  assert.equal(w.document.querySelector('#playerBtn img').getAttribute('src'),t.CHECKIN_OUTFITS[0].src,'explicit outfit remains selected');
  w.document.querySelector('#followBaseAvatar').click();
- assert.equal(w.document.querySelector('#playerBtn img').getAttribute('src'),'assets/base2-3.png');
+ assert.equal(w.document.querySelector('#playerBtn img').getAttribute('src'),'assets/base2-3.png?v=20260925');
  assert.equal(t.currentProfile().economy.checkin.equippedOutfit,'base');
  console.log('PASS all 18 BASE2/3 avatar stages across growth, header, hero, checkin and peers; custom outfit retained and follow-BASE button works');
  student();

@@ -13,13 +13,17 @@ for p in (root/'assets').iterdir():
   im=Image.open(p);im.load();assert min(im.size)>0,p
 for i in range(1,17):assert (root/f'assets/badge-{i}.png').exists()
 for b in [2,3]:
- for i in range(1,10):assert (root/f'assets/base{b}-{i}.png').exists()
-# Preserve all original files, including graphics not currently visible.
+ for i in range(1,10):
+  p=root/f'assets/base{b}-{i}.png'
+  assert p.exists(),p
+  with Image.open(p) as im:assert im.size==(420,420),(p,im.size)
+# Preserve archived originals except BASE2/BASE3, which are intentionally replaced by the current theme artwork.
 with zipfile.ZipFile('RATIOBOT_GitHub_Pages_v4.0.zip') as z:
  n=0
  for name in z.namelist():
   if '/assets/' not in name or name.endswith('/'):continue
   rel='assets/'+name.split('/assets/',1)[1]
+  if re.fullmatch(r'assets/base[23]-[1-9]\\.png',rel):continue
   assert (root/rel).read_bytes()==z.read(name),rel
   n+=1
-print(f'PASS syntax, complete image decoding, 16 badges, 18 restored theme stages, {n} original assets byte-identical')
+print(f'PASS syntax, complete image decoding, 16 badges, 18 current 420px theme stages, {n} archived assets byte-identical')
