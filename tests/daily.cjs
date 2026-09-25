@@ -18,12 +18,12 @@ const ui=w.mountDailyChallenges({client:()=>client,identity:()=>who,go:id=>route
  $('#dailyPublish').click();await tick();assert.equal(sets[0].published,true);assert.equal($('#dailyPublish'),null);
  sets[0].questions[0].steps=['第一步','第二步'];sets[0].questions[0].has_solution=true;sets[0].questions[0].answer_type='fill';sets[0].questions[1].answer_type='choice';sets[0].questions[1].choices=['3','4','5'];
  who={...who,role:'student'};await ui.open();assert.equal(d.querySelectorAll('#dailyContent .daily-card').length,2);assert.equal($('#dailyContent img'),null);
- assert.equal($('.daily-answer-btn').disabled,true);$('.daily-step-btn').click();assert.match($('.daily-steps').textContent,/第一步/);assert.doesNotMatch($('.daily-steps').textContent,/第二步/);$('.daily-step-btn').click();assert.equal($('.daily-step-btn').disabled,true);
+ assert.equal($('.daily-answer-btn').disabled,true);
  let h=$('.daily-hint-btn');assert.equal(h.disabled,true);assert.match(h.textContent,/提交答案/);assert.equal($('.daily-step-btn').disabled,true);
- $('#dailyAnswer0').value='42';$('#dailyReason0').value='推理过程';await $('form').onsubmit({preventDefault(){},currentTarget:$('form')});assert.equal(answers.length,1);assert.match($('.daily-status').textContent,/已提交/);assert.equal(h.disabled,false);assert.equal($('.daily-step-btn').disabled,false);h.click();assert.match($('.daily-hints').textContent,/先观察/);
+ $('#dailyAnswer0').value='42';$('#dailyReason0').value='推理过程';await $('form').onsubmit({preventDefault(){},currentTarget:$('form')});assert.equal(answers.length,1);assert.match($('.daily-status').textContent,/已提交/);assert.equal(h.disabled,false);assert.equal($('.daily-step-btn').disabled,false);h.click();assert.match($('.daily-hints').textContent,/先观察/);$('.daily-step-btn').click();assert.match($('.daily-steps').textContent,/第一步/);assert.doesNotMatch($('.daily-steps').textContent,/第二步/);$('.daily-step-btn').click();assert.equal($('.daily-step-btn').disabled,true);
  assert.equal($('.daily-answer-btn').disabled,false);
  const choice=d.querySelectorAll('input[name="dailyChoice1"]')[1];assert(choice);choice.checked=true;const secondForm=d.querySelectorAll('#dailyContent form')[1];await secondForm.onsubmit({preventDefault(){},currentTarget:secondForm});assert.equal(answers.length,2);assert.equal(answers.find(x=>x.slot===1).answer,'B');
- $('#dailyAnswer0').value='43';await $('form').onsubmit({preventDefault(){},currentTarget:$('form')});assert.equal(answers.length,1);assert.equal(answers[0].answer,'43');
+ $('#dailyAnswer0').value='43';await $('form').onsubmit({preventDefault(){},currentTarget:$('form')});assert.equal(answers.length,2);assert.equal(answers.find(x=>x.slot===0).answer,'43');
  fail=true;$('#dailyAnswer0').value='44';await $('form').onsubmit({preventDefault(){},currentTarget:$('form')});assert.match($('.daily-status').textContent,/保存失败/);assert.equal($('#dailyAnswer0').value,'44');fail=false;
  who={...who,user:{id:'s2'}};await ui.open();assert.equal($('#dailyAnswer0').value,'');
  who={...who,role:'teacher'};await ui.loadTeacher('c1');assert.match($('#dailyAnswers').textContent,/2号/);assert.match($('#dailyAnswers').textContent,/43/);
