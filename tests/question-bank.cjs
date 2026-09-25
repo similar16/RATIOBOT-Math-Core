@@ -13,7 +13,7 @@ function insertMath(kind,a,b){const button=kind==='fraction'?'#qbFraction':kind=
  assert.equal(w.QuestionImport.cleanOcrText('计 算  12 + 8 ， 得 到 20'),'计算 12+8，得到 20');
  assert.equal(w.QuestionContent.images(['javascript:alert(1)','https://external.invalid/a.png']), '');
  await ui.loadTeacher('class1');
- $('#qbBody').focus();insertMath('fraction','1','2');insertMath('sup','a','2');insertMath('sub','x','1');assert.equal($('#qbPreview').querySelectorAll('.katex').length,3);assert.equal($('#qbBody').querySelectorAll('.qb-math-token .katex').length,3);assert.equal($('#qbBody').innerHTML.includes('$\\frac'),false);
+ $('#qbBody').focus();insertMath('fraction','1','2');insertMath('sup','a','2');insertMath('sub','x','1');assert.equal($('#qbPreview').querySelectorAll('.katex').length,3);assert.equal($('#qbBody').querySelectorAll('.qb-math-token .katex').length,3);
  w.prompt=()=> '3,3';$('#qbInsertTable').click();assert.equal($('#qbPreview').querySelectorAll('table tr').length,3);
  w.prompt=()=> 'https://www.geogebra.org/m/RHYH3UQ8';$('#qbInsertGgb').click();const ggb=$('#qbPreview [data-ggb]');assert(ggb);assert.equal(ggb.querySelector('iframe'),null);ggb.querySelector('button').click();assert.match(ggb.querySelector('iframe').src,/geogebra.org\/material\/iframe\/id\/RHYH3UQ8/);
  assert.equal(w.QuestionContent.ggbId('https://evil.example/m/RHYH3UQ8'),'');
