@@ -9,7 +9,7 @@
 @media(max-width:1000px){.qb-layout{grid-template-columns:180px minmax(0,1fr)}.qb-workspace{grid-template-columns:1fr}.qb-preview{position:static;max-height:none}}
 @media(max-width:600px){.qb-layout{grid-template-columns:1fr}.qb-list{max-height:220px}.qb-library,.qb-edit,.qb-preview{padding:12px}.qb-toolbar{align-items:stretch}.qb-toolbar input[type=date]{max-width:100%}}
 
-.qb-table-scroll{overflow-x:auto;max-width:100%;margin:12px 0;white-space:normal}.qb-table{width:100%;border-collapse:collapse;font-size:14px;line-height:1.7;background:#fff}.qb-table th,.qb-table td{border:2px solid var(--ink);padding:9px;min-width:65px;vertical-align:middle}.qb-table th{background:#FFF0B8}.qb-text{white-space:pre-wrap;line-height:1.8;overflow-wrap:anywhere}.qb-ggb{white-space:normal;border:2px solid var(--ink);border-radius:14px;padding:12px;margin:14px 0;background:#FFFDF8}.qb-ggb a{display:block;margin:10px 0;font-size:12px;color:var(--ink)}.qb-ggb iframe{width:100%;height:480px;border:0;border-radius:10px}.qb-preview .katex-display{overflow:auto}.qb-edit input[hidden]{display:none!important}
+.qb-table-scroll{overflow-x:auto;max-width:100%;margin:12px 0;white-space:normal}.qb-table{width:auto;min-width:100%;border-collapse:collapse;font-size:14px;line-height:1.7;background:#fff;table-layout:fixed}.qb-table th,.qb-table td{border:2px solid var(--ink);padding:7px 9px;min-width:var(--qb-col-w,90px);width:var(--qb-col-w,90px);height:var(--qb-row-h,42px);box-sizing:border-box;vertical-align:middle;text-align:center}.qb-table th{background:#fff;font-weight:800}.qb-text{white-space:pre-wrap;line-height:1.8;overflow-wrap:anywhere}.qb-ggb{white-space:normal;border:2px solid var(--ink);border-radius:14px;padding:12px;margin:14px 0;background:#FFFDF8}.qb-ggb a{display:block;margin:10px 0;font-size:12px;color:var(--ink)}.qb-ggb iframe{width:100%;height:480px;border:0;border-radius:10px}.qb-preview .katex-display{overflow:auto}.qb-edit input[hidden]{display:none!important}
 
 /* Visual question editor */
 .qb-format-toolbar{position:sticky;top:76px;z-index:6;background:#FFFDF8;border:2px solid #DACCB8;border-radius:12px;padding:8px;margin:8px 0 10px}
@@ -27,3 +27,13 @@
 .qb-inline-image{margin:12px 0}.qb-inline-image .qb-image{margin:0 auto}
 .qb-dialog{width:min(430px,calc(100vw - 28px));border:3px solid var(--ink);border-radius:18px;background:#FFFDF8;color:var(--ink);padding:18px;box-shadow:8px 8px 0 rgba(62,53,64,.16)}.qb-dialog::backdrop{background:rgba(62,53,64,.28)}.qb-dialog h3{margin-top:0}.qb-dialog input{width:100%;box-sizing:border-box;border:2px solid var(--ink);border-radius:10px;padding:9px;font:inherit;background:#fff}.qb-dialog label{display:block;margin:9px 0 5px;font-size:12px;font-weight:900}
 @media(max-width:600px){.qb-format-toolbar{position:static}.qb-rich{font-size:15px}.qb-media-grid{grid-template-columns:1fr 1fr}}
+/* Question math follows the surrounding text font for simple fractions/powers/subscripts. */
+.qb-math-token .katex,.qb-math-token .katex *,.qb-preview .katex,.qb-preview .katex *,.daily-card .katex,.daily-card .katex *{font-family:inherit!important}
+.qb-rich-table-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:0 0 7px}
+.qb-rich-table-label{margin:0}
+.qb-table-controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.qb-table-controls label{display:flex!important;align-items:center;gap:4px;margin:0!important;font-size:11px!important;color:var(--muted)}
+.qb-table-controls input{width:64px!important;padding:4px 5px!important;border:1.5px solid #D6C7B4!important;border-radius:7px!important;background:#fff!important;font-size:11px!important}
+.qb-rich-table-block .qb-table{width:auto;min-width:100%}
+.qb-rich-table-block .qb-table th,.qb-rich-table-block .qb-table td{min-width:var(--qb-col-w,90px);width:var(--qb-col-w,90px);height:var(--qb-row-h,42px);text-align:center;vertical-align:middle}
+.qb-sized-table .qb-table th,.qb-sized-table .qb-table td{min-width:var(--qb-col-w,90px);width:var(--qb-col-w,90px);height:var(--qb-row-h,42px)}
