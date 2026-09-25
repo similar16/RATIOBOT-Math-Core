@@ -37,3 +37,5 @@
 .qb-rich-table-block .qb-table{width:auto;min-width:100%}
 .qb-rich-table-block .qb-table th,.qb-rich-table-block .qb-table td{min-width:var(--qb-col-w,90px);width:var(--qb-col-w,90px);height:var(--qb-row-h,42px);text-align:center;vertical-align:middle}
 .qb-sized-table .qb-table th,.qb-sized-table .qb-table td{min-width:var(--qb-col-w,90px);width:var(--qb-col-w,90px);height:var(--qb-row-h,42px)}
+
+.qb-table tr{height:var(--qb-row-h,42px)}
