@@ -39,3 +39,9 @@
 .qb-sized-table .qb-table th,.qb-sized-table .qb-table td{min-width:var(--qb-col-w,90px);width:var(--qb-col-w,90px);height:var(--qb-row-h,42px)}
 
 .qb-table tr{height:var(--qb-row-h,42px)}
+
+/* Unified question text and student answer controls */
+.qb-rich,.qb-preview .daily-pre,.daily-card .daily-pre,.daily-card form,.daily-card input,.daily-card textarea,.daily-choice-group{font-family:inherit!important;font-size:15px!important}
+.qb-rich .katex,.qb-rich .katex *,.qb-preview .katex,.qb-preview .katex *,.daily-card .katex,.daily-card .katex *{font-family:inherit!important;font-size:1em!important}
+.qb-answer-settings{margin:14px 0;padding:12px;border:2px solid #D6C7B4;border-radius:14px;background:#F8F5EC}.qb-answer-settings h4{margin:0 0 8px}.qb-answer-settings select,.qb-answer-settings input,.qb-answer-settings textarea{display:block;width:100%;box-sizing:border-box;border:2px solid var(--ink);border-radius:10px;padding:8px;background:#fff;color:var(--ink);font:inherit}.qb-answer-settings textarea{min-height:92px;resize:vertical}
+.daily-fill-answer{display:block;width:100%;box-sizing:border-box;border:2px solid var(--ink);border-radius:10px;padding:10px;background:#fff;color:var(--ink);font:inherit}.daily-choice-group{border:2px solid var(--ink);border-radius:12px;padding:10px 12px;margin:10px 0;background:#FFFDF8}.daily-choice-group legend{font-weight:900;padding:0 5px}.daily-choice-group label{display:block;padding:8px 6px;border-radius:8px;cursor:pointer}.daily-choice-group label:has(input:checked){background:#FFF4D7}.daily-choice-group input{width:auto!important;margin-right:6px}
