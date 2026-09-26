@@ -319,3 +319,84 @@ end $$;
 
 revoke all on function public.publish_bank_questions(uuid,date,uuid[]) from public,anon;
 grant execute on function public.publish_bank_questions(uuid,date,uuid[]) to authenticated;
+
+
+-- 2026-09-27: student fraction/power answer notation.
+-- Students may type 1/2, -3/4, 2^3, (-2)^3.
+-- Teacher answer keys may keep equivalent LaTeX such as \frac{1}{2} or 2^{3}.
+create or replace function private.normalize_daily_math_answer(v text)
+returns text
+language plpgsql
+immutable
+set search_path=''
+as $$
+declare
+  s text := lower(coalesce(v,''));
+  t text;
+begin
+  s := replace(s,'−','-');
+  s := replace(s,'⁄','/');
+  s := replace(s,'×','*');
+  s := replace(s,'·','*');
+  s := replace(s,'÷','/');
+  s := replace(s,E'\\left','');
+  s := replace(s,E'\\right','');
+  s := replace(s,E'\\dfrac',E'\\frac');
+  s := replace(s,E'\\tfrac',E'\\frac');
+  s := replace(s,E'\\(','');
+  s := replace(s,E'\\)','');
+  s := replace(s,E'\\[','');
+  s := replace(s,E'\\]','');
+  s := replace(s,'$','');
+  s := regexp_replace(s,'[[:space:]]+','','g');
+
+  loop
+    t := regexp_replace(s,E'\\\\frac\\{([^{}]+)\\}\\{([^{}]+)\\}',E'(\\1)/(\\2)','g');
+    exit when t=s;
+    s := t;
+  end loop;
+
+  s := regexp_replace(s,E'\\^\\{([+-]?[0-9]+(?:\\.[0-9]+)?)\\}',E'^\\1','g');
+  s := regexp_replace(s,E'\\(([+-]?[0-9]+(?:\\.[0-9]+)?)\\)/\\(([+-]?[0-9]+(?:\\.[0-9]+)?)\\)',E'\\1/\\2','g');
+  return s;
+end $$;
+
+create or replace function public.check_daily_inline_answer(
+  target_set uuid,
+  target_slot smallint,
+  target_blank text,
+  submitted text
+) returns boolean
+language plpgsql
+security definer
+set search_path=''
+as $$
+declare expected text;
+begin
+  if auth.uid() is null then return false; end if;
+
+  if not exists (
+    select 1
+    from public.daily_challenge_sets s
+    join public.class_members m on m.class_id=s.class_id
+    where s.id=target_set
+      and s.published
+      and now() >= ((s.challenge_date::timestamp + interval '7 hours') at time zone 'Asia/Shanghai')
+      and m.user_id=auth.uid()
+      and m.role='student'
+  ) then return false; end if;
+
+  select e->>'answer'
+  into expected
+  from public.daily_challenge_solutions sol,
+       lateral jsonb_array_elements(coalesce(sol.inline_answers,'[]'::jsonb)) e
+  where sol.set_id=target_set
+    and sol.slot=target_slot
+    and e->>'id'=target_blank
+  limit 1;
+
+  if expected is null then return false; end if;
+
+  return private.normalize_daily_math_answer(expected)
+       = private.normalize_daily_math_answer(submitted);
+end $$;
