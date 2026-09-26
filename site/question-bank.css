@@ -65,3 +65,13 @@
 
 /* teacher image preview fallback */
 .qb-preview-images{margin:12px 0;padding:10px;border:2px dashed #D6C7B4;border-radius:12px;background:#FFF9ED}.qb-preview-images.source{background:#F5FBFB}.qb-preview-images>b{display:block;font-size:12px;margin-bottom:2px}.qb-preview-images>p{margin:0 0 8px;color:var(--muted);font-size:10px;font-weight:800;line-height:1.5}.qb-preview-images .qb-image{max-height:320px}
+
+/* Teacher-controlled question image sizing */
+.qb-rich-image{max-width:none!important}
+.qb-rich-image .qb-image{width:var(--qb-image-w,60%)!important;max-width:100%!important;height:auto!important;max-height:none!important}
+.qb-inline-image{text-align:center}
+.qb-inline-image .qb-image{width:var(--qb-image-w,60%)!important;max-width:100%!important;height:auto!important;max-height:none!important}
+.qb-image-controls{display:flex;justify-content:center;margin:7px 0 2px}
+.qb-image-controls label{display:flex!important;align-items:center;gap:8px;margin:0!important;font-size:11px!important;color:var(--muted)}
+.qb-image-controls input[type=range]{width:160px!important}
+.qb-image-controls span{min-width:36px;font-weight:900;color:var(--ink)}
