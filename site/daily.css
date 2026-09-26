@@ -50,3 +50,12 @@
 
 .teacher-mode .student-navigation,.teacher-mode .top-actions{display:none!important}#teacherNavigation[hidden]{display:none!important}#teacherNavigation{flex-wrap:wrap}.teacher-mode .topbar{flex-wrap:wrap}#dailyDateSelect{border:2px solid var(--ink);background:#FFFDF8;color:var(--ink);border-radius:12px;padding:10px;max-width:100%}
 #ratioCompanion{height:136px}@media(max-width:650px){#ratioCompanion{height:102px}}
+
+/* Single-question challenge pages */
+.daily-student-pages{display:block!important}
+.daily-question-page{max-width:820px;margin:0 auto}
+.daily-question-page[hidden]{display:none!important}
+.daily-question-pager{display:flex;align-items:center;justify-content:center;gap:12px;margin:8px 0 16px}
+.daily-question-pager b{min-width:96px;text-align:center;font-size:13px}
+.daily-question-pager button{min-width:96px}
+@media(max-width:600px){.daily-question-pager{gap:7px}.daily-question-pager button{min-width:0;padding:8px 10px}.daily-question-page{padding:16px}}
