@@ -1,7 +1,7 @@
 (function(){
 'use strict';
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const safeImage=v=>typeof v==='string'&&/^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/.test(v)&&v.length<2200000;
+const safeImage=v=>typeof v==='string'&&/^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/.test(v)&&v.length<5900000;
 function images(list){return (Array.isArray(list)?list:[]).filter(safeImage).map(src=>`<img class="qb-image" alt="题目配图" src="${src}">`).join('');}
 function hasImageMarkers(value){return /(^|\n)\s*\[IMG:\d+\]\s*(?=\n|$)/i.test(String(value||''));}
 function ggbId(value){const s=String(value||'').trim();if(/^[A-Za-z0-9]{5,32}$/.test(s))return s;try{const u=new URL(s);if(u.protocol!=='https:'||!['www.geogebra.org','geogebra.org'].includes(u.hostname))return '';return u.pathname.match(/^\/(?:m|classic|geometry|graphing)\/([A-Za-z0-9]{5,32})(?:\/|$)/)?.[1]||u.pathname.match(/^\/material\/iframe\/id\/([A-Za-z0-9]{5,32})(?:\/|$)/)?.[1]||'';}catch(e){return '';}}
