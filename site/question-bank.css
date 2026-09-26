@@ -81,3 +81,11 @@
 .qb-inline-key-row{grid-template-columns:28px auto minmax(0,1fr) auto!important}
 .qb-inline-key-row select,.qb-inline-key-row textarea{width:100%;box-sizing:border-box;border:2px solid var(--ink);border-radius:9px;padding:7px 9px;background:#fff;font:inherit}
 .qb-control-proof textarea{min-height:62px;resize:vertical}
+
+/* Precise field-scoped image placement */
+.qb-field-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:10px 0 5px}
+.qb-field-head label{margin:0!important}
+.qb-field-image{padding:5px 9px!important;font-size:11px!important;white-space:nowrap}
+.qb-image-controls label{flex-wrap:wrap;justify-content:center}
+.qb-image-controls input[type=range]{width:min(220px,55vw)!important}
+.qb-image-controls input[type=number]{width:64px!important;padding:4px 6px!important;border:1.5px solid #D6C7B4!important;border-radius:7px!important;background:#fff!important;font-size:11px!important}
