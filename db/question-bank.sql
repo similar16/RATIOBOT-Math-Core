@@ -60,3 +60,262 @@ begin
 end $$;
 revoke all on function public.publish_bank_questions(uuid,date,uuid[]) from public,anon;
 grant execute on function public.publish_bank_questions(uuid,date,uuid[]) to authenticated;
+
+
+-- 2026-09-27: structured challenge feedback + 07:00 release
+-- This block is intentionally idempotent and supersedes the earlier date-only
+-- student visibility policies and exact-answer requirement for proof boxes.
+
+alter table public.daily_challenge_answers
+  add column if not exists response_data jsonb not null default '{}'::jsonb;
+
+create table if not exists public.daily_challenge_judgments(
+  set_id uuid not null references public.daily_challenge_sets(id) on delete cascade,
+  user_id uuid not null references auth.users(id) on delete cascade,
+  slot smallint not null check(slot in (0,1)),
+  blank_id text not null check(length(blank_id) between 1 and 32),
+  status text not null check(status in ('correct','wrong','revise')),
+  note text not null default '',
+  judged_by uuid not null references auth.users(id) on delete cascade,
+  judged_at timestamptz not null default now(),
+  primary key(set_id,user_id,slot,blank_id)
+);
+alter table public.daily_challenge_judgments enable row level security;
+revoke all on public.daily_challenge_judgments from anon,authenticated;
+grant select,insert,update on public.daily_challenge_judgments to authenticated;
+
+drop policy if exists daily_judgments_read on public.daily_challenge_judgments;
+create policy daily_judgments_read on public.daily_challenge_judgments
+for select to authenticated using(
+  user_id=(select auth.uid())
+  or exists(
+    select 1 from public.daily_challenge_sets s
+    where s.id=set_id and private.is_teacher_in_class(s.class_id)
+  )
+);
+
+drop policy if exists daily_judgments_insert on public.daily_challenge_judgments;
+create policy daily_judgments_insert on public.daily_challenge_judgments
+for insert to authenticated with check(
+  judged_by=(select auth.uid())
+  and exists(
+    select 1 from public.daily_challenge_sets s
+    where s.id=set_id and private.is_teacher_in_class(s.class_id)
+  )
+);
+
+drop policy if exists daily_judgments_update on public.daily_challenge_judgments;
+create policy daily_judgments_update on public.daily_challenge_judgments
+for update to authenticated using(
+  exists(
+    select 1 from public.daily_challenge_sets s
+    where s.id=set_id and private.is_teacher_in_class(s.class_id)
+  )
+) with check(
+  judged_by=(select auth.uid())
+  and exists(
+    select 1 from public.daily_challenge_sets s
+    where s.id=set_id and private.is_teacher_in_class(s.class_id)
+  )
+);
+
+drop policy if exists daily_sets_read on public.daily_challenge_sets;
+create policy daily_sets_read on public.daily_challenge_sets
+for select using(
+  private.is_teacher_in_class(class_id)
+  or (
+    private.is_member_of_class(class_id)
+    and published
+    and now() >= ((challenge_date::timestamp + interval '7 hours') at time zone 'Asia/Shanghai')
+  )
+);
+
+drop policy if exists daily_answers_create on public.daily_challenge_answers;
+create policy daily_answers_create on public.daily_challenge_answers
+for insert to authenticated with check(
+  user_id=(select auth.uid())
+  and exists(
+    select 1 from public.daily_challenge_sets s
+    where s.id=daily_challenge_answers.set_id
+      and private.is_member_of_class(s.class_id)
+      and not private.is_teacher_in_class(s.class_id)
+      and s.published
+      and now() >= ((s.challenge_date::timestamp + interval '7 hours') at time zone 'Asia/Shanghai')
+  )
+);
+
+drop policy if exists daily_answers_edit on public.daily_challenge_answers;
+create policy daily_answers_edit on public.daily_challenge_answers
+for update to authenticated using(
+  user_id=(select auth.uid())
+) with check(
+  user_id=(select auth.uid())
+  and exists(
+    select 1 from public.daily_challenge_sets s
+    where s.id=daily_challenge_answers.set_id
+      and private.is_member_of_class(s.class_id)
+      and not private.is_teacher_in_class(s.class_id)
+      and s.published
+      and now() >= ((s.challenge_date::timestamp + interval '7 hours') at time zone 'Asia/Shanghai')
+  )
+);
+
+drop policy if exists solution_read on public.daily_challenge_solutions;
+create policy solution_read on public.daily_challenge_solutions
+for select to authenticated using(
+  exists(
+    select 1 from public.daily_challenge_sets s
+    where s.id=daily_challenge_solutions.set_id
+      and (
+        private.is_teacher_in_class(s.class_id)
+        or (
+          private.is_member_of_class(s.class_id)
+          and s.published
+          and now() >= ((s.challenge_date::timestamp + interval '7 hours') at time zone 'Asia/Shanghai')
+          and exists(
+            select 1 from public.daily_challenge_answers a
+            where a.set_id=daily_challenge_solutions.set_id
+              and a.slot=daily_challenge_solutions.slot
+              and a.user_id=(select auth.uid())
+          )
+        )
+      )
+  )
+);
+
+create or replace function public.check_daily_inline_answer(
+  target_set uuid,
+  target_slot smallint,
+  target_blank text,
+  submitted text
+) returns boolean
+language plpgsql
+security definer
+set search_path=''
+as $$
+declare expected text;
+begin
+  if auth.uid() is null then return false; end if;
+
+  if not exists (
+    select 1
+    from public.daily_challenge_sets s
+    join public.class_members m on m.class_id=s.class_id
+    where s.id=target_set
+      and s.published
+      and now() >= ((s.challenge_date::timestamp + interval '7 hours') at time zone 'Asia/Shanghai')
+      and m.user_id=auth.uid()
+      and m.role='student'
+  ) then return false; end if;
+
+  select e->>'answer'
+  into expected
+  from public.daily_challenge_solutions sol,
+       lateral jsonb_array_elements(coalesce(sol.inline_answers,'[]'::jsonb)) e
+  where sol.set_id=target_set
+    and sol.slot=target_slot
+    and e->>'id'=target_blank
+  limit 1;
+
+  if expected is null then return false; end if;
+
+  return lower(regexp_replace(trim(expected),'\s+','','g'))
+       = lower(regexp_replace(trim(coalesce(submitted,'')),'\s+','','g'));
+end $$;
+
+create or replace function public.publish_bank_questions(
+  target_class uuid,
+  target_date date,
+  question_ids uuid[]
+) returns uuid
+language plpgsql security invoker set search_path='' as $$
+declare
+  q public.question_bank;
+  result_id uuid;
+  items jsonb:='[]';
+  answers text[]:='{}';
+  inline_keys jsonb[]:='{}';
+  solution text;
+begin
+  if auth.uid() is null or not private.is_teacher_in_class(target_class) then
+    raise exception '只能向自己管理的班级发布';
+  end if;
+  if target_date is null
+     or coalesce(array_length(question_ids,1),0)<>2
+     or question_ids[1]=question_ids[2] then
+    raise exception '请选择两道不同的题目和日期';
+  end if;
+
+  foreach result_id in array question_ids loop
+    select * into q
+    from public.question_bank
+    where id=result_id and owner_id=auth.uid()
+    for share;
+
+    if not found then raise exception '题目不存在或无权访问'; end if;
+    if not q.reviewed
+       or length(trim(q.body))=0
+       or length(trim(q.answer))=0 then
+      raise exception '请完成题目与答案，并校对保存';
+    end if;
+
+    if q.answer_type='choice' then
+      if jsonb_array_length(coalesce(q.choices,'[]'::jsonb))<2 then
+        raise exception '选择题至少需要两个选项';
+      end if;
+      if length(trim(coalesce(q.answer_key,'')))=0 then
+        raise exception '选择题请填写标准答案';
+      end if;
+    end if;
+
+    if exists (
+      select 1
+      from jsonb_array_elements(coalesce(q.inline_answers,'[]'::jsonb)) e
+      where length(trim(coalesce(e->>'id','')))=0
+         or (
+           coalesce(e->>'kind','fill')<>'proof'
+           and length(trim(coalesce(e->>'answer','')))=0
+         )
+    ) then
+      raise exception '请填写所有填空框和选项框的正确答案';
+    end if;
+
+    items:=items||jsonb_build_array(jsonb_build_object(
+      'bank_id',q.id,
+      'title',q.title,
+      'body',q.body,
+      'hints',coalesce(q.hints,'[]'::jsonb),
+      'steps',coalesce(q.steps,'[]'::jsonb),
+      'images',coalesce(q.content_images,'[]'::jsonb),
+      'extra_images',
+        case when q.include_images then coalesce(q.source_images,'[]'::jsonb) else '[]'::jsonb end,
+      'answer_type',q.answer_type,
+      'choices',
+        case when q.answer_type='choice' then coalesce(q.choices,'[]'::jsonb) else '[]'::jsonb end,
+      'has_solution',true
+    ));
+
+    solution:=case
+      when length(trim(coalesce(q.answer_key,'')))>0
+        then '参考答案：'||trim(q.answer_key)||E'\n'||q.answer
+      else q.answer
+    end;
+
+    answers:=array_append(answers,solution);
+    inline_keys:=array_append(inline_keys,coalesce(q.inline_answers,'[]'::jsonb));
+  end loop;
+
+  insert into public.daily_challenge_sets(class_id,challenge_date,questions,published)
+  values(target_class,target_date,items,true)
+  returning id into result_id;
+
+  insert into public.daily_challenge_solutions(set_id,slot,answer,inline_answers)
+  values
+    (result_id,0,answers[1],inline_keys[1]),
+    (result_id,1,answers[2],inline_keys[2]);
+
+  return result_id;
+end $$;
+
+revoke all on function public.publish_bank_questions(uuid,date,uuid[]) from public,anon;
+grant execute on function public.publish_bank_questions(uuid,date,uuid[]) to authenticated;
