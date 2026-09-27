@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "build": "node build.cjs",
-    "test": "node tests/regression.cjs && node tests/rings.cjs && node tests/review.cjs && node tests/daily.cjs && node tests/question-bank.cjs && node tests/appearance.cjs && node tests/ocr.cjs"
+    "test": "node tests/regression.cjs && node tests/rings.cjs && node tests/review.cjs && node tests/daily.cjs && node tests/question-bank.cjs && node tests/appearance.cjs && node tests/student-profile.cjs && node tests/ocr.cjs"
   },
   "repository": {
     "type": "git",
