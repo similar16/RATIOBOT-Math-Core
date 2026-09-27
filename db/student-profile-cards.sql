@@ -41,3 +41,29 @@ left join public.daily_checkins dc
   on dc.user_id=cm.user_id
  and dc.checkin_date=(now() at time zone 'Asia/Shanghai')::date
 where cm.role='student' and p.public_card_enabled=true;
+
+
+-- 2026-09-28: avatar uploads are disabled.
+-- custom_avatar now stores only one of ten built-in portrait asset paths.
+update public.profiles
+set custom_avatar=null
+where custom_avatar is not null
+  and custom_avatar not in (
+    'assets/student-avatar-01.svg','assets/student-avatar-02.svg',
+    'assets/student-avatar-03.svg','assets/student-avatar-04.svg',
+    'assets/student-avatar-05.svg','assets/student-avatar-06.svg',
+    'assets/student-avatar-07.svg','assets/student-avatar-08.svg',
+    'assets/student-avatar-09.svg','assets/student-avatar-10.svg'
+  );
+alter table public.profiles drop constraint if exists profiles_custom_avatar_whitelist;
+alter table public.profiles add constraint profiles_custom_avatar_whitelist
+check (
+  custom_avatar is null or custom_avatar in (
+    'assets/student-avatar-01.svg','assets/student-avatar-02.svg',
+    'assets/student-avatar-03.svg','assets/student-avatar-04.svg',
+    'assets/student-avatar-05.svg','assets/student-avatar-06.svg',
+    'assets/student-avatar-07.svg','assets/student-avatar-08.svg',
+    'assets/student-avatar-09.svg','assets/student-avatar-10.svg'
+  )
+);
+update public.class_visual_settings set avatars='[]'::jsonb where avatars <> '[]'::jsonb;
