@@ -584,6 +584,122 @@ footer{text-align:center;padding:30px;color:#8C7E82;font:900 10px ui-monospace;l
 .midautumn-framed{position:relative!important}.midautumn-framed:after{content:"";position:absolute;inset:0;background:url('assets/midautumn-frame-2026-clear.png?v=20260926-clear') center/contain no-repeat;pointer-events:none;z-index:6;transform:translateY(-4%) scale(1.02);transform-origin:center}.mascot-stage.midautumn-framed>.mascot-img{width:68%;max-height:205px}.growth-robot.midautumn-framed>#growthRobot{width:min(245px,74%)}.growth-robot.midautumn-framed>.base-hero-sprite{transform:scale(.72)}.growth-robot.midautumn-framed .energy-chip,.growth-robot.midautumn-framed .base-stage-chip{z-index:8}.checkin-avatar-preview.midautumn-framed{border-color:transparent!important;background:transparent!important;overflow:visible!important}.checkin-avatar-preview.midautumn-framed>#checkinAvatarPreview{width:102px;height:102px}.player-mini-wrap.midautumn-framed{border-color:transparent!important;background:transparent!important;overflow:visible!important}.player-mini-wrap.midautumn-framed>.player-mini{width:68%!important;height:68%!important;object-fit:contain}.peer-card .peer-avatar.midautumn-framed{border-color:transparent!important;background:transparent!important;box-shadow:none!important;overflow:visible!important}.peer-avatar.midautumn-framed>img{width:68%;height:68%}
 @media(max-width:760px){.midautumn-home-banner{grid-template-columns:64px 1fr}.midautumn-home-banner>button{grid-column:1/-1}.midautumn-home-icon{width:60px;height:60px}.midautumn-event-body{grid-template-columns:1fr}.midautumn-reward{display:grid;grid-template-columns:125px 1fr;align-items:center;text-align:left}.midautumn-reward-preview{width:120px}.midautumn-task-grid{grid-template-columns:1fr 1fr}}@media(max-width:520px){.midautumn-task-grid{grid-template-columns:1fr}.midautumn-reward{grid-template-columns:100px 1fr}.midautumn-reward-preview{width:96px}}
 
+
+/* ===== game-style top command bar v1 ===== */
+.topbar{gap:16px}
+.game-nav-primary{
+  flex:1;
+  justify-content:center;
+  gap:5px!important;
+  min-width:0;
+}
+.topbar .game-nav-primary button{
+  min-width:86px;
+  padding:7px 10px!important;
+  border:2px solid transparent;
+  border-radius:13px;
+  color:var(--muted);
+  background:transparent;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:7px;
+  font-size:11px;
+  font-weight:1000;
+  white-space:nowrap;
+}
+.game-nav-key{
+  width:25px;height:25px;
+  display:grid;place-items:center;
+  border:2px solid var(--ink);
+  border-radius:8px;
+  background:#FFFDF8;
+  color:var(--ink);
+  font:1000 9px ui-monospace,monospace;
+  box-shadow:2px 2px 0 rgba(62,53,64,.1);
+}
+.topbar .game-nav-primary button:hover,
+.topbar .game-nav-primary button.active{background:#FFF0B8;border-color:var(--ink);color:var(--ink)}
+.topbar .game-nav-primary button.active .game-nav-key{background:var(--coral);color:#fff}
+.game-menu-btn{
+  height:42px;
+  border:3px solid var(--ink);
+  border-radius:12px;
+  background:#FFFDF8;
+  color:var(--ink);
+  padding:0 11px;
+  display:inline-flex;
+  align-items:center;
+  gap:7px;
+  font-size:10px;
+  font-weight:1000;
+  box-shadow:3px 3px 0 var(--yellow);
+}
+.game-menu-btn:hover,.game-menu-btn.active{background:var(--yellow);transform:translate(-1px,-1px)}
+.game-menu-icon{font-size:17px;line-height:1}
+.game-sound-btn{width:42px;height:42px;padding:0!important;border:2px solid transparent!important}
+.student-game-menu{
+  position:absolute;
+  top:68px;
+  right:clamp(14px,3vw,48px);
+  width:min(440px,calc(100vw - 28px));
+  border:4px solid var(--ink);
+  border-radius:20px;
+  background:#FFFDF8;
+  box-shadow:9px 9px 0 rgba(62,53,64,.18);
+  padding:13px;
+  z-index:60;
+}
+.student-game-menu-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;padding:2px 2px 10px}
+.student-game-menu-head small{display:block;color:var(--coral);font:1000 8px ui-monospace,monospace;letter-spacing:.15em}
+.student-game-menu-head b{display:block;font-size:18px;margin-top:1px}
+.game-menu-close{width:34px;height:34px;border:2px solid var(--ink);border-radius:10px;background:#FFF0B8;color:var(--ink);font-size:22px;font-weight:1000;line-height:1}
+.student-game-menu-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.student-game-menu-grid button{
+  min-height:92px;
+  border:3px solid var(--ink);
+  border-radius:14px;
+  background:#FFF9ED;
+  color:var(--ink);
+  padding:10px;
+  text-align:left;
+  display:grid;
+  grid-template-columns:31px 1fr;
+  grid-template-rows:auto auto;
+  column-gap:8px;
+  align-items:center;
+  box-shadow:3px 3px 0 rgba(62,53,64,.08);
+}
+.student-game-menu-grid button:hover,.student-game-menu-grid button.active{background:#DDF3F3;transform:translate(-1px,-1px)}
+.student-game-menu-grid button>span{grid-row:1/3;width:31px;height:31px;display:grid;place-items:center;border:2px solid var(--ink);border-radius:9px;background:var(--yellow);font:1000 8px ui-monospace,monospace}
+.student-game-menu-grid button>b{font-size:12px;align-self:end}
+.student-game-menu-grid button>small{font-size:8px;color:var(--muted);font-weight:850;align-self:start}
+.student-game-menu-foot{display:flex;align-items:center;justify-content:space-between;gap:9px;padding-top:10px}
+.student-game-menu-foot>span{font-size:8px;line-height:1.35;color:var(--muted);font-weight:850;text-align:right}
+.student-game-menu-foot .top-logout{padding:7px 9px!important;font-size:9px!important;white-space:nowrap}
+.teacher-mode .game-nav-primary,.teacher-mode #studentMenuBtn,.teacher-mode #studentGameMenu,.teacher-mode #playerBtn,.teacher-mode .game-sound-btn{display:none!important}
+@media(max-width:1100px){
+  .game-nav-primary{display:none!important}
+  .topbar{justify-content:space-between}
+  .game-menu-btn{display:inline-flex}
+}
+@media(max-width:620px){
+  .topbar{padding:0 10px;height:64px;gap:8px}
+  .brand-mark{width:36px;height:36px}
+  .brand b{font-size:11px}.brand small{display:none}
+  .top-actions{gap:5px}
+  .player-pill{max-width:145px;padding:4px 7px}
+  .game-menu-btn{width:42px;padding:0;justify-content:center}
+  .game-menu-btn>span:last-child{display:none}
+  .game-sound-btn{display:none}
+  .student-game-menu{top:58px;right:10px;width:calc(100vw - 20px)}
+  .student-game-menu-grid{grid-template-columns:1fr 1fr}
+}
+@media(max-width:430px){
+  .student-game-menu-grid{grid-template-columns:1fr}
+  .student-game-menu-grid button{min-height:76px}
+}
+
 </style><link rel="stylesheet" href="review.css"><link rel="stylesheet" href="daily.css"><link rel="stylesheet" href="question-bank.css"><link rel="stylesheet" href="appearance-manager.css"><link rel="stylesheet" href="student-profile.css"><link rel="stylesheet" href="assets/import/katex/katex.min.css">
 </head>
 <body data-base-theme-system="v1">
@@ -593,17 +709,28 @@ footer{text-align:center;padding:30px;color:#8C7E82;font:900 10px ui-monospace;l
       <span class="brand-mark">R</span>
       <span><b>RATIOBOT</b><small>有理数运算核心训练</small></span>
     </button>
-    <nav class="student-navigation">
-      <button data-go="knowledge">A 知识点库</button>
-      <button data-go="train">B 闯关训练</button>
-      <button data-go="rings">C 数圈侦探</button>
-      <button data-go="growth">我的核心</button>
-      <button data-go="profile">个人名片</button>
-      <button data-go="stats">训练记录</button>
-      <button data-go="classmates">同班挑战墙</button>
+    <nav class="student-navigation game-nav-primary" aria-label="核心游戏导航">
+      <button data-go="knowledge"><span class="game-nav-key">A</span><span>知识</span></button>
+      <button data-go="train"><span class="game-nav-key">B</span><span>挑战</span></button>
+      <button data-go="rings"><span class="game-nav-key">C</span><span>侦探</span></button>
+      <button data-go="growth"><span class="game-nav-key">D</span><span>成长</span></button>
     </nav>
     <nav id="teacherNavigation" hidden><button data-teacher-tab="bank">题库</button><button data-teacher-tab="daily">每日挑战发布</button><button data-teacher-tab="data">学生数据</button><button data-teacher-tab="publish">班级账号</button><button data-teacher-tab="review">教学进度</button><button data-teacher-tab="appearance">外观管理</button></nav>
-    <div class="top-actions"><button id="profileQuickBtn" data-go="profile" class="profile-quick hidden" title="打开个人名片">个人名片</button><button id="playerBtn" data-go="account" class="player-pill" title="切换学生">未登录</button><button id="topLogoutBtn" class="icon-btn top-logout hidden" title="退出当前学生">退出</button><button id="soundBtn" class="icon-btn" title="声音">♪</button></div>
+    <div class="top-actions">
+      <button id="playerBtn" data-go="account" class="player-pill" title="学生登录">未登录</button>
+      <button id="studentMenuBtn" class="game-menu-btn" type="button" aria-expanded="false" aria-controls="studentGameMenu"><span class="game-menu-icon">☰</span><span>菜单</span></button>
+      <button id="soundBtn" class="icon-btn game-sound-btn" title="声音">♪</button>
+    </div>
+    <div id="studentGameMenu" class="student-game-menu hidden" role="dialog" aria-label="玩家菜单">
+      <div class="student-game-menu-head"><div><small>COMMAND MENU</small><b>玩家菜单</b></div><button id="studentMenuClose" class="game-menu-close" type="button" aria-label="关闭菜单">×</button></div>
+      <div class="student-game-menu-grid">
+        <button data-go="profile"><span>01</span><b>个人名片</b><small>头像 · 称号 · 展示徽章</small></button>
+        <button data-go="stats"><span>02</span><b>训练记录</b><small>准确率 · 速度 · 历史</small></button>
+        <button data-go="classmates"><span>03</span><b>同班挑战墙</b><small>查看同伴任务状态</small></button>
+        <button data-go="account"><span>04</span><b>账号</b><small>登录与账号切换</small></button>
+      </div>
+      <div class="student-game-menu-foot"><button id="topLogoutBtn" class="ghost top-logout hidden" type="button">退出当前学生</button><span>核心玩法留在顶部，其余功能集中在这里。</span></div>
+    </div>
   </header>
 
   <main>
@@ -1525,7 +1652,7 @@ setTimeout(()=>{try{renderHonorGrowth();updateRingsProfileHint();}catch(e){}},50
   }
   function refreshHintButton(){const btn=$('#hintBtn');if(!btn)return;const p=currentProfile();const level=levelInfo(p&&p.xp||0).level;const src=avatarSrcByLevel(level,true,null,true);btn.innerHTML=`<span class="hint-bot-wrap"><img class="hint-bot" src="${src}" alt=""></span><span>提示</span>`;}
   function renderGrowthAvatar(){ const p=currentProfile(); const level=levelInfo(p&&p.xp||0).level; const base=avatarSrcByLevel(level,false,p&&p.equip),baseMini=avatarSrcByLevel(level,true,p&&p.equip),framed=midAutumnFrameOn(p); const src=p?(framed?framedAvatarForProfile(p,base):checkinAvatarForProfile(p,base)):base,mini=p?(framed?framedAvatarForProfile(p,baseMini):checkinAvatarForProfile(p,baseMini)):baseMini; const hero=$('#heroRobot'); if(hero) hero.src=src; const grow=$('#growthRobot'); if(grow) grow.src=src; const btn=$('#playerBtn'); if(btn){btn.dataset.avatar=mini;} applyMidAutumnFrameUI(p); refreshHintButton(); }
-  function refreshPlayerUI(){const p=currentProfile(),btn=$('#playerBtn');if(!btn)return;const topLogout=$('#topLogoutBtn'),profileQuick=$('#profileQuickBtn');if(topLogout)topLogout.classList.toggle('hidden',!p);if(profileQuick)profileQuick.classList.toggle('hidden',!p);const level=levelInfo(p&&p.xp||0).level;const def=avatarSrcByLevel(level,true,p&&p.equip),mini=p?(midAutumnFrameOn(p)?framedAvatarForProfile(p,def):checkinAvatarForProfile(p,def)):def;if(p){btn.dataset.go='profile';btn.title='打开个人名片';btn.innerHTML=`<span class="player-mini-wrap"><img class="player-mini" src="${mini}" alt="当前头像"></span><span>${p.classCode} · ${p.studentId}号</span>`;btn.classList.add('logged');}else{btn.dataset.go='account';btn.title='学生登录';btn.innerHTML=`<span class="player-mini-wrap"><img class="player-mini" src="${mini}" alt="默认头像"></span><span>学生入口</span>`;btn.classList.remove('logged');}applyMidAutumnFrameUI(p);renderMidAutumnHome(p);renderGrowthAvatar();}
+  function refreshPlayerUI(){const p=currentProfile(),btn=$('#playerBtn');if(!btn)return;const topLogout=$('#topLogoutBtn');if(topLogout)topLogout.classList.toggle('hidden',!p);const level=levelInfo(p&&p.xp||0).level;const def=avatarSrcByLevel(level,true,p&&p.equip),mini=p?(midAutumnFrameOn(p)?framedAvatarForProfile(p,def):checkinAvatarForProfile(p,def)):def;if(p){btn.dataset.go='profile';btn.title='打开个人名片';btn.innerHTML=`<span class="player-mini-wrap"><img class="player-mini" src="${mini}" alt="当前头像"></span><span>${p.classCode} · ${p.studentId}号</span>`;btn.classList.add('logged');}else{btn.dataset.go='account';btn.title='学生登录';btn.innerHTML=`<span class="player-mini-wrap"><img class="player-mini" src="${mini}" alt="默认头像"></span><span>学生入口</span>`;btn.classList.remove('logged');}applyMidAutumnFrameUI(p);renderMidAutumnHome(p);renderGrowthAvatar();}
 
   function displayDateLong(iso){try{return new Intl.DateTimeFormat('zh-CN',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}).format(new Date(iso));}catch(e){return iso||''}}
   function todayKey(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
@@ -1539,6 +1666,7 @@ setTimeout(()=>{try{renderHonorGrowth();updateRingsProfileHint();}catch(e){}},50
   const CLOUD_LOGIN_REQUIRED_PAGES=new Set(['rules','train','rings','classmates','daily','profile']);
   function cloudStudentReady(){try{return !!(cloudState?.user&&cloudState?.role==='student'&&!cloudState?.mustChangePassword)}catch(e){return false}}
   function go(id,opts={}){
+    setStudentGameMenu(false);
     if(cloudState.role==='teacher'&&!['teacher','account'].includes(id))id='teacher';
     if(CLOUD_LOGIN_REQUIRED_PAGES.has(id)&&!opts.bypass&&!cloudStudentReady()){
       try{cloudState.pendingPage=id}catch(e){}
@@ -1550,7 +1678,17 @@ setTimeout(()=>{try{renderHonorGrowth();updateRingsProfileHint();}catch(e){}},50
     }
     window.dailyUI?.route(id);$$('.page').forEach(x=>x.classList.toggle('active',x.id===id));$$('[data-go]').forEach(x=>x.classList.toggle('active',(x.dataset.go===id||(x.dataset.go==='knowledge'&&['rules','review'].includes(id)))));if(id==='growth')renderGrowth?.();if(id==='profile')window.StudentProfileCard?.render?.();if(id==='stats')renderStats?.();if(id==='account')renderAccount?.();if(id==='rings')ensureRingsLoaded?.();if(id==='classmates')loadStudentClassWall();if(id==='review')window.reviewUI?.open(opts.reviewMode);window.scrollTo({top:0,behavior:'smooth'});
   }
-  $$('[data-go]').forEach(b=>b.addEventListener('click',()=>go(b.dataset.go)));
+  $('[data-go]').forEach(b=>b.addEventListener('click',()=>go(b.dataset.go)));
+  function setStudentGameMenu(open){
+    const panel=$('#studentGameMenu'),button=$('#studentMenuBtn');if(!panel||!button)return;
+    const on=!!open&&!document.body.classList.contains('teacher-mode');
+    panel.classList.toggle('hidden',!on);button.classList.toggle('active',on);button.setAttribute('aria-expanded',String(on));
+  }
+  $('#studentMenuBtn')?.addEventListener('click',e=>{e.stopPropagation();setStudentGameMenu($('#studentGameMenu')?.classList.contains('hidden'));});
+  $('#studentMenuClose')?.addEventListener('click',()=>setStudentGameMenu(false));
+  $('#studentGameMenu')?.addEventListener('click',e=>e.stopPropagation());
+  document.addEventListener('click',()=>setStudentGameMenu(false));
+  window.addEventListener('keydown',e=>{if(e.key==='Escape')setStudentGameMenu(false)});
 
 
   // ===== V8 local multi-profile store (cloud-ready data shape) =====
@@ -2331,7 +2469,7 @@ setTimeout(()=>{try{renderHonorGrowth();updateRingsProfileHint();}catch(e){}},50
   async function cloudStudentRegister(){if(!cloudClient){cloudMsg('#accountError','云端组件未加载，请检查网络。','bad');return}let {join,sid,password,name}=studentForm();if(!join||!/^[0-9]{1,3}$/.test(sid)){cloudMsg('#accountError','请输入老师给出的班级用户名和1–3位数字学号。','bad');return}if(!/^[A-Za-z0-9!@#$%^&*._-]{6,32}$/.test(password)){cloudMsg('#accountError','请设置6–32位密码，可使用字母、数字及常见符号。','bad');return}cloudMsg('#accountError','正在创建学生账号…');try{let r=await fetch(`${CLOUD_URL}/functions/v1/student-auth`,{method:'POST',headers:{'Content-Type':'application/json','apikey':CLOUD_KEY},body:JSON.stringify({action:'register',join_code:join,student_code:sid,password,display_name:name||`${sid}号`})}),j=await r.json();if(!r.ok||!j.ok)throw new Error(j.error||'学生注册失败');cloudMsg('#accountError',`✓ 注册成功，账号 ${join}-${sid}。正在自动登录…`,'good');await cloudStudentLogin()}catch(e){cloudMsg('#accountError',e.message||'学生注册失败','bad')}}
   async function setFirstStudentPassword(){let a=$('#firstNewPassword').value,b=$('#firstNewPassword2').value;if(a!==b)return cloudMsg('#firstPasswordMsg','两次输入的密码不一致。','bad');if(!/^[A-Za-z0-9!@#$%^&*._-]{6,32}$/.test(a))return cloudMsg('#firstPasswordMsg','密码需为6–32位，可使用字母、数字及常见符号。','bad');let {data}=await cloudClient.auth.getSession(),token=data?.session?.access_token;if(!token)return cloudMsg('#firstPasswordMsg','登录状态已失效，请重新登录。','bad');cloudMsg('#firstPasswordMsg','正在保存新密码…');try{let r=await fetch(`${CLOUD_URL}/functions/v1/student-auth`,{method:'POST',headers:{'Content-Type':'application/json','apikey':CLOUD_KEY,'Authorization':`Bearer ${token}`},body:JSON.stringify({action:'change_password',new_password:a})}),j=await r.json();if(!r.ok||!j.ok)throw new Error(j.error||'修改密码失败');cloudState.mustChangePassword=false;$('#firstNewPassword').value='';$('#firstNewPassword2').value='';$('#firstPasswordBox').classList.add('cloud-hidden');cloudMsg('#accountError','✓ 新密码已设置完成。','');refreshCloudUI();const next=cloudState.pendingPage||'growth';cloudState.pendingPage='';setTimeout(()=>go(next,{bypass:true}),250)}catch(e){cloudMsg('#firstPasswordMsg',e.message||'修改密码失败。','bad')}}
   $('#setFirstPasswordBtn').onclick=setFirstStudentPassword;
-  async function refreshCloudUI(){const teaching=cloudState.role==='teacher';document.body.classList.toggle('teacher-mode',teaching);$('#teacherNavigation').hidden=!teaching;window.dailyUI?.refresh();let st=$('#cloudStatus'),id=$('#cloudIdentity');if(st){st.className='cloud-pill '+(cloudClient?'online':'offline');st.innerHTML=`<i class="cloud-dot"></i><span>${cloudClient?'Supabase 云端已连接':'云端组件未加载'}</span>`}if(id){if(cloudState.user){id.className='cloud-pill online';id.innerHTML=`<i class="cloud-dot"></i><span>${cloudState.role==='teacher'?'教师已登录':`${cloudState.username||cloudState.className||state.classCode}${cloudState.mustChangePassword?' · 待设置密码':''}`}</span>`}else{id.className='cloud-pill offline';id.innerHTML='<i class="cloud-dot"></i><span>未登录云端</span>'}}}
+  async function refreshCloudUI(){const teaching=cloudState.role==='teacher';document.body.classList.toggle('teacher-mode',teaching);if(teaching)setStudentGameMenu(false);$('#teacherNavigation').hidden=!teaching;window.dailyUI?.refresh();let st=$('#cloudStatus'),id=$('#cloudIdentity');if(st){st.className='cloud-pill '+(cloudClient?'online':'offline');st.innerHTML=`<i class="cloud-dot"></i><span>${cloudClient?'Supabase 云端已连接':'云端组件未加载'}</span>`}if(id){if(cloudState.user){id.className='cloud-pill online';id.innerHTML=`<i class="cloud-dot"></i><span>${cloudState.role==='teacher'?'教师已登录':`${cloudState.username||cloudState.className||state.classCode}${cloudState.mustChangePassword?' · 待设置密码':''}`}</span>`}else{id.className='cloud-pill offline';id.innerHTML='<i class="cloud-dot"></i><span>未登录云端</span>'}}}
   function peerAvatarSrc(row){if(row?.custom_avatar)return row.custom_avatar;const lv=Math.max(1,Math.min(90,Number(row.level)||1)),fallback=CHECKIN_OUTFITS.find(x=>x.id===row.outfit_key)?.src||avatarSrcByLevel(lv,true,blankEquip(),true);if(window.AppearanceManager?.hasAvatars?.())return window.AppearanceManager.avatarForLevel(lv,fallback);return peerHasMidAutumnFrame(row)?GROWTH_AVATAR_ART[1]:fallback}
   function peerCardTheme(row){const t=String(row?.profile_card?.theme||'sun');return ['sun','detective','forest','graphite'].includes(t)?t:'sun'}
   function peerCardTitle(row){return teacherEsc(row?.profile_card?.title||'数学任务员')}
