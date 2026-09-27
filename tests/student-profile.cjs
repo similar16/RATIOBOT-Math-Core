@@ -7,6 +7,7 @@ w.RatioProfileBridge={
   today:()=>({points:22,checked:true,full:false})
 };
 w.eval(fs.readFileSync('site/student-profile.js','utf8'));
+const client={from(){return {}}};
 const row={user_id:'u1',display_name:'17号小方',level:12,base_level:2,streak:5,badge_count:2,public_card_enabled:true,avatar_key:'level:12|frame:midautumn2026',custom_avatar:'data:image/png;base64,AA==',public_training:{history:[{game:'rings',accuracy:90}]},profile_card:{theme:'detective',title:'分类侦探',featured_badges:['数圈新探'],show_recent:true}};
 w.StudentProfileCard.hydrate(row,{classId:'c1',className:'七年级29班',studentCode:'17'},client);
 assert.match(w.StudentProfileCard.avatarSrc('fallback'),/AA/);
