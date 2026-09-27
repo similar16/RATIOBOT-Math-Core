@@ -89,3 +89,18 @@
 .qb-image-controls label{flex-wrap:wrap;justify-content:center}
 .qb-image-controls input[type=range]{width:min(220px,55vw)!important}
 .qb-image-controls input[type=number]{width:64px!important;padding:4px 6px!important;border:1.5px solid #D6C7B4!important;border-radius:7px!important;background:#fff!important;font-size:11px!important}
+
+/* Published challenge live preview */
+.qb-published-preview{margin-top:10px;display:grid;gap:10px}
+.qb-published-head{display:flex;flex-direction:column;gap:2px;padding:9px 10px;border:2px solid #D6C7B4;border-radius:12px;background:#FFF7DD}
+.qb-published-head b{font-size:13px}.qb-published-head span{font-size:10px;color:var(--muted);font-weight:800}
+.qb-published-card{border:2px solid #D6C7B4;border-radius:14px;background:#FFFDF8;padding:10px}
+.qb-published-card h4{margin:0 0 8px;font-size:13px}
+.qb-published-card .daily-pre{font-size:12px;line-height:1.6;white-space:pre-wrap;overflow-wrap:anywhere}
+.qb-published-card details{margin-top:7px;border-top:1px solid #E7DDCD;padding-top:6px}
+.qb-published-card summary{cursor:pointer;font-size:11px;font-weight:900}
+.qb-published-hint{margin-top:7px;padding:7px;border-radius:9px;background:#FFF7DD}
+.qb-published-hint>b{display:block;margin-bottom:4px;font-size:10px}
+.qb-published-empty{padding:10px;border:2px dashed #D6C7B4;border-radius:12px;background:#FFFDF8;font-size:11px;color:var(--muted)}
+.qb-published-empty.error{color:#9B342C}
+.qb-published-preview .qb-image{max-width:100%!important}
