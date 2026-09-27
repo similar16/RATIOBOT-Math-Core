@@ -20,8 +20,8 @@ function xpAt(lv){let n=0;for(let i=1;i<lv;i++)n+=260+(i-1)*85;return n;}
  student();
  for(let lv=1;lv<=90;lv++){const p=t.currentProfile();p.xp=xpAt(lv);t.saveCurrentProfile(p);t.renderGrowth();const h=t.honorInfoFromProfile(p);assert.equal(h.currentBase,Math.floor((lv-1)/9)+1);assert.equal(h.phase,(lv-1)%9+1);assert.equal(t.cloudLevelBase(p).base,h.currentBase);assert.equal(w.document.querySelectorAll('#baseStageGallery article').length,9);assert.equal(w.document.querySelectorAll('#baseCompleteGallery article').length,Math.min(3,Math.floor(lv/9)));assert.equal(w.document.querySelector('#growthLevel').textContent,String(h.phase));assert.ok(!/BASE\s*0\b/.test(w.document.body.textContent));}
  assert.equal(t.levelInfo(259).level,1);assert.equal(t.levelInfo(260).level,2);assert.equal(t.levelInfo(xpAt(90)+999999).level,90);
- for(const [id,target] of [['homeGrowthBtn','growth'],['homeStatsBtn','stats'],['playerBtn','profile'],['growthSwitchBtn','account'],['statsSwitchBtn','account']]){t.go('home');w.document.getElementById(id).click();assert.ok(w.document.getElementById(target).classList.contains('active'),id+' click routes to '+target);}
- console.log('PASS 90 levels, BASE boundaries, retained completed collections and slow XP');
+ for(const [id,target] of [['homeGrowthBtn','growth'],['homeStatsBtn','stats'],['homeProfileBtn','profile'],['playerBtn','profile'],['profileQuickBtn','profile'],['growthSwitchBtn','account'],['statsSwitchBtn','account']]){t.go('home');w.document.getElementById(id).click();assert.ok(w.document.getElementById(target).classList.contains('active'),id+' click routes to '+target);}
+ console.log('PASS 90 levels, BASE boundaries, retained completed collections, profile discovery routes and slow XP');
  student();const pending=t.currentProfile();pending.xp=2753;pending.economy.credits=219;t.saveCurrentProfile(pending);
  fixture.profiles=[{xp:5400,level:10,base_level:2,migrated_from_local:true}];
  fixture.progress_snapshots=[{game_stats:{games:1},economy:{lifetimeCredits:219}}];
