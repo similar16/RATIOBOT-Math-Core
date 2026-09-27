@@ -17,7 +17,8 @@ function normalizeCard(v){
     featured=Array.isArray(x.featured_badges)?x.featured_badges.filter(Boolean).slice(0,3):[];
   return {theme,title,featured_badges:featured,show_recent:x.show_recent!==false};
 }
-function hydrate(profileRow,extra={}){
+function hydrate(profileRow,extra={},c=null){
+  if(c)client=c;
   row=profileRow?{...profileRow,profile_card:normalizeCard(profileRow.profile_card)}:null;
   meta={...meta,...extra};
   window.dispatchEvent(new CustomEvent('ratiobot-profile-card-hydrated'));
@@ -60,7 +61,7 @@ function cardMarkup(){
     '</section>'+
     '<section class="profile-settings">'+
       '<div class="profile-settings-head"><div><small>PROFILE LOADOUT</small><h3>编辑我的名片</h3><p>头像、名片主题与展示徽章只在同班可见，不会公开到班级之外。</p></div><span class="profile-save-state" id="profileSaveState"></span></div>'+
-      '<div class="profile-avatar-setting"><div class="profile-avatar-preview '+(frameOn()?'with-midautumn-frame':'')+'"><img src="'+esc(av)+'" alt=""><span>头像</span></div><div><b>自定义头像</b><p>上传后可缩放和裁切成正方形；中秋头像框会继续作为独立收藏叠加。</p><div class="profile-action-row"><input id="profileAvatarFile" type="file" accept="image/png,image/jpeg,image/webp" hidden><button id="profileUploadAvatar" class="primary" type="button">上传 / 修改头像</button>'+(row.custom_avatar?'<button id="profileResetAvatar" class="ghost" type="button">恢复系统头像</button>':'')+'</div></div></div>'+
+      '<div class="profile-avatar-setting"><div class="profile-avatar-preview '+(frameOn()?'with-midautumn-frame':'')+'"><img src="'+esc(av)+'" alt=""><span>头像</span></div><div><b>自定义头像</b><p>上传后可缩放和裁切成正方形；中秋头像框会继续作为独立收藏叠加。</p><div class="profile-action-row"><input id="profileAvatarFile" type="file" accept="image/png,image/jpeg,image/webp" hidden><label for="profileAvatarFile" id="profileUploadAvatar" class="primary profile-upload-label">上传 / 修改头像</label>'+(row.custom_avatar?'<button id="profileResetAvatar" class="ghost" type="button">恢复系统头像</button>':'')+'</div></div></div>'+
       '<div class="profile-form-grid"><label>昵称<input id="profileNickname" maxlength="18" value="'+esc(row.display_name||'')+'"></label><label>任务称号<select id="profileTitle">'+TITLES.map(x=>'<option value="'+esc(x)+'" '+(x===c.title?'selected':'')+'>'+esc(x)+'</option>').join('')+'</select></label></div>'+
       '<div class="profile-section"><b>名片主题</b><div class="profile-theme-grid">'+THEMES.map(t=>'<button type="button" data-profile-theme="'+t.id+'" class="'+(t.id===c.theme?'active':'')+' theme-'+t.id+'"><strong>'+esc(t.name)+'</strong><span>'+esc(t.note)+'</span></button>').join('')+'</div></div>'+
       '<div class="profile-section"><b>展示徽章 · 最多 3 枚</b><p>只显示已经获得的徽章。</p><div class="profile-earned-badges">'+(earned.length?earned.map(n=>'<button type="button" data-profile-badge="'+esc(n)+'" class="'+(featured.includes(n)?'active':'')+'">'+badgeHtml(n)+'<span>'+esc(n)+'</span></button>').join(''):'<div class="profile-empty-badges">完成任务后，已获得徽章会出现在这里。</div>')+'</div></div>'+
@@ -76,8 +77,7 @@ function render(){
   root.querySelectorAll('[data-profile-theme]').forEach(b=>b.onclick=()=>{draft.theme=b.dataset.profileTheme;root.querySelectorAll('[data-profile-theme]').forEach(x=>x.classList.toggle('active',x===b));root.querySelector('.mission-card')?.setAttribute('class','mission-card theme-'+draft.theme)});
   root.querySelectorAll('[data-profile-badge]').forEach(b=>b.onclick=()=>{const n=b.dataset.profileBadge;if(featured.has(n)){featured.delete(n);b.classList.remove('active')}else if(featured.size<3){featured.add(n);b.classList.add('active')}else{setState('最多展示 3 枚徽章',true)}});
   const file=root.querySelector('#profileAvatarFile');
-  root.querySelector('#profileUploadAvatar').onclick=()=>file.click();
-  file.onchange=async()=>{const f=file.files?.[0];file.value='';if(!f)return;try{setState('正在处理头像…');const data=await window.AppearanceManager?.cropFile?.(f,'裁切个人头像');if(!data)return setState('已取消');const r=await client.from('profiles').update({custom_avatar:data,updated_at:new Date().toISOString()}).eq('user_id',row.user_id).select('*').single();if(r.error)throw r.error;hydrate(r.data,meta);render();setState('头像已更新')}catch(e){setState(e.message||'头像更新失败',true)}};
+  file.onchange=async()=>{const f=file.files?.[0];file.value='';if(!f)return;try{if(!client)throw Error('云端连接尚未就绪，请刷新页面后再试');setState('正在处理头像…');const data=await window.AppearanceManager?.cropFile?.(f,'裁切个人头像');if(!data)return setState('已取消');const r=await client.from('profiles').update({custom_avatar:data,updated_at:new Date().toISOString()}).eq('user_id',row.user_id).select('*').single();if(r.error)throw r.error;hydrate(r.data,meta);render();setState('头像已更新')}catch(e){setState(e.message||'头像更新失败',true)}};
   root.querySelector('#profileResetAvatar')?.addEventListener('click',async()=>{try{const r=await client.from('profiles').update({custom_avatar:null,updated_at:new Date().toISOString()}).eq('user_id',row.user_id).select('*').single();if(r.error)throw r.error;hydrate(r.data,meta);render();setState('已恢复系统头像')}catch(e){setState(e.message||'恢复失败',true)}});
   root.querySelector('#profileSaveCard').onclick=async()=>{try{const nickname=root.querySelector('#profileNickname').value.trim().slice(0,18)||row.display_name||'RATIOBOT 学员';draft={theme:draft.theme,title:root.querySelector('#profileTitle').value,featured_badges:[...featured],show_recent:root.querySelector('#profileShowRecent').checked};setState('正在保存…');const r=await client.from('profiles').update({display_name:nickname,profile_card:draft,public_card_enabled:root.querySelector('#profilePublic').checked,updated_at:new Date().toISOString()}).eq('user_id',row.user_id).select('*').single();if(r.error)throw r.error;hydrate(r.data,meta);render();setState('✓ 名片已保存')}catch(e){setState(e.message||'保存失败',true)}};
 }
