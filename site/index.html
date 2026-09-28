@@ -1941,7 +1941,7 @@ setTimeout(()=>{try{renderHonorGrowth();updateRingsProfileHint();}catch(e){}},50
     else{$('#baseNextUnlock').textContent=`BASE${theme.base} 已集齐 · Lv${hp.lv+1} 进入 BASE${theme.base+1} · ${BASE_THEME_META[theme.base].name}`;}
     $('#baseMilestones').innerHTML=BASE_THEME_META.map(t=>{const start=(t.base-1)*9+1,end=t.base*9,done=hp.completed>=t.base,current=hp.currentBase===t.base;let reached=current?hp.phase:done?9:0;let d='';for(let i=1;i<=9;i++)d+=`<i class="${i<=reached?'on':current&&i===reached+1?'now':''}"></i>`;return `<div class="base-mini ${done?'done':''} ${current?'current':''}"><div class="bno">BASE ${t.base} · Lv${start}–${end}</div><b>${t.name}</b><div class="base-nine-dots">${d}</div><span class="base-status">${done?'9 / 9 · 已集齐':current?`${hp.phase} / 9 · 当前主题`:'0 / 9 · 未开始'}</span></div>`}).join('');
     renderBaseHero(hp);
-    const heavy=()=>{if(currentProfile()!==p)return;renderBaseStageGallery(hp);renderCompletedBaseThemes(hp);renderUnifiedBadges(p);};
+    const expectedProfileKey=currentProfileKey(),heavy=()=>{if(currentProfileKey()!==expectedProfileKey)return;renderBaseStageGallery(hp);renderCompletedBaseThemes(hp);renderUnifiedBadges(p);};
     if('requestIdleCallback' in window)requestIdleCallback(heavy,{timeout:500});else setTimeout(heavy,0);
     let ms=$('#semesterModuleStrip');if(ms)ms.innerHTML=HQ_SEMESTER_MODULES.map((m,i)=>`<span class="semester-node ${i===0?'now':'future'}"><b>${m.code}</b>${m.name}</span>`).join('');let today=ensureTodayRecord(p);$('#rWalletSummary').textContent=`余额 ${e.credits} · 今日 ${today.points}/40`;
   }
