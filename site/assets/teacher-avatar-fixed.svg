@@ -1,12 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-<path d="M106 184Q108 74 256 64Q404 76 406 188L410 350Q382 410 332 382L320 228H192L176 382Q126 410 102 350Z" fill="#744C3B" stroke="#2A1717" stroke-width="18"/>
-<path d="M136 338Q174 302 256 300Q338 302 376 338L396 478H116Z" fill="#F2B454" stroke="#2A1717" stroke-width="18"/>
-<circle cx="150" cy="220" r="36" fill="#FFE3C6" stroke="#2A1717" stroke-width="16"/><circle cx="362" cy="220" r="36" fill="#FFE3C6" stroke="#2A1717" stroke-width="16"/>
-<ellipse cx="256" cy="220" rx="120" ry="126" fill="#FFE3C6" stroke="#2A1717" stroke-width="18"/>
-<path d="M144 176Q148 92 256 84Q366 92 368 178Q330 148 302 132Q302 170 280 186Q260 152 252 130Q236 168 210 184Q198 148 198 126Q172 152 144 176Z" fill="#744C3B" stroke="#2A1717" stroke-width="18" stroke-linejoin="round"/>
-<g fill="none" stroke="#5A3227" stroke-width="14"><rect x="156" y="188" width="100" height="74" rx="28"/><rect x="258" y="188" width="100" height="74" rx="28"/><path d="M256 214h2"/></g>
-<circle cx="208" cy="224" r="12" fill="#2A1717"/><circle cx="304" cy="224" r="12" fill="#2A1717"/><circle cx="184" cy="270" r="16" fill="#FF8276"/><circle cx="328" cy="270" r="16" fill="#FF8276"/>
-<path d="M234 272q22 24 44 0" fill="none" stroke="#2A1717" stroke-width="12" stroke-linecap="round"/>
-<path d="M210 320L256 362L302 320L316 362L256 394L196 362Z" fill="#FFF9ED" stroke="#2A1717" stroke-width="14"/>
-<g transform="rotate(12 330 392)"><rect x="300" y="336" width="116" height="122" rx="14" fill="#F06D61" stroke="#2A1717" stroke-width="15"/><rect x="326" y="360" width="66" height="28" rx="8" fill="#FFF5DD"/></g>
-<path d="M214 382Q238 354 262 382L250 432Q206 426 214 382Z" fill="#FFE3C6" stroke="#2A1717" stroke-width="15"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1254 1254" width="1254" height="1254"><image href="teacher-avatar-fixed.png" width="1254" height="1254" preserveAspectRatio="none"/></svg>
