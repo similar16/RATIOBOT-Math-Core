@@ -11,8 +11,8 @@ w.structuredClone=structuredClone;w.supabase={createClient:()=>client};w.scrollT
 for(const script of w.document.scripts){if(script.src&&!/(review-(engine|ui)|daily|question-(content|import|bank))\.js$/.test(new URL(script.src).pathname))continue;let code=script.src?fs.readFileSync(root+'/'+new URL(script.src).pathname.split('/').pop(),'utf8'):script.textContent;new vm.Script(code);code=code.replace('    migrateLegacy();const initP=',`    window.__test={levelInfo,honorInfoFromProfile,cloudLevelBase,blankProfile,saveCurrentProfile,currentProfile,currentProfileKey,cloudState,cloudSyncProfile,renderGrowth,renderStats,go,openStudentGate,loadTeacherDashboard,teacherSwitchTab,rosterNameMap,loadStudentClassWall,peerState,ensureTodayRecord,calcQuestionXP,recordGameClear,gameSignatureArithmetic,state,renderConfig,avatarSrcByLevel,peerAvatarSrc,refreshPlayerUI,CHECKIN_OUTFITS,cloudLoadStudentData};\n    migrateLegacy();const initP=`);w.eval(code)}
 const t=w.__test;assert.ok(t,'main closure reaches initialization');
 assert.match(html,/midautumn-frame-2026-clear\.png\?v=20260926-clear/,'Mid-Autumn uses clear original PNG');
-assert.match(html,/teacher-avatar-fixed\.png/,'teacher UI uses the exact supplied PNG directly');
-assert.match(html,/reward-frame[^>]+loading="lazy"/,'large event frame is lazy-loaded');
+assert.match(html,/data-src="assets\/teacher-avatar-fixed\.png"/,'teacher original is deferred until teacher mode');
+assert.match(html,/reward-frame[^>]+data-src="assets\/midautumn-frame-2026-clear\.png\?v=20260926-clear"[^>]+loading="lazy"/,'large event frame is deferred and lazy-loaded');
 assert.match(html,/MID_AUTUMN_MIXED_STAGES=new Set\(\['supermixed'\]\)/,'Mid-Autumn only counts five-operation supermixed rounds');
 assert.doesNotMatch(html,/神秘房间[^<\n]{0,40}补充题/,'Mid-Autumn Secret Room wording uses 挑战题');
 
@@ -27,6 +27,7 @@ function xpAt(lv){let n=0;for(let i=1;i<lv;i++)n+=260+(i-1)*85;return n;}
  assert.equal(ringsFrame.dataset.loaded,'1','rings game loads on first visit');
  assert.match(ringsFrame.getAttribute('src')||'',/rings\.html/);
  t.go('home');
+ t.go('growth');
  for(let lv=1;lv<=90;lv++){const p=t.currentProfile();p.xp=xpAt(lv);t.saveCurrentProfile(p);t.renderGrowth();const h=t.honorInfoFromProfile(p);assert.equal(h.currentBase,Math.floor((lv-1)/9)+1);assert.equal(h.phase,(lv-1)%9+1);assert.equal(t.cloudLevelBase(p).base,h.currentBase);assert.equal(w.document.querySelectorAll('#baseStageGallery article').length,9);assert.equal(w.document.querySelectorAll('#baseCompleteGallery article').length,Math.min(3,Math.floor(lv/9)));assert.equal(w.document.querySelector('#growthLevel').textContent,String(h.phase));assert.ok(!/BASE\s*0\b/.test(w.document.body.textContent));}
  assert.equal(t.levelInfo(259).level,1);assert.equal(t.levelInfo(260).level,2);assert.equal(t.levelInfo(xpAt(90)+999999).level,90);
  for(const [id,target] of [['homeGrowthBtn','growth'],['homeStatsBtn','stats'],['homeProfileBtn','profile'],['playerBtn','profile'],['growthSwitchBtn','account'],['statsSwitchBtn','account']]){t.go('home');w.document.getElementById(id).click();assert.ok(w.document.getElementById(target).classList.contains('active'),id+' click routes to '+target);}
