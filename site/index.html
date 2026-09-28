@@ -701,6 +701,82 @@ footer{text-align:center;padding:30px;color:#8C7E82;font:900 10px ui-monospace;l
   .student-game-menu-grid button{min-height:76px}
 }
 
+
+/* ===== compact game HUD tuning v2 ===== */
+.topbar{gap:10px;min-height:62px}
+.game-nav-primary{gap:4px!important}
+.topbar .game-nav-primary button{
+  min-width:70px;
+  min-height:36px;
+  padding:5px 8px!important;
+  border-width:2px;
+  border-radius:11px;
+  gap:5px;
+  font-size:10px;
+  line-height:1;
+}
+.game-nav-key{
+  width:21px;height:21px;
+  border-width:2px;
+  border-radius:7px;
+  font-size:8px;
+  box-shadow:1px 1px 0 rgba(62,53,64,.10);
+}
+.top-actions{gap:6px}
+.player-pill{padding:4px 8px;gap:6px;font-size:10px;max-width:190px;box-shadow:1px 1px 0 rgba(62,53,64,.10)}
+.player-mini-wrap{width:27px;height:27px;flex-basis:27px;border-width:2px}.player-mini{width:25px;height:25px;flex-basis:25px}
+.game-menu-btn{
+  height:36px;
+  border-width:2px;
+  border-radius:10px;
+  padding:0 9px;
+  gap:5px;
+  font-size:9px;
+  box-shadow:2px 2px 0 var(--yellow);
+}
+.game-menu-icon{font-size:15px}
+.game-sound-btn{width:36px;height:36px}
+.student-game-menu{
+  top:61px;
+  width:min(392px,calc(100vw - 24px));
+  border-width:3px;
+  border-radius:16px;
+  box-shadow:6px 6px 0 rgba(62,53,64,.16);
+  padding:10px;
+}
+.student-game-menu-head{padding:1px 1px 8px}
+.student-game-menu-head small{font-size:7px;letter-spacing:.13em}
+.student-game-menu-head b{font-size:15px}
+.game-menu-close{width:29px;height:29px;border-width:2px;border-radius:8px;font-size:18px}
+.student-game-menu-grid{gap:7px}
+.student-game-menu-grid button{
+  min-height:74px;
+  border-width:2px;
+  border-radius:11px;
+  padding:8px;
+  grid-template-columns:27px 1fr;
+  column-gap:7px;
+  box-shadow:2px 2px 0 rgba(62,53,64,.07);
+}
+.student-game-menu-grid button>span{width:27px;height:27px;border-width:2px;border-radius:8px;font-size:7px}
+.student-game-menu-grid button>b{font-size:11px;line-height:1.15}
+.student-game-menu-grid button>small{font-size:7.5px;line-height:1.3}
+.student-game-menu-foot{padding-top:8px}
+.student-game-menu-foot>span{font-size:7px}
+.student-game-menu-foot .top-logout{padding:6px 8px!important;font-size:8px!important}
+@media(max-width:980px){.game-nav-primary{display:none!important}}
+@media(max-width:620px){
+  .topbar{height:58px;min-height:58px;padding:0 9px;gap:6px}
+  .brand-mark{width:34px;height:34px}.brand b{font-size:10px}
+  .player-pill{max-width:136px;padding:3px 6px}
+  .game-menu-btn{width:36px;height:36px;padding:0}
+  .student-game-menu{top:54px;right:8px;width:calc(100vw - 16px);padding:9px}
+}
+@media(max-width:390px){
+  .student-game-menu-grid{grid-template-columns:1fr}
+  .student-game-menu-grid button{min-height:62px}
+}
+
 </style><link rel="stylesheet" href="review.css"><link rel="stylesheet" href="daily.css"><link rel="stylesheet" href="question-bank.css"><link rel="stylesheet" href="appearance-manager.css"><link rel="stylesheet" href="student-profile.css"><link rel="stylesheet" href="assets/import/katex/katex.min.css">
 </head>
 <body data-base-theme-system="v1">
@@ -718,7 +794,7 @@ footer{text-align:center;padding:30px;color:#8C7E82;font:900 10px ui-monospace;l
     </nav>
     <nav id="teacherNavigation" hidden><button data-teacher-tab="bank">题库</button><button data-teacher-tab="daily">每日挑战发布</button><button data-teacher-tab="data">学生数据</button><button data-teacher-tab="publish">班级账号</button><button data-teacher-tab="review">教学进度</button><button data-teacher-tab="appearance">外观管理</button></nav>
     <div class="top-actions">
-      <div id="teacherFixedAvatar" class="teacher-fixed-avatar hidden"><img src="assets/teacher-avatar-fixed.svg" alt="教师头像"><span>教师端</span></div>
+      <div id="teacherFixedAvatar" class="teacher-fixed-avatar hidden"><img src="assets/teacher-avatar-fixed.svg" alt="教师头像" loading="lazy" decoding="async" fetchpriority="low"><span>教师端</span></div>
       <button id="playerBtn" data-go="account" class="player-pill" title="学生登录">未登录</button>
       <button id="studentMenuBtn" class="game-menu-btn" type="button" aria-expanded="false" aria-controls="studentGameMenu"><span class="game-menu-icon">☰</span><span>菜单</span></button>
       <button id="soundBtn" class="icon-btn game-sound-btn" title="声音">♪</button>
@@ -1832,7 +1908,7 @@ setTimeout(()=>{try{renderHonorGrowth();updateRingsProfileHint();}catch(e){}},50
     ['双核连携','∞','运算训练与数圈侦探都至少完成 1 次',Number(e.modules.arithmetic.clears||0)>=1&&ringsClears>=1]
   ];const all=defs.every(x=>x[3]);defs.push(['数学全徽章','★','集满前面 9 枚数学基地徽章',all]);return defs;}
   const USER_BADGE_V50={'数圈新探':0,'零点守卫':1,'分类大师':2,'精准推理':3,'运算满贯':4,'S级破案':5,'双人擂主':6,'追平高手':7,'双核连携':8,'数学全徽章':9,'核心启动':10,'连击点火':11,'第一次就对':12,'修理大师':13,'稳定核心':14,'全系统在线':15};
-  function userBadgeImg50(name){const i=USER_BADGE_V50[name],fallback=`assets/badge-${i+1}.png`,src=window.AppearanceManager?.badgeSrc?.(name,fallback)||fallback,custom=window.AppearanceManager?.isCustomBadge?.(name);return `<img class="${custom?'custom-badge-art':''}" src="${src}" alt="${name}" width="240" height="280">`;}
+  function userBadgeImg50(name){const i=USER_BADGE_V50[name],fallback=`assets/badge-${i+1}.png`,src=window.AppearanceManager?.badgeSrc?.(name,fallback)||fallback,custom=window.AppearanceManager?.isCustomBadge?.(name);return `<img class="${custom?'custom-badge-art':''}" src="${src}" alt="${name}" width="240" height="280" loading="lazy" decoding="async" fetchpriority="low">`;}
   window.RatioProfileBridge={
     earnedBadges(){const p=currentProfile();if(!p)return[];const growth=new Set(p.badges||[]);return [...hqBadges(p).filter(x=>x[3]).map(x=>x[0]),...BADGES.filter(b=>growth.has(b.id)).map(b=>b.name)];},
     badgeImg(name){return userBadgeImg50(name);},
@@ -1847,7 +1923,7 @@ setTimeout(()=>{try{renderHonorGrowth();updateRingsProfileHint();}catch(e){}},50
   }
   function baseSpritePosition(stage){stage=Math.max(1,Math.min(9,Number(stage)||1));const i=stage-1,col=i%3,row=Math.floor(i/3);return `${col*50}% ${row*50}%`;}
   function baseImage(theme,stage){return theme.base===1?GROWTH_AVATAR_ART[stage]:theme.base<=3?baseThemeImageSrc(theme.base,stage):'';}
-  function baseSpriteHtml(theme,stage,extra=''){const src=baseImage(theme,stage);return src?`<img class="base-sprite ${extra}" src="${src}" alt="BASE ${theme.base} · Lv.${stage} ${theme.stages[stage-1]}">`:`<div class="base-sprite placeholder ${extra}">?</div>`;}
+  function baseSpriteHtml(theme,stage,extra=''){const src=baseImage(theme,stage);return src?`<img class="base-sprite ${extra}" src="${src}" alt="BASE ${theme.base} · Lv.${stage} ${theme.stages[stage-1]}" loading="lazy" decoding="async" fetchpriority="low">`:`<div class="base-sprite placeholder ${extra}">?</div>`;}
   function renderBaseHero(hp){const old=$('#growthRobot'),sprite=$('#baseHeroSprite'),p=currentProfile();if(!old||!sprite)return;if(midAutumnFrameOn(p)){old.classList.remove('base-theme-hidden');sprite.classList.add('hidden');old.src=framedAvatarForProfile(p,GROWTH_AVATAR_ART[1]);return;}old.classList.add('base-theme-hidden');sprite.classList.remove('hidden');sprite.innerHTML=baseSpriteHtml(hp.level,hp.phase);}
   function renderBaseStageGallery(hp){const theme=hp.level,box=$('#baseStageGallery');if(!box||!theme)return;$('#baseThemeTitle').textContent=`BASE ${theme.base} · ${theme.name}`;$('#baseThemeDesc').textContent=theme.desc;$('#baseThemeCount').textContent=`${hp.phase} / 9`;box.innerHTML=theme.stages.map((name,i)=>{const st=i+1,unlocked=st<=hp.phase,cur=st===hp.phase;return `<article class="base-stage-card ${unlocked?'complete':'locked'} ${cur?'current':''}">${baseSpriteHtml(theme,st)}<small>LEVEL ${st}</small><b>${name}</b></article>`}).join('');}
   function renderCompletedBaseThemes(hp){const box=$('#baseCompleteGallery');if(!box)return;const complete=BASE_THEME_META.filter(t=>t.base<=hp.completed&&t.atlas);box.innerHTML=complete.length?complete.map(t=>`<article class="base-complete-card">${baseSpriteHtml(t,9)}<b>BASE ${t.base} · ${t.name}</b><span>9 / 9 · 完整主题已收藏</span></article>`).join(''):`<div class="base-complete-empty">当前还没有集齐完整 BASE。BASE1 达到第 9 级后，完整主题形象会出现在这里。</div>`;}
@@ -1864,8 +1940,10 @@ setTimeout(()=>{try{renderHonorGrowth();updateRingsProfileHint();}catch(e){}},50
     else if(hp.phase<9){$('#baseNextUnlock').textContent=`Lv${hp.lv+1} 解锁 ${hp.phase+1}/9 · ${theme.stages[hp.phase]}`;}
     else{$('#baseNextUnlock').textContent=`BASE${theme.base} 已集齐 · Lv${hp.lv+1} 进入 BASE${theme.base+1} · ${BASE_THEME_META[theme.base].name}`;}
     $('#baseMilestones').innerHTML=BASE_THEME_META.map(t=>{const start=(t.base-1)*9+1,end=t.base*9,done=hp.completed>=t.base,current=hp.currentBase===t.base;let reached=current?hp.phase:done?9:0;let d='';for(let i=1;i<=9;i++)d+=`<i class="${i<=reached?'on':current&&i===reached+1?'now':''}"></i>`;return `<div class="base-mini ${done?'done':''} ${current?'current':''}"><div class="bno">BASE ${t.base} · Lv${start}–${end}</div><b>${t.name}</b><div class="base-nine-dots">${d}</div><span class="base-status">${done?'9 / 9 · 已集齐':current?`${hp.phase} / 9 · 当前主题`:'0 / 9 · 未开始'}</span></div>`}).join('');
-    renderBaseHero(hp);renderBaseStageGallery(hp);renderCompletedBaseThemes(hp);
-    let ms=$('#semesterModuleStrip');if(ms)ms.innerHTML=HQ_SEMESTER_MODULES.map((m,i)=>`<span class="semester-node ${i===0?'now':'future'}"><b>${m.code}</b>${m.name}</span>`).join('');let today=ensureTodayRecord(p);$('#rWalletSummary').textContent=`余额 ${e.credits} · 今日 ${today.points}/40`;renderUnifiedBadges(p);
+    renderBaseHero(hp);
+    const heavy=()=>{if(currentProfile()!==p)return;renderBaseStageGallery(hp);renderCompletedBaseThemes(hp);renderUnifiedBadges(p);};
+    if('requestIdleCallback' in window)requestIdleCallback(heavy,{timeout:500});else setTimeout(heavy,0);
+    let ms=$('#semesterModuleStrip');if(ms)ms.innerHTML=HQ_SEMESTER_MODULES.map((m,i)=>`<span class="semester-node ${i===0?'now':'future'}"><b>${m.code}</b>${m.name}</span>`).join('');let today=ensureTodayRecord(p);$('#rWalletSummary').textContent=`余额 ${e.credits} · 今日 ${today.points}/40`;
   }
   function updateRingsProfileHint(){const p=currentProfile(),el=$('#ringsProfileHint');if(!el)return;el.textContent=p?`共享档案：${p.classCode} · ${p.studentId}号 · ${growthLabel(levelInfo(p.xp).level)}`:'当前未登录学生；可先进入“我的核心 / 学生入口”。';}
   $('#reloadRingsBtn')?.addEventListener('click',()=>ensureRingsLoaded(true));
@@ -2389,8 +2467,8 @@ setTimeout(()=>{try{renderHonorGrowth();updateRingsProfileHint();}catch(e){}},50
     const p=currentProfile(),guard=$('#growthGuard'),content=$('#growthContent');if(!p){guard.classList.remove('hidden');content.classList.add('hidden');return;}guard.classList.add('hidden');content.classList.remove('hidden');const li=levelInfo(p.xp);$('#growthClass').textContent=`班级 ${p.classCode}`;$('#growthStudent').textContent=`学号 ${p.studentId}`;$('#growthGames').textContent=`${p.games} 局`;$('#growthLevel').textContent=((li.level-1)%9)+1;$('#growthTitle').textContent=`BASE ${Math.floor((li.level-1)/9)+1} · ${levelTitle(li.level)}`;$('#growthTotalXP').textContent=`累计 ${p.xp} XP`;$('#growthXPBar').style.width=li.pct+'%';$('#growthXPNow').textContent=li.capped?'Lv90 已完成':`${li.into} / ${li.need} XP`;$('#growthNext').textContent=li.capped?'十个 BASE 主题全部集齐':`距离 ${growthLabel(li.level+1)} 还差 ${li.toNext} XP`;let defaultGrowthAvatar=avatarSrcByLevel(li.level,false,blankEquip(),true);$('#growthRobot').src=midAutumnFrameOn(p)?framedAvatarForProfile(p,defaultGrowthAvatar):checkinAvatarForProfile(p,defaultGrowthAvatar);renderCheckin(p);renderMidAutumnEvent(p);
     const started=Object.values(p.cores).filter(c=>c.sessions>0).length;$('#growthEnergy').textContent=`核心启动 ${started}/7`;
     const nextItem=GROWTH_ITEMS.find(it=>it.level>li.level);
-    const unlockedCount=GROWTH_ITEMS.filter(it=>li.level>=it.level).length;$('#growthRoadmap').innerHTML=`<div class="growth-roadmap-visual"><img src="${ROADMAP_ART}" alt="小方成长升级路线图"></div>`;
-    const accessoryMeta=[['hat','帽子',2],['coffee','咖啡',3],['book','书',4],['dog','小狗',5],['buddy','伙伴',6],['garden','小花园',7],['car','小汽车',8],['villa','小别墅',9]]; const accessoryGallery=$('#accessoryGallery'); if(accessoryGallery) accessoryGallery.innerHTML=accessoryMeta.map(([id,name,unlock])=>`<div class="accessory-item ${li.level>=unlock?'unlocked':'locked'}" title="${name} · Lv.${unlock}"><img src="${ACCESSORY_ITEM_ART[id]}" alt="${name}"><b>${name}</b></div>`).join('');
+    const unlockedCount=GROWTH_ITEMS.filter(it=>li.level>=it.level).length;$('#growthRoadmap').innerHTML=`<div class="growth-roadmap-visual"><img src="${ROADMAP_ART}" alt="小方成长升级路线图" loading="lazy" decoding="async" fetchpriority="low"></div>`;
+    const accessoryMeta=[['hat','帽子',2],['coffee','咖啡',3],['book','书',4],['dog','小狗',5],['buddy','伙伴',6],['garden','小花园',7],['car','小汽车',8],['villa','小别墅',9]]; const accessoryGallery=$('#accessoryGallery'); if(accessoryGallery) accessoryGallery.innerHTML=accessoryMeta.map(([id,name,unlock])=>`<div class="accessory-item ${li.level>=unlock?'unlocked':'locked'}" title="${name} · Lv.${unlock}"><img src="${ACCESSORY_ITEM_ART[id]}" alt="${name}" loading="lazy" decoding="async" fetchpriority="low"><b>${name}</b></div>`).join('');
     renderHonorGrowth();const weak=weakestCore(p);$('#coreGrid').innerHTML=Object.entries(CORE_META).map(([k,m])=>{const c=p.cores[k]||blankCore(),lvl=coreLevel(c),pct=Math.round(c.mastery||0);return `<div class="core-card ${weak===k?'weak':''}"><div class="core-head"><div class="core-icon">${m.icon}</div><div><b>${m.label}</b><div class="core-level">CORE Lv.${lvl}</div></div></div><div class="core-pct">${c.sessions?pct+'%':'—'}</div><div class="core-bar"><i style="width:${pct}%"></i></div><div class="core-foot"><span>${c.questions||0} 题</span><span>最佳 ${c.bestAccuracy||0}%</span></div><button data-core-train="${k}">${c.sessions?'继续训练':'启动核心'}</button></div>`;}).join('');$$('[data-core-train]').forEach(b=>b.onclick=()=>startCoreTraining(b.dataset.coreTrain));
     if(weak){const c=p.cores[weak];$('#repairTitle').textContent=`优先维修：${CORE_META[weak].label} · ${Math.round(c.mastery)}%`;$('#repairText').textContent=`已经训练 ${c.questions} 题。建议先用“标准”难度再做一局，观察首次正确率是否稳定。`;$('#repairCoreBtn').disabled=false;$('#repairCoreBtn').dataset.stage=weak;}else{$('#repairTitle').textContent='先完成第一局训练';$('#repairText').textContent='训练后系统会自动找到当前最需要维修的能力核心。';$('#repairCoreBtn').disabled=true;$('#repairCoreBtn').dataset.stage='';}
   }
@@ -2463,10 +2541,10 @@ setTimeout(()=>{try{renderHonorGrowth();updateRingsProfileHint();}catch(e){}},50
     }else{
       let db2=loadDB(),key2=makeProfileKey(cls,id),p2=db2.profiles[key2]?ensureProfileShape(db2.profiles[key2]):blankProfile(cls,id,'');db2.profiles[key2]=p2;db2.current=key2;saveDB(db2);state.profileKey=key2;state.classCode=cls;state.studentId=String(id);refreshPlayerUI();await cloudSyncProfile(p2,true);
     }
-    await loadStudentClassWall();
+    peerRows=[];
   }
   function studentForm(){return {join:$('#accountClassInput').value.trim().toUpperCase(),sid:$('#accountStudentInput').value.trim(),password:$('#accountPasswordInput').value,name:$('#accountNameInput').value.trim()}}
-  async function finishStudentSession(j,join,sid){await cloudClient.auth.setSession({access_token:j.session.access_token,refresh_token:j.session.refresh_token});cloudState.user={id:j.user.id};cloudState.role='student';cloudState.classId=j.class.id;cloudState.className=j.class.name;cloudState.displayName=j.user.display_name||sid;cloudState.mustChangePassword=!!j.account.must_change_password;cloudState.username=j.account.username||`${join}-${sid}`;localStorage.setItem('ratiobot_last_class',join);localStorage.setItem('ratiobot_last_student',sid);await cloudLoadStudentData(join,sid);await syncMidAutumnSecretRoomFromCloud(true);$('#accountPasswordInput').value='';renderAccount();renderGrowth();renderStats();refreshCloudUI();if(cloudState.mustChangePassword){$('#firstPasswordBox').classList.remove('cloud-hidden');$('#firstNewPassword').focus();go('account',{bypass:true});return}const next=cloudState.pendingPage||'growth';cloudState.pendingPage='';setTimeout(()=>go(next,{bypass:true}),250)}
+  async function finishStudentSession(j,join,sid){await cloudClient.auth.setSession({access_token:j.session.access_token,refresh_token:j.session.refresh_token});cloudState.user={id:j.user.id};cloudState.role='student';cloudState.classId=j.class.id;cloudState.className=j.class.name;cloudState.displayName=j.user.display_name||sid;cloudState.mustChangePassword=!!j.account.must_change_password;cloudState.username=j.account.username||`${join}-${sid}`;localStorage.setItem('ratiobot_last_class',join);localStorage.setItem('ratiobot_last_student',sid);await cloudLoadStudentData(join,sid);await syncMidAutumnSecretRoomFromCloud(true);$('#accountPasswordInput').value='';refreshCloudUI();if(cloudState.mustChangePassword){$('#firstPasswordBox').classList.remove('cloud-hidden');$('#firstNewPassword').focus();go('account',{bypass:true});return}const next=cloudState.pendingPage||'growth';cloudState.pendingPage='';setTimeout(()=>go(next,{bypass:true}),250)}
   async function cloudStudentLogin(){if(!cloudClient){cloudMsg('#accountError','云端组件未加载，请检查网络。','bad');return}let {join,sid,password}=studentForm();if(!join||!/^[0-9]{1,3}$/.test(sid)||!password){cloudMsg('#accountError','请输入班级用户名、数字学号和密码。','bad');return}cloudMsg('#accountError','正在登录云端…');try{let r=await fetch(`${CLOUD_URL}/functions/v1/student-auth`,{method:'POST',headers:{'Content-Type':'application/json','apikey':CLOUD_KEY},body:JSON.stringify({action:'login',join_code:join,student_code:sid,password})}),j=await r.json();if(!r.ok||!j.ok)throw new Error(j.error||'云端登录失败');cloudMsg('#accountError','✓ 云端登录成功。','good');await finishStudentSession(j,join,sid)}catch(e){cloudMsg('#accountError',e.message||'云端登录失败','bad');beep(180,.1,'square')}}
   async function cloudStudentRegister(){if(!cloudClient){cloudMsg('#accountError','云端组件未加载，请检查网络。','bad');return}let {join,sid,password,name}=studentForm();if(!join||!/^[0-9]{1,3}$/.test(sid)){cloudMsg('#accountError','请输入老师给出的班级用户名和1–3位数字学号。','bad');return}if(!/^[A-Za-z0-9!@#$%^&*._-]{6,32}$/.test(password)){cloudMsg('#accountError','请设置6–32位密码，可使用字母、数字及常见符号。','bad');return}cloudMsg('#accountError','正在创建学生账号…');try{let r=await fetch(`${CLOUD_URL}/functions/v1/student-auth`,{method:'POST',headers:{'Content-Type':'application/json','apikey':CLOUD_KEY},body:JSON.stringify({action:'register',join_code:join,student_code:sid,password,display_name:name||`${sid}号`})}),j=await r.json();if(!r.ok||!j.ok)throw new Error(j.error||'学生注册失败');cloudMsg('#accountError',`✓ 注册成功，账号 ${join}-${sid}。正在自动登录…`,'good');await cloudStudentLogin()}catch(e){cloudMsg('#accountError',e.message||'学生注册失败','bad')}}
   async function setFirstStudentPassword(){let a=$('#firstNewPassword').value,b=$('#firstNewPassword2').value;if(a!==b)return cloudMsg('#firstPasswordMsg','两次输入的密码不一致。','bad');if(!/^[A-Za-z0-9!@#$%^&*._-]{6,32}$/.test(a))return cloudMsg('#firstPasswordMsg','密码需为6–32位，可使用字母、数字及常见符号。','bad');let {data}=await cloudClient.auth.getSession(),token=data?.session?.access_token;if(!token)return cloudMsg('#firstPasswordMsg','登录状态已失效，请重新登录。','bad');cloudMsg('#firstPasswordMsg','正在保存新密码…');try{let r=await fetch(`${CLOUD_URL}/functions/v1/student-auth`,{method:'POST',headers:{'Content-Type':'application/json','apikey':CLOUD_KEY,'Authorization':`Bearer ${token}`},body:JSON.stringify({action:'change_password',new_password:a})}),j=await r.json();if(!r.ok||!j.ok)throw new Error(j.error||'修改密码失败');cloudState.mustChangePassword=false;$('#firstNewPassword').value='';$('#firstNewPassword2').value='';$('#firstPasswordBox').classList.add('cloud-hidden');cloudMsg('#accountError','✓ 新密码已设置完成。','');refreshCloudUI();const next=cloudState.pendingPage||'growth';cloudState.pendingPage='';setTimeout(()=>go(next,{bypass:true}),250)}catch(e){cloudMsg('#firstPasswordMsg',e.message||'修改密码失败。','bad')}}
@@ -2484,7 +2562,7 @@ setTimeout(()=>{try{renderHonorGrowth();updateRingsProfileHint();}catch(e){}},50
   function peerToday(row){const h=row.public_training?.history||[];return h.some(r=>{const d=new Date(r.at);return !isNaN(d)&&new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Shanghai',year:'numeric',month:'2-digit',day:'2-digit'}).format(d)===new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Shanghai',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date())});}
   function peerState(row){return row.today_full_clear?'full':row.today_checked_in?'checked':Number(row.today_points)>0||peerToday(row)?'training':'ready';}
   const PEER_STATES={full:'★ 今日满卡',checked:'✓ 已打卡',training:'↗ 今日已练',ready:'○ 等待出发'};
-  function renderPeerWall(){const filter=$('#peerFilter').value;$('#peerSummary').textContent=`${peerRows.length} 位同学 · ${peerRows.filter(x=>x.today_checked_in).length} 人已打卡 · ${peerRows.filter(x=>x.today_full_clear).length} 人满卡`;const rows=peerRows.filter(x=>filter==='all'||(filter==='checked'?x.today_checked_in:filter==='training'?peerState(x)!=='ready':peerState(x)==='ready'));$('#peerGrid').innerHTML=rows.map(x=>{const names=peerBadgeNames(x),st=peerState(x);return `<button class="peer-card ${st} theme-${peerCardTheme(x)}" data-peer="${teacherEsc(x.user_id)}" aria-label="查看${teacherEsc(x.display_name)}的训练详情"><div class="peer-avatar ${peerHasMidAutumnFrame(x)?'midautumn-framed':''}"><img src="${peerAvatarSrc(x)}" alt="${teacherEsc(x.display_name)}的成长头像"><span class="peer-level">${growthLabel(x.level)}</span></div><b>${teacherEsc(x.student_code||'')}号 · ${teacherEsc(x.display_name)}${x.user_id===cloudState.user?.id?' · 我':''}</b><span class="peer-title">${peerCardTitle(x)}</span><span class="peer-state">${PEER_STATES[st]}</span><span>今日 ${Number(x.today_points)||0}/40 R · 连续 ${Number(x.streak)||0} 天</span><div class="peer-medals">${(Array.isArray(x.profile_card?.featured_badges)&&x.profile_card.featured_badges.length?x.profile_card.featured_badges.filter(n=>names.includes(n)).slice(0,3):names.slice(0,3)).map(userBadgeImg50).join('')}</div><span>${names.length} 枚徽章 · 点击查看训练卡 →</span></button>`}).join('')||'<div class="peer-empty">当前没有符合条件的同学。</div>';$$('[data-peer]').forEach(b=>b.onclick=()=>showPeerDetail(b.dataset.peer));}
+  function renderPeerWall(){const filter=$('#peerFilter').value;$('#peerSummary').textContent=`${peerRows.length} 位同学 · ${peerRows.filter(x=>x.today_checked_in).length} 人已打卡 · ${peerRows.filter(x=>x.today_full_clear).length} 人满卡`;const rows=peerRows.filter(x=>filter==='all'||(filter==='checked'?x.today_checked_in:filter==='training'?peerState(x)!=='ready':peerState(x)==='ready'));$('#peerGrid').innerHTML=rows.map(x=>{const names=peerBadgeNames(x),st=peerState(x);return `<button class="peer-card ${st} theme-${peerCardTheme(x)}" data-peer="${teacherEsc(x.user_id)}" aria-label="查看${teacherEsc(x.display_name)}的训练详情"><div class="peer-avatar ${peerHasMidAutumnFrame(x)?'midautumn-framed':''}"><img src="${peerAvatarSrc(x)}" alt="${teacherEsc(x.display_name)}的成长头像" loading="lazy" decoding="async"><span class="peer-level">${growthLabel(x.level)}</span></div><b>${teacherEsc(x.student_code||'')}号 · ${teacherEsc(x.display_name)}${x.user_id===cloudState.user?.id?' · 我':''}</b><span class="peer-title">${peerCardTitle(x)}</span><span class="peer-state">${PEER_STATES[st]}</span><span>今日 ${Number(x.today_points)||0}/40 R · 连续 ${Number(x.streak)||0} 天</span><div class="peer-medals">${(Array.isArray(x.profile_card?.featured_badges)&&x.profile_card.featured_badges.length?x.profile_card.featured_badges.filter(n=>names.includes(n)).slice(0,3):names.slice(0,3)).map(userBadgeImg50).join('')}</div><span>${names.length} 枚徽章 · 点击查看训练卡 →</span></button>`}).join('')||'<div class="peer-empty">当前没有符合条件的同学。</div>';$$('[data-peer]').forEach(b=>b.onclick=()=>showPeerDetail(b.dataset.peer));}
   function showPeerDetail(id){const x=peerRows.find(r=>r.user_id===id);if(!x||cloudState.role!=='student')return;const box=$('#peerDetail'),s=x.public_training||{},names=peerBadgeNames(x),history=Array.isArray(s.history)?s.history:[];const records=history.slice(0,10).map(r=>{const rings=r.game==='rings'||r.stage==='rings';return `<article class="peer-record"><b>${teacherEsc(r.game==='knowledge'?'知识点回顾':rings?'数圈侦探 · 分类推理':E.STAGES[r.stage]?.label||'运算训练')}</b><p>${teacherEsc(displayDate(r.at))} · ${rings?'投放准确率':'首次正确率'} ${Number.isFinite(Number(r.accuracy))?Number(r.accuracy)+'%':'—'}</p><p>${r.game==='knowledge'?`${teacherEsc(r.numberType||'定义与法则')} · +${Number(r.rGain)||0} R`:rings?`+${Number(r.rGain)||0} R · A/B错误 ${Number(r.abMistakes)||0} 次 · 操作 ${Number(r.totalOps)||0} / 失败 ${Number(r.totalFails)||0} · ${teacherEsc(r.grade||'—')} · 总用时 ${r.durationSeconds==null?'—':Number(r.durationSeconds)+'s'}`:`${teacherEsc(E.DIFFICULTY[r.difficulty]?.label||'')} · ${teacherEsc(E.NUMBER_TYPES[r.numberType]?.label||'')} · 平均 ${r.avgTime==null?'—':Number(r.avgTime).toFixed(1)+'s'} · +${Number(r.xp)||0} XP`}</p></article>`}).join('');box.innerHTML=`<div class="peer-detail-top"><img src="${peerAvatarSrc(x)}" alt="成长头像"><div><h3>${teacherEsc(x.display_name)}的训练卡</h3><span class="peer-detail-card-title">${peerCardTitle(x)}</span><p>${growthLabel(x.level)} · 连续打卡 ${Number(x.streak)||0} 天</p><p>${PEER_STATES[peerState(x)]} · 今日 ${Number(x.today_points)||0}/40 R</p></div><button id="closePeerDetail" class="ghost">收起训练卡</button></div><h4>已点亮徽章 · ${names.length}/16</h4><div class="peer-all-badges">${names.map(n=>`<figure>${userBadgeImg50(n)}<figcaption>${n}</figcaption></figure>`).join('')||'完成训练，点亮第一枚徽章。'}</div><h4>最近 ${Math.min(history.length,10)} 次训练</h4>${records||'<p>还没有同步的训练记录，完成第一局后会显示在这里。</p>'}<p>仅同班可见 · 展示已完成并同步的训练，不代表实时在线状态。</p>`;box.hidden=false;$('#closePeerDetail').onclick=()=>{box.hidden=true;$$('[data-peer]').find(b=>b.dataset.peer===id)?.focus()};box.focus();box.scrollIntoView?.({behavior:'smooth',block:'start'});}
   async function loadStudentClassWall(){const request=++peerRequest,uid=cloudState.user?.id,cls=cloudState.classId;if(!cloudClient||!uid||cloudState.role!=='student'||!cls){clearPeerWall();$('#peerWallStatus').textContent='请先登录学生账号，查看同班挑战状态。';return}$('#peerWallStatus').textContent='正在读取同班挑战状态…';try{const {data,error}=await cloudClient.from('class_public_cards').select('*').eq('class_id',cls);if(request!==peerRequest||uid!==cloudState.user?.id||cls!==cloudState.classId)return;if(error)throw error;peerRows=(data||[]).sort((a,b)=>String(a.student_code||'').localeCompare(String(b.student_code||''),'zh',{numeric:true}));$('#classWallTitle').textContent=`${cloudState.className||'同班'} · 挑战墙`;$('#peerDetail').hidden=true;renderPeerWall();$('#peerWallStatus').textContent='已更新 · 页面停留时每30秒刷新';}catch(e){if(request!==peerRequest)return;peerRows=[];$('#peerGrid').innerHTML='';$('#peerDetail').hidden=true;$('#peerWallStatus').textContent='暂时无法读取同班数据，请点击刷新重试。';}}
   $('#peerFilter').onchange=renderPeerWall;
