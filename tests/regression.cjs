@@ -11,6 +11,8 @@ w.structuredClone=structuredClone;w.supabase={createClient:()=>client};w.scrollT
 for(const script of w.document.scripts){if(script.src&&!/(review-(engine|ui)|daily|question-(content|import|bank))\.js$/.test(new URL(script.src).pathname))continue;let code=script.src?fs.readFileSync(root+'/'+new URL(script.src).pathname.split('/').pop(),'utf8'):script.textContent;new vm.Script(code);code=code.replace('    migrateLegacy();const initP=',`    window.__test={levelInfo,honorInfoFromProfile,cloudLevelBase,blankProfile,saveCurrentProfile,currentProfile,currentProfileKey,cloudState,cloudSyncProfile,renderGrowth,renderStats,go,openStudentGate,loadTeacherDashboard,teacherSwitchTab,rosterNameMap,loadStudentClassWall,peerState,ensureTodayRecord,calcQuestionXP,recordGameClear,gameSignatureArithmetic,state,renderConfig,avatarSrcByLevel,peerAvatarSrc,refreshPlayerUI,CHECKIN_OUTFITS,cloudLoadStudentData};\n    migrateLegacy();const initP=`);w.eval(code)}
 const t=w.__test;assert.ok(t,'main closure reaches initialization');
 assert.match(html,/midautumn-frame-2026-clear\.png\?v=20260926-clear/,'Mid-Autumn uses clear original PNG');
+assert.match(html,/teacher-avatar-fixed\.png/,'teacher UI uses the exact supplied PNG directly');
+assert.match(html,/reward-frame[^>]+loading="lazy"/,'large event frame is lazy-loaded');
 assert.match(html,/MID_AUTUMN_MIXED_STAGES=new Set\(\['supermixed'\]\)/,'Mid-Autumn only counts five-operation supermixed rounds');
 assert.doesNotMatch(html,/神秘房间[^<\n]{0,40}补充题/,'Mid-Autumn Secret Room wording uses 挑战题');
 
@@ -18,11 +20,18 @@ function student(){t.cloudState.user={id:'fixture-student'};t.cloudState.role='s
 function xpAt(lv){let n=0;for(let i=1;i<lv;i++)n+=260+(i-1)*85;return n;}
 (async()=>{
  student();
+ const ringsFrame=w.document.querySelector('#ringsFrame');
+ assert.equal(ringsFrame.dataset.loaded,undefined,'rings game must not preload on the homepage');
+ assert.ok(!/rings\.html/.test(ringsFrame.getAttribute('src')||''),'rings iframe starts cold');
+ t.go('rings');
+ assert.equal(ringsFrame.dataset.loaded,'1','rings game loads on first visit');
+ assert.match(ringsFrame.getAttribute('src')||'',/rings\.html/);
+ t.go('home');
  for(let lv=1;lv<=90;lv++){const p=t.currentProfile();p.xp=xpAt(lv);t.saveCurrentProfile(p);t.renderGrowth();const h=t.honorInfoFromProfile(p);assert.equal(h.currentBase,Math.floor((lv-1)/9)+1);assert.equal(h.phase,(lv-1)%9+1);assert.equal(t.cloudLevelBase(p).base,h.currentBase);assert.equal(w.document.querySelectorAll('#baseStageGallery article').length,9);assert.equal(w.document.querySelectorAll('#baseCompleteGallery article').length,Math.min(3,Math.floor(lv/9)));assert.equal(w.document.querySelector('#growthLevel').textContent,String(h.phase));assert.ok(!/BASE\s*0\b/.test(w.document.body.textContent));}
  assert.equal(t.levelInfo(259).level,1);assert.equal(t.levelInfo(260).level,2);assert.equal(t.levelInfo(xpAt(90)+999999).level,90);
  for(const [id,target] of [['homeGrowthBtn','growth'],['homeStatsBtn','stats'],['homeProfileBtn','profile'],['playerBtn','profile'],['growthSwitchBtn','account'],['statsSwitchBtn','account']]){t.go('home');w.document.getElementById(id).click();assert.ok(w.document.getElementById(target).classList.contains('active'),id+' click routes to '+target);}
  const menu=w.document.querySelector('#studentMenuBtn'),panel=w.document.querySelector('#studentGameMenu');assert(menu&&panel);menu.click();assert.equal(panel.classList.contains('hidden'),false,'command menu opens');const profileMenu=[...panel.querySelectorAll('[data-go]')].find(x=>x.dataset.go==='profile');profileMenu.click();assert.ok(w.document.querySelector('#profile').classList.contains('active'),'menu profile route works');assert.equal(panel.classList.contains('hidden'),true,'command menu closes after routing');assert.equal(w.document.querySelectorAll('.game-nav-primary [data-go]').length,4,'only four primary gameplay tabs stay in top bar');assert.match(html,/compact game HUD tuning v2/);assert.doesNotMatch(html,/await loadStudentClassWall\(\);\n  \}\n  function studentForm/);
- console.log('PASS compact game-style header, command menu, profile discovery routes and slow XP');
+ console.log('PASS lazy rings loading, balanced game HUD, command menu, profile discovery routes and slow XP');
  student();const pending=t.currentProfile();pending.xp=2753;pending.economy.credits=219;t.saveCurrentProfile(pending);
  fixture.profiles=[{xp:5400,level:10,base_level:2,migrated_from_local:true}];
  fixture.progress_snapshots=[{game_stats:{games:1},economy:{lifetimeCredits:219}}];

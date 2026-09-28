@@ -777,6 +777,66 @@ footer{text-align:center;padding:30px;color:#8C7E82;font:900 10px ui-monospace;l
   .student-game-menu-grid button{min-height:62px}
 }
 
+
+/* ===== game HUD proportion pass v3 ===== */
+.topbar{gap:11px;min-height:64px}
+.topbar .game-nav-primary button{
+  min-width:76px;
+  min-height:38px;
+  padding:6px 9px!important;
+  border-radius:12px;
+  gap:6px;
+  font-size:10.5px;
+  letter-spacing:.01em;
+}
+.game-nav-key{width:22px;height:22px;border-radius:7px;font-size:8px}
+.player-pill{min-height:38px;padding:4px 9px;font-size:10px;border-radius:12px}
+.player-mini-wrap{width:28px;height:28px;flex-basis:28px}.player-mini{width:26px;height:26px;flex-basis:26px}
+.game-menu-btn{height:38px;padding:0 10px;font-size:10px;border-radius:11px}
+.game-menu-icon{font-size:15px}
+.game-sound-btn{width:38px;height:38px}
+.student-game-menu{
+  top:63px;
+  width:min(414px,calc(100vw - 24px));
+  padding:11px;
+  border-radius:17px;
+}
+.student-game-menu-head{padding:2px 2px 9px}
+.student-game-menu-head small{font-size:7.5px;letter-spacing:.14em}
+.student-game-menu-head b{font-size:16.5px;line-height:1.1}
+.game-menu-close{width:30px;height:30px;font-size:18px}
+.student-game-menu-grid{gap:8px}
+.student-game-menu-grid button{
+  min-height:80px;
+  padding:9px;
+  border-radius:12px;
+  grid-template-columns:29px 1fr;
+  column-gap:8px;
+}
+.student-game-menu-grid button>span{width:29px;height:29px;border-radius:8px;font-size:7.5px}
+.student-game-menu-grid button>b{font-size:12.5px;line-height:1.15}
+.student-game-menu-grid button>small{font-size:8.5px;line-height:1.32}
+.student-game-menu-foot{padding-top:9px;gap:10px}
+.student-game-menu-foot>span{font-size:7.5px;max-width:205px}
+.student-game-menu-foot .top-logout{font-size:8.5px!important}
+@media(max-width:980px){
+  .topbar{min-height:60px}
+  .student-game-menu{top:59px}
+}
+@media(max-width:620px){
+  .topbar{height:58px;min-height:58px}
+  .player-pill{min-height:36px}
+  .student-game-menu{top:55px}
+  .student-game-menu-grid button{min-height:76px}
+  .student-game-menu-grid button>b{font-size:12px}
+  .student-game-menu-grid button>small{font-size:8px}
+  .student-game-menu-foot>span{display:none}
+}
+@media(max-width:390px){
+  .student-game-menu-grid{grid-template-columns:1fr}
+  .student-game-menu-grid button{min-height:64px}
+}
+
 </style><link rel="stylesheet" href="review.css"><link rel="stylesheet" href="daily.css"><link rel="stylesheet" href="question-bank.css"><link rel="stylesheet" href="appearance-manager.css"><link rel="stylesheet" href="student-profile.css"><link rel="stylesheet" href="assets/import/katex/katex.min.css">
 </head>
 <body data-base-theme-system="v1">
@@ -794,7 +854,7 @@ footer{text-align:center;padding:30px;color:#8C7E82;font:900 10px ui-monospace;l
     </nav>
     <nav id="teacherNavigation" hidden><button data-teacher-tab="bank">题库</button><button data-teacher-tab="daily">每日挑战发布</button><button data-teacher-tab="data">学生数据</button><button data-teacher-tab="publish">班级账号</button><button data-teacher-tab="review">教学进度</button><button data-teacher-tab="appearance">外观管理</button></nav>
     <div class="top-actions">
-      <div id="teacherFixedAvatar" class="teacher-fixed-avatar hidden"><img src="assets/teacher-avatar-fixed.svg" alt="教师头像" loading="lazy" decoding="async" fetchpriority="low"><span>教师端</span></div>
+      <div id="teacherFixedAvatar" class="teacher-fixed-avatar hidden"><img src="assets/teacher-avatar-fixed.png" alt="教师头像" loading="lazy" decoding="async" fetchpriority="low"><span>教师端</span></div>
       <button id="playerBtn" data-go="account" class="player-pill" title="学生登录">未登录</button>
       <button id="studentMenuBtn" class="game-menu-btn" type="button" aria-expanded="false" aria-controls="studentGameMenu"><span class="game-menu-icon">☰</span><span>菜单</span></button>
       <button id="soundBtn" class="icon-btn game-sound-btn" title="声音">♪</button>
@@ -999,7 +1059,7 @@ footer{text-align:center;padding:30px;color:#8C7E82;font:900 10px ui-monospace;l
         <section class="midautumn-event" id="midAutumnEvent">
           <div class="midautumn-event-head"><div><div class="eyebrow">MID-AUTUMN · LIMITED COLLECTION</div><h3>中秋限定头像框收集任务</h3><p>连续 2 个自然日完成每日两项任务；这两天中的任意 1 天再完成神秘房间当天发布的挑战题，即可永久解锁中秋头像框，之后可随时佩戴或摘下。</p></div><span class="midautumn-event-badge">限定收藏 · 永久拥有</span></div>
           <div class="midautumn-event-body">
-            <div class="midautumn-reward"><div class="midautumn-reward-preview"><img id="midAutumnAvatarPreview" class="reward-avatar" alt="当前头像预览"><img class="reward-frame" src="assets/midautumn-frame-2026-clear.png?v=20260926-clear" alt=""></div><div><b>月兔团圆 · 中秋头像框</b><span>不替换 BASE / 换装，只叠加在当前头像外层</span></div></div>
+            <div class="midautumn-reward"><div class="midautumn-reward-preview"><img id="midAutumnAvatarPreview" class="reward-avatar" alt="当前头像预览"><img class="reward-frame" src="assets/midautumn-frame-2026-clear.png?v=20260926-clear" alt="" loading="lazy" decoding="async" fetchpriority="low"></div><div><b>月兔团圆 · 中秋头像框</b><span>不替换 BASE / 换装，只叠加在当前头像外层</span></div></div>
             <div>
               <div class="midautumn-task-grid">
                 <div class="midautumn-task" id="midAutumnDaysTask"><small>① 连续达标</small><b id="midAutumnDayCount">0 / 2 天</b><p>前两项必须在连续两个自然日内分别完成。</p><div class="midautumn-track"><i id="midAutumnDayBar"></i></div></div>
@@ -1950,7 +2010,6 @@ setTimeout(()=>{try{renderHonorGrowth();updateRingsProfileHint();}catch(e){}},50
   const RINGS_GAME_B64='';
   function decodeBase64Utf8(b64){const bin=atob(b64),bytes=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i);return new TextDecoder('utf-8').decode(bytes);}
   function ensureRingsLoaded(force=false){let f=$('#ringsFrame');if(!f)return;if(force||!f.dataset.loaded){f.src='rings.html?v=integrated-1';f.dataset.loaded='1';}}
-  ensureRingsLoaded();
 
   // Sound
   $('#soundBtn').addEventListener('click',()=>{state.sound=!state.sound; $('#soundBtn').textContent=state.sound?'♪':'×';});
