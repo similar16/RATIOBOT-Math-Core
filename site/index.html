@@ -909,7 +909,7 @@ footer{text-align:center;padding:30px;color:#8C7E82;font:900 10px ui-monospace;l
         <button class="portal-card rings-hot" data-go="rings"><span class="portal-num">C</span><div><h3>数圈侦探</h3><p>用重叠类型、0 的边界和试错线索做分类推理。</p></div><span class="arrow">↗</span></button>
         <button class="portal-card" id="homeGrowthBtn" data-go="growth"><span class="portal-num">D</span><div><h3>我的核心</h3><p>BASE1–10，每个 BASE 9 级成长，配合 7 个能力核心与徽章柜。</p></div><span class="arrow">↗</span></button>
         <button class="portal-card" id="homeStatsBtn" data-go="stats"><span class="portal-num">E</span><div><h3>训练记录</h3><p>两个游戏共享同一学生档案与 R积分。</p></div><span class="arrow">↗</span></button>
-        <button class="portal-card profile-hot" id="homeProfileBtn" data-go="profile"><span class="portal-num">F</span><div><h3>个人名片</h3><p>上传自己的头像，设置任务称号、名片主题和展示徽章。</p></div><span class="arrow">↗</span></button>
+        <button class="portal-card profile-hot" id="homeProfileBtn" data-go="profile"><span class="portal-num">F</span><div><h3>个人名片</h3><p>切换内置学生头像，设置任务称号、头像框、名片主题和展示徽章。</p></div><span class="arrow">↗</span></button>
       </div>
     </section>
 
@@ -1973,7 +1973,9 @@ setTimeout(()=>{try{renderHonorGrowth();updateRingsProfileHint();}catch(e){}},50
     earnedBadges(){const p=currentProfile();if(!p)return[];const growth=new Set(p.badges||[]);return [...hqBadges(p).filter(x=>x[3]).map(x=>x[0]),...BADGES.filter(b=>growth.has(b.id)).map(b=>b.name)];},
     badgeImg(name){return userBadgeImg50(name);},
     defaultAvatar(){const p=currentProfile();if(!p)return GROWTH_AVATAR_ART[1];const lv=levelInfo(p.xp||0).level,def=avatarSrcByLevel(lv,true,p.equip,true);if(window.AppearanceManager?.hasAvatars?.())return window.AppearanceManager.avatarForLevel(lv,def);let id=p?.economy?.checkin?.equippedOutfit,o=CHECKIN_OUTFITS.find(x=>x.id===id);return o?.src||def;},
-    today(){const p=currentProfile();if(!p)return{points:0,checked:false,full:false};const r=ensureTodayRecord(p);return{points:Number(r.points||0),checked:!!r.checked,full:!!r.full};}
+    today(){const p=currentProfile();if(!p)return{points:0,checked:false,full:false};const r=ensureTodayRecord(p);return{points:Number(r.points||0),checked:!!r.checked,full:!!r.full};},
+    frameState(){const p=currentProfile();if(!p)return{unlocked:false,equipped:false};const ev=midAutumnEvent(p);return{unlocked:!!ev.unlocked,equipped:!!ev.equipped};},
+    async toggleFrame(){const p=currentProfile();if(!p)return false;const ev=midAutumnEvent(p);if(!ev.unlocked)return false;ev.equipped=!ev.equipped;ev.equippedUpdatedAt=new Date().toISOString();saveCurrentProfile(p);refreshPlayerUI();renderGrowth();if($('#classmates')?.classList.contains('active'))loadStudentClassWall();await cloudSyncProfile(p,true);return ev.equipped;}
   };
   function renderUnifiedBadges(p){
     let box=$('#unifiedBadgeGrid');if(!box||!p)return;
