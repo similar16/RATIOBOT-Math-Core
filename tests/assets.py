@@ -11,6 +11,12 @@ for page in root.glob('*.html'):
 for p in (root/'assets').iterdir():
  if p.suffix.lower() in ['.png','.webp','.jpg']:
   im=Image.open(p);im.load();assert min(im.size)>0,p
+for i in range(1,11):
+ p=root/f'assets/student-avatar-{i:02d}.png'
+ assert p.exists(),p
+ with Image.open(p) as im:
+  im.load()
+  assert min(im.size)>0,(p,im.size)
 for i in range(1,17):assert (root/f'assets/badge-{i}.png').exists()
 for b in [2,3]:
  for i in range(1,10):
