@@ -9,3 +9,5 @@ GitHub Pages production build.
 
 ## GitHub Pages
 Publish from the repository root on the `main` branch.
+
+- Avatar UI: standalone PNG portrait crops for iOS/WebKit; limited frames live in the permanent profile appearance collection.
