@@ -8,6 +8,24 @@ with zipfile.ZipFile('RATIOBOT_GitHub_Pages_v4.0.zip') as z:
    rel=n.split('/assets/',1)[1]
    if rel.startswith(('base2-','base3-')) and rel.endswith('.png'):continue
    p=Path('_site/assets')/rel;p.parent.mkdir(parents=True,exist_ok=True);p.write_bytes(z.read(n))`]);
+// Build standalone student portrait PNGs from the exact supplied contact sheet.
+// External SVG <image> references are unreliable when the SVG itself is used as <img> on iOS/WebKit.
+execFileSync('python',['-c',`from pathlib import Path
+from PIL import Image
+import re
+sheet=Image.open('_site/assets/student-avatar-sheet.png').convert('RGBA')
+for svg in sorted(Path('site/assets').glob('student-avatar-??.svg')):
+    text=svg.read_text()
+    vb=re.search(r'viewBox="0 0 ([0-9.]+) ([0-9.]+)"',text)
+    im=re.search(r'<image[^>]*x="(-?[0-9.]+)"[^>]*y="(-?[0-9.]+)"[^>]*width="([0-9.]+)"[^>]*height="([0-9.]+)"',text)
+    if not vb or not im: raise SystemExit(f'cannot parse {svg}')
+    vw,vh=map(float,vb.groups()); x,y,iw,ih=map(float,im.groups())
+    sx,sy=sheet.width/iw,sheet.height/ih
+    left=int(round(-x*sx)); top=int(round(-y*sy))
+    right=int(round(left+vw*sx)); bottom=int(round(top+vh*sy))
+    crop=sheet.crop((left,top,right,bottom))
+    crop.save(Path('_site/assets')/(svg.stem+'.png'),optimize=True)
+`]);
 fs.copyFileSync('node_modules/@supabase/supabase-js/dist/umd/supabase.js','_site/assets/supabase.min.js');
 // Recognition resources stay on the same origin and load only when importing.
 const vendor='_site/assets/import';fs.mkdirSync(vendor+'/core',{recursive:true});fs.mkdirSync(vendor+'/lang',{recursive:true});
