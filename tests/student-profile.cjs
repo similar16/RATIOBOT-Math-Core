@@ -12,7 +12,7 @@ assert.equal(sha('site/assets/teacher-avatar-fixed.png'),'0ce073790924c3151998c7
 for(let i=1;i<=10;i++){const n=String(i).padStart(2,'0'),svg=fs.readFileSync('site/assets/student-avatar-'+n+'.svg','utf8');assert.match(svg,/student-avatar-sheet\.png/,'portrait '+n+' must crop the original sheet rather than redraw it');}
 assert.match(fs.readFileSync('site/assets/teacher-avatar-fixed.svg','utf8'),/teacher-avatar-fixed\.png/,'teacher wrapper must use exact original');
 assert.equal(w.StudentProfileCard.portraits().length,10);
-assert.equal(w.StudentProfileCard.avatarSrc('fallback'),'assets/student-avatar-03.svg');
+assert.equal(w.StudentProfileCard.avatarSrc('fallback'),'assets/student-avatar-03.png');
 assert.equal(w.StudentProfileCard.frameOn(),true);
 w.StudentProfileCard.render();
 const d=w.document;
@@ -21,6 +21,9 @@ assert.equal(d.querySelector('input[type="file"]'),null);
 assert.doesNotMatch(d.querySelector('#studentProfileContent').textContent,/上传图片|上传 \/ 修改头像/);
 assert.match(d.querySelector('#studentProfileContent').innerHTML,/midautumn-frame-2026-clear/);
 assert.ok(d.querySelector('#profileFrameToggle'),'unlocked frame must remain accessible from profile after being removed');
-const choice=d.querySelector('[data-avatar-choice="assets/student-avatar-08.svg"]');choice.click();
-assert.equal(d.querySelector('.mission-avatar-img').getAttribute('src'),'assets/student-avatar-08.svg');
-console.log('PASS student profile: exact original portrait sources, 10 built-in choices, no avatar upload, mission card and frame');w.close();
+assert.match(d.querySelector('#studentProfileContent').textContent,/可选头像/);
+assert.match(d.querySelector('#studentProfileContent').textContent,/外观收藏/);
+const choice=d.querySelector('[data-avatar-choice="assets/student-avatar-08.png"]');choice.click();
+assert.equal(d.querySelector('.mission-avatar-img').getAttribute('src'),'assets/student-avatar-08.png');
+const built=process.env.SITE_DIR||'_site';for(let i=1;i<=10;i++){const n=String(i).padStart(2,'0');assert.ok(fs.existsSync(built+'/assets/student-avatar-'+n+'.png'),'built portrait '+n+' must exist as standalone PNG');}
+console.log('PASS student profile: 10 visible PNG choices, old SVG values migrate, permanent frame collection, no avatar upload');w.close();
