@@ -42,3 +42,23 @@
 .profile-frame-row span{display:block;margin-top:3px;color:var(--muted);font-size:9px;font-weight:900}
 .profile-frame-row button{white-space:nowrap}
 @media(max-width:560px){.profile-frame-row{grid-template-columns:64px 1fr}.profile-frame-row button{grid-column:1/-1;width:100%}}
+
+
+/* Avatar system audit: make choices and permanent limited collection unmistakable */
+.profile-section-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.profile-section-head b{font-size:13px}
+.profile-section-head p{margin:4px 0 0;color:var(--muted);font-size:9px;font-weight:850;line-height:1.5}
+.profile-picker-tip{border:2px solid var(--ink);border-radius:999px;background:var(--teal-soft);padding:4px 7px;font-size:8px;font-weight:1000;white-space:nowrap}
+.profile-avatar-picker{margin-top:12px;padding:13px;border:2px solid #DDD4C7;border-radius:16px;background:#FFFDF8}
+.profile-avatar-picker.profile-section{border-top:0}
+.profile-portrait-grid{margin:12px 0 0}
+.profile-portrait-choice{min-height:112px;background:#fff;transition:.14s transform,.14s box-shadow,.14s background}
+.profile-portrait-choice:hover{transform:translateY(-2px);box-shadow:3px 3px 0 rgba(62,53,64,.12)}
+.profile-portrait-choice img{width:78px;height:78px;object-fit:contain;display:block}
+.profile-portrait-choice small{font-size:7px;color:var(--muted);font-weight:850;white-space:nowrap}
+.profile-portrait-choice.active:after{content:"✓ 已选择";position:absolute;right:5px;top:5px;border:2px solid var(--ink);border-radius:999px;background:var(--yellow);padding:2px 5px;font-size:7px;font-weight:1000}
+.profile-frame-collection{padding:13px;border:2px solid #DDD4C7;border-radius:16px;background:#FFFDF8}
+.profile-frame-collection.profile-section{border-top:0}
+.profile-frame-row.locked{opacity:.55;filter:grayscale(.55)}
+.profile-frame-row.locked button{cursor:not-allowed;box-shadow:none}
+@media(max-width:560px){.profile-section-head{align-items:flex-start}.profile-picker-tip{font-size:7px}.profile-portrait-choice{min-height:102px}.profile-portrait-choice img{width:68px;height:68px}}
