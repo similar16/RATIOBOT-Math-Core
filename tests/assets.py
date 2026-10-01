@@ -17,6 +17,11 @@ for i in range(1,11):
  with Image.open(p) as im:
   im.load()
   assert min(im.size)>0,(p,im.size)
+p=root/'assets/national-day-frame-2026.png'
+assert p.exists(),p
+with Image.open(p) as im:
+ im.load()
+ assert im.mode=='RGBA' and min(im.size)>=1000,(p,im.mode,im.size)
 for i in range(1,17):assert (root/f'assets/badge-{i}.png').exists()
 for b in [2,3]:
  for i in range(1,10):
