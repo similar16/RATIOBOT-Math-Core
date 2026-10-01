@@ -69,3 +69,8 @@
 .profile-teacher-test-avatar b{display:block;font-size:13px}
 .profile-teacher-test-avatar small{display:block;margin-top:4px;color:var(--muted);font-size:9px;font-weight:850;line-height:1.45}
 .profile-wall-fixed{font-size:10px;font-weight:1000;color:#2F7D5C}
+
+.profile-frame-list{display:grid;gap:10px;margin-top:10px}
+.profile-frame-row small{display:block;margin-top:3px;color:var(--muted);font-size:8px;font-weight:850;line-height:1.35}
+.profile-frame-row.unlocked{background:#FFFDF8}
+.profile-frame-row.unlocked:has([data-profile-frame="nationalday2026"]){background:#F8F0E6}
