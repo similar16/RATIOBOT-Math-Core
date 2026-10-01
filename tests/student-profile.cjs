@@ -1,6 +1,6 @@
 const {JSDOM}=require('jsdom'),fs=require('fs'),assert=require('node:assert/strict'),crypto=require('node:crypto');
 const dom=new JSDOM('<!doctype html><div id="studentProfileContent"></div>',{runScripts:'outside-only',url:'https://test.local'}),w=dom.window;
-let frameEquipped=true;w.RatioProfileBridge={earnedBadges:()=>['核心启动','数圈新探'],badgeImg:n=>'<img src="badge-'+n+'.png">',defaultAvatar:()=> 'default.png',today:()=>({points:22,checked:true,full:false}),frameState:()=>({unlocked:true,equipped:frameEquipped}),toggleFrame:async()=>{frameEquipped=!frameEquipped;return frameEquipped}};
+let frameEquipped=true;w.RatioProfileBridge={earnedBadges:()=>['核心启动','数圈新探'],badgeImg:n=>'<img src="badge-'+n+'.png">',defaultAvatar:()=> 'default.png',today:()=>({points:22,checked:true,full:false}),frameState:()=>({midAutumn:{unlocked:true,equipped:frameEquipped},national:{unlocked:true,equipped:false,magnetEligible:true}}),toggleFrame:async kind=>{frameEquipped=kind==='midAutumn'?!frameEquipped:false;return frameEquipped}};
 w.eval(fs.readFileSync('site/student-profile.js','utf8'));
 const row={user_id:'u1',display_name:'17号小方',level:12,base_level:2,streak:5,badge_count:2,public_card_enabled:true,avatar_key:'level:12|frame:midautumn2026',custom_avatar:'assets/student-avatar-03.svg',public_training:{history:[{game:'rings',accuracy:90}]},profile_card:{theme:'detective',title:'分类侦探',featured_badges:['数圈新探'],show_recent:true}};
 const chain={payload:null,update(payload){this.payload=payload;return this},eq(){return this},select(){return this},async single(){return {data:{...row,...this.payload},error:null}}};
@@ -20,7 +20,8 @@ assert.equal(d.querySelectorAll('[data-avatar-choice]').length,11);
 assert.equal(d.querySelector('input[type="file"]'),null);
 assert.doesNotMatch(d.querySelector('#studentProfileContent').textContent,/上传图片|上传 \/ 修改头像/);
 assert.match(d.querySelector('#studentProfileContent').innerHTML,/midautumn-frame-2026-clear/);
-assert.ok(d.querySelector('#profileFrameToggle'),'unlocked frame must remain accessible from profile after being removed');
+assert.equal(d.querySelectorAll('[data-profile-frame]').length,2,'both festival frames must stay in permanent collection');
+assert.match(d.querySelector('#studentProfileContent').textContent,/国庆限定/);
 assert.match(d.querySelector('#studentProfileContent').textContent,/可选头像/);
 assert.match(d.querySelector('#studentProfileContent').textContent,/外观收藏/);
 const choice=d.querySelector('[data-avatar-choice="assets/student-avatar-08.png"]');choice.click();
