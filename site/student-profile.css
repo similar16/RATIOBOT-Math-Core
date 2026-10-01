@@ -62,3 +62,10 @@
 .profile-frame-row.locked{opacity:.55;filter:grayscale(.55)}
 .profile-frame-row.locked button{cursor:not-allowed;box-shadow:none}
 @media(max-width:560px){.profile-section-head{align-items:flex-start}.profile-picker-tip{font-size:7px}.profile-portrait-choice{min-height:102px}.profile-portrait-choice img{width:68px;height:68px}}
+
+.profile-portrait-grid.teacher-test{display:block}
+.profile-teacher-test-avatar{display:grid;grid-template-columns:96px 1fr;gap:12px;align-items:center;padding:12px;border:3px solid var(--ink);border-radius:16px;background:#FFF0B8;box-shadow:4px 4px 0 rgba(62,53,64,.12)}
+.profile-teacher-test-avatar img{width:92px;height:92px;object-fit:contain;border-radius:18px}
+.profile-teacher-test-avatar b{display:block;font-size:13px}
+.profile-teacher-test-avatar small{display:block;margin-top:4px;color:var(--muted);font-size:9px;font-weight:850;line-height:1.45}
+.profile-wall-fixed{font-size:10px;font-weight:1000;color:#2F7D5C}
