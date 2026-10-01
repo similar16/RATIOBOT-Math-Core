@@ -15,6 +15,12 @@ assert.match(html,/data-src="assets\/teacher-avatar-fixed\.png"/,'teacher origin
 assert.match(html,/reward-frame[^>]+data-src="assets\/midautumn-frame-2026-clear\.png\?v=20260926-clear"[^>]+loading="lazy"/,'large event frame is deferred and lazy-loaded');
 assert.match(html,/MID_AUTUMN_MIXED_STAGES=new Set\(\['supermixed'\]\)/,'Mid-Autumn only counts five-operation supermixed rounds');
 assert.doesNotMatch(html,/神秘房间[^<\n]{0,40}补充题/,'Mid-Autumn Secret Room wording uses 挑战题');
+assert.match(html,/NATIONAL_DAY_2026_START='2026-10-02'/,'National Day starts on Oct 2');
+assert.match(html,/NATIONAL_DAY_2026_REQUIRED_DAYS=4/,'National Day requires four qualifying days');
+assert.match(html,/NATIONAL_DAY_2026_KNOWLEDGE=20/,'National Day requires 20 knowledge blanks per qualifying day');
+assert.match(html,/NATIONAL_DAY_2026_MIXED=5/,'National Day requires five full mixed rounds per qualifying day');
+assert.match(html,/frame:nationalday2026/,'National Day frame syncs through the public avatar key');
+assert.match(html,/national-day-frame-2026\.svg/,'National Day frame asset is wired into the UI');
 
 function student(){t.cloudState.user={id:'fixture-student'};t.cloudState.role='student';t.cloudState.mustChangePassword=false;t.saveCurrentProfile(t.blankProfile('TEST','1',''));}
 function xpAt(lv){let n=0;for(let i=1;i<lv;i++)n+=260+(i-1)*85;return n;}
