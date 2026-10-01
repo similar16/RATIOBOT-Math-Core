@@ -33,4 +33,4 @@ assert.match(d.querySelector('#studentProfileContent').textContent,/教师测试
 assert.equal(d.querySelectorAll('[data-avatar-choice]').length,0,'46号教师测试账号不应显示学生头像选择');
 assert.equal(d.querySelector('.mission-avatar-img').getAttribute('src'),'assets/teacher-avatar-fixed.png');
 const built=process.env.SITE_DIR||'_site';for(let i=1;i<=10;i++){const n=String(i).padStart(2,'0');assert.ok(fs.existsSync(built+'/assets/student-avatar-'+n+'.png'),'built portrait '+n+' must exist as standalone PNG');}
-console.log('PASS student profile: 10 visible PNG choices, old SVG values migrate, permanent frame collection, no avatar upload');w.close();
+console.log('PASS student profile: 10 visible PNG choices, teacher test avatar, multi-frame permanent collection, no avatar upload');w.close();
