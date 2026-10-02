@@ -16,6 +16,8 @@ assert.match(html,/reward-frame[^>]+data-src="assets\/midautumn-frame-2026-clear
 assert.match(html,/MID_AUTUMN_MIXED_STAGES=new Set\(\['supermixed'\]\)/,'Mid-Autumn only counts five-operation supermixed rounds');
 assert.doesNotMatch(html,/神秘房间[^<\n]{0,40}补充题/,'Mid-Autumn Secret Room wording uses 挑战题');
 assert.match(html,/NATIONAL_DAY_2026_START='2026-10-02'/,'National Day starts on Oct 2');
+assert.match(html,/NATIONAL_DAY_2026_END='2026-10-08'/,'National Day ends on Oct 8');
+assert.match(html,/key>=NATIONAL_DAY_2026_START&&key<=NATIONAL_DAY_2026_END/,'National Day task counting is limited to Oct 2 through Oct 8 inclusive');
 assert.match(html,/NATIONAL_DAY_2026_REQUIRED_DAYS=4/,'National Day requires four qualifying days');
 assert.match(html,/NATIONAL_DAY_2026_KNOWLEDGE=20/,'National Day requires 20 knowledge blanks per qualifying day');
 assert.match(html,/NATIONAL_DAY_2026_MIXED=5/,'National Day requires five full mixed rounds per qualifying day');
