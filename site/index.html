@@ -856,7 +856,7 @@ footer{text-align:center;padding:30px;color:#8C7E82;font:900 10px ui-monospace;l
 .nationalday-event:before{background:rgba(185,135,54,.12)}.nationalday-event-badge{background:#A94D4B;color:#FFFDF8;box-shadow:3px 3px 0 #D4AE57}
 .nationalday-reward{background:#FFFDF8}.nationalday-event .midautumn-task.done{background:#E3EFE7}.nationalday-event .midautumn-task.optional{background:#F7E7E3}
 .nationalday-event .midautumn-track i{background:#9E5A50}.nationalday-event .midautumn-task.optional .midautumn-track i{background:#6E8A74}
-.nationalday-framed{position:relative!important}.nationalday-framed:after{content:"";position:absolute;inset:0;background:url('assets/national-day-frame-2026.svg') center/contain no-repeat;pointer-events:none;z-index:6;transform:translateY(-3%) scale(1.02);transform-origin:center}
+.nationalday-framed{position:relative!important}.nationalday-framed:after{content:"";position:absolute;inset:0;background:url('assets/national-day-frame-2026.png') center/contain no-repeat;pointer-events:none;z-index:6;transform:translateY(-3%) scale(1.02);transform-origin:center}
 .mascot-stage.nationalday-framed>.mascot-img{width:68%;max-height:205px}.growth-robot.nationalday-framed>#growthRobot{width:min(245px,74%)}.growth-robot.nationalday-framed>.base-hero-sprite{transform:scale(.72)}
 .growth-robot.nationalday-framed .energy-chip,.growth-robot.nationalday-framed .base-stage-chip{z-index:8}
 .checkin-avatar-preview.nationalday-framed{border-color:transparent!important;background:transparent!important;overflow:visible!important}.checkin-avatar-preview.nationalday-framed>#checkinAvatarPreview{width:102px;height:102px}
@@ -932,7 +932,7 @@ footer{text-align:center;padding:30px;color:#8C7E82;font:900 10px ui-monospace;l
         <button class="primary" data-go="growth">查看收集任务 →</button>
       </div>
       <div class="nationalday-home-banner" id="nationalDayHomeBanner">
-        <div class="nationalday-home-icon"><img src="assets/national-day-frame-2026.svg" alt="国庆限定头像框"></div>
+        <div class="nationalday-home-icon"><img src="assets/national-day-frame-2026.png" alt="国庆限定头像框"></div>
         <div class="nationalday-home-copy"><small>NATIONAL DAY · LIMITED COLLECTION</small><h3>国庆限定 · 星旗头像框</h3><p>10月2日—10月8日限时：每天完成知识点回顾 20 空 + 五种运算全覆盖混合挑战 5 局 + 神秘房间当天挑战。累计 4 个达标日，永久获得头像框，并记录实体主题冰箱贴领取资格。</p><b id="nationalDayHomeStatus">10月2日开启</b></div>
         <button class="primary" data-go="growth">查看国庆任务 →</button>
       </div>
@@ -1091,7 +1091,7 @@ footer{text-align:center;padding:30px;color:#8C7E82;font:900 10px ui-monospace;l
 <div class="midautumn-event nationalday-event" id="nationalDayEvent">
   <div class="midautumn-event-head"><div><div class="eyebrow">NATIONAL DAY · 2026 LIMITED</div><h3>国庆限定 · 四日同行计划</h3><p>活动时间 10 月 2 日—10 月 8 日，不要求连续。当天三项都完成才点亮 1 个“国庆达标日”；累计 4 天即可解锁限定头像框与实体主题冰箱贴领取资格。</p></div><span class="midautumn-event-badge nationalday-event-badge">4 DAYS · LIMITED</span></div>
   <div class="midautumn-event-body">
-    <div class="midautumn-reward nationalday-reward"><div class="midautumn-reward-preview"><img class="reward-avatar" id="nationalDayAvatarPreview" src="assets/img_f3d2d6b03565.svg" alt="头像预览"><img class="reward-frame" src="assets/national-day-frame-2026.svg" alt="国庆限定头像框"></div><div><b>星旗头像框 · 2026</b><span>数字奖励：永久收藏</span><span>实体奖励：主题冰箱贴领取资格</span></div></div>
+    <div class="midautumn-reward nationalday-reward"><div class="midautumn-reward-preview"><img class="reward-avatar" id="nationalDayAvatarPreview" src="assets/img_f3d2d6b03565.svg" alt="头像预览"><img class="reward-frame" src="assets/national-day-frame-2026.png" alt="国庆限定头像框"></div><div><b>星旗头像框 · 2026</b><span>数字奖励：永久收藏</span><span>实体奖励：主题冰箱贴领取资格</span></div></div>
     <div>
       <div class="midautumn-task-grid">
         <article class="midautumn-task" id="nationalDayDaysTask"><small>累计达标</small><b id="nationalDayDayCount">0 / 4 天</b><p>三项任务同一天全部完成，点亮 1 天。</p><div class="midautumn-track"><i id="nationalDayDayBar"></i></div></article>
@@ -2043,7 +2043,7 @@ setTimeout(()=>{try{renderHonorGrowth();updateRingsProfileHint();}catch(e){}},50
     badgeImg(name){return userBadgeImg50(name);},
     defaultAvatar(){const p=currentProfile();if(!p)return GROWTH_AVATAR_ART[1];const lv=levelInfo(p.xp||0).level,def=avatarSrcByLevel(lv,true,p.equip,true);if(window.AppearanceManager?.hasAvatars?.())return window.AppearanceManager.avatarForLevel(lv,def);let id=p?.economy?.checkin?.equippedOutfit,o=CHECKIN_OUTFITS.find(x=>x.id===id);return o?.src||def;},
     today(){const p=currentProfile();if(!p)return{points:0,checked:false,full:false};const r=ensureTodayRecord(p);return{points:Number(r.points||0),checked:!!r.checked,full:!!r.full};},
-    frameCollection(){const p=currentProfile();if(!p)return[];const m=midAutumnEvent(p),n=nationalDayEvent(p);return[{id:'midautumn2026',name:'中秋限定 · 2026',asset:'assets/midautumn-frame-2026-clear.png?v=20260926-clear',unlocked:!!m.unlocked,equipped:!!m.equipped,note:'月兔头像框'},{id:'nationalday2026',name:'国庆限定 · 2026',asset:'assets/national-day-frame-2026.svg',unlocked:!!n.unlocked,equipped:!!n.equipped,note:'星旗头像框 · 含实体冰箱贴资格'}]},
+    frameCollection(){const p=currentProfile();if(!p)return[];const m=midAutumnEvent(p),n=nationalDayEvent(p);return[{id:'midautumn2026',name:'中秋限定 · 2026',asset:'assets/midautumn-frame-2026-clear.png?v=20260926-clear',unlocked:!!m.unlocked,equipped:!!m.equipped,note:'月兔头像框'},{id:'nationalday2026',name:'国庆限定 · 2026',asset:'assets/national-day-frame-2026.png',unlocked:!!n.unlocked,equipped:!!n.equipped,note:'星旗头像框 · 含实体冰箱贴资格'}]},
     async toggleFrameById(id){const p=currentProfile();if(!p)return false;const m=midAutumnEvent(p),n=nationalDayEvent(p),target=id==='nationalday2026'?n:m;if(!target.unlocked)return false;const next=!target.equipped;m.equipped=false;n.equipped=false;target.equipped=next;target.equippedUpdatedAt=new Date().toISOString();saveCurrentProfile(p);refreshPlayerUI();renderGrowth();applyMidAutumnFrameUI(p);applyNationalDayFrameUI(p);if($('#classmates')?.classList.contains('active'))loadStudentClassWall();await cloudSyncProfile(p,true);return next},
     frameState(){const p=currentProfile();if(!p)return{midAutumn:{unlocked:false,equipped:false},national:{unlocked:false,equipped:false}};const ma=midAutumnEvent(p),nd=nationalEvent(p);return{midAutumn:{unlocked:!!ma.unlocked,equipped:!!ma.equipped},national:{unlocked:!!nd.unlocked,equipped:!!nd.equipped,magnetEligible:!!nd.magnetEligible}};},
     async toggleFrame(kind='midAutumn'){const p=currentProfile();if(!p)return false;const ev=kind==='national'?nationalEvent(p):midAutumnEvent(p);if(!ev.unlocked)return false;if(!ev.equipped){const other=kind==='national'?midAutumnEvent(p):nationalEvent(p);other.equipped=false;other.equippedUpdatedAt=new Date().toISOString();}ev.equipped=!ev.equipped;ev.equippedUpdatedAt=new Date().toISOString();saveCurrentProfile(p);refreshPlayerUI();renderGrowth();if($('#classmates')?.classList.contains('active'))loadStudentClassWall();await cloudSyncProfile(p,true);return ev.equipped;},
