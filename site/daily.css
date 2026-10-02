@@ -61,7 +61,7 @@
 @media(max-width:600px){.daily-question-pager{gap:7px}.daily-question-pager button{min-width:0;padding:8px 10px}.daily-question-page{padding:16px}}
 
 /* Question + simultaneous right-side hint panel */
-.daily-challenge-layout{display:grid;grid-template-columns:minmax(0,1fr) 250px;gap:18px;align-items:start}
+.daily-challenge-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(310px,36%);gap:18px;align-items:start}
 .daily-question-main{min-width:0}
 .daily-hint-panel{position:sticky;top:88px;border:2px solid #D6C7B4;border-radius:16px;background:#FFF7DD;padding:12px;min-height:120px}
 .daily-hint-title{font-size:13px;font-weight:1000;margin-bottom:6px}
@@ -89,3 +89,18 @@
 .daily-fill-math-wrap{display:flex;flex-direction:column;align-items:flex-start;gap:4px;margin:12px 0}
 .daily-fill-math-wrap .daily-math-entry input{width:min(280px,55vw);max-width:100%}
 @media(max-width:600px){.daily-inline-answer-wrap{display:inline-flex;max-width:100%}.daily-math-entry{gap:4px}.daily-math-entry input{min-width:96px;max-width:145px}.daily-math-key{min-width:40px;padding:4px 6px!important}.daily-math-help{font-size:9px}}
+
+/* Secret-room hint readability + click-to-zoom images */
+.daily-hint-panel{padding:15px}
+.daily-hint-panel .daily-hint{padding:14px}
+.daily-hint-panel .qb-image,.daily-question-main .qb-image{cursor:zoom-in;transition:transform .14s ease,box-shadow .14s ease}
+.daily-hint-panel .qb-image:hover,.daily-question-main .qb-image:hover{transform:translateY(-1px);box-shadow:0 5px 16px rgba(62,53,64,.12)}
+.daily-hint-panel .qb-image:focus-visible,.daily-question-main .qb-image:focus-visible{outline:3px solid var(--coral);outline-offset:3px}
+.daily-image-zoom{position:fixed;inset:0;z-index:9999;background:rgba(35,31,36,.82);display:grid;place-items:center;padding:max(22px,env(safe-area-inset-top)) max(18px,env(safe-area-inset-right)) max(22px,env(safe-area-inset-bottom)) max(18px,env(safe-area-inset-left));box-sizing:border-box}
+.daily-image-zoom[hidden]{display:none}
+.daily-image-zoom-inner{position:relative;width:min(1120px,96vw);height:min(88vh,900px);display:grid;place-items:center}
+.daily-image-zoom img{display:block;max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;background:#FFFDF8;border:3px solid var(--ink);border-radius:14px;box-shadow:8px 8px 0 rgba(0,0,0,.18)}
+.daily-image-zoom-close{position:absolute;right:-6px;top:-6px;z-index:2;width:42px;height:42px;border:3px solid var(--ink);border-radius:50%;background:#FFFDF8;color:var(--ink);font-size:24px;font-weight:1000;line-height:1;cursor:pointer;box-shadow:3px 3px 0 rgba(0,0,0,.16)}
+.daily-image-zoom-tip{position:absolute;left:50%;bottom:-4px;transform:translate(-50%,100%);color:#FFFDF8;font-size:11px;font-weight:900;white-space:nowrap}
+@media(max-width:900px) and (min-width:761px){.daily-challenge-layout{grid-template-columns:minmax(0,1fr) 300px}}
+@media(max-width:760px){.daily-hint-panel{padding:14px}.daily-image-zoom{padding:14px}.daily-image-zoom-inner{width:100%;height:84vh}.daily-image-zoom-close{right:4px;top:4px}}
