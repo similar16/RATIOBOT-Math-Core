@@ -22,7 +22,8 @@ assert.match(html,/NATIONAL_DAY_2026_REQUIRED_DAYS=4/,'National Day requires fou
 assert.match(html,/NATIONAL_DAY_2026_KNOWLEDGE=20/,'National Day requires 20 knowledge blanks per qualifying day');
 assert.match(html,/NATIONAL_DAY_2026_MIXED=5/,'National Day requires five full mixed rounds per qualifying day');
 assert.match(html,/frame:nationalday2026/,'National Day frame syncs through the public avatar key');
-assert.match(html,/national-day-frame-2026\.svg/,'National Day frame asset is wired into the UI');
+assert.match(html,/national-day-frame-2026\.png/,'Original National Day frame artwork is wired into the UI');
+assert.doesNotMatch(html,/national-day-frame-2026\.svg/,'Simplified National Day frame is not used by the UI');
 assert.match(html,/id="nationalDayHomeBanner"/,'current National Day home banner remains');
 assert.match(html,/id="nationalDayEvent"/,'current National Day event remains');
 assert.doesNotMatch(html,/id="nationalHomeBanner"/,'legacy duplicate National Day home banner is removed');
