@@ -23,6 +23,10 @@ assert.match(html,/NATIONAL_DAY_2026_KNOWLEDGE=20/,'National Day requires 20 kno
 assert.match(html,/NATIONAL_DAY_2026_MIXED=5/,'National Day requires five full mixed rounds per qualifying day');
 assert.match(html,/frame:nationalday2026/,'National Day frame syncs through the public avatar key');
 assert.match(html,/national-day-frame-2026\.svg/,'National Day frame asset is wired into the UI');
+assert.match(html,/id="nationalDayHomeBanner"/,'current National Day home banner remains');
+assert.match(html,/id="nationalDayEvent"/,'current National Day event remains');
+assert.doesNotMatch(html,/id="nationalHomeBanner"/,'legacy duplicate National Day home banner is removed');
+assert.doesNotMatch(html,/id="nationalEvent"/,'legacy duplicate National Day event is removed');
 
 function student(){t.cloudState.user={id:'fixture-student'};t.cloudState.role='student';t.cloudState.mustChangePassword=false;t.saveCurrentProfile(t.blankProfile('TEST','1',''));}
 function xpAt(lv){let n=0;for(let i=1;i<lv;i++)n+=260+(i-1)*85;return n;}
