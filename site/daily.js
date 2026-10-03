@@ -52,7 +52,7 @@ function answerToolMarkup(){
   [['±','±'],['×','×'],['÷','÷'],['√','√'],['∠','∠'],['⟂','⊥'],['∥','∥'],['°','°']],
   ['①','②','③','④','⑤','⑥','⑦','⑧','⑨','⑩'].map(x=>[x,x])
  ];
- return '<div class="daily-answer-tools" aria-label="作答工具"><div class="daily-answer-tools-title"><b>作答工具</b><span>先点要填写的答案框，再点符号</span></div>'+groups.map((g,i)=>'<div class="daily-answer-tool-row '+(i===3?'circle-tools':'')+'>'+g.map(([v,label])=>'<button type="button" class="daily-answer-tool-key" data-answer-symbol="'+v+'" aria-label="插入'+label+'">'+label+'</button>').join('')+'</div>').join('')+'</div>';
+ return '<div class="daily-answer-tools" aria-label="作答工具"><div class="daily-answer-tools-title"><b>作答工具</b><span>先点要填写的答案框，再点符号</span></div>'+groups.map((g,i)=>'<div class="daily-answer-tool-row '+(i===3?'circle-tools':'')+'>'+g.map(([v,label])=>'<button type="button" class="daily-answer-tool-key" data-answer-symbol="'+esc(v)+'" aria-label="插入'+esc(label)+'">'+esc(label)+'</button>').join('')+'</div>').join('')+'</div>';
 }
 function bindAnswerTools(card){
  let target=card.querySelector('[data-symbol-answer]');
