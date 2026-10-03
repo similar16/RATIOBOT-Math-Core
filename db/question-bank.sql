@@ -329,7 +329,7 @@ returns text
 language plpgsql
 immutable
 set search_path=''
-as $$
+as $
 declare
   s text := lower(coalesce(v,''));
   t text;
@@ -339,15 +339,194 @@ begin
   s := replace(s,'×','*');
   s := replace(s,'·','*');
   s := replace(s,'÷','/');
+  s := replace(s,'≥','>=');
+  s := replace(s,'≤','<=');
+  s := replace(s,'≠','!=');
+  s := replace(s,'<>','!=');
   s := replace(s,E'\\left','');
   s := replace(s,E'\\right','');
   s := replace(s,E'\\dfrac',E'\\frac');
   s := replace(s,E'\\tfrac',E'\\frac');
+  s := replace(s,E'\\geq','>=');
+  s := replace(s,E'\\ge','>=');
+  s := replace(s,E'\\leq','<=');
+  s := replace(s,E'\\le','<=');
+  s := replace(s,E'\\neq','!=');
+  s := replace(s,E'\\ne','!=');
+  s := replace(s,E'\\times','*');
+  s := replace(s,E'\\cdot','*');
+  s := replace(s,E'\\div','/');
+  s := replace(s,E'\\pm','±');
+  s := replace(s,E'\\perp','⟂');
+  s := replace(s,E'\\parallel','∥');
   s := replace(s,E'\\(','');
   s := replace(s,E'\\)','');
   s := replace(s,E'\\[','');
   s := replace(s,E'\\]','');
-  s := replace(s,'$','');
+  s := replace(s,'
+create or replace function public.check_daily_inline_answer(
+  target_set uuid,
+  target_slot smallint,
+  target_blank text,
+  submitted text
+) returns boolean
+language plpgsql
+security definer
+set search_path=''
+as $$
+declare expected text;
+begin
+  if auth.uid() is null then return false; end if;
+
+  if not exists (
+    select 1
+    from public.daily_challenge_sets s
+    join public.class_members m on m.class_id=s.class_id
+    where s.id=target_set
+      and s.published
+      and now() >= ((s.challenge_date::timestamp + interval '7 hours') at time zone 'Asia/Shanghai')
+      and m.user_id=auth.uid()
+      and m.role='student'
+  ) then return false; end if;
+
+  select e->>'answer'
+  into expected
+  from public.daily_challenge_solutions sol,
+       lateral jsonb_array_elements(coalesce(sol.inline_answers,'[]'::jsonb)) e
+  where sol.set_id=target_set
+    and sol.slot=target_slot
+    and e->>'id'=target_blank
+  limit 1;
+
+  if expected is null then return false; end if;
+
+  return private.normalize_daily_math_answer(expected)
+       = private.normalize_daily_math_answer(submitted);
+end $$;
+
+
+-- 2026-09-27: refresh an already-published challenge from its linked question-bank rows.
+-- Keeps set_id and all existing student submissions/rewards; only the published
+-- question snapshot and solution keys are replaced.
+create or replace function public.refresh_published_bank_questions(
+  target_class uuid,
+  target_date date
+) returns jsonb
+language plpgsql
+security definer
+set search_path=''
+as $$
+declare
+  target_set public.daily_challenge_sets;
+  q public.question_bank;
+  slot_index integer;
+  bank_uuid uuid;
+  items jsonb := '[]'::jsonb;
+  solution_text text;
+  refreshed_titles jsonb := '[]'::jsonb;
+begin
+  if auth.uid() is null or not private.is_teacher_in_class(target_class) then
+    raise exception '只能刷新自己管理班级的题目';
+  end if;
+
+  select *
+  into target_set
+  from public.daily_challenge_sets
+  where class_id=target_class and challenge_date=target_date
+  for update;
+
+  if not found then
+    raise exception '该日期还没有已发布题目';
+  end if;
+
+  for slot_index in 0..1 loop
+    begin
+      bank_uuid := ((target_set.questions->slot_index)->>'bank_id')::uuid;
+    exception when others then
+      raise exception '第 % 题没有关联题库原题，无法自动刷新', slot_index+1;
+    end;
+
+    select *
+    into q
+    from public.question_bank
+    where id=bank_uuid and owner_id=auth.uid();
+
+    if not found then
+      raise exception '第 % 题的题库原题不存在或无权访问', slot_index+1;
+    end if;
+
+    if length(trim(q.body))=0 or length(trim(q.answer))=0 then
+      raise exception '第 % 题正文或答案为空，先保存完整内容再刷新', slot_index+1;
+    end if;
+
+    if q.answer_type='choice' then
+      if jsonb_array_length(coalesce(q.choices,'[]'::jsonb))<2
+         or length(trim(coalesce(q.answer_key,'')))=0 then
+        raise exception '第 % 题的选择题选项或标准答案不完整', slot_index+1;
+      end if;
+    end if;
+
+    if exists (
+      select 1
+      from jsonb_array_elements(coalesce(q.inline_answers,'[]'::jsonb)) e
+      where length(trim(coalesce(e->>'id','')))=0
+         or (
+           coalesce(e->>'kind','fill')<>'proof'
+           and length(trim(coalesce(e->>'answer','')))=0
+         )
+    ) then
+      raise exception '第 % 题的填空框或选项框标准答案不完整', slot_index+1;
+    end if;
+
+    items := items || jsonb_build_array(jsonb_build_object(
+      'bank_id',q.id,
+      'title',q.title,
+      'body',q.body,
+      'hints',coalesce(q.hints,'[]'::jsonb),
+      'steps',coalesce(q.steps,'[]'::jsonb),
+      'images',coalesce(q.content_images,'[]'::jsonb),
+      'extra_images',
+        case when q.include_images then coalesce(q.source_images,'[]'::jsonb) else '[]'::jsonb end,
+      'answer_type',q.answer_type,
+      'choices',
+        case when q.answer_type='choice' then coalesce(q.choices,'[]'::jsonb) else '[]'::jsonb end,
+      'has_solution',true
+    ));
+
+    solution_text := case
+      when length(trim(coalesce(q.answer_key,'')))>0
+        then '参考答案：'||trim(q.answer_key)||E'\n'||q.answer
+      else q.answer
+    end;
+
+    insert into public.daily_challenge_solutions(set_id,slot,answer,inline_answers)
+    values(
+      target_set.id,
+      slot_index::smallint,
+      solution_text,
+      coalesce(q.inline_answers,'[]'::jsonb)
+    )
+    on conflict(set_id,slot) do update
+      set answer=excluded.answer,
+          inline_answers=excluded.inline_answers;
+
+    refreshed_titles := refreshed_titles || to_jsonb(q.title);
+  end loop;
+
+  update public.daily_challenge_sets
+  set questions=items
+  where id=target_set.id;
+
+  return jsonb_build_object(
+    'set_id',target_set.id,
+    'challenge_date',target_date,
+    'titles',refreshed_titles
+  );
+end $$;
+
+revoke all on function public.refresh_published_bank_questions(uuid,date) from public,anon;
+grant execute on function public.refresh_published_bank_questions(uuid,date) to authenticated;
+,'');
   s := regexp_replace(s,'[[:space:]]+','','g');
 
   loop
@@ -359,7 +538,7 @@ begin
   s := regexp_replace(s,E'\\^\\{([+-]?[0-9]+(?:\\.[0-9]+)?)\\}',E'^\\1','g');
   s := regexp_replace(s,E'\\(([+-]?[0-9]+(?:\\.[0-9]+)?)\\)/\\(([+-]?[0-9]+(?:\\.[0-9]+)?)\\)',E'\\1/\\2','g');
   return s;
-end $$;
+end $;
 
 create or replace function public.check_daily_inline_answer(
   target_set uuid,
