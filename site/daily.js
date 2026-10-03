@@ -64,7 +64,7 @@ function bindAnswerTools(card){
  const remember=input=>{target=input;card.querySelectorAll('[data-symbol-answer]').forEach(x=>x.classList.toggle('symbol-target',x===input));};
  card.querySelectorAll('[data-symbol-answer]').forEach(input=>{input.addEventListener('focus',()=>remember(input));input.addEventListener('pointerdown',()=>remember(input));});
  if(target)remember(target);
- card.querySelectorAll('[data-answer-key]').forEach(btn=>{btn.onclick=()=>{
+ card.querySelectorAll('[data-answer-key]').forEach(btn=>{btn.onclick=e=>{e.preventDefault();e.stopPropagation();
    const active=document.activeElement?.matches?.('[data-symbol-answer]')&&card.contains(document.activeElement)?document.activeElement:target;
    const input=active||card.querySelector('[data-symbol-answer]');if(!input)return;
    const mark=ANSWER_TOOL_MAP[btn.dataset.answerKey]||'',value=String(input.value||''),rawStart=Number.isFinite(input.selectionStart)?input.selectionStart:value.length,rawEnd=Number.isFinite(input.selectionEnd)?input.selectionEnd:rawStart,start=Math.max(0,Math.min(value.length,rawStart)),end=Math.max(start,Math.min(value.length,rawEnd)),next=value.slice(0,start)+mark+value.slice(end),caret=start+mark.length;
