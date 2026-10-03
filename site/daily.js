@@ -67,8 +67,8 @@ function bindAnswerTools(card){
  card.querySelectorAll('[data-answer-key]').forEach(btn=>{btn.onclick=()=>{
    const active=document.activeElement?.matches?.('[data-symbol-answer]')&&card.contains(document.activeElement)?document.activeElement:target;
    const input=active||card.querySelector('[data-symbol-answer]');if(!input)return;
-   const mark=ANSWER_TOOL_MAP[btn.dataset.answerKey]||'',start=Number.isFinite(input.selectionStart)?input.selectionStart:input.value.length,end=Number.isFinite(input.selectionEnd)?input.selectionEnd:start;
-   input.setRangeText(mark,start,end,'end');remember(input);input.focus();input.dispatchEvent(new Event('input',{bubbles:true}));
+   const mark=ANSWER_TOOL_MAP[btn.dataset.answerKey]||'',value=String(input.value||''),rawStart=Number.isFinite(input.selectionStart)?input.selectionStart:value.length,rawEnd=Number.isFinite(input.selectionEnd)?input.selectionEnd:rawStart,start=Math.max(0,Math.min(value.length,rawStart)),end=Math.max(start,Math.min(value.length,rawEnd)),next=value.slice(0,start)+mark+value.slice(end),caret=start+mark.length;
+   input.value=next;remember(input);input.focus();if(typeof input.setSelectionRange==='function')input.setSelectionRange(caret,caret);input.dispatchEvent(new Event('input',{bubbles:true}));
  };});
 }
 
