@@ -45,24 +45,29 @@ function prepareZoomImages(scope=root){scope?.querySelectorAll('.qb-image').forE
 root?.addEventListener('click',e=>{const img=e.target.closest?.('.qb-image');if(img&&root.contains(img)){e.preventDefault();openDailyImageZoom(img);}});
 root?.addEventListener('keydown',e=>{const img=e.target.closest?.('.qb-image');if(img&&root.contains(img)&&(e.key==='Enter'||e.key===' ')){e.preventDefault();openDailyImageZoom(img);}});
 
+const ANSWER_TOOL_MAP={
+ frac:'/',pow:'^',ge:'≥',le:'≤',ne:'≠',gt:'>',lt:'<',eq:'=',pm:'±',mul:'×',div:'÷',sqrt:'√',angle:'∠',perp:'⟂',parallel:'∥',degree:'°',
+ c1:'①',c2:'②',c3:'③',c4:'④',c5:'⑤',c6:'⑥',c7:'⑦',c8:'⑧',c9:'⑨',c10:'⑩'
+};
+const ANSWER_TOOL_LABEL={frac:'分数',pow:'乘方',perp:'⊥',parallel:'∥'};
+const ANSWER_TOOL_GROUPS=[
+ ['frac','pow'],
+ ['ge','le','ne','gt','lt','eq'],
+ ['pm','mul','div','sqrt','angle','perp','parallel','degree'],
+ ['c1','c2','c3','c4','c5','c6','c7','c8','c9','c10']
+];
 function answerToolMarkup(){
- const groups=[
-  [['/','分数'],['^','乘方']],
-  [['≥','≥'],['≤','≤'],['≠','≠'],['>','>'],['<','<'],['=','=']],
-  [['±','±'],['×','×'],['÷','÷'],['√','√'],['∠','∠'],['⟂','⊥'],['∥','∥'],['°','°']],
-  ['①','②','③','④','⑤','⑥','⑦','⑧','⑨','⑩'].map(x=>[x,x])
- ];
- return '<div class="daily-answer-tools" aria-label="作答工具"><div class="daily-answer-tools-title"><b>作答工具</b><span>先点要填写的答案框，再点符号</span></div>'+groups.map((g,i)=>'<div class="daily-answer-tool-row '+(i===3?'circle-tools':'')+'>'+g.map(([v,label])=>'<button type="button" class="daily-answer-tool-key" data-answer-symbol="'+esc(v)+'" aria-label="插入'+esc(label)+'">'+esc(label)+'</button>').join('')+'</div>').join('')+'</div>';
+ return '<div class="daily-answer-tools" aria-label="作答工具"><div class="daily-answer-tools-title"><b>作答工具</b><span>先点要填写的答案框，再点符号</span></div>'+ANSWER_TOOL_GROUPS.map((g,i)=>'<div class="daily-answer-tool-row '+(i===3?'circle-tools':'')+'>'+g.map(key=>{const v=ANSWER_TOOL_MAP[key],label=ANSWER_TOOL_LABEL[key]||v;return '<button type="button" class="daily-answer-tool-key" data-answer-key="'+key+'" aria-label="插入'+esc(label)+'">'+esc(label)+'</button>'}).join('')+'</div>').join('')+'</div>';
 }
 function bindAnswerTools(card){
  let target=card.querySelector('[data-symbol-answer]');
  const remember=input=>{target=input;card.querySelectorAll('[data-symbol-answer]').forEach(x=>x.classList.toggle('symbol-target',x===input));};
  card.querySelectorAll('[data-symbol-answer]').forEach(input=>{input.addEventListener('focus',()=>remember(input));input.addEventListener('pointerdown',()=>remember(input));});
  if(target)remember(target);
- card.querySelectorAll('[data-answer-symbol]').forEach(btn=>{btn.onclick=()=>{
+ card.querySelectorAll('[data-answer-key]').forEach(btn=>{btn.onclick=()=>{
    const active=document.activeElement?.matches?.('[data-symbol-answer]')&&card.contains(document.activeElement)?document.activeElement:target;
    const input=active||card.querySelector('[data-symbol-answer]');if(!input)return;
-   const mark=btn.dataset.answerSymbol||'',start=Number.isFinite(input.selectionStart)?input.selectionStart:input.value.length,end=Number.isFinite(input.selectionEnd)?input.selectionEnd:start;
+   const mark=ANSWER_TOOL_MAP[btn.dataset.answerKey]||'',start=Number.isFinite(input.selectionStart)?input.selectionStart:input.value.length,end=Number.isFinite(input.selectionEnd)?input.selectionEnd:start;
    input.setRangeText(mark,start,end,'end');remember(input);input.focus();input.dispatchEvent(new Event('input',{bubbles:true}));
  };});
 }
