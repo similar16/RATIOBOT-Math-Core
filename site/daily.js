@@ -68,7 +68,7 @@ function ensureGlobalAnswerToolHitTest(){
    if(direct)return direct;
    const x=Number(e.clientX),y=Number(e.clientY);
    if(!Number.isFinite(x)||!Number.isFinite(y))return null;
-   return [...document.querySelectorAll('.daily-answer-tool-key')].find(el=>{const r=el.getBoundingClientRect();return x>=r.left&&x<=r.right&&y>=r.top&&y<=r.bottom;})||null;
+   return [...document.querySelectorAll('.daily-answer-tool-key')].find(el=>{const r=el.getBoundingClientRect(),w=r.right-r.left,h=r.bottom-r.top;return w>4&&h>4&&x>=r.left&&x<=r.right&&y>=r.top&&y<=r.bottom;})||null;
  };
  const run=(e,kind)=>{
    const btn=pick(e),toolbar=btn?.closest?.('.daily-answer-tools'),insert=toolbar?.__dailyInsert;
