@@ -57,7 +57,28 @@ const ANSWER_TOOL_GROUPS=[
  ['c1','c2','c3','c4','c5','c6','c7','c8','c9','c10']
 ];
 function answerToolMarkup(){
- return '<div class="daily-answer-tools" aria-label="作答工具"><div class="daily-answer-tools-title"><b>作答工具</b><span>先点要填写的答案框，再点符号</span></div>'+ANSWER_TOOL_GROUPS.map((g,i)=>'<div class="daily-answer-tool-row '+(i===3?'circle-tools':'')+'>'+g.map(key=>{const v=ANSWER_TOOL_MAP[key],label=ANSWER_TOOL_LABEL[key]||v;return '<span class="daily-answer-tool-key" role="button" tabindex="0" data-answer-key="'+key+'" aria-label="插入'+esc(label)+'">'+esc(label)+'</span>'}).join('')+'</div>').join('')+'</div>';
+ return '<div class="daily-answer-tools" aria-label="作答工具"><div class="daily-answer-tools-title"><b>作答工具</b><span>先点要填写的答案框，再点符号</span></div>'+ANSWER_TOOL_GROUPS.map((g,i)=>'<div class="daily-answer-tool-row '+(i===3?'circle-tools':'')+'"><span class="daily-answer-tool-guard" aria-hidden="true"></span>'+g.map(key=>{const v=ANSWER_TOOL_MAP[key],label=ANSWER_TOOL_LABEL[key]||v;return '<span class="daily-answer-tool-key" role="button" tabindex="0" data-answer-key="'+key+'" aria-label="插入'+esc(label)+'">'+esc(label)+'</span>'}).join('')+'</div>').join('')+'</div>';
+}
+function ensureGlobalAnswerToolHitTest(){
+ if(window.__dailyAnswerToolHitTestInstalled)return;
+ window.__dailyAnswerToolHitTestInstalled=true;
+ let suppressUntil=0,suppressKey='';
+ const pick=(e)=>{
+   const direct=e.target?.closest?.('.daily-answer-tool-key');
+   if(direct)return direct;
+   const x=Number(e.clientX),y=Number(e.clientY);
+   if(!Number.isFinite(x)||!Number.isFinite(y))return null;
+   return [...document.querySelectorAll('.daily-answer-tool-key')].find(el=>{const r=el.getBoundingClientRect();return x>=r.left&&x<=r.right&&y>=r.top&&y<=r.bottom;})||null;
+ };
+ const run=(e,kind)=>{
+   const btn=pick(e),toolbar=btn?.closest?.('.daily-answer-tools'),insert=toolbar?.__dailyInsert;
+   if(!btn||typeof insert!=='function')return;
+   if(kind==='click'&&Date.now()<suppressUntil&&suppressKey===(btn.dataset.answerKey||'')){e.preventDefault();e.stopImmediatePropagation();return;}
+   e.preventDefault();e.stopImmediatePropagation();insert(btn);
+   if(kind==='pointer'){suppressUntil=Date.now()+750;suppressKey=btn.dataset.answerKey||'';}
+ };
+ document.addEventListener('pointerup',e=>{if(e.pointerType!=='mouse')run(e,'pointer');},true);
+ document.addEventListener('click',e=>run(e,'click'),true);
 }
 function bindAnswerTools(card){
  let target=card.querySelector('[data-symbol-answer]');
@@ -65,26 +86,17 @@ function bindAnswerTools(card){
  const remember=input=>{target=input;card.querySelectorAll('[data-symbol-answer]').forEach(x=>x.classList.toggle('symbol-target',x===input));};
  card.querySelectorAll('[data-symbol-answer]').forEach(input=>{input.addEventListener('focus',()=>remember(input));input.addEventListener('pointerdown',()=>remember(input));});
  if(target)remember(target);
- if(!toolbar||toolbar.dataset.bound==='1')return;
- toolbar.dataset.bound='1';
- let suppressClickUntil=0,suppressKey='';
+ if(!toolbar)return;
  const insert=btn=>{
-   if(!btn||!toolbar.contains(btn))return;
    const active=document.activeElement?.matches?.('[data-symbol-answer]')&&card.contains(document.activeElement)?document.activeElement:target;
    const input=active||card.querySelector('[data-symbol-answer]');if(!input)return;
    const mark=ANSWER_TOOL_MAP[btn.dataset.answerKey]||'',value=String(input.value||''),rawStart=Number.isFinite(input.selectionStart)?input.selectionStart:value.length,rawEnd=Number.isFinite(input.selectionEnd)?input.selectionEnd:rawStart,start=Math.max(0,Math.min(value.length,rawStart)),end=Math.max(start,Math.min(value.length,rawEnd)),next=value.slice(0,start)+mark+value.slice(end),caret=start+mark.length;
    input.value=next;remember(input);input.focus({preventScroll:true});if(typeof input.setSelectionRange==='function')input.setSelectionRange(caret,caret);input.dispatchEvent(new Event('input',{bubbles:true}));
  };
- toolbar.addEventListener('pointerup',e=>{
-   const btn=e.target.closest?.('[data-answer-key]');if(!btn||!toolbar.contains(btn)||e.pointerType==='mouse')return;
-   e.preventDefault();insert(btn);suppressClickUntil=Date.now()+700;suppressKey=btn.dataset.answerKey||'';
- });
- toolbar.addEventListener('click',e=>{
-   const btn=e.target.closest?.('[data-answer-key]');if(!btn||!toolbar.contains(btn))return;
-   e.preventDefault();e.stopPropagation();
-   if(Date.now()<suppressClickUntil&&suppressKey===(btn.dataset.answerKey||''))return;
-   insert(btn);
- });
+ toolbar.__dailyInsert=insert;
+ ensureGlobalAnswerToolHitTest();
+ if(toolbar.dataset.bound==='1')return;
+ toolbar.dataset.bound='1';
  toolbar.addEventListener('keydown',e=>{
    const btn=e.target.closest?.('[data-answer-key]');if(!btn||!toolbar.contains(btn)||(e.key!=='Enter'&&e.key!==' '))return;
    e.preventDefault();insert(btn);
