@@ -57,7 +57,7 @@ const ANSWER_TOOL_GROUPS=[
  ['c1','c2','c3','c4','c5','c6','c7','c8','c9','c10']
 ];
 function answerToolMarkup(){
- return '<div class="daily-answer-tools" aria-label="作答工具"><div class="daily-answer-tools-title"><b>作答工具</b><span>先点要填写的答案框，再点符号</span></div>'+ANSWER_TOOL_GROUPS.map((g,i)=>'<div class="daily-answer-tool-row '+(i===3?'circle-tools':'')+'>'+g.map(key=>{const v=ANSWER_TOOL_MAP[key],label=ANSWER_TOOL_LABEL[key]||v;return '<button type="button" class="daily-answer-tool-key" data-answer-key="'+key+'" aria-label="插入'+esc(label)+'">'+esc(label)+'</button>'}).join('')+'</div>').join('')+'</div>';
+ return '<div class="daily-answer-tools" aria-label="作答工具"><div class="daily-answer-tools-title"><b>作答工具</b><span>先点要填写的答案框，再点符号</span></div>'+ANSWER_TOOL_GROUPS.map((g,i)=>'<div class="daily-answer-tool-row '+(i===3?'circle-tools':'')+'>'+g.map(key=>{const v=ANSWER_TOOL_MAP[key],label=ANSWER_TOOL_LABEL[key]||v;return '<span class="daily-answer-tool-key" role="button" tabindex="0" data-answer-key="'+key+'" aria-label="插入'+esc(label)+'">'+esc(label)+'</span>'}).join('')+'</div>').join('')+'</div>';
 }
 function bindAnswerTools(card){
  let target=card.querySelector('[data-symbol-answer]');
@@ -67,17 +67,29 @@ function bindAnswerTools(card){
  if(target)remember(target);
  if(!toolbar||toolbar.dataset.bound==='1')return;
  toolbar.dataset.bound='1';
- toolbar.addEventListener('pointerdown',e=>{const btn=e.target.closest?.('[data-answer-key]');if(btn&&toolbar.contains(btn))e.preventDefault();});
- toolbar.addEventListener('click',e=>{
-   const btn=e.target.closest?.('[data-answer-key]');if(!btn||!toolbar.contains(btn))return;
-   e.preventDefault();e.stopPropagation();
+ let suppressClickUntil=0,suppressKey='';
+ const insert=btn=>{
+   if(!btn||!toolbar.contains(btn))return;
    const active=document.activeElement?.matches?.('[data-symbol-answer]')&&card.contains(document.activeElement)?document.activeElement:target;
    const input=active||card.querySelector('[data-symbol-answer]');if(!input)return;
    const mark=ANSWER_TOOL_MAP[btn.dataset.answerKey]||'',value=String(input.value||''),rawStart=Number.isFinite(input.selectionStart)?input.selectionStart:value.length,rawEnd=Number.isFinite(input.selectionEnd)?input.selectionEnd:rawStart,start=Math.max(0,Math.min(value.length,rawStart)),end=Math.max(start,Math.min(value.length,rawEnd)),next=value.slice(0,start)+mark+value.slice(end),caret=start+mark.length;
    input.value=next;remember(input);input.focus({preventScroll:true});if(typeof input.setSelectionRange==='function')input.setSelectionRange(caret,caret);input.dispatchEvent(new Event('input',{bubbles:true}));
+ };
+ toolbar.addEventListener('pointerup',e=>{
+   const btn=e.target.closest?.('[data-answer-key]');if(!btn||!toolbar.contains(btn)||e.pointerType==='mouse')return;
+   e.preventDefault();insert(btn);suppressClickUntil=Date.now()+700;suppressKey=btn.dataset.answerKey||'';
+ });
+ toolbar.addEventListener('click',e=>{
+   const btn=e.target.closest?.('[data-answer-key]');if(!btn||!toolbar.contains(btn))return;
+   e.preventDefault();e.stopPropagation();
+   if(Date.now()<suppressClickUntil&&suppressKey===(btn.dataset.answerKey||''))return;
+   insert(btn);
+ });
+ toolbar.addEventListener('keydown',e=>{
+   const btn=e.target.closest?.('[data-answer-key]');if(!btn||!toolbar.contains(btn)||(e.key!=='Enter'&&e.key!==' '))return;
+   e.preventDefault();insert(btn);
  });
 }
-
 function status(el,msg,error=false){el.textContent=msg;el.dataset.error=String(error);}
 function identityKey(){const i=a.identity();return `${i.user?.id||''}:${i.classId||''}:${i.role||''}`;}
 function studentReady(){const i=a.identity();return !!(i.user&&i.classId&&i.role==='student'&&!i.mustChangePassword);}
