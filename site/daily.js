@@ -61,15 +61,21 @@ function answerToolMarkup(){
 }
 function bindAnswerTools(card){
  let target=card.querySelector('[data-symbol-answer]');
+ const toolbar=card.querySelector('.daily-answer-tools');
  const remember=input=>{target=input;card.querySelectorAll('[data-symbol-answer]').forEach(x=>x.classList.toggle('symbol-target',x===input));};
  card.querySelectorAll('[data-symbol-answer]').forEach(input=>{input.addEventListener('focus',()=>remember(input));input.addEventListener('pointerdown',()=>remember(input));});
  if(target)remember(target);
- card.querySelectorAll('[data-answer-key]').forEach(btn=>{btn.onclick=e=>{e.preventDefault();e.stopPropagation();
+ if(!toolbar||toolbar.dataset.bound==='1')return;
+ toolbar.dataset.bound='1';
+ toolbar.addEventListener('pointerdown',e=>{const btn=e.target.closest?.('[data-answer-key]');if(btn&&toolbar.contains(btn))e.preventDefault();});
+ toolbar.addEventListener('click',e=>{
+   const btn=e.target.closest?.('[data-answer-key]');if(!btn||!toolbar.contains(btn))return;
+   e.preventDefault();e.stopPropagation();
    const active=document.activeElement?.matches?.('[data-symbol-answer]')&&card.contains(document.activeElement)?document.activeElement:target;
    const input=active||card.querySelector('[data-symbol-answer]');if(!input)return;
    const mark=ANSWER_TOOL_MAP[btn.dataset.answerKey]||'',value=String(input.value||''),rawStart=Number.isFinite(input.selectionStart)?input.selectionStart:value.length,rawEnd=Number.isFinite(input.selectionEnd)?input.selectionEnd:rawStart,start=Math.max(0,Math.min(value.length,rawStart)),end=Math.max(start,Math.min(value.length,rawEnd)),next=value.slice(0,start)+mark+value.slice(end),caret=start+mark.length;
-   input.value=next;remember(input);input.focus();if(typeof input.setSelectionRange==='function')input.setSelectionRange(caret,caret);input.dispatchEvent(new Event('input',{bubbles:true}));
- };});
+   input.value=next;remember(input);input.focus({preventScroll:true});if(typeof input.setSelectionRange==='function')input.setSelectionRange(caret,caret);input.dispatchEvent(new Event('input',{bubbles:true}));
+ });
 }
 
 function status(el,msg,error=false){el.textContent=msg;el.dataset.error=String(error);}
