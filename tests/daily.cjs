@@ -1,5 +1,7 @@
 const {JSDOM}=require('jsdom'),fs=require('fs'),assert=require('node:assert/strict');
 const dailyCss=fs.readFileSync('site/daily.css','utf8');assert.match(dailyCss,/grid-template-columns:minmax\(0,1fr\) minmax\(310px,36%\)/,'Secret Room hint panel is wider on desktop');assert.match(dailyCss,/\.daily-image-zoom\{/,'Secret Room image zoom styles exist');assert.match(dailyCss,/\.daily-room \.katex \.mfrac \.sizing\{font-size:1em!important\}/,'Secret Room fraction numerator and denominator use full text size');assert.match(dailyCss,/daily-answer-tool-guard/,'Secret Room toolbar protects the first visible key in each row');
+assert.match(dailyCss,/daily-answer-tool-guard\{[^}]*flex:0 0 40px/,'Secret Room first visible key is shifted past a full control-width spacer');
+assert.match(dailyCss,/sizing\.reset-size6\.size3/,'Secret Room KaTeX fraction size classes are explicitly restored');
 const dom=new JSDOM('<section id="home" class="page active"></section><div id="dailyDate"></div><div id="dailyArchive"></div><div id="dailyContent"></div><div id="teacherDailyContent"></div>',{runScripts:'outside-only',url:'https://test.local'}),w=dom.window,d=w.document;
 w.matchMedia=()=>({matches:true});w.eval(fs.readFileSync('site/question-content.js','utf8'));w.eval(fs.readFileSync('site/daily.js','utf8'));
 let who={user:{id:'s1'},classId:'c1',role:'student'},sets=[],answers=[],solutions=[{set_id:'set1',slot:0,answer:'42',inline_answers:[{id:'a1',answer:'42',kind:'fill'}]},{set_id:'set1',slot:1,answer:'⑤',inline_answers:[]}],judgments=[],fail=false,route='',progress=[];
