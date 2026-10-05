@@ -110,10 +110,10 @@
 .daily-answer-tools-title{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
 .daily-answer-tools-title b{font-size:12px;color:var(--ink)}
 .daily-answer-tools-title span{font-size:9px;color:var(--muted);font-weight:800}
-.daily-answer-tool-row{display:flex;flex-wrap:wrap;gap:6px;position:relative;z-index:1;overflow:visible;padding-inline-start:8px}
+.daily-answer-tool-row{display:flex;flex-wrap:wrap;gap:6px;position:relative;z-index:1;overflow:visible;padding-inline-start:0}
 .daily-answer-tool-key{margin:0!important;min-width:34px;height:32px;padding:4px 8px!important;border:1.5px solid var(--ink)!important;border-radius:8px!important;background:#FFF7DD!important;color:var(--ink)!important;font-size:13px!important;font-weight:950!important;line-height:1!important;box-shadow:1.5px 1.5px 0 rgba(62,53,64,.08);position:relative;z-index:2;pointer-events:auto;touch-action:manipulation;-webkit-tap-highlight-color:transparent;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;user-select:none;-webkit-user-select:none}
 .daily-answer-tool-row:first-of-type .daily-answer-tool-key{min-width:54px;font-size:11px!important;background:#F8E8C6!important}
-.daily-answer-tool-guard{display:block;flex:0 0 2px;width:2px;height:1px;pointer-events:none}
+.daily-answer-tool-guard{display:block;flex:0 0 40px;width:40px;height:32px;pointer-events:none;visibility:hidden}
 .daily-answer-tool-row>.daily-answer-tool-key:first-of-type{z-index:4}
 .daily-answer-tool-key:active{transform:translate(1px,1px);box-shadow:none}
 .daily-answer-tool-row.circle-tools .daily-answer-tool-key{font-size:18px!important;min-width:34px;padding:2px 6px!important;background:#F3F0E8!important}
@@ -126,3 +126,12 @@
 .daily-room .katex .mfrac .sizing{font-size:1em!important}
 .daily-room .katex .mfrac .mtight{font-size:1em!important}
 .daily-room .katex .mfrac .mord,.daily-room .katex .mfrac .mop,.daily-room .katex .mfrac .mbin,.daily-room .katex .mfrac .mrel{font-size:1em!important}
+
+.daily-room .katex .mfrac .sizing.reset-size6.size3,
+.daily-room .katex .mfrac .sizing.reset-size6.size4,
+.daily-room .katex .mfrac .sizing.reset-size5.size3,
+.daily-room .katex .mfrac .sizing.reset-size5.size4{font-size:1em!important}
+.daily-room .katex .mfrac .sizing.reset-size6.size3 .mtight,
+.daily-room .katex .mfrac .sizing.reset-size6.size4 .mtight,
+.daily-room .katex .mfrac .sizing.reset-size5.size3 .mtight,
+.daily-room .katex .mfrac .sizing.reset-size5.size4 .mtight{font-size:1em!important}
