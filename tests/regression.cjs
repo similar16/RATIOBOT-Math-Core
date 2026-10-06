@@ -8,7 +8,7 @@ const fixture={};
 const client={auth:{onAuthStateChange(){},getSession:async()=>({data:{session:null}}),signOut:async()=>({error:null})},from(table){let data=[];const q={select(){data=fixture[table]||[];return q},eq(){return q},in(){return q},gte(){return q},order(){return q},maybeSingle:async()=>({data:data[0]||null}),update(row){fixture[table]=(fixture[table]||[]).map(x=>({...x,...row}));return q},upsert(row){q.row=row;return q},throwOnError:async()=>{if(failTable===table)throw Error('simulated rejected write');writes.push({table,row:structuredClone(q.row)});return {error:null}},then(resolve){return Promise.resolve({data,error:null}).then(resolve)}};return q}};
 const dom=new JSDOM(html,{url:'https://test.invalid/',runScripts:'outside-only',pretendToBeVisual:true});const w=dom.window;
 w.structuredClone=structuredClone;w.supabase={createClient:()=>client};w.scrollTo=()=>{};w.requestIdleCallback=cb=>{cb({didTimeout:false,timeRemaining:()=>50});return 1};w.cancelIdleCallback=()=>{};w.Element.prototype.animate=()=>({});w.alert=()=>{};w.confirm=()=>true;w.console.warn=()=>{};
-for(const script of w.document.scripts){if(script.src&&!/(review-(engine|ui)|daily|question-(content|import|bank))\.js$/.test(new URL(script.src).pathname))continue;let code=script.src?fs.readFileSync(root+'/'+new URL(script.src).pathname.split('/').pop(),'utf8'):script.textContent;new vm.Script(code);code=code.replace('    migrateLegacy();const initP=',`    window.__test={levelInfo,honorInfoFromProfile,cloudLevelBase,blankProfile,saveCurrentProfile,currentProfile,currentProfileKey,cloudState,cloudSyncProfile,renderGrowth,renderStats,go,openStudentGate,loadTeacherDashboard,teacherSwitchTab,rosterNameMap,loadStudentClassWall,peerState,ensureTodayRecord,calcQuestionXP,recordGameClear,gameSignatureArithmetic,state,renderConfig,avatarSrcByLevel,peerAvatarSrc,refreshPlayerUI,CHECKIN_OUTFITS,cloudLoadStudentData};\n    migrateLegacy();const initP=`);w.eval(code)}
+for(const script of w.document.scripts){if(script.src&&!/(review-(engine|ui)|daily|question-(content|import|bank))\.js$/.test(new URL(script.src).pathname))continue;let code=script.src?fs.readFileSync(root+'/'+new URL(script.src).pathname.split('/').pop(),'utf8'):script.textContent;new vm.Script(code);code=code.replace('    migrateLegacy();const initP=',`    window.__test={levelInfo,honorInfoFromProfile,cloudLevelBase,blankProfile,saveCurrentProfile,currentProfile,currentProfileKey,cloudState,cloudSyncProfile,renderGrowth,renderStats,go,openStudentGate,loadTeacherDashboard,teacherSwitchTab,rosterNameMap,loadStudentClassWall,peerState,ensureTodayRecord,calcQuestionXP,recordGameClear,gameSignatureArithmetic,state,renderConfig,avatarSrcByLevel,peerAvatarSrc,refreshPlayerUI,CHECKIN_OUTFITS,cloudLoadStudentData,midAutumnProgress,midAutumnEvaluate,nationalDayProgress,nationalDayEvaluate,reconcileFestivalRewards};\n    migrateLegacy();const initP=`);w.eval(code)}
 const t=w.__test;assert.ok(t,'main closure reaches initialization');
 assert.match(html,/midautumn-frame-2026-clear\.png\?v=20260926-clear/,'Mid-Autumn uses clear original PNG');
 assert.match(html,/data-src="assets\/teacher-avatar-fixed\.png"/,'teacher original is deferred until teacher mode');
@@ -28,6 +28,55 @@ assert.match(html,/id="nationalDayHomeBanner"/,'current National Day home banner
 assert.match(html,/id="nationalDayEvent"/,'current National Day event remains');
 assert.doesNotMatch(html,/id="nationalHomeBanner"/,'legacy duplicate National Day home banner is removed');
 assert.doesNotMatch(html,/id="nationalEvent"/,'legacy duplicate National Day event is removed');
+assert.match(html,/secretRoomEligible=!!s\.pair\|\|!!ev\.unlocked/,'Mid-Autumn UI only marks Secret Room satisfied when it overlaps the qualifying consecutive pair');
+assert.match(html,/s\.qualified\.length>=NATIONAL_DAY_2026_REQUIRED_DAYS&&s\.secretDays\.length>=NATIONAL_DAY_2026_REQUIRED_DAYS/,'National Day unlock requires four training days plus four Secret Room days');
+assert.doesNotMatch(html,/Number\(d\.mixedRounds\)>=NATIONAL_DAY_2026_MIXED&&!!d\.secretRoom/,'National Day training-qualified days no longer require Secret Room on the same dates');
+assert.match(html,/function reconcileFestivalRewards\(p\)/,'Festival rewards are re-evaluated on every profile save');
+
+
+{
+ const p=t.blankProfile('FEST','45','');
+ p.economy.events.midAutumn2026={
+   days:{
+     '2026-09-27':{knowledgeBlanks:18,mixedRounds:2,secretRoom:true},
+     '2026-09-28':{knowledgeBlanks:10,mixedRounds:5,secretRoom:false},
+     '2026-09-29':{knowledgeBlanks:12,mixedRounds:5,secretRoom:false}
+   },
+   unlocked:false,equipped:false,unlockPair:[]
+ };
+ const mp=t.midAutumnProgress(p);
+ assert.equal(mp.best,2,'Mid-Autumn finds the two consecutive training-qualified days');
+ assert.equal(mp.pair,null,'Secret Room outside those two days must not unlock Mid-Autumn');
+ assert.equal(t.midAutumnEvaluate(p),false);
+ assert.equal(p.economy.events.midAutumn2026.unlocked,false);
+}
+{
+ const p=t.blankProfile('FEST','23','');
+ p.economy.events.nationalDay2026={days:{},unlocked:false,equipped:false};
+ for(const k of ['2026-10-02','2026-10-03','2026-10-04','2026-10-05'])
+   p.economy.events.nationalDay2026.days[k]={knowledgeBlanks:20,mixedRounds:5,secretRoom:false};
+ for(const k of ['2026-10-03','2026-10-04','2026-10-05','2026-10-06']){
+   const d=p.economy.events.nationalDay2026.days[k]||(p.economy.events.nationalDay2026.days[k]={knowledgeBlanks:0,mixedRounds:0,secretRoom:false});
+   d.secretRoom=true;
+ }
+ const np=t.nationalDayProgress(p);
+ assert.equal(np.qualified.length,4,'National Day counts four training-qualified dates');
+ assert.equal(np.secretDays.length,4,'National Day counts four Secret Room dates separately');
+ assert.equal(np.qualified.includes('2026-10-06'),false,'Secret Room-only date need not be a training-qualified date');
+ assert.equal(t.nationalDayEvaluate(p),true,'National Day unlocks when both cumulative requirements reach four');
+ assert.equal(p.economy.events.nationalDay2026.unlocked,true);
+ assert.equal(p.economy.events.nationalDay2026.physicalRewardEligible,true);
+ assert.equal(p.economy.events.nationalDay2026.magnetEligible,true);
+}
+{
+ const p=t.blankProfile('FEST','88','');
+ p.economy.events.nationalDay2026={days:{},unlocked:false,equipped:false};
+ for(const k of ['2026-10-02','2026-10-03','2026-10-04','2026-10-05'])
+   p.economy.events.nationalDay2026.days[k]={knowledgeBlanks:20,mixedRounds:5,secretRoom:true};
+ t.saveCurrentProfile(p);
+ const saved=t.currentProfile();
+ assert.equal(saved.economy.events.nationalDay2026.unlocked,true,'saving an eligible profile auto-reconciles the National Day reward');
+}
 
 function student(){t.cloudState.user={id:'fixture-student'};t.cloudState.role='student';t.cloudState.mustChangePassword=false;t.saveCurrentProfile(t.blankProfile('TEST','1',''));}
 function xpAt(lv){let n=0;for(let i=1;i<lv;i++)n+=260+(i-1)*85;return n;}
