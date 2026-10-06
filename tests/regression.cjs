@@ -96,16 +96,26 @@ function xpAt(lv){let n=0;for(let i=1;i<lv;i++)n+=260+(i-1)*85;return n;}
  for(const [id,target] of [['homeGrowthBtn','growth'],['homeStatsBtn','stats'],['homeProfileBtn','profile'],['playerBtn','profile'],['growthSwitchBtn','account'],['statsSwitchBtn','account']]){t.go('home');w.document.getElementById(id).click();assert.ok(w.document.getElementById(target).classList.contains('active'),id+' click routes to '+target);}
  const menu=w.document.querySelector('#studentMenuBtn'),panel=w.document.querySelector('#studentGameMenu');assert(menu&&panel);menu.click();assert.equal(panel.classList.contains('hidden'),false,'command menu opens');const profileMenu=[...panel.querySelectorAll('[data-go]')].find(x=>x.dataset.go==='profile');profileMenu.click();assert.ok(w.document.querySelector('#profile').classList.contains('active'),'menu profile route works');assert.equal(panel.classList.contains('hidden'),true,'command menu closes after routing');assert.equal(w.document.querySelectorAll('.game-nav-primary [data-go]').length,4,'only four primary gameplay tabs stay in top bar');assert.match(html,/compact game HUD tuning v2/);assert.doesNotMatch(html,/await loadStudentClassWall\(\);\n  \}\n  function studentForm/);
  console.log('PASS lazy rings loading, balanced game HUD, command menu, profile discovery routes and slow XP');
- student();const pending=t.currentProfile();pending.xp=2753;pending.economy.credits=219;t.saveCurrentProfile(pending);
+ student();const pending=t.currentProfile();pending.xp=2753;pending.economy.credits=219;
+ pending.economy.events.nationalDay2026.days['2026-10-06']={knowledgeBlanks:2,mixedRounds:0,secretRoom:false};
+ pending.economy.checkin.days['2026-10-06']={points:2,checked:false,full:false,runs:{}};
+ t.saveCurrentProfile(pending);
  fixture.profiles=[{xp:5400,level:10,base_level:2,migrated_from_local:true}];
- fixture.progress_snapshots=[{game_stats:{games:1},economy:{lifetimeCredits:219}}];
+ fixture.progress_snapshots=[{game_stats:{games:1},economy:{lifetimeCredits:219,events:{nationalDay2026:{days:{'2026-10-03':{knowledgeBlanks:20,mixedRounds:5,secretRoom:true}},unlocked:false,equipped:false}},checkin:{days:{'2026-10-03':{points:40,checked:true,full:true,runs:{}}}}}}];
  await t.cloudLoadStudentData('TEST','1');
  assert.equal(t.currentProfile().xp,5400,'pending local profile adopts newer cloud XP');
  assert.equal(t.currentProfile().economy.credits,219,'pending wallet retained');
+ assert.equal(t.currentProfile().economy.events.nationalDay2026.days['2026-10-03'].secretRoom,true,'pending local sync keeps earlier cloud festival counters');
+ assert.equal(t.currentProfile().economy.events.nationalDay2026.days['2026-10-06'].knowledgeBlanks,2,'pending local sync keeps new local festival work');
+ assert.equal(t.currentProfile().economy.checkin.days['2026-10-03'].full,true,'pending local sync keeps earlier cloud check-in history');
+ assert.equal(t.currentProfile().economy.checkin.days['2026-10-06'].points,2,'pending local sync keeps current local check-in');
  assert.equal(w.document.querySelector('#playerBtn img').getAttribute('src'),'assets/base2-1.png?v=20260925');
  assert.equal(writes.filter(x=>x.table==='profiles').at(-1).row.xp,5400,'upload cannot undo cloud grant');
+ const mergedSnap=writes.filter(x=>x.table==='progress_snapshots').at(-1).row;
+ assert.equal(mergedSnap.economy.events.nationalDay2026.days['2026-10-03'].secretRoom,true,'uploaded snapshot retains earlier cloud event history');
+ assert.equal(mergedSnap.economy.checkin.days['2026-10-03'].full,true,'uploaded snapshot retains earlier cloud check-in history');
  delete fixture.profiles;delete fixture.progress_snapshots;
- console.log('PASS pending login preserves cloud XP grant, local work and BASE2 avatar');
+ console.log('PASS pending login merges cloud history with local work instead of overwriting earlier cumulative data');
  student();
 
  for(let level=10;level<=27;level++){
