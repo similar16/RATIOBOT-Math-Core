@@ -32,6 +32,8 @@ assert.match(html,/secretRoomEligible=!!s\.pair\|\|!!ev\.unlocked/,'Mid-Autumn U
 assert.match(html,/s\.qualified\.length>=NATIONAL_DAY_2026_REQUIRED_DAYS&&s\.secretDays\.length>=NATIONAL_DAY_2026_REQUIRED_DAYS/,'National Day unlock requires four training days plus four Secret Room days');
 assert.doesNotMatch(html,/Number\(d\.mixedRounds\)>=NATIONAL_DAY_2026_MIXED&&!!d\.secretRoom/,'National Day training-qualified days no longer require Secret Room on the same dates');
 assert.match(html,/function reconcileFestivalRewards\(p\)/,'Festival rewards are re-evaluated on every profile save');
+assert.match(html,/历史累计（换天不清零）/,'National Day history display explicitly persists across dates');
+assert.match(html,/function applyTeacherTestNationalDay\(p\)/,'teacher test account has a deterministic National Day completion seed');
 assert.doesNotMatch(html,/d\.secretRoom=true;recordNationalDaySecretRoom\(\);const unlocked=midAutumnEvaluate/,'Mid-Autumn Secret Room completion must not stamp National Day current date');
 
 
@@ -77,6 +79,17 @@ assert.doesNotMatch(html,/d\.secretRoom=true;recordNationalDaySecretRoom\(\);con
  t.saveCurrentProfile(p);
  const saved=t.currentProfile();
  assert.equal(saved.economy.events.nationalDay2026.unlocked,true,'saving an eligible profile auto-reconciles the National Day reward');
+}
+
+
+{
+ const p=t.ensureProfileShape(t.blankProfile('TEST','46',''));
+ const np=t.nationalDayProgress(p);
+ assert.equal(np.qualified.length,4,'teacher test account starts with all four National Day cards complete');
+ assert.equal(np.secretDays.length,4,'teacher test account has four Secret Room days');
+ assert.equal(p.economy.events.nationalDay2026.unlocked,true);
+ assert.equal(p.economy.events.nationalDay2026.equipped,true);
+ assert.equal(p.economy.events.nationalDay2026.physicalRewardEligible,true);
 }
 
 function student(){t.cloudState.user={id:'fixture-student'};t.cloudState.role='student';t.cloudState.mustChangePassword=false;t.saveCurrentProfile(t.blankProfile('TEST','1',''));}
