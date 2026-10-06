@@ -8,7 +8,7 @@ const fixture={};
 const client={auth:{onAuthStateChange(){},getSession:async()=>({data:{session:null}}),signOut:async()=>({error:null})},from(table){let data=[];const q={select(){data=fixture[table]||[];return q},eq(){return q},in(){return q},gte(){return q},order(){return q},maybeSingle:async()=>({data:data[0]||null}),update(row){fixture[table]=(fixture[table]||[]).map(x=>({...x,...row}));return q},upsert(row){q.row=row;return q},throwOnError:async()=>{if(failTable===table)throw Error('simulated rejected write');writes.push({table,row:structuredClone(q.row)});return {error:null}},then(resolve){return Promise.resolve({data,error:null}).then(resolve)}};return q}};
 const dom=new JSDOM(html,{url:'https://test.invalid/',runScripts:'outside-only',pretendToBeVisual:true});const w=dom.window;
 w.structuredClone=structuredClone;w.supabase={createClient:()=>client};w.scrollTo=()=>{};w.requestIdleCallback=cb=>{cb({didTimeout:false,timeRemaining:()=>50});return 1};w.cancelIdleCallback=()=>{};w.Element.prototype.animate=()=>({});w.alert=()=>{};w.confirm=()=>true;w.console.warn=()=>{};
-for(const script of w.document.scripts){if(script.src&&!/(review-(engine|ui)|daily|question-(content|import|bank))\.js$/.test(new URL(script.src).pathname))continue;let code=script.src?fs.readFileSync(root+'/'+new URL(script.src).pathname.split('/').pop(),'utf8'):script.textContent;new vm.Script(code);code=code.replace('    migrateLegacy();const initP=',`    window.__test={levelInfo,honorInfoFromProfile,cloudLevelBase,blankProfile,saveCurrentProfile,currentProfile,currentProfileKey,cloudState,cloudSyncProfile,renderGrowth,renderStats,go,openStudentGate,loadTeacherDashboard,teacherSwitchTab,rosterNameMap,loadStudentClassWall,peerState,ensureTodayRecord,calcQuestionXP,recordGameClear,gameSignatureArithmetic,state,renderConfig,avatarSrcByLevel,peerAvatarSrc,refreshPlayerUI,CHECKIN_OUTFITS,cloudLoadStudentData,midAutumnProgress,midAutumnEvaluate,nationalDayProgress,nationalDayEvaluate,reconcileFestivalRewards};\n    migrateLegacy();const initP=`);w.eval(code)}
+for(const script of w.document.scripts){if(script.src&&!/(review-(engine|ui)|daily|question-(content|import|bank))\.js$/.test(new URL(script.src).pathname))continue;let code=script.src?fs.readFileSync(root+'/'+new URL(script.src).pathname.split('/').pop(),'utf8'):script.textContent;new vm.Script(code);code=code.replace('    migrateLegacy();const initP=',`    window.__test={levelInfo,honorInfoFromProfile,cloudLevelBase,blankProfile,ensureProfileShape,saveCurrentProfile,currentProfile,currentProfileKey,cloudState,cloudSyncProfile,renderGrowth,renderStats,go,openStudentGate,loadTeacherDashboard,teacherSwitchTab,rosterNameMap,loadStudentClassWall,peerState,ensureTodayRecord,calcQuestionXP,recordGameClear,gameSignatureArithmetic,state,renderConfig,avatarSrcByLevel,peerAvatarSrc,refreshPlayerUI,CHECKIN_OUTFITS,cloudLoadStudentData,midAutumnProgress,midAutumnEvaluate,nationalDayProgress,nationalDayEvaluate,reconcileFestivalRewards};\n    migrateLegacy();const initP=`);w.eval(code)}
 const t=w.__test;assert.ok(t,'main closure reaches initialization');
 assert.match(html,/midautumn-frame-2026-clear\.png\?v=20260926-clear/,'Mid-Autumn uses clear original PNG');
 assert.match(html,/data-src="assets\/teacher-avatar-fixed\.png"/,'teacher original is deferred until teacher mode');
@@ -35,7 +35,7 @@ assert.match(html,/function reconcileFestivalRewards\(p\)/,'Festival rewards are
 
 
 {
- const p=t.blankProfile('FEST','45','');
+ const p=t.ensureProfileShape(t.blankProfile('FEST','45',''));
  p.economy.events.midAutumn2026={
    days:{
      '2026-09-27':{knowledgeBlanks:18,mixedRounds:2,secretRoom:true},
@@ -51,7 +51,7 @@ assert.match(html,/function reconcileFestivalRewards\(p\)/,'Festival rewards are
  assert.equal(p.economy.events.midAutumn2026.unlocked,false);
 }
 {
- const p=t.blankProfile('FEST','23','');
+ const p=t.ensureProfileShape(t.blankProfile('FEST','23',''));
  p.economy.events.nationalDay2026={days:{},unlocked:false,equipped:false};
  for(const k of ['2026-10-02','2026-10-03','2026-10-04','2026-10-05'])
    p.economy.events.nationalDay2026.days[k]={knowledgeBlanks:20,mixedRounds:5,secretRoom:false};
@@ -69,7 +69,7 @@ assert.match(html,/function reconcileFestivalRewards\(p\)/,'Festival rewards are
  assert.equal(p.economy.events.nationalDay2026.magnetEligible,true);
 }
 {
- const p=t.blankProfile('FEST','88','');
+ const p=t.ensureProfileShape(t.blankProfile('FEST','88',''));
  p.economy.events.nationalDay2026={days:{},unlocked:false,equipped:false};
  for(const k of ['2026-10-02','2026-10-03','2026-10-04','2026-10-05'])
    p.economy.events.nationalDay2026.days[k]={knowledgeBlanks:20,mixedRounds:5,secretRoom:true};
