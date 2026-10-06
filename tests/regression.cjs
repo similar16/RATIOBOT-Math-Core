@@ -32,6 +32,7 @@ assert.match(html,/secretRoomEligible=!!s\.pair\|\|!!ev\.unlocked/,'Mid-Autumn U
 assert.match(html,/s\.qualified\.length>=NATIONAL_DAY_2026_REQUIRED_DAYS&&s\.secretDays\.length>=NATIONAL_DAY_2026_REQUIRED_DAYS/,'National Day unlock requires four training days plus four Secret Room days');
 assert.doesNotMatch(html,/Number\(d\.mixedRounds\)>=NATIONAL_DAY_2026_MIXED&&!!d\.secretRoom/,'National Day training-qualified days no longer require Secret Room on the same dates');
 assert.match(html,/function reconcileFestivalRewards\(p\)/,'Festival rewards are re-evaluated on every profile save');
+assert.doesNotMatch(html,/d\.secretRoom=true;recordNationalDaySecretRoom\(\);const unlocked=midAutumnEvaluate/,'Mid-Autumn Secret Room completion must not stamp National Day current date');
 
 
 {
