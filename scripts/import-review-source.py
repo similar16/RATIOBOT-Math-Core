@@ -84,5 +84,6 @@ p=Path('site/review-engine.js');s=p.read_text();a=s.index('const rows=');b=s.ind
 s=s[:a]+'const rows='+json.dumps(rows,ensure_ascii=False,indent=2)+';\n'+s[b:]
 s=s.replace('([lesson,title,text],i)', '([lesson,title,text,page],i)').replace('chapter:2,lesson,title,text,parts:', 'chapter:2,lesson,title,text,page,parts:')
 p.write_text(s)
+manifest += [item for item in json.loads(Path('tests/review-source-manifest.json').read_text()) if not item['id'].startswith('ch2-')]
 Path('tests/review-source-manifest.json').write_text(json.dumps(manifest,ensure_ascii=False,indent=2)+'\n')
 print('PASS: 47 prompts copied from DOCX spans; punctuation and page provenance preserved')

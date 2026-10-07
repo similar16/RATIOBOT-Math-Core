@@ -288,6 +288,142 @@ const rows=[
   ]
 ];
 const bank=rows.map(([lesson,title,text,page],i)=>({id:'ch2-'+(i+1),order:i+1,chapter:2,lesson,title,text,page,parts:text.split(/\{([^{}]+)\}/g)}));
+const chapter3Rows=[
+  [
+    2,
+    "字母式的书写",
+    "一般地，数与字母、字母与字母相乘，乘号“×”通常用“{·}”表示或{省略不写}，并且把数写在字母的{前面}，如将10×a写成10a；除法运算通常写成{分数}的形式，如将10÷m写成10/m。",
+    77
+  ],
+  [
+    2,
+    "代数式的定义",
+    "像10a，8a+8b，10/m，10/(n+1)这样，用{运算符号}把{数和字母}连接而成的式子叫作{代数式}（algebraic expression）。",
+    77
+  ],
+  [
+    2,
+    "单独的数与字母",
+    "单独一个{数}或一个{字母}也是{代数式}。",
+    77
+  ],
+  [
+    2,
+    "代数式的值",
+    "代数式中的字母表示的是{数}，用{具体数值}代替代数式中的字母，计算所得的结果叫作{代数式的值}。",
+    80
+  ],
+  [
+    2,
+    "代数式值的变化",
+    "一般地，{代数式的值}随着代数式中{字母取值}的变化而变化。",
+    80
+  ],
+  [
+    3,
+    "单项式的定义",
+    "可以相应地列出代数式：a³，6a²，300t，πr²和πr²h。像这样，由{数与字母的积}组成的代数式叫作{单项式}（monomial expression）。单独一个{数}或一个{字母}也是单项式。",
+    84
+  ],
+  [
+    3,
+    "单项式的系数与次数",
+    "单项式中的{数字因数}叫作单项式的{系数}。单项式中所有字母的{指数的和}叫作单项式的{次数}。如1/2 x的系数是1/2，次数是1；-2a²的系数是-2，次数是2；abc的系数是1，次数是3。",
+    84
+  ],
+  [
+    3,
+    "不含字母的单项式",
+    "如果一个单项式{不含字母}，就称它的次数是{0}。",
+    84
+  ],
+  [
+    3,
+    "多项式的定义",
+    "代数式ab+πR²-πr²可以看作单项式ab，πR²，-πr²的和。像这样可以看作{几个单项式的和}的代数式叫作{多项式}（polynomial）。",
+    85
+  ],
+  [
+    3,
+    "多项式的项与次数",
+    "多项式中，每个单项式叫作多项式的{项}；其中{次数最高的项的次数}叫作这个多项式的{次数}，{不含字母的项}叫作{常数项}。例如，多项式n-2的次数是1，其中-2是常数项；多项式ab+πR²-πr²的次数是2。",
+    85
+  ],
+  [
+    3,
+    "整式",
+    "{单项式}和{多项式}统称{整式}（integral expression）。",
+    85
+  ],
+  [
+    3,
+    "同类项",
+    "一般地，所含{字母相同}，并且{相同字母的指数也相同}的项叫作{同类项}（like terms）。",
+    86
+  ],
+  [
+    3,
+    "代数式与运算律",
+    "代数式中的字母表示的是{数}，因此数的{运算律}也适用于代数式。",
+    87
+  ],
+  [
+    3,
+    "合并同类项的定义",
+    "根据运算律把多项式中的{同类项}合并成{一项}叫作{合并同类项}（unite like terms）。",
+    87
+  ],
+  [
+    3,
+    "合并同类项法则",
+    "同类项的{系数相加}，所得的结果作为{系数}，{字母}和字母的{指数不变}。",
+    87
+  ],
+  [
+    3,
+    "多项式化简",
+    "通过{合并同类项}，可以将多项式{化简}。",
+    87
+  ],
+  [
+    3,
+    "先化简再求值",
+    "求代数式的值时，如果代数式中含有{同类项}，通常先{合并同类项}再进行{计算}。",
+    89
+  ],
+  [
+    3,
+    "去括号与运算律",
+    "在进行整式的运算时，我们可以利用{运算律}把括号去掉，即\na+(b-c)={a+b-c}；\na-(b-c)=a+(-1)(b-c)={a-b+c}。",
+    91
+  ],
+  [
+    3,
+    "括号前是加号",
+    "括号前面是“{+}”号，把括号和它前面的“+”号去掉，括号里{各项的符号}都{不改变}。",
+    91
+  ],
+  [
+    3,
+    "括号前是减号",
+    "括号前面是“{-}”号，把括号和它前面的“-”号去掉，括号里{各项的符号}都要{改变}。",
+    91
+  ],
+  [
+    3,
+    "整式加减的法则",
+    "利用{合并同类项}与{去括号}法则，我们可以进行整式的加减运算。",
+    94
+  ],
+  [
+    3,
+    "整式加减的顺序",
+    "整式的加减运算，像数的运算一样满足各种{运算律}，如果有括号先{去括号}，再{合并同类项}。",
+    94
+  ]
+];
+bank.push(...chapter3Rows.map(([lesson,title,text,page],i)=>({id:"ch3-"+(i+1),order:48+i,chapter:3,lesson,title,text,page,parts:text.split(/\{([^{}]+)\}/g)})));
+const sections=lessons.map((title,i)=>({chapter:2,lesson:i+1,title})).concat([{chapter:3,lesson:2,title:"代数式的概念"},{chapter:3,lesson:3,title:"整式的加减"}]);
 const day=(d=new Date())=>new Intl.DateTimeFormat('sv-SE',{timeZone:'Asia/Shanghai'}).format(d);
 const normalize=s=>String(s??'').replace(/ⁿ/g,'^n').normalize('NFKC').trim().replace(/\s/g,'').replace(/零/g,'0').replace(/[−–]/g,'-').replace(/\*/g,'×').replace(/<=/g,'≤').replace(/>=/g,'≥').replace(/!=/g,'≠').replace(/ⁿ/g,'^n');
 function eligible(progress,all=bank,today=day()){return all.filter(x=>x.order<=Number(progress?.through||0)&&progress?.dates?.[x.id]&&progress.dates[x.id]<=today);}
@@ -315,5 +451,5 @@ function settle(p,run,answers,{today=day(),now=Date.now()}={}){
  p.history.unshift({game:'knowledge',stage:'knowledge',numberType:run.q.item.title,difficulty:run.repair?'补签复习':'知识回顾',at:new Date(now).toISOString(),runId:run.id,accuracy:Math.round(result.count/run.q.blanks.length*100),avgTime:seconds/run.q.blanks.length,durationSeconds:Math.round(seconds),rGain:gain,correctBlanks:result.count,totalBlanks:run.q.blanks.length,qualified:result.ok,repairDate:repaired});p.history=p.history.slice(0,10);
  return {...result,gain,streak,repaired,repairError};
 }
-const api={lessons,bank,day,normalize,eligible,batch,question,grade,makeupTarget,settle};if(typeof module==='object')module.exports=api;else root.KnowledgeReview=api;
+const api={lessons,sections,bank,day,normalize,eligible,batch,question,grade,makeupTarget,settle};if(typeof module==='object')module.exports=api;else root.KnowledgeReview=api;
 })(typeof window==='object'?window:this);
