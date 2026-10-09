@@ -15,9 +15,22 @@ assert(src.includes("if(role!=='teacher')return"),'teacher-only mutation');
 assert(src.includes('async function publish()')&&src.includes('saveDraft()')&&src.includes('loadPublic('));
 assert(src.includes('window.QuestionImport.docx')&&src.includes('q.ocr')&&src.includes('q.imageData'),'existing Word/OCR/image import helpers reused');
 assert(css.includes('.stage-aside')&&css.includes('.viewer-question'),'step-based projection layout');
+assert(css.includes('.substage-tabs')&&css.includes('min-height:29px'),'compact substage navigation');
+for(const name of ['活动','问题','尝试','探究','讨论','其他']){
+ assert(src.includes("label:'"+name+"'"),'missing classroom branch '+name);
+}
+assert(src.includes("label:'课堂环节'"),'main stage renamed without changing ID');
+assert(!src.includes("label:'知识点梳理'"),'old main stage label removed');
+assert(src.includes("branchOf(p)")&&src.includes("'other'"),'old knowledge items default to other');
+
 assert(!entry.includes("a.href='classroom.html'+(access?'':'?student=1')"),'old student menu must be absent');
 
-const pub={title:'3.2 代数式的概念',sections:{warmup:[{id:'q1',title:'课前诊断',body:'$x+3$',images:[]}],intro:[],knowledge:[],example:[{id:'q2',title:'例题1',body:'$2a$',images:[]}],practice:[],exit:[{id:'q3',title:'课堂检测',body:'$4a$',images:[]}]},published_at:'2026-10-10T01:00:00Z'};
+const pub={title:'3.2 代数式的概念',sections:{warmup:[{id:'q1',title:'课前诊断',body:'$x+3$',images:[]}],intro:[],knowledge:[
+{id:'act1',branch:'activity',title:'活动一',body:'活动题目A',images:[]},
+{id:'ques1',branch:'question',title:'问题一',body:'问题题目B',images:[]},
+{id:'act2',branch:'activity',title:'活动二',body:'活动题目C',images:[]},
+{id:'old1',title:'旧知识点',body:'未分类的历史内容',images:[]}
+],example:[{id:'q2',title:'例题1',body:'$2a$',images:[]}],practice:[],exit:[{id:'q3',title:'课堂检测',body:'$4a$',images:[]}]},published_at:'2026-10-10T01:00:00Z'};
 const draft={title:'教师草稿课题',sections:pub.sections};
 const teacherId='85b3350a-5457-4adb-be73-9c9c4e1c46e7',testerId='d12f28d3-a8d3-4fc3-a2e0-0aeab43e9920';
 async function page(id,role,student_code){
@@ -45,13 +58,47 @@ assert(!d.window.document.querySelector('#pageBody'),'46 has no editing field');
 assert(!d.window.document.querySelector('#studentAnswer'),'no student response UI');
 assert(d.window.document.body.textContent.includes('课前诊断'));
 d.window.document.querySelector('[data-act="next"]').click();
-assert(d.window.document.body.textContent.includes('例题1'),'next moves across populated lesson stages');
+assert(d.window.document.body.textContent.includes('活动一'),'next moves into first classroom substage');
+assert.equal(d.window.document.querySelectorAll('.substage-tab').length,6,'six compact branches appear only for classroom');
+assert(d.window.document.body.textContent.includes('课堂环节'));
+d.window.document.querySelector('[data-act="next"]').click();
+assert(d.window.document.body.textContent.includes('活动二'),'next moves within same branch');
+d.window.document.querySelector('[data-act="next"]').click();
+assert(d.window.document.body.textContent.includes('问题一'),'next proceeds to next populated branch');
+d.window.document.querySelector('[data-act="branch"][data-id="other"]').click();
+assert(d.window.document.body.textContent.includes('旧知识点'),'pre-existing unclassified questions remain under other');
+d.window.document.querySelector('[data-act="previous"]').click();
+assert(d.window.document.body.textContent.includes('问题一'),'previous returns to earlier branch');
+d.window.document.querySelector('[data-act="stage"][data-id="example"]').click();
+assert(d.window.document.body.textContent.includes('例题1'),'other major stages remain navigable');
+assert.equal(d.window.document.querySelectorAll('.substage-tab').length,0,'substage buttons do not leak into other stages');
 d.window.close();
 d=await page(teacherId,'teacher',null);
 assert(d.window.document.querySelector('#lessonDate'),'teacher has date picker');
 assert(d.window.document.querySelector('#lessonTitle'),'teacher can edit lesson title');
 assert(d.window.document.querySelector('[data-act="publish"]'),'teacher has publish button');
 assert(d.window.document.querySelector('#pageBody'),'teacher can edit question body');
+d.window.document.querySelector('[data-act="stage"][data-id="knowledge"]').click();
+assert.equal(d.window.document.querySelectorAll('.substage-tab').length,6,'teacher sees six subtypes');
+d.window.document.querySelector('[data-act="branch"][data-id="other"]').click();
+assert(d.window.document.querySelector('#pageBody').value.includes('未分类的历史内容'),'teacher still can edit legacy question');
+d.window.document.querySelector('[data-act="branch"][data-id="explore"]').click();
+assert(!d.window.document.querySelector('#pageBody'),'empty subtype has empty page list');
+d.window.document.querySelector('[data-act="add"]').click();
+assert(d.window.document.querySelector('#pageBody'),'teacher can add a page within selected subtype');
+let el=d.window.document.querySelector('#pageBody');
+el.value='新探究内容';
+el.dispatchEvent(new d.window.Event('input',{bubbles:true}));
+d.window.document.querySelector('[data-act="branch"][data-id="discussion"]').click();
+assert(!d.window.document.querySelector('#pageBody'),'new explore page is absent in another subtype');
+d.window.document.querySelector('[data-act="branch"][data-id="explore"]').click();
+assert(d.window.document.querySelector('#pageBody').value==='新探究内容','new page is preserved when switching subtypes');
+d.window.document.querySelector('[data-act="duplicate"]').click();
+assert.equal(d.window.document.querySelectorAll('.page-pill').length,2,'duplicate creates second page in same subtype');
+d.window.document.querySelector('[data-act="left"]').click();
+assert.equal(d.window.document.querySelectorAll('.page-pill').length,2,'sort does not lose subtyped pages');
+d.window.document.querySelector('[data-act="stage"][data-id="warmup"]').click();
+assert.equal(d.window.document.querySelectorAll('.substage-tab').length,0,'other teacher sections unchanged');
 d.window.close();
 d=await page('student-1','student','1');
 assert(d.window.document.body.textContent.includes('此账号无课堂权限'),'regular student cannot use classroom');

@@ -6,11 +6,20 @@ const TEST46='d12f28d3-a8d3-4fc3-a2e0-0aeab43e9920';
 const STAGES=[
  {id:'warmup',label:'课前练习'},
  {id:'intro',label:'知识点引入'},
- {id:'knowledge',label:'知识点梳理'},
+ {id:'knowledge',label:'课堂环节'},
  {id:'example',label:'例题'},
  {id:'practice',label:'课堂练习'},
  {id:'exit',label:'随堂检测'}
 ];
+const BRANCHES=[
+ {id:'activity',label:'活动'},
+ {id:'question',label:'问题'},
+ {id:'attempt',label:'尝试'},
+ {id:'explore',label:'探究'},
+ {id:'discussion',label:'讨论'},
+ {id:'other',label:'其他'}
+];
+
 const app=document.querySelector('#classroomApp');
 const sb=window.supabase?.createClient(API,KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
 const $=s=>document.querySelector(s);
@@ -19,14 +28,32 @@ const today=()=>new Intl.DateTimeFormat('sv-SE',{timeZone:'Asia/Shanghai',year:'
 const unique=()=>window.crypto?.randomUUID?.()||('p'+Date.now()+Math.random().toString(16).slice(2));
 const validDay=s=>/^\d{4}-\d{2}-\d{2}$/.test(s||'');
 let user=null,member=null,role='',classId='',date=today();
-let stage='warmup',pageIndex=0,draft=null,published=null,dirty=false,saving=null,timer=null,revision=0,busyImport=false,full=false,loading=false;
+let stage='warmup',branch='activity',pageIndex=0,draft=null,published=null,dirty=false,saving=null,timer=null,revision=0,busyImport=false,full=false,loading=false;
 function blankSections(){const x={};for(const s of STAGES)x[s.id]=[];return x;}
 function createPage(){return {id:unique(),title:'',body:'',images:[]};}
-function safePage(p){return {id:typeof p?.id==='string'&&p.id.length<100?p.id:unique(),title:String(p?.title||'').slice(0,160),body:String(p?.body||'').slice(0,14000),images:Array.isArray(p?.images)?p.images.filter(v=>typeof v==='string'&&/^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/.test(v)&&v.length<950000).slice(0,8):[]};}
+function safePage(p){return {id:typeof p?.id==='string'&&p.id.length<100?p.id:unique(),title:String(p?.title||'').slice(0,160),body:String(p?.body||'').slice(0,14000),images:Array.isArray(p?.images)?p.images.filter(v=>typeof v==='string'&&/^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/.test(v)&&v.length<950000).slice(0,8):[],...(BRANCHES.some(b=>b.id===p?.branch)?{branch:p.branch}:{})};}
 function normalizeSections(src){const x=blankSections();for(const s of STAGES){if(Array.isArray(src?.[s.id]))x[s.id]=src[s.id].slice(0,50).map(safePage);}return x;}
-function pages(){return draft?.sections?.[stage]||[];}
+// The existing knowledge pages without a branch stay accessible under “其他”.
+function branchOf(p){return BRANCHES.some(b=>b.id===p?.branch)?p.branch:'other';}
+function filteredPages(sections,selectedStage=stage,selectedBranch=branch){
+ const all=sections?.[selectedStage]||[];
+ return selectedStage==='knowledge'?all.filter(p=>branchOf(p)===selectedBranch):all;
+}
+function pageStore(){return draft?.sections?.[stage]||[];}
+function pages(){return filteredPages(draft?.sections);}
 function paper(){return pages()[pageIndex]||null;}
 function stageName(){return STAGES.find(s=>s.id===stage)?.label||'课堂';}
+function chooseBranch(sections,reverse=false){
+ const order=reverse?[...BRANCHES].reverse():BRANCHES;
+ return order.find(b=>filteredPages(sections,'knowledge',b.id).length)?.id||'activity';
+}
+function branchTabs(sections){
+ if(stage!=='knowledge')return '';
+ return '<nav class="substage-tabs" aria-label="课堂环节子分类">'+BRANCHES.map(b=>{
+  const count=filteredPages(sections,'knowledge',b.id).length;
+  return '<button type="button" class="substage-tab '+(branch===b.id?'active':'')+'" data-act="branch" data-id="'+b.id+'" aria-pressed="'+String(branch===b.id)+'" '+(role==='viewer'&&!count?'disabled':'')+'>'+b.label+(count?'<small>'+count+'</small>':'')+'</button>';
+ }).join('')+'</nav>';
+}
 function note(text,bad){const el=$('#msg');if(el){el.textContent=text;el.style.color=bad?'#b45046':'#537866';}else console.log(text);}
 function viewContent(p,el){if(!el)return;const cleaned=String(p?.body||'').replace(/\[(ANS|OPT|PROOF):([A-Za-z0-9_-]{1,32})\]/gi,'□');
 if(window.QuestionContent){el.innerHTML=window.QuestionContent.content(cleaned,p?.images||[]);window.QuestionContent.math(el);}
@@ -57,19 +84,38 @@ try{
 }
 function stageSelect(id){
  if(!STAGES.some(s=>s.id===id))return;
- if(role==='viewer'&&!(published?.sections?.[id]||[]).length)return;
- stage=id;pageIndex=0;render();
+ const sections=role==='teacher'?draft?.sections:published?.sections;
+ if(role==='viewer'&&!(sections?.[id]||[]).length)return;
+ stage=id;
+ if(stage==='knowledge')branch=chooseBranch(sections);
+ pageIndex=0;render();
+}
+function branchSelect(id){
+ if(stage!=='knowledge'||!BRANCHES.some(b=>b.id===id))return;
+ const sections=role==='teacher'?draft?.sections:published?.sections;
+ if(role==='viewer'&&!filteredPages(sections,'knowledge',id).length)return;
+ branch=id;pageIndex=0;render();
 }
 function changePage(dir){
  const sections=role==='teacher'?draft?.sections:published?.sections;
- if(!sections)return;
- let arr=sections[stage]||[];
- let next=pageIndex+dir;
+ if(!sections||!dir)return;
+ const arr=filteredPages(sections),next=pageIndex+dir;
  if(next>=0&&next<arr.length){pageIndex=next;render();return;}
- let i=STAGES.findIndex(s=>s.id===stage);
- for(let j=i+Math.sign(dir);j>=0&&j<STAGES.length;j+=Math.sign(dir)){
-  const key=STAGES[j].id,list=sections[key]||[];
-  if(list.length){stage=key;pageIndex=dir>0?0:list.length-1;render();return;}
+ if(stage==='knowledge'){
+  const from=BRANCHES.findIndex(b=>b.id===branch);
+  for(let j=from+Math.sign(dir);j>=0&&j<BRANCHES.length;j+=Math.sign(dir)){
+   const list=filteredPages(sections,'knowledge',BRANCHES[j].id);
+   if(list.length){branch=BRANCHES[j].id;pageIndex=dir>0?0:list.length-1;render();return;}
+  }
+ }
+ const from=STAGES.findIndex(s=>s.id===stage);
+ for(let j=from+Math.sign(dir);j>=0&&j<STAGES.length;j+=Math.sign(dir)){
+  const nextStage=STAGES[j].id,list=sections[nextStage]||[];
+  if(!list.length)continue;
+  stage=nextStage;
+  if(stage==='knowledge')branch=chooseBranch(sections,dir<0);
+  const items=filteredPages(sections);pageIndex=dir>0?0:items.length-1;
+  render();return;
  }
 }
 function mark(){if(role!=='teacher')return;dirty=true;revision++;note('草稿已修改 · 即将自动保存');clearTimeout(timer);timer=setTimeout(()=>{saveDraft();},1500);}
@@ -93,7 +139,7 @@ const [a,b]=await Promise.all([
 ]);
 if(a.error)throw a.error;if(b.error)throw b.error;
 draft={title:a.data?.title||'',sections:normalizeSections(a.data?.sections)};
-published=b.data||null;dirty=false;revision=0;stage='warmup';pageIndex=0;render();
+published=b.data||null;dirty=false;revision=0;stage='warmup';branch='activity';pageIndex=0;render();
 }catch(e){app.innerHTML='<div class="loading"><h2>无法读取教师课件</h2><p>'+esc(e?.message||e)+'</p><a href="./">返回</a></div>';}finally{loading=false;}
 }
 async function loadPublic(reset=true){
@@ -102,7 +148,7 @@ try{
 const q=await sb.from('classroom_day_public').select('title,sections,published_at').eq('class_id',classId).eq('lesson_date',date).maybeSingle();
 if(q.error)throw q.error;
 published=q.data?{...q.data,sections:normalizeSections(q.data.sections)}:null;
-if(reset){stage=STAGES.find(s=>(published?.sections?.[s.id]||[]).length)?.id||'warmup';pageIndex=0;}
+if(reset){stage=STAGES.find(s=>(published?.sections?.[s.id]||[]).length)?.id||'warmup';branch=stage==='knowledge'?chooseBranch(published?.sections):'activity';pageIndex=0;}
 render();
 }catch(e){app.innerHTML='<div class="loading"><h2>无法读取当天课件</h2><p>'+esc(e?.message||e)+'</p><button data-act="reload">重新读取</button></div>';}
 finally{loading=false;}
@@ -118,7 +164,7 @@ html+='<div class="toolbar"><label>课题名称 <input id="lessonTitle" maxlengt
 html+='<div class="toolbar"><label>上课日期 <input id="lessonDate" type="date" value="'+esc(date)+'"></label><button data-act="save" class="smol">保存草稿</button><button data-act="publish" class="primary">发布 / 更新给46号</button>'+
 (published?'<button data-act="withdraw" class="smol">撤回发布</button>':'')+
 '<span class="pub-signal">'+(published?'✓ 该日已发布，可继续修改草稿后重新发布':'○ 未发布 · 46号暂不可见')+'</span></div>'+
-'<section class="panel"><div class="row" style="justify-content:space-between"><div><div class="eyebrow">STEP '+(STAGES.findIndex(s=>s.id===stage)+1)+'</div><h3>'+esc(stageName())+'</h3></div><button data-act="add" class="primary smol">＋ 添加题目页</button></div>'+
+'<section class="panel">'+branchTabs(draft.sections)+'<div class="row" style="justify-content:space-between"><div><div class="eyebrow">STEP '+(STAGES.findIndex(s=>s.id===stage)+1)+'</div><h3>'+esc(stageName())+'</h3></div><button data-act="add" class="primary smol">＋ 添加题目页</button></div>'+
 '<div class="page-strip">'+(list.length?list.map((p,i)=>'<button class="page-pill '+(i===pageIndex?'active':'')+'" data-act="page" data-i="'+i+'"><small>第 '+(i+1)+' 页</small><strong>'+esc(p.title||'题目 '+(i+1))+'</strong></button>').join(''):'<p class="muted small">此环节还没有题目。点击“添加题目页”。</p>')+'</div>';
 if(current){
 html+='<div class="page-ops"><button class="smol" data-act="left">← 前移</button><button class="smol" data-act="right">后移 →</button><button class="smol" data-act="duplicate">复制本页</button><button class="smol" data-act="delete">删除本页</button><span class="muted small">每题占一页，顺序就是课堂展示顺序。</span></div>'+
@@ -137,9 +183,10 @@ app.innerHTML=html;
 if(current)viewContent(current,$('#previewBody'));
 }
 function viewer(){
-let title=published?.title||'今日数学课',list=published?.sections?.[stage]||[],p=list[pageIndex]||null;
+let title=published?.title||'今日数学课',list=filteredPages(published?.sections),p=list[pageIndex]||null;
 let html=top(title,false)+'<div class="shell">'+sidebar()+'<section class="workspace"><div class="viewer-heading"><div><div class="eyebrow">DATE · '+esc(date)+'</div><h2>'+esc(title)+'</h2></div>'+
 '<div class="row"><button data-act="reload" class="smol">刷新课件</button><button data-act="fullscreen" class="smol">'+(full?'退出全屏':'全屏')+'</button></div></div>';
+if(published)html+=branchTabs(published.sections);
 if(!published){html+='<div class="panel centered"><div class="empty"><h2>今日课件尚未发布</h2><p>请先从正式教师账号选择今天的日期，编辑课堂内容并点击“发布 / 更新给46号”。</p><button data-act="reload" class="primary">重新读取今日进度</button></div></div>';}
 else if(!p){html+='<div class="panel centered"><div class="empty"><h2>当前环节暂无题目</h2><p>选择左侧已有题目的环节。</p></div></div>';}
 else{
@@ -218,12 +265,15 @@ mark();render();note(r.note||'Word 题目已导入，发布前请校对。');
 }
 function addPage(){
 if(!draft)return;
-if(pages().length>=50){note('每个环节最多 50 页。',true);return;}
-pages().push(createPage());pageIndex=pages().length-1;mark();render();
+if(pageStore().length>=50){note('每个主环节最多 50 页。',true);return;}
+const item=createPage();
+if(stage==='knowledge')item.branch=branch;
+pageStore().push(item);pageIndex=pages().length-1;mark();render();
 }
 async function clickAction(button){
 const act=button.dataset.act;
 if(act==='stage'){stageSelect(button.dataset.id);return;}
+if(act==='branch'){branchSelect(button.dataset.id);return;}
 if(act==='page'){pageIndex=Math.max(0,Math.min(Number(button.dataset.i)||0,pages().length-1));render();return;}
 if(act==='reload'){await loadPublic(true);note('已重新读取发布内容。');return;}
 if(act==='fullscreen'){
@@ -236,15 +286,20 @@ if(act==='previous'||act==='next'){changePage(act==='next'?1:-1);return;}
 if(role!=='teacher')return;
 if(act==='add'){addPage();return;}
 if(act==='left'||act==='right'){
-const i=pageIndex,j=i+(act==='left'?-1:1),arr=pages();if(j<0||j>=arr.length)return;
-[arr[i],arr[j]]=[arr[j],arr[i]];pageIndex=j;mark();render();return;
+const i=pageIndex,j=i+(act==='left'?-1:1),visible=pages();if(j<0||j>=visible.length)return;
+const arr=pageStore(),first=arr.indexOf(visible[i]),second=arr.indexOf(visible[j]);
+if(first<0||second<0)return;
+[arr[first],arr[second]]=[arr[second],arr[first]];pageIndex=j;mark();render();return;
 }
 if(act==='duplicate'){
-const p=paper();if(!p)return;const copy=safePage(p);copy.id=unique();pages().splice(pageIndex+1,0,copy);pageIndex++;mark();render();return;
+const p=paper();if(!p)return;const copy=safePage(p);copy.id=unique();
+const store=pageStore(),i=store.indexOf(p);store.splice(i+1,0,copy);
+pageIndex++;mark();render();return;
 }
 if(act==='delete'){
 if(!paper()||!window.confirm('删除当前题目页？'))return;
-pages().splice(pageIndex,1);pageIndex=Math.max(0,Math.min(pageIndex,pages().length-1));mark();render();return;
+const store=pageStore(),i=store.indexOf(paper());if(i>=0)store.splice(i,1);
+pageIndex=Math.max(0,Math.min(pageIndex,pages().length-1));mark();render();return;
 }
 if(act==='save'){await saveDraft(true);return;}
 if(act==='publish'){await publish();return;}
