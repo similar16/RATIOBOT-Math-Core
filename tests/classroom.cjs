@@ -13,7 +13,7 @@ assert(src.includes('Asia/Shanghai'),'date follows China classroom date');
 assert(src.includes("role=member.role==='teacher'")&&src.includes('TEST46'),'46 viewer and teacher scopes');
 assert(src.includes("if(role!=='teacher')return"),'teacher-only mutation');
 assert(src.includes('async function publish()')&&src.includes('saveDraft()')&&src.includes('loadPublic('));
-assert(src.includes('QuestionImport.docx')&&src.includes('QuestionImport.ocr')&&src.includes('QuestionImport.imageData'));
+assert(src.includes('window.QuestionImport.docx')&&src.includes('q.ocr')&&src.includes('q.imageData'),'existing Word/OCR/image import helpers reused');
 assert(css.includes('.stage-aside')&&css.includes('.viewer-question'),'step-based projection layout');
 assert(!entry.includes("a.href='classroom.html'+(access?'':'?student=1')"),'old student menu must be absent');
 
