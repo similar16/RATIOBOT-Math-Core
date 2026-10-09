@@ -20,6 +20,13 @@ assert(src.includes('async function publish()')&&src.includes('saveDraft()')&&sr
 assert(src.includes('window.QuestionImport.docx')&&src.includes('q.ocr')&&src.includes('q.imageData'),'existing Word/OCR/image import helpers reused');
 assert(css.includes('.stage-aside')&&css.includes('.viewer-question'),'step-based projection layout');
 assert(css.includes('.substage-tabs')&&css.includes('min-height:29px'),'compact substage navigation');
+assert(css.includes('.visibility-tools')&&css.includes('.page-hidden'),'teacher visibility UI styles');
+assert(css.includes('.recall-controls'),'oral recall presentation controls');
+assert(src.includes("p.hidden===true")&&src.includes("p.hidden!==true"),'hidden page marker is supported');
+assert(src.includes('function recallTemplate(p)')&&src.includes('function recallDisplayText(p'),'cloze display reads original knowledge markers');
+assert(src.includes('clozeTemplate:item.text'),'original marked source is retained');
+assert(src.includes('data-act="toggleBranchVisibility"')&&src.includes('data-act="togglePageVisibility"'),'teacher can hide categories and pages');
+assert(src.includes('data-act="toggleRecall"'),'teacher can reveal original after oral recall');
 for(const name of ['活动','问题','尝试','探究','讨论','其他']){
  assert(src.includes("label:'"+name+"'"),'missing classroom branch '+name);
 }
@@ -39,15 +46,20 @@ const draft={title:'教师草稿课题',sections:pub.sections};
 const teacherId='85b3350a-5457-4adb-be73-9c9c4e1c46e7',testerId='d12f28d3-a8d3-4fc3-a2e0-0aeab43e9920';
 async function page(id,role,student_code){
  const d=new JSDOM(html,{url:'https://similar16.github.io/RATIOBOT-Math-Core/classroom.html',runScripts:'outside-only',pretendToBeVisual:true});
- const win=d.window;
+ const win=d.window,writes=[];
+ win.__testWrites=writes;
+ win.KnowledgeReview={bank:[{id:'k1',title:'有理数的定义',text:'{整数}和{分数}统称为{有理数}。'}]};
  win.QuestionContent={content:s=>'<div class="qb-text">'+s+'</div>',math:()=>{}};
  win.supabase={createClient:()=>({
   auth:{getUser:async()=>({data:{user:{id}}})},
   from:table=>{
+   let writing=false;
    const x={
     select(){return x;},eq(){return x;},order(){return x;},
+    upsert(payload){writes.push({table,payload});writing=true;return x;},
+    async single(){return{data:{published_at:'2026-10-10T09:00:00Z'},error:null};},
     async maybeSingle(){return{data:table==='classroom_day_drafts'?draft:table==='classroom_day_public'?pub:null,error:null};},
-    then(resolve,reject){return Promise.resolve({data:table==='classroom_curriculum_resources'?[]:[{class_id:'class-uuid',role,student_code,classes:{name:'七年级35班'}}],error:null}).then(resolve,reject);}
+    then(resolve,reject){return Promise.resolve(writing?{data:null,error:null}:{data:table==='classroom_curriculum_resources'?[]:[{class_id:'class-uuid',role,student_code,classes:{name:'七年级35班'}}],error:null}).then(resolve,reject);}
    };return x;
   }
  })};
@@ -113,5 +125,60 @@ d=await page('student-1','student','1');
 assert(d.window.document.body.textContent.includes('此账号无课堂权限'),'regular student cannot use classroom');
 assert(!d.window.document.querySelector('.stage-aside'),'regular student does not see presentation');
 d.window.close();
-console.log('Classroom V2: JS syntax, teacher editor, account 46 viewer, normal-student exclusion, stage navigation OK');
+
+// Hidden imported activity and an entirely hidden branch: neither must appear in 46's projector.
+pub.sections.knowledge.push({id:'hiddenActivity',branch:'activity',title:'内部备用活动',body:'只给教师看',images:[],hidden:true});
+pub.sections.knowledge.push({id:'hiddenDiscussion',branch:'discussion',title:'备选讨论',body:'不得显示',images:[],hidden:true});
+pub.sections.exit=[
+ {id:'recallCard',title:'知识点 · 有理数',body:'整数和分数统称为有理数。',images:[],branch:'recall',knowledgeId:'k1'},
+ {id:'quickCard',title:'快速练习',body:'试计算 2+3',images:[],branch:'quick'}
+];
+d=await page(testerId,'student','46');
+d.window.document.querySelector('[data-act="stage"][data-id="knowledge"]').click();
+assert(!d.window.document.querySelector('[data-act="branch"][data-id="discussion"]'),'hidden entire discussion category omitted from viewer');
+assert.equal(d.window.document.querySelectorAll('.substage-tab').length,3,'viewer sees only nonempty visible knowledge branches');
+assert(d.window.document.body.textContent.includes('活动一'));
+assert(!d.window.document.body.textContent.includes('内部备用活动'),'hidden title never displayed to viewer');
+d.window.document.querySelector('[data-act="next"]').click();
+assert(d.window.document.body.textContent.includes('活动二'),'forward navigation skips hidden activity');
+d.window.document.querySelector('[data-act="stage"][data-id="exit"]').click();
+assert(d.window.document.querySelector('#viewerBody').textContent.includes('＿＿＿'),'key concepts are blank by default');
+assert(!d.window.document.querySelector('#viewerBody').textContent.includes('有理数'),'cloze answer not revealed');
+assert(d.window.document.querySelector('[data-act="toggleRecall"]'),'projection can toggle source definition');
+d.window.document.querySelector('[data-act="toggleRecall"]').click();
+assert(d.window.document.querySelector('#viewerBody').textContent.includes('整数和分数统称为有理数。'),'show answer exactly matches existing knowledge source');
+d.window.document.querySelector('[data-act="next"]').click();
+assert(d.window.document.body.textContent.includes('快速练习'),'quick exercise navigation unaffected');
+d.window.document.querySelector('[data-act="previous"]').click();
+assert(d.window.document.querySelector('#viewerBody').textContent.includes('＿＿＿'),'returning to recall automatically hides previous answer');
+d.window.close();
+
+// Teacher keeps the hidden content editable, can hide entire category and restore it.
+d=await page(teacherId,'teacher',null);
+d.window.document.querySelector('[data-act="stage"][data-id="knowledge"]').click();
+assert(d.window.document.querySelector('.visibility-tools'),'teacher sees category visibility toolbar');
+assert.equal(d.window.document.querySelectorAll('.page-pill').length,3,'teacher still sees hidden and visible pages');
+assert(d.window.document.querySelector('.page-hidden'),'hidden teacher draft page is visibly marked');
+d.window.document.querySelector('[data-act="toggleBranchVisibility"]').click();
+assert.equal(d.window.document.querySelectorAll('.page-hidden').length,3,'hide entire activity category');
+d.window.document.querySelector('[data-act="toggleBranchVisibility"]').click();
+assert.equal(d.window.document.querySelectorAll('.page-hidden').length,0,'restore category makes all pages visible without deleting them');
+d.window.document.querySelector('[data-act="togglePageVisibility"]').click();
+assert(d.window.document.querySelector('.page-hidden'),'single page can be hidden independently');
+d.window.document.querySelector('[data-act="branch"][data-id="discussion"]').click();
+assert(d.window.document.querySelector('#pageBody').value.includes('不得显示'),'teacher can edit hidden branch content');
+d.window.document.querySelector('[data-act="stage"][data-id="exit"]').click();
+assert(d.window.document.querySelector('.substage-tab'),'teacher retains existing exit submodules');
+assert(d.window.document.querySelector('#previewBody').textContent.includes('＿＿＿'),'teacher preview also shows oral recall blanks');
+await (async()=>{
+ const publishButton=d.window.document.querySelector('[data-act="publish"]');
+ publishButton.click();
+ await new Promise(ok=>setTimeout(ok,60));
+ const pubWrite=d.window.__testWrites.find(x=>x.table==='classroom_day_public');
+ assert(pubWrite,'teacher publish writes sanitized classroom content');
+ assert(pubWrite.payload.sections.knowledge.every(p=>p.hidden!==true),'hidden classroom pages never stored in 46-readable published data');
+ assert(!pubWrite.payload.sections.knowledge.some(p=>p.id==='hiddenDiscussion'),'fully hidden category has no published pages');
+})();
+d.window.close();
+console.log('Classroom V3: legacy navigation, teacher-only hiding, published filtering, oral recall blanks/reveal, normal student exclusion OK');
 })().catch(e=>{console.error(e);process.exitCode=1;});

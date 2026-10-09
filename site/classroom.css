@@ -68,3 +68,11 @@ p{line-height:1.6}h1,h2,h3{margin:0}h2{font-size:23px}h3{font-size:16px}
 @media(max-width:650px){.curriculum-toolbar select{max-width:100%;width:100%}.curriculum-toolbar .small{flex-basis:100%}}
 
 .source-line{display:inline-block;margin:6px 0 10px;padding:5px 9px;background:#fff4d9;border:1px solid #e4cfaa;border-radius:8px;font-size:12px;color:#746048}
+
+/* Teacher-only presentation visibility; hidden pages stay editable in drafts. */
+.visibility-tools{display:flex;align-items:center;justify-content:flex-start;gap:9px;flex-wrap:wrap;margin:-2px 0 13px}
+.visibility-tools .smol{border:1.5px solid #bdb5a9;background:#f5f1e9;min-height:29px;padding:3px 10px}
+.page-pill.page-hidden{border-style:dashed;opacity:.66;background:#f4f1eb}
+.page-pill.page-hidden.active{opacity:.92;background:#ece6d6}
+.recall-controls{display:flex;gap:12px;justify-content:space-between;align-items:center;flex-wrap:wrap;margin:0 0 16px;padding:6px 0}
+.recall-controls .smol{min-height:31px}

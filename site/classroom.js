@@ -31,7 +31,7 @@ const unique=()=>window.crypto?.randomUUID?.()||('p'+Date.now()+Math.random().to
 const validDay=s=>/^\d{4}-\d{2}-\d{2}$/.test(s||'');
 let user=null,member=null,role='',classId='',date=today();
 let catalog=[],selectedLessonKey='',importingCatalog=false;
-let stage='warmup',branch='activity',pageIndex=0,draft=null,published=null,dirty=false,saving=null,timer=null,revision=0,busyImport=false,full=false,loading=false;
+let stage='warmup',branch='activity',pageIndex=0,revealedRecallPageId=null,draft=null,published=null,dirty=false,saving=null,timer=null,revision=0,busyImport=false,full=false,loading=false;
 function blankSections(){const x={};for(const s of STAGES)x[s.id]=[];return x;}
 function createPage(){return {id:unique(),title:'',body:'',images:[]};}
 function safePage(p){return {
@@ -43,13 +43,17 @@ function safePage(p){return {
  ...(typeof p?.sourceKind==='string'?{sourceKind:p.sourceKind.slice(0,40)}:{}),
  ...(typeof p?.knowledgeId==='string'?{knowledgeId:p.knowledgeId.slice(0,100)}:{}),
  ...(p?.requiresCheck===true?{requiresCheck:true}:{}),
- ...(p?.checked===true?{checked:true}:{})
+ ...(p?.checked===true?{checked:true}:{}),
+ ...(p?.hidden===true?{hidden:true}:{}),
+ ...(typeof p?.clozeTemplate==='string'&&p.clozeTemplate.length<=14000?{clozeTemplate:p.clozeTemplate}:{})
 };}
 function normalizeSections(src){const x=blankSections();for(const s of STAGES){if(Array.isArray(src?.[s.id]))x[s.id]=src[s.id].slice(0,50).map(safePage);}return x;}
 // The existing knowledge pages without a branch stay accessible under “其他”.
 function branchOf(p,group='knowledge'){const kinds=branchSet(group);return kinds.some(b=>b.id===p?.branch)?p.branch:(group==='exit'?'quick':'other');}
+function visiblePage(p){return role==='teacher'||p?.hidden!==true;}
+function stagePages(sections,key){return (sections?.[key]||[]).filter(visiblePage);}
 function filteredPages(sections,selectedStage=stage,selectedBranch=branch){
- const all=sections?.[selectedStage]||[];
+ const all=stagePages(sections,selectedStage);
  return branchSet(selectedStage).length?all.filter(p=>branchOf(p,selectedStage)===selectedBranch):all;
 }
 function pageStore(){return draft?.sections?.[stage]||[];}
@@ -61,25 +65,56 @@ function chooseBranch(sections,reverse=false,targetStage=stage){
  const order=reverse?[...branches].reverse():branches;
  return order.find(b=>filteredPages(sections,targetStage,b.id).length)?.id||branches[0]?.id||'activity';
 }
+function branchVisibilityTools(){
+ if(role!=='teacher'||stage!=='knowledge')return '';
+ const list=pages(),hidden=list.filter(p=>p.hidden===true).length;
+ if(!list.length)return '';
+ const allHidden=hidden===list.length;
+ return '<div class="visibility-tools"><span class="muted small">本分类 '+list.length+' 页 · '+hidden+' 页隐藏</span>'+
+ '<button class="smol" data-act="toggleBranchVisibility">'+(allHidden?'恢复本分类全部页面':'隐藏本分类全部页面')+'</button></div>';
+}
 function branchTabs(sections){
  const branches=branchSet(stage);
  if(!branches.length)return '';
- return '<nav class="substage-tabs" aria-label="'+(stage==='exit'?'随堂检测子模块':'课堂环节子分类')+'">'+branches.map(b=>{
+ const shown=role==='viewer'&&stage==='knowledge'?branches.filter(b=>filteredPages(sections,'knowledge',b.id).length>0):branches;
+ return '<nav class="substage-tabs" aria-label="'+(stage==='exit'?'随堂检测子模块':'课堂环节子分类')+'">'+shown.map(b=>{
   const count=filteredPages(sections,stage,b.id).length;
-  return '<button type="button" class="substage-tab '+(branch===b.id?'active':'')+'" data-act="branch" data-id="'+b.id+'" aria-pressed="'+String(branch===b.id)+'" '+(role==='viewer'&&!count?'disabled':'')+'>'+b.label+(count?'<small>'+count+'</small>':'')+'</button>';
+  const hiddenCount=role==='teacher'?filteredPages(sections,stage,b.id).filter(p=>p.hidden===true).length:0;
+  return '<button type="button" class="substage-tab '+(branch===b.id?'active':'')+'" data-act="branch" data-id="'+b.id+'" aria-pressed="'+String(branch===b.id)+'" '+(role==='viewer'&&!count?'disabled':'')+'>'+b.label+(count?'<small>'+count+(hiddenCount?' · 隐'+hiddenCount:'')+'</small>':'')+'</button>';
  }).join('')+'</nav>';
 }
 function note(text,bad){const el=$('#msg');if(el){el.textContent=text;el.style.color=bad?'#b45046':'#537866';}else console.log(text);}
-function viewContent(p,el){if(!el)return;const cleaned=String(p?.body||'').replace(/\[(ANS|OPT|PROOF):([A-Za-z0-9_-]{1,32})\]/gi,'□');
-if(window.QuestionContent){el.innerHTML=window.QuestionContent.content(cleaned,p?.images||[]);window.QuestionContent.math(el);}
-else el.textContent=cleaned;}
+function recallTemplate(p){
+ if(p?.branch!=='recall')return '';
+ const text=String(p?.body||'');
+ // The teacher may mark additional oral blanks manually with {关键词}.
+ if(/\{[^{}]+\}/.test(text))return text;
+ const bank=(window.KnowledgeReview?.bank||[]).find(x=>x.id===p.knowledgeId);
+ const original=String(p.clozeTemplate||bank?.text||'');
+ // Never overwrite an edited definition with text from the knowledge bank.
+ if(original&&original.replace(/\{([^{}]+)\}/g,'$1').trim()===text.trim())return original;
+ return '';
+}
+function recallDisplayText(p,showAnswer=false){
+ const raw=recallTemplate(p);
+ if(!raw)return String(p?.body||'');
+ if(showAnswer)return raw.replace(/\{([^{}]+)\}/g,'$1');
+ return raw.replace(/\{([^{}]+)\}/g,(_,answer)=>'＿'.repeat(Math.min(9,Math.max(3,Math.ceil(Array.from(answer).length*0.8)))));
+}
+function viewContent(p,el,showAnswer=false){
+ if(!el)return;
+ const display=recallDisplayText(p,showAnswer);
+ const cleaned=String(display).replace(/\[(ANS|OPT|PROOF):([A-Za-z0-9_-]{1,32})\]/gi,'□');
+ if(window.QuestionContent){el.innerHTML=window.QuestionContent.content(cleaned,p?.images||[]);window.QuestionContent.math(el);}
+ else el.textContent=cleaned;
+}
 function top(title,teacher){
 return '<header class="topbar"><strong class="brand">▣ RATIOBOT · 课堂交互</strong><span class="crumb">'+esc(member?.classes?.name||'本班')+'</span><span class="status">'+(teacher?'教师发布端':'46号 · 课堂展示')+'</span><span class="spacer"></span><span id="msg"></span><a class="linkbtn" href="./">返回数学基地</a></header>';
 }
 function sidebar(){
 const ss=role==='teacher'?draft?.sections:published?.sections;
 return '<aside class="stage-aside"><div class="tiny-heading">CLASSROOM STEPS · 教学环节</div>'+
-STAGES.map((s,i)=>{const list=ss?.[s.id]||[],count=list.length,active=stage===s.id;
+STAGES.map((s,i)=>{const list=stagePages(ss,s.id),count=list.length,active=stage===s.id;
 return '<button type="button" class="stage-btn '+(active?'active':'')+'" data-act="stage" data-id="'+s.id+'" '+(role==='viewer'&&!count?'disabled':'')+'><b>'+(i+1)+'. '+s.label+'</b><small>'+count+' 页</small></button>';}).join('')+
 '<div class="stage-footer">RATIOBOT · 数学课堂<br>左侧选教学环节，右侧切换题目。<br>Ctrl / Cmd 不需要，方向键即可翻页。</div></aside>';
 }
@@ -100,8 +135,8 @@ try{
 function stageSelect(id){
  if(!STAGES.some(s=>s.id===id))return;
  const sections=role==='teacher'?draft?.sections:published?.sections;
- if(role==='viewer'&&!(sections?.[id]||[]).length)return;
- stage=id;
+ if(role==='viewer'&&!stagePages(sections,id).length)return;
+ stage=id;revealedRecallPageId=null;
  if(branchSet(stage).length)branch=chooseBranch(sections);
  pageIndex=0;render();
 }
@@ -109,11 +144,12 @@ function branchSelect(id){
  if(!branchSet(stage).some(b=>b.id===id))return;
  const sections=role==='teacher'?draft?.sections:published?.sections;
  if(role==='viewer'&&!filteredPages(sections,stage,id).length)return;
- branch=id;pageIndex=0;render();
+ branch=id;pageIndex=0;revealedRecallPageId=null;render();
 }
 function changePage(dir){
  const sections=role==='teacher'?draft?.sections:published?.sections;
  if(!sections||!dir)return;
+ revealedRecallPageId=null;
  const arr=filteredPages(sections),next=pageIndex+dir;
  if(next>=0&&next<arr.length){pageIndex=next;render();return;}
  if(branchSet(stage).length){
@@ -125,7 +161,7 @@ function changePage(dir){
  }
  const from=STAGES.findIndex(s=>s.id===stage);
  for(let j=from+Math.sign(dir);j>=0&&j<STAGES.length;j+=Math.sign(dir)){
-  const nextStage=STAGES[j].id,list=sections[nextStage]||[];
+  const nextStage=STAGES[j].id,list=stagePages(sections,nextStage);
   if(!list.length)continue;
   stage=nextStage;
   if(branchSet(stage).length)branch=chooseBranch(sections,dir<0);
@@ -197,7 +233,7 @@ function reviewPagesFor(L){
   return !candidates.length||candidates[0].lesson_key===selectedLessonKey;
  };
  return bank.filter(item=>item.chapter===ch&&item.lesson===sec&&item.page>=lo&&item.page<=hi&&belongs(item.page))
- .map(item=>({id:'recall-'+item.id,title:'知识点 · '+item.title+'（教材P'+item.page+'）',body:item.text.replace(/\{([^{}]+)\}/g,'$1'),images:[],branch:'recall',sourcePage:item.page,sourceKind:'knowledge-review',knowledgeId:item.id}));
+ .map(item=>({id:'recall-'+item.id,title:'知识点 · '+item.title+'（教材P'+item.page+'）',body:item.text.replace(/\{([^{}]+)\}/g,'$1'),clozeTemplate:item.text,images:[],branch:'recall',sourcePage:item.page,sourceKind:'knowledge-review',knowledgeId:item.id}));
 }
 async function fillFromCurriculum(){
  if(role!=='teacher'||!draft||!selectedLessonKey)return;
@@ -240,7 +276,7 @@ try{
 const q=await sb.from('classroom_day_public').select('title,sections,published_at').eq('class_id',classId).eq('lesson_date',date).maybeSingle();
 if(q.error)throw q.error;
 published=q.data?{...q.data,sections:normalizeSections(q.data.sections)}:null;
-if(reset){stage=STAGES.find(s=>(published?.sections?.[s.id]||[]).length)?.id||'warmup';branch=branchSet(stage).length?chooseBranch(published?.sections,false,stage):'activity';pageIndex=0;}
+if(reset){stage=STAGES.find(s=>stagePages(published?.sections,s.id).length)?.id||'warmup';branch=branchSet(stage).length?chooseBranch(published?.sections,false,stage):'activity';pageIndex=0;revealedRecallPageId=null;}
 render();
 }catch(e){app.innerHTML='<div class="loading"><h2>无法读取当天课件</h2><p>'+esc(e?.message||e)+'</p><button data-act="reload">重新读取</button></div>';}
 finally{loading=false;}
@@ -256,10 +292,10 @@ html+='<div class="toolbar"><label>课题名称 <input id="lessonTitle" maxlengt
 html+='<div class="toolbar"><label>上课日期 <input id="lessonDate" type="date" value="'+esc(date)+'"></label><button data-act="save" class="smol">保存草稿</button><button data-act="publish" class="primary">发布 / 更新给46号</button>'+
 (published?'<button data-act="withdraw" class="smol">撤回发布</button>':'')+
 '<span class="pub-signal">'+(published?'✓ 该日已发布，可继续修改草稿后重新发布':'○ 未发布 · 46号暂不可见')+'</span></div>'+
-sourceToolbar()+'<section class="panel">'+branchTabs(draft.sections)+'<div class="row" style="justify-content:space-between"><div><div class="eyebrow">STEP '+(STAGES.findIndex(s=>s.id===stage)+1)+'</div><h3>'+esc(stageName())+'</h3></div><button data-act="add" class="primary smol">＋ 添加题目页</button></div>'+
-'<div class="page-strip">'+(list.length?list.map((p,i)=>'<button class="page-pill '+(i===pageIndex?'active':'')+'" data-act="page" data-i="'+i+'"><small>第 '+(i+1)+' 页</small><strong>'+esc(p.title||'题目 '+(i+1))+'</strong></button>').join(''):'<p class="muted small">此环节还没有题目。点击“添加题目页”。</p>')+'</div>';
+sourceToolbar()+'<section class="panel">'+branchTabs(draft.sections)+branchVisibilityTools()+'<div class="row" style="justify-content:space-between"><div><div class="eyebrow">STEP '+(STAGES.findIndex(s=>s.id===stage)+1)+'</div><h3>'+esc(stageName())+'</h3></div><button data-act="add" class="primary smol">＋ 添加题目页</button></div>'+
+'<div class="page-strip">'+(list.length?list.map((p,i)=>'<button class="page-pill '+(i===pageIndex?'active':'')+(p.hidden===true?' page-hidden':'')+'" data-act="page" data-i="'+i+'"><small>第 '+(i+1)+' 页'+(p.hidden===true?' · 已隐藏':'')+'</small><strong>'+esc(p.title||'题目 '+(i+1))+'</strong></button>').join(''):'<p class="muted small">此环节还没有题目。点击“添加题目页”。</p>')+'</div>';
 if(current){
-html+='<div class="page-ops"><button class="smol" data-act="left">← 前移</button><button class="smol" data-act="right">后移 →</button><button class="smol" data-act="duplicate">复制本页</button><button class="smol" data-act="delete">删除本页</button><span class="muted small">每题占一页，顺序就是课堂展示顺序。</span></div>'+
+html+='<div class="page-ops"><button class="smol" data-act="left">← 前移</button><button class="smol" data-act="right">后移 →</button><button class="smol" data-act="duplicate">复制本页</button><button class="smol" data-act="delete">删除本页</button>'+(stage==='knowledge'?'<button class="smol '+(current.hidden===true?'green':'')+'" data-act="togglePageVisibility">'+(current.hidden===true?'恢复此页投屏':'隐藏此页（保留草稿）')+'</button>':'')+'<span class="muted small">每题占一页，顺序就是课堂展示顺序。</span></div>'+
 (current.sourcePage?'<p class="source-line">原教材 P'+esc(current.sourcePage)+(current.requiresCheck&&!current.checked?' · 自动截图，请核对题干和裁切':' · 来源已记录')+'</p>':'')+
 '<div class="edit-grid"><div><label>题目标题（可选）</label><input id="pageTitle" maxlength="160" value="'+esc(current.title)+'" placeholder="例如：例题 1">'+
 '<label>题目正文（支持 LaTeX 公式、表格、图片标记）</label><textarea id="pageBody" maxlength="14000" placeholder="直接输入或粘贴题目；数学公式用 $...$，也可以上传课本截图。">'+esc(current.body)+'</textarea>'+
@@ -269,7 +305,7 @@ html+='<div class="page-ops"><button class="smol" data-act="left">← 前移</bu
 '<p class="small muted">截图可直接粘贴在题干框内。Word 和图片识别沿用神秘房间的导入组件，复杂数学公式需人工校对。</p>'+
 '<p class="small muted">图片标记示例：[IMG:1@85] 表示第 1 张图片，宽度 85%。</p></div>'+
 '<div><div class="preview-label">投屏预览 · 教师审核</div><div id="questionPreview" class="preview"><h3>'+esc(current.title||stageName()+' · 第'+(pageIndex+1)+'题')+'</h3><div id="previewBody"></div></div>'+
-'<div class="help"><strong>只发布题目</strong><br>此版本不设置答案、提示、自动判分或学生作答。一个环节可以加入多页。课本例题建议直接拍图或导入 Word，先校对再发布。</div></div></div>';
+'<div class="help"><strong>只发布题目</strong><br>不设置学生端作答或自动判分。课堂环节可在左侧子分类中隐藏指定页面，重新发布后46号才会同步。知识点回顾使用原知识点库的 {关键词} 挖空，投屏后口头回答。</div></div></div>';
 }else html+='<div class="empty">没有题目页。先添加一页，然后输入题目。</div>';
 html+='</section></section></div>';
 app.innerHTML=html;
@@ -284,12 +320,12 @@ if(!published){html+='<div class="panel centered"><div class="empty"><h2>今日�
 else if(!p){html+='<div class="panel centered"><div class="empty"><h2>当前环节暂无题目</h2><p>选择左侧已有题目的环节。</p></div></div>';}
 else{
 html+='<div class="viewer-area panel"><div class="viewer-heading"><div class="screen-marker">'+esc(stageName())+' · '+(pageIndex+1)+' / '+list.length+'</div><div class="screen-marker">RATIOBOT CLASSROOM</div></div>'+
-'<div class="viewer-title">'+esc(p.title||stageName()+' · 第'+(pageIndex+1)+'题')+'</div><div id="viewerBody" class="viewer-question"></div>'+
+'<div class="viewer-title">'+esc(p.title||stageName()+' · 第'+(pageIndex+1)+'题')+'</div>'+((p.branch==='recall'&&recallTemplate(p))?'<div class="recall-controls"><span class="small muted">知识点关键词填空 · 请学生口头作答</span><button class="smol '+(revealedRecallPageId===p.id?'green':'')+'" data-act="toggleRecall">'+(revealedRecallPageId===p.id?'重新挖空':'显示原文')+'</button></div>':'')+'<div id="viewerBody" class="viewer-question"></div>'+
 '<div class="viewer-foot"><div class="row"><button data-act="previous">← 上一页</button><button data-act="next" class="primary">下一页 →</button></div>'+
 '<span class="small muted">方向键换页 · 数字 1–6 快速切换环节</span></div></div>';
 }
 html+='</section></div>';app.innerHTML=html;
-if(p)viewContent(p,$('#viewerBody'));
+if(p)viewContent(p,$('#viewerBody'),revealedRecallPageId===p.id);
 document.body.classList.toggle('fullscreen-mode',full);
 }
 function render(){if(role==='teacher')editor();else viewer();}
@@ -311,7 +347,7 @@ if(!draft)return;
 if(dirty){const ok=await saveDraft();if(!ok)return;}
 const sections=blankSections();let total=0;
 for(const s of STAGES){for(const p of draft.sections[s.id]){
-if(!p.body.trim())continue;
+if(!p.body.trim()||p.hidden===true)continue;
 sections[s.id].push(safePage(p));total++;
 }}
 if(!total){note('请至少填写一道题后再发布。',true);return;}
@@ -366,6 +402,11 @@ pageStore().push(item);pageIndex=pages().length-1;mark();render();
 async function clickAction(button){
 const act=button.dataset.act;
 if(act==='stage'){stageSelect(button.dataset.id);return;}
+if(act==='toggleRecall'&&role==='viewer'){
+ const selected=filteredPages(published?.sections)[pageIndex];
+ if(selected?.branch==='recall'&&recallTemplate(selected)){revealedRecallPageId=revealedRecallPageId===selected.id?null:selected.id;render();}
+ return;
+}
 if(act==='branch'){branchSelect(button.dataset.id);return;}
 if(act==='page'){pageIndex=Math.max(0,Math.min(Number(button.dataset.i)||0,pages().length-1));render();return;}
 if(act==='reload'){await loadPublic(true);note('已重新读取发布内容。');return;}
@@ -378,6 +419,15 @@ if(act==='fullscreen'){
 if(act==='previous'||act==='next'){changePage(act==='next'?1:-1);return;}
 if(role!=='teacher')return;
 if(act==='applyCurriculum'){await fillFromCurriculum();return;}
+if(act==='togglePageVisibility'&&stage==='knowledge'&&paper()){
+ paper().hidden=paper().hidden!==true;mark();render();return;
+}
+if(act==='toggleBranchVisibility'&&stage==='knowledge'){
+ const subset=pages();if(!subset.length)return;
+ const hide=!subset.every(p=>p.hidden===true);
+ for(const p of subset)p.hidden=hide;
+ mark();render();return;
+}
 if(act==='add'){addPage();return;}
 if(act==='left'||act==='right'){
 const i=pageIndex,j=i+(act==='left'?-1:1),visible=pages();if(j<0||j>=visible.length)return;
