@@ -8,6 +8,10 @@ assert(html.includes('id="classroomApp"'));
 assert(html.includes('question-content.js')&&html.includes('question-import.js'));
 assert(home.includes('classroom-entry.js'));
 assert(src.includes('classroom_day_drafts')&&src.includes('classroom_day_public'));
+assert(src.includes('classroom_curriculum_resources'),'teacher-only textbook catalogue exists');
+assert(src.includes('reviewPagesFor')&&src.includes('KnowledgeReview'),'knowledge bank reuse required');
+assert(src.includes("label:'知识点回顾'")&&src.includes("label:'快速练习'"),'two exit submodules required');
+assert(html.includes('review-engine.js'),'original knowledge point engine loaded');
 assert(!src.includes('classroom_responses')&&!src.includes('classroom_live'),'student response features removed');
 assert(src.includes('Asia/Shanghai'),'date follows China classroom date');
 assert(src.includes("role=member.role==='teacher'")&&src.includes('TEST46'),'46 viewer and teacher scopes');
@@ -41,9 +45,9 @@ async function page(id,role,student_code){
   auth:{getUser:async()=>({data:{user:{id}}})},
   from:table=>{
    const x={
-    select(){return x;},eq(){return x;},
+    select(){return x;},eq(){return x;},order(){return x;},
     async maybeSingle(){return{data:table==='classroom_day_drafts'?draft:table==='classroom_day_public'?pub:null,error:null};},
-    then(resolve,reject){return Promise.resolve({data:[{class_id:'class-uuid',role,student_code,classes:{name:'七年级35班'}}],error:null}).then(resolve,reject);}
+    then(resolve,reject){return Promise.resolve({data:table==='classroom_curriculum_resources'?[]:[{class_id:'class-uuid',role,student_code,classes:{name:'七年级35班'}}],error:null}).then(resolve,reject);}
    };return x;
   }
  })};
@@ -76,6 +80,7 @@ d.window.close();
 d=await page(teacherId,'teacher',null);
 assert(d.window.document.querySelector('#lessonDate'),'teacher has date picker');
 assert(d.window.document.querySelector('#lessonTitle'),'teacher can edit lesson title');
+assert(d.window.document.querySelector('#curriculumImport'),'teacher can upload a textbook lesson package');
 assert(d.window.document.querySelector('[data-act="publish"]'),'teacher has publish button');
 assert(d.window.document.querySelector('#pageBody'),'teacher can edit question body');
 d.window.document.querySelector('[data-act="stage"][data-id="knowledge"]').click();
@@ -97,6 +102,10 @@ d.window.document.querySelector('[data-act="duplicate"]').click();
 assert.equal(d.window.document.querySelectorAll('.page-pill').length,2,'duplicate creates second page in same subtype');
 d.window.document.querySelector('[data-act="left"]').click();
 assert.equal(d.window.document.querySelectorAll('.page-pill').length,2,'sort does not lose subtyped pages');
+d.window.document.querySelector('[data-act="stage"][data-id="exit"]').click();
+assert.equal(d.window.document.querySelectorAll('.substage-tab').length,2,'exit check has two submodules');
+assert(d.window.document.body.textContent.includes('知识点回顾')&&d.window.document.body.textContent.includes('快速练习'));
+assert(d.window.document.querySelector('[data-act="branch"][data-id="quick"]'),'teacher can select quick practice');
 d.window.document.querySelector('[data-act="stage"][data-id="warmup"]').click();
 assert.equal(d.window.document.querySelectorAll('.substage-tab').length,0,'other teacher sections unchanged');
 d.window.close();
