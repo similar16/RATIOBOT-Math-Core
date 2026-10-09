@@ -9,7 +9,7 @@ const STAGES=[
  {id:'knowledge',label:'课堂环节'},
  {id:'example',label:'例题'},
  {id:'practice',label:'课堂练习'},
- {id:'exit',label:'随堂检测'}
+ {id:'exit',label:'随堂检验'}
 ];
 const BRANCHES=[
  {id:'activity',label:'活动'},
@@ -34,7 +34,17 @@ let catalog=[],selectedLessonKey='',importingCatalog=false;
 let stage='warmup',branch='activity',pageIndex=0,draft=null,published=null,dirty=false,saving=null,timer=null,revision=0,busyImport=false,full=false,loading=false;
 function blankSections(){const x={};for(const s of STAGES)x[s.id]=[];return x;}
 function createPage(){return {id:unique(),title:'',body:'',images:[]};}
-function safePage(p){return {id:typeof p?.id==='string'&&p.id.length<100?p.id:unique(),title:String(p?.title||'').slice(0,160),body:String(p?.body||'').slice(0,14000),images:Array.isArray(p?.images)?p.images.filter(v=>typeof v==='string'&&/^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/.test(v)&&v.length<950000).slice(0,8):[],...(branchSet('knowledge').concat(branchSet('exit')).some(b=>b.id===p?.branch)?{branch:p.branch}:{})};}
+function safePage(p){return {
+ id:typeof p?.id==='string'&&p.id.length<100?p.id:unique(),
+ title:String(p?.title||'').slice(0,160),body:String(p?.body||'').slice(0,14000),
+ images:Array.isArray(p?.images)?p.images.filter(v=>typeof v==='string'&&/^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/.test(v)&&v.length<950000).slice(0,8):[],
+ ...(branchSet('knowledge').concat(branchSet('exit')).some(b=>b.id===p?.branch)?{branch:p.branch}:{}),
+ ...(Number.isFinite(Number(p?.sourcePage))&&Number(p.sourcePage)>0?{sourcePage:Number(p.sourcePage)}:{}),
+ ...(typeof p?.sourceKind==='string'?{sourceKind:p.sourceKind.slice(0,40)}:{}),
+ ...(typeof p?.knowledgeId==='string'?{knowledgeId:p.knowledgeId.slice(0,100)}:{}),
+ ...(p?.requiresCheck===true?{requiresCheck:true}:{}),
+ ...(p?.checked===true?{checked:true}:{})
+};}
 function normalizeSections(src){const x=blankSections();for(const s of STAGES){if(Array.isArray(src?.[s.id]))x[s.id]=src[s.id].slice(0,50).map(safePage);}return x;}
 // The existing knowledge pages without a branch stay accessible under “其他”.
 function branchOf(p,group='knowledge'){const kinds=branchSet(group);return kinds.some(b=>b.id===p?.branch)?p.branch:(group==='exit'?'quick':'other');}
@@ -180,8 +190,14 @@ function reviewPagesFor(L){
  const bank=window.KnowledgeReview?.bank||[];
  const m=/^([0-9]+)\.([0-9]+)$/.exec(String(L.section||''));if(!m)return [];
  const ch=Number(m[1]),sec=Number(m[2]),lo=Number(L.firstPage),hi=Number(L.lastPage);
- return bank.filter(item=>item.chapter===ch&&item.lesson===sec&&item.page>=lo&&item.page<=hi)
- .map(item=>({id:'recall-'+item.id,title:'知识点 · '+item.title+'（教材P'+item.page+'）',body:item.text.replace(/\{([^{}]+)\}/g,'$1'),images:[],branch:'recall'}));
+ const sameLessons=catalog.filter(x=>x.section===L.section);
+ const belongs=(page)=>{
+  const candidates=sameLessons.filter(x=>Number(x.first_page)<=page&&Number(x.last_page)>=page)
+     .sort((a,b)=>Number(b.first_page)-Number(a.first_page));
+  return !candidates.length||candidates[0].lesson_key===selectedLessonKey;
+ };
+ return bank.filter(item=>item.chapter===ch&&item.lesson===sec&&item.page>=lo&&item.page<=hi&&belongs(item.page))
+ .map(item=>({id:'recall-'+item.id,title:'知识点 · '+item.title+'（教材P'+item.page+'）',body:item.text.replace(/\{([^{}]+)\}/g,'$1'),images:[],branch:'recall',sourcePage:item.page,sourceKind:'knowledge-review',knowledgeId:item.id}));
 }
 async function fillFromCurriculum(){
  if(role!=='teacher'||!draft||!selectedLessonKey)return;
@@ -244,6 +260,7 @@ sourceToolbar()+'<section class="panel">'+branchTabs(draft.sections)+'<div class
 '<div class="page-strip">'+(list.length?list.map((p,i)=>'<button class="page-pill '+(i===pageIndex?'active':'')+'" data-act="page" data-i="'+i+'"><small>第 '+(i+1)+' 页</small><strong>'+esc(p.title||'题目 '+(i+1))+'</strong></button>').join(''):'<p class="muted small">此环节还没有题目。点击“添加题目页”。</p>')+'</div>';
 if(current){
 html+='<div class="page-ops"><button class="smol" data-act="left">← 前移</button><button class="smol" data-act="right">后移 →</button><button class="smol" data-act="duplicate">复制本页</button><button class="smol" data-act="delete">删除本页</button><span class="muted small">每题占一页，顺序就是课堂展示顺序。</span></div>'+
+(current.sourcePage?'<p class="source-line">原教材 P'+esc(current.sourcePage)+(current.requiresCheck&&!current.checked?' · 自动截图，请核对题干和裁切':' · 来源已记录')+'</p>':'')+
 '<div class="edit-grid"><div><label>题目标题（可选）</label><input id="pageTitle" maxlength="160" value="'+esc(current.title)+'" placeholder="例如：例题 1">'+
 '<label>题目正文（支持 LaTeX 公式、表格、图片标记）</label><textarea id="pageBody" maxlength="14000" placeholder="直接输入或粘贴题目；数学公式用 $...$，也可以上传课本截图。">'+esc(current.body)+'</textarea>'+
 '<div class="import-actions"><label class="linkbtn">插入图片<input type="file" id="fileImage" accept="image/png,image/jpeg,image/webp" hidden></label>'+
