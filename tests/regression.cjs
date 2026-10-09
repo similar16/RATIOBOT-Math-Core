@@ -10,9 +10,9 @@ const dom=new JSDOM(html,{url:'https://test.invalid/',runScripts:'outside-only',
 w.structuredClone=structuredClone;w.supabase={createClient:()=>client};w.scrollTo=()=>{};w.requestIdleCallback=cb=>{cb({didTimeout:false,timeRemaining:()=>50});return 1};w.cancelIdleCallback=()=>{};w.Element.prototype.animate=()=>({});w.alert=()=>{};w.confirm=()=>true;w.console.warn=()=>{};
 for(const script of w.document.scripts){if(script.src&&!/(review-(engine|ui)|daily|question-(content|import|bank))\.js$/.test(new URL(script.src).pathname))continue;let code=script.src?fs.readFileSync(root+'/'+new URL(script.src).pathname.split('/').pop(),'utf8'):script.textContent;new vm.Script(code);code=code.replace('    migrateLegacy();const initP=',`    window.__test={levelInfo,honorInfoFromProfile,cloudLevelBase,blankProfile,ensureProfileShape,saveCurrentProfile,currentProfile,currentProfileKey,cloudState,cloudSyncProfile,renderGrowth,renderStats,go,openStudentGate,loadTeacherDashboard,teacherSwitchTab,rosterNameMap,loadStudentClassWall,peerState,ensureTodayRecord,calcQuestionXP,recordGameClear,gameSignatureArithmetic,state,renderConfig,avatarSrcByLevel,peerAvatarSrc,refreshPlayerUI,CHECKIN_OUTFITS,cloudLoadStudentData,midAutumnProgress,midAutumnEvaluate,nationalDayProgress,nationalDayEvaluate,reconcileFestivalRewards};\n    migrateLegacy();const initP=`);w.eval(code)}
 const t=w.__test;assert.ok(t,'main closure reaches initialization');
-assert.match(html,/midautumn-frame-2026-clear\.png\?v=20260926-clear/,'Mid-Autumn uses clear original PNG');
-assert.match(html,/data-src="assets\/teacher-avatar-fixed\.png"/,'teacher original is deferred until teacher mode');
-assert.match(html,/reward-frame[^>]+data-src="assets\/midautumn-frame-2026-clear\.png\?v=20260926-clear"[^>]+loading="lazy"/,'large event frame is deferred and lazy-loaded');
+assert.match(html,/midautumn-frame-2026-clear(?:\.png\?v=20260926-clear|\.[a-f0-9]{12}\.webp)/,'Mid-Autumn uses clear original PNG');
+assert.match(html,/data-src="assets\/teacher-avatar-fixed(?:\.png|\.[a-f0-9]{12}\.webp)"/,'teacher original is deferred until teacher mode');
+assert.match(html,/reward-frame[^>]+data-src="assets\/midautumn-frame-2026-clear(?:\.png\?v=20260926-clear|\.[a-f0-9]{12}\.webp)"[^>]+loading="lazy"/,'large event frame is deferred and lazy-loaded');
 assert.match(html,/MID_AUTUMN_MIXED_STAGES=new Set\(\['supermixed'\]\)/,'Mid-Autumn only counts five-operation supermixed rounds');
 assert.doesNotMatch(html,/神秘房间[^<\n]{0,40}补充题/,'Mid-Autumn Secret Room wording uses 挑战题');
 assert.match(html,/NATIONAL_DAY_2026_START='2026-10-02'/,'National Day starts on Oct 2');
@@ -22,7 +22,7 @@ assert.match(html,/NATIONAL_DAY_2026_REQUIRED_DAYS=4/,'National Day requires fou
 assert.match(html,/NATIONAL_DAY_2026_KNOWLEDGE=20/,'National Day requires 20 knowledge blanks per qualifying day');
 assert.match(html,/NATIONAL_DAY_2026_MIXED=5/,'National Day requires five full mixed rounds per qualifying day');
 assert.match(html,/frame:nationalday2026/,'National Day frame syncs through the public avatar key');
-assert.match(html,/national-day-frame-2026\.png/,'Original National Day frame artwork is wired into the UI');
+assert.match(html,/national-day-frame-2026(?:\.png|\.[a-f0-9]{12}\.webp)/,'Original National Day frame artwork is wired into the UI');
 assert.doesNotMatch(html,/national-day-frame-2026\.svg/,'Simplified National Day frame is not used by the UI');
 assert.match(html,/id="nationalDayHomeBanner"/,'current National Day home banner remains');
 assert.match(html,/id="nationalDayEvent"/,'current National Day event remains');

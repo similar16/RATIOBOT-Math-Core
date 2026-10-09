@@ -38,3 +38,17 @@ with zipfile.ZipFile('RATIOBOT_GitHub_Pages_v4.0.zip') as z:
   assert (root/rel).read_bytes()==z.read(name),rel
   n+=1
 print(f'PASS syntax, complete image decoding, 16 badges, 18 current 420px theme stages, {n} archived assets byte-identical')
+# Display variants must be smaller, decodable and preserve transparency.
+import json
+manifest=json.loads((root/'image-optimization.json').read_text())
+assert manifest,'image optimization must produce display variants'
+for item in manifest:
+ original=root/item['source']; variant=root/item['web']
+ assert original.exists() and variant.exists(),item
+ assert variant.stat().st_size<original.stat().st_size,item
+ with Image.open(variant) as im:
+  im.load(); assert max(im.size)<=960,item
+  if 'frame-2026' in item['source']:assert im.mode=='RGBA',item
+html=(root/'index.html').read_text()
+assert 'alt="${o.name}" loading="lazy"' in html
+print('PASS optimized image sizes, transparency and deferred outfit images')
