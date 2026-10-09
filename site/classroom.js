@@ -192,7 +192,7 @@ async function saveDraft(force=false){
 async function loadCatalog(){
  const q=await sb.from('classroom_curriculum_resources').select('lesson_key,title,section,first_page,last_page').eq('class_id',classId).order('lesson_key',{ascending:true});
  if(q.error){console.warn('Textbook resource index unavailable:',q.error);return;}
- catalog=q.data||[];
+ catalog=window.TextbookPack2026?.chooseCatalog(q.data||[])||(q.data||[]);
  if(!selectedLessonKey||!catalog.some(x=>x.lesson_key===selectedLessonKey))selectedLessonKey=catalog[0]?.lesson_key||'';
 }
 function sourceToolbar(){
@@ -201,12 +201,23 @@ function sourceToolbar(){
  '<strong>教材课时资源库</strong>'+
  '<select id="curriculumLesson" aria-label="选择教材课时" '+(!catalog.length?'disabled':'')+'>'+options+'</select>'+
  '<button class="smol primary" data-act="applyCurriculum" '+(!catalog.length?'disabled':'')+'>填入当天课件</button>'+
- '<label class="linkbtn smol">导入教材资源包<input id="curriculumImport" type="file" accept=".json,application/json" hidden></label>'+
- '<span class="muted small">已存 '+catalog.length+' / 54 课时 · 仅教师可管理，填入后仍需手动发布</span></div>';
+ '<label class="linkbtn smol">导入新版教材 ZIP（含图片）<input id="curriculumImport" type="file" accept=".zip,.json,application/json,application/zip" hidden></label>'+
+ '<span class="muted small">'+(catalog.length===54&&window.TextbookPack2026?.isNew(catalog[0]?.lesson_key)?'✓ 2026新版已启用 · ':'')+'已存 '+catalog.length+' / 54 课时 · 仅教师可管理，填入后仍需手动发布</span></div>';
 }
 async function importCatalogFile(file){
  if(role!=='teacher'||!file||importingCatalog)return;
- if(file.size>30000000){note('资源包超过30MB，请检查文件。',true);return;}
+ if(/\.zip$/i.test(file.name||'')){
+  importingCatalog=true;
+  try{
+   if(!window.TextbookPack2026)throw Error('新版资源导入器尚未加载');
+   await window.TextbookPack2026.importZip(file,{sb:sb,user:user,classId:classId,teacher:role==='teacher',progress:function(msg){note(msg);}});
+   await loadCatalog();selectedLessonKey=catalog[0]?.lesson_key||'';
+   render();note('✓ 新教材已替换旧版显示：54课时、224栏目、356原图。旧版保留作备份。');
+  }catch(e){note('新版导入失败：'+(e?.message||e)+'。旧版内容不会被提前替换。',true);}
+  finally{importingCatalog=false;}
+  return;
+ }
+ if(file.size>30000000){note('旧版JSON超过30MB限制。新版请上传完整ZIP。',true);return;}
  importingCatalog=true;let added=0;
  try{
   const bundle=JSON.parse(await file.text());
@@ -245,7 +256,13 @@ async function fillFromCurriculum(){
  if(role!=='teacher'||!draft||!selectedLessonKey)return;
  const q=await sb.from('classroom_curriculum_resources').select('data').eq('class_id',classId).eq('lesson_key',selectedLessonKey).maybeSingle();
  if(q.error||!q.data?.data){note('未能读取所选课时资源。',true);return;}
- const L=q.data.data,sections=normalizeSections(L.sections);let added=0;
+ const L=q.data.data;let sections;
+ try{
+  const raw=L.schema==='RATIOBOT_TEXTBOOK_2026_V2'
+   ?await window.TextbookPack2026.resolveSections(L.sections,sb,function(msg){note(msg);}):L.sections;
+  sections=normalizeSections(raw);
+ }catch(e){note('本课时教材图片读取失败，请重试：'+(e?.message||e),true);return;}
+ let added=0;
  const copyUnique=(key,p)=>{
   const bucket=draft.sections[key];if(bucket.some(existing=>existing.id===p.id))return;
   if(bucket.length>=50)return;
