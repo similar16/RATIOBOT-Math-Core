@@ -76,3 +76,27 @@ p{line-height:1.6}h1,h2,h3{margin:0}h2{font-size:23px}h3{font-size:16px}
 .page-pill.page-hidden.active{opacity:.92;background:#ece6d6}
 .recall-controls{display:flex;gap:12px;justify-content:space-between;align-items:center;flex-wrap:wrap;margin:0 0 16px;padding:6px 0}
 .recall-controls .smol{min-height:31px}
+
+/* A shared projection type scale: Chinese text, Latin letters, digits and KaTeX use the same base font size. */
+.preview .qb-text,.preview .katex{font-size:inherit}
+.viewer-question .katex,.warmup-viewer-question .katex,.preview .katex{font-size:1em!important}
+.viewer-question .qb-text,.warmup-viewer-question .qb-text{font-size:inherit;line-height:1.95}
+.viewer-question,.warmup-viewer-question{font-family:"FZXiJinLJW","Songti SC","Noto Serif CJK SC","Microsoft YaHei",serif}
+.viewer-question .katex,.warmup-viewer-question .katex,.preview .katex{line-height:1.4}
+.preview{font-size:20px;line-height:1.9}
+/* Warm-up contains multiple editable question blocks, but projection uses a single page. */
+.warmup-edit-list{display:grid;gap:16px;margin-top:12px}
+.warmup-editor-card{padding:14px;border:1.5px solid var(--line);border-radius:14px;background:#fffefa}
+.warmup-editor-bar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:10px}
+.warmup-editor-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px}
+.warmup-editor-grid label:not(.linkbtn){display:block;margin:10px 0 6px}
+.warmup-editor-grid textarea{min-height:124px}
+.warmup-editor-grid .preview{min-height:155px}
+.warmup-viewer .viewer-foot{margin-top:auto}
+.warmup-viewer-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,360px),1fr));align-items:start;gap:14px;flex:1;padding:12px 0 20px}
+.warmup-viewer-item{padding:13px 17px;border:1.5px solid var(--line);border-radius:14px;background:#fffefa;min-width:0}
+.warmup-viewer-label{font-size:clamp(18px,1.45vw,25px);font-weight:900;margin-bottom:8px}
+.warmup-viewer-question{font-size:clamp(23px,2.15vw,38px);overflow-wrap:anywhere;min-width:0;line-height:1.95}
+.warmup-viewer-question .qb-inline-image img{max-height:50vh}
+@media(max-width:900px){.warmup-editor-grid{grid-template-columns:1fr}}
+@media(max-width:600px){.warmup-viewer-grid{grid-template-columns:1fr}.warmup-editor-card{padding:9px}.warmup-viewer-question{font-size:22px}}

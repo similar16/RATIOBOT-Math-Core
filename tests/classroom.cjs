@@ -22,6 +22,8 @@ assert(css.includes('.stage-aside')&&css.includes('.viewer-question'),'step-base
 assert(css.includes('.substage-tabs')&&css.includes('min-height:29px'),'compact substage navigation');
 assert(css.includes('.visibility-tools')&&css.includes('.page-hidden'),'teacher visibility UI styles');
 assert(css.includes('.recall-controls'),'oral recall presentation controls');
+assert(css.includes('.warmup-viewer-grid'),'warmup single-screen layout exists');
+assert(src.includes('classroomMathSize'),'math fraction display scaling exists');
 assert(src.includes("p.hidden===true")&&src.includes("p?.hidden!==true"),'hidden page marker is supported');
 assert(src.includes('function recallTemplate(p)')&&src.includes('function recallDisplayText(p'),'cloze display reads original knowledge markers');
 assert(src.includes('clozeTemplate:item.text'),'original marked source is retained');
@@ -36,7 +38,7 @@ assert(src.includes("function branchOf(p,group='knowledge')")&&src.includes("gro
 
 assert(!entry.includes("a.href='classroom.html'+(access?'':'?student=1')"),'old student menu must be absent');
 
-const pub={title:'3.2 代数式的概念',sections:{warmup:[{id:'q1',title:'课前诊断',body:'$x+3$',images:[]}],intro:[],knowledge:[
+const pub={title:'3.2 代数式的概念',sections:{warmup:[{id:'q1',title:'课前诊断',body:'$x+3$',images:[]},{id:'q1b',title:'课前分式题',body:'分式：$\\frac{a+1}{b}$',images:[]}],intro:[],knowledge:[
 {id:'act1',branch:'activity',title:'活动一',body:'活动题目A',images:[]},
 {id:'ques1',branch:'question',title:'问题一',body:'问题题目B',images:[]},
 {id:'act2',branch:'activity',title:'活动二',body:'活动题目C',images:[]},
@@ -68,7 +70,11 @@ async function page(id,role,student_code){
 }
 (async()=>{
 let d=await page(testerId,'student','46');
-assert(d.window.document.querySelector('#viewerBody'),'46 goes directly into published lesson presentation');
+assert(d.window.document.querySelector('#warmupViewer-0'),'46 sees first warmup question on the single shared screen');
+assert(d.window.document.querySelector('#warmupViewer-1'),'46 sees second warmup question without changing pages');
+assert.equal(d.window.document.querySelectorAll('.warmup-viewer-item').length,2,'all warmups on the same screen');
+assert(!d.window.document.querySelector('.viewer-title'),'no separate per-question slide for warmup');
+assert(d.window.document.querySelector('#warmupViewer-1').innerHTML.includes('dfrac'),'fraction scales for projection');
 assert.equal(d.window.document.querySelectorAll('.stage-btn').length,6);
 assert(!d.window.document.querySelector('#pageBody'),'46 has no editing field');
 assert(!d.window.document.querySelector('#studentAnswer'),'no student response UI');
@@ -94,7 +100,14 @@ assert(d.window.document.querySelector('#lessonDate'),'teacher has date picker')
 assert(d.window.document.querySelector('#lessonTitle'),'teacher can edit lesson title');
 assert(d.window.document.querySelector('#curriculumImport'),'teacher can upload a textbook lesson package');
 assert(d.window.document.querySelector('[data-act="publish"]'),'teacher has publish button');
-assert(d.window.document.querySelector('#pageBody'),'teacher can edit question body');
+assert(d.window.document.querySelector('[data-warmup-body="0"]'),'teacher can edit warmup from the single-page overview');
+assert.equal(d.window.document.querySelectorAll('.warmup-editor-card').length,2,'teacher sees both warmup questions together');
+assert(!d.window.document.querySelector('.page-strip'),'warmup editor has no pagination strip');
+const otherWarmup=d.window.document.querySelector('[data-warmup-body="1"]');
+otherWarmup.value='编辑后的分式题';otherWarmup.dispatchEvent(new d.window.Event('input',{bubbles:true}));
+assert(d.window.document.querySelector('#warmupPreview-1').textContent.includes('编辑后的分式题'),'second warmup editor previews own changes');
+d.window.document.querySelector('[data-act="add"]').click();
+assert.equal(d.window.document.querySelectorAll('.warmup-editor-card').length,3,'adding warmup expands the same editor rather than paginating');
 d.window.document.querySelector('[data-act="stage"][data-id="knowledge"]').click();
 assert.equal(d.window.document.querySelectorAll('.substage-tab').length,6,'teacher sees six subtypes');
 d.window.document.querySelector('[data-act="branch"][data-id="other"]').click();
