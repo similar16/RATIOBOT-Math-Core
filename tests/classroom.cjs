@@ -75,7 +75,7 @@ assert(!d.window.document.querySelector('#studentAnswer'),'no student response U
 assert(d.window.document.body.textContent.includes('课前诊断'));
 d.window.document.querySelector('[data-act="next"]').click();
 assert(d.window.document.body.textContent.includes('活动一'),'next moves into first classroom substage');
-assert.equal(d.window.document.querySelectorAll('.substage-tab').length,6,'six compact branches appear only for classroom');
+assert.equal(d.window.document.querySelectorAll('.substage-tab').length,3,'46 sees only nonempty classroom branches');
 assert(d.window.document.body.textContent.includes('课堂环节'));
 d.window.document.querySelector('[data-act="next"]').click();
 assert(d.window.document.body.textContent.includes('活动二'),'next moves within same branch');
