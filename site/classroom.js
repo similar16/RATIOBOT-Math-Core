@@ -31,7 +31,7 @@ const unique=()=>window.crypto?.randomUUID?.()||('p'+Date.now()+Math.random().to
 const validDay=s=>/^\d{4}-\d{2}-\d{2}$/.test(s||'');
 let user=null,member=null,role='',classId='',date=today();
 let catalog=[],selectedLessonKey='',importingCatalog=false;
-let stage='warmup',branch='activity',pageIndex=0,revealedRecallPageId=null,draft=null,published=null,dirty=false,saving=null,timer=null,revision=0,busyImport=false,full=false,loading=false;
+let stage='warmup',branch='activity',pageIndex=0,revealedRecallPageId=null,unlockError='',unlockBusy=false,draft=null,published=null,dirty=false,saving=null,timer=null,revision=0,busyImport=false,full=false,loading=false;
 function blankSections(){const x={};for(const s of STAGES)x[s.id]=[];return x;}
 function createPage(){return {id:unique(),title:'',body:'',images:[]};}
 function safePage(p){return {
@@ -192,7 +192,7 @@ async function saveDraft(force=false){
 async function loadCatalog(){
  const q=await sb.from('classroom_curriculum_resources').select('lesson_key,title,section,first_page,last_page').eq('class_id',classId).order('lesson_key',{ascending:true});
  if(q.error){console.warn('Textbook resource index unavailable:',q.error);return;}
- catalog=window.TextbookPack2026?.chooseCatalog(q.data||[])||(q.data||[]);
+ catalog=q.data||[];
  if(!selectedLessonKey||!catalog.some(x=>x.lesson_key===selectedLessonKey))selectedLessonKey=catalog[0]?.lesson_key||'';
 }
 function sourceToolbar(){
@@ -201,23 +201,12 @@ function sourceToolbar(){
  '<strong>教材课时资源库</strong>'+
  '<select id="curriculumLesson" aria-label="选择教材课时" '+(!catalog.length?'disabled':'')+'>'+options+'</select>'+
  '<button class="smol primary" data-act="applyCurriculum" '+(!catalog.length?'disabled':'')+'>填入当天课件</button>'+
- '<label class="linkbtn smol">导入新版教材 ZIP（含图片）<input id="curriculumImport" type="file" accept=".zip,.json,application/json,application/zip" hidden></label>'+
- '<span class="muted small">'+(catalog.length===54&&window.TextbookPack2026?.isNew(catalog[0]?.lesson_key)?'✓ 2026新版已启用 · ':'')+'已存 '+catalog.length+' / 54 课时 · 仅教师可管理，填入后仍需手动发布</span></div>';
+ '<label class="linkbtn smol">导入教材资源包<input id="curriculumImport" type="file" accept=".json,application/json" hidden></label>'+
+ '<span class="muted small">已存 '+catalog.length+' / 54 课时 · 仅教师可管理，填入后仍需手动发布</span></div>';
 }
 async function importCatalogFile(file){
  if(role!=='teacher'||!file||importingCatalog)return;
- if(/\.zip$/i.test(file.name||'')){
-  importingCatalog=true;
-  try{
-   if(!window.TextbookPack2026)throw Error('新版资源导入器尚未加载');
-   await window.TextbookPack2026.importZip(file,{sb:sb,user:user,classId:classId,teacher:role==='teacher',progress:function(msg){note(msg);}});
-   await loadCatalog();selectedLessonKey=catalog[0]?.lesson_key||'';
-   render();note('✓ 新教材已替换旧版显示：54课时、224栏目、356原图。旧版保留作备份。');
-  }catch(e){note('新版导入失败：'+(e?.message||e)+'。旧版内容不会被提前替换。',true);}
-  finally{importingCatalog=false;}
-  return;
- }
- if(file.size>30000000){note('旧版JSON超过30MB限制。新版请上传完整ZIP。',true);return;}
+ if(file.size>30000000){note('资源包超过30MB，请检查文件。',true);return;}
  importingCatalog=true;let added=0;
  try{
   const bundle=JSON.parse(await file.text());
@@ -256,13 +245,7 @@ async function fillFromCurriculum(){
  if(role!=='teacher'||!draft||!selectedLessonKey)return;
  const q=await sb.from('classroom_curriculum_resources').select('data').eq('class_id',classId).eq('lesson_key',selectedLessonKey).maybeSingle();
  if(q.error||!q.data?.data){note('未能读取所选课时资源。',true);return;}
- const L=q.data.data;let sections;
- try{
-  const raw=L.schema==='RATIOBOT_TEXTBOOK_2026_V2'
-   ?await window.TextbookPack2026.resolveSections(L.sections,sb,function(msg){note(msg);}):L.sections;
-  sections=normalizeSections(raw);
- }catch(e){note('本课时教材图片读取失败，请重试：'+(e?.message||e),true);return;}
- let added=0;
+ const L=q.data.data,sections=normalizeSections(L.sections);let added=0;
  const copyUnique=(key,p)=>{
   const bucket=draft.sections[key];if(bucket.some(existing=>existing.id===p.id))return;
   if(bucket.length>=50)return;
@@ -296,13 +279,30 @@ published=b.data||null;dirty=false;revision=0;stage='warmup';branch='activity';p
 async function loadPublic(reset=true){
 if(loading)return;loading=true;
 try{
-const q=await sb.from('classroom_day_public').select('title,sections,published_at').eq('class_id',classId).eq('lesson_date',date).maybeSingle();
-if(q.error)throw q.error;
-published=q.data?{...q.data,sections:normalizeSections(q.data.sections)}:null;
-if(reset){stage=STAGES.find(s=>stagePages(published?.sections,s.id).length)?.id||'warmup';branch=branchSet(stage).length?chooseBranch(published?.sections,false,stage):'activity';pageIndex=0;revealedRecallPageId=null;}
-render();
+ // 46 must not read classroom_day_public directly: its RLS permits teachers only.
+ // This RPC provides the warmup-only snapshot until the date-scoped server unlock.
+ if(role==='viewer')date=today();
+ const q=await sb.rpc('classroom_46_today',{p_day:date});
+ if(q.error)throw q.error;
+ published=q.data?{...q.data,sections:normalizeSections(q.data.sections)}:null;
+ if(reset){stage='warmup';branch='activity';pageIndex=0;revealedRecallPageId=null;}
+ render();
 }catch(e){app.innerHTML='<div class="loading"><h2>无法读取当天课件</h2><p>'+esc(e?.message||e)+'</p><button data-act="reload">重新读取</button></div>';}
 finally{loading=false;}
+}
+async function unlockToday(){
+ if(role!=='viewer'||unlockBusy||!published||published.unlocked===true)return;
+ const field=$('#classroomPin');
+ const pin=field?.value?.trim()||'';
+ if(!/^[0-9]{7}$/.test(pin)){unlockError='请输入完整的7位数字口令';render();return;}
+ unlockBusy=true;unlockError='';
+ try{
+  const q=await sb.rpc('classroom_unlock_today',{p_day:today(),p_pin:pin});
+  if(q.error)throw q.error;
+  if(q.data!==true){unlockError='口令不正确，请教师核对后重试';render();return;}
+  await loadPublic(false);
+ }catch(e){unlockError=String(e.message||'课堂解锁失败，请稍后重试');render();}
+ finally{unlockBusy=false;}
 }
 function heading(){
 return '<div class="eyebrow">'+(role==='teacher'?'LESSON PUBLISHER':'TODAY\'S LESSON')+'</div>'+
@@ -372,7 +372,18 @@ function viewer(){
 let title=published?.title||'今日数学课',list=filteredPages(published?.sections),p=list[pageIndex]||null;
 let html=top(title,false)+'<div class="shell">'+sidebar()+'<section class="workspace"><div class="viewer-heading"><div><div class="eyebrow">DATE · '+esc(date)+'</div><h2>'+esc(title)+'</h2></div>'+
 '<div class="row"><button data-act="reload" class="smol">刷新课件</button><button data-act="fullscreen" class="smol">'+(full?'退出全屏':'全屏')+'</button></div></div>';
-if(published)html+=branchTabs(published.sections);
+if(published){
+ if(published.unlocked!==true){
+ html+='<section class="classroom-lockbar" aria-label="课堂锁定状态">'+
+ '<div><strong><span aria-hidden="true">🔒</span> 课前练习已开放</strong><p>其余教学环节暂时锁定。教师上课时输入7位口令即可开放当天全部内容。</p></div>'+
+ '<div class="classroom-pin-tools"><input id="classroomPin" type="password" inputmode="numeric" autocomplete="off" maxlength="7" pattern="[0-9]{7}" aria-label="教师课堂解锁口令" placeholder="教师输入7位口令">'+
+ '<button class="primary smol" data-act="unlockToday">解锁课堂</button></div>'+
+ (unlockError?'<p class="unlock-error" role="alert">'+esc(unlockError)+'</p>':'')+'</section>';
+ }else{
+ html+='<div class="classroom-unlocked-status" aria-label="课堂已解锁">✓ 今日课堂已开放全部环节</div>';
+ }
+ html+=branchTabs(published.sections);
+}
 if(!published){html+='<div class="panel centered"><div class="empty"><h2>今日课件尚未发布</h2><p>请先从正式教师账号选择今天的日期，编辑课堂内容并点击“发布 / 更新给46号”。</p><button data-act="reload" class="primary">重新读取今日进度</button></div></div>';}
 else if(!p){html+='<div class="panel centered"><div class="empty"><h2>当前环节暂无题目</h2><p>选择左侧已有题目的环节。</p></div></div>';}
 else if(stage==='warmup'){
@@ -486,7 +497,8 @@ if(act==='toggleRecall'&&role==='viewer'){
 }
 if(act==='branch'){branchSelect(button.dataset.id);return;}
 if(act==='page'){pageIndex=Math.max(0,Math.min(Number(button.dataset.i)||0,pages().length-1));render();return;}
-if(act==='reload'){await loadPublic(true);note('已重新读取发布内容。');return;}
+if(act==='reload'){unlockError='';await loadPublic(true);note('已重新读取发布内容。');return;}
+if(act==='unlockToday'){await unlockToday();return;}
 if(act==='fullscreen'){
  try{
   if(!document.fullscreenElement)await document.documentElement.requestFullscreen();else await document.exitFullscreen();

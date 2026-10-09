@@ -100,3 +100,13 @@ p{line-height:1.6}h1,h2,h3{margin:0}h2{font-size:23px}h3{font-size:16px}
 .warmup-viewer-question .qb-inline-image img{max-height:50vh}
 @media(max-width:900px){.warmup-editor-grid{grid-template-columns:1fr}}
 @media(max-width:600px){.warmup-viewer-grid{grid-template-columns:1fr}.warmup-editor-card{padding:9px}.warmup-viewer-question{font-size:22px}}
+
+/* 46号课前练习预开放，教师当堂解锁口令 */
+.classroom-lockbar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px 16px;padding:12px 17px;margin-bottom:12px;border:1.5px solid #c8bba4;border-radius:14px;background:#f6f2e8;color:#403d37}
+.classroom-lockbar strong{font-size:16px}
+.classroom-lockbar p{font-size:13px;margin:4px 0 0;color:#6a655d}
+.classroom-lockbar .classroom-pin-tools{display:flex;align-items:center;gap:8px}
+.classroom-pin-tools input{max-width:165px;min-height:38px;text-align:center;letter-spacing:5px;font-size:19px;border-radius:9px;border:1.5px solid #aead9e;background:#fff}
+.classroom-lockbar .unlock-error{color:#a43c2f;flex-basis:100%;margin:0}
+.classroom-unlocked-status{padding:8px 13px;margin-bottom:8px;font-size:13px;color:#4e7760}
+@media(max-width:650px){.classroom-lockbar .classroom-pin-tools{width:100%}.classroom-pin-tools input{flex:1;max-width:none}}

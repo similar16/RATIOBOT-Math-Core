@@ -24,6 +24,9 @@ assert(css.includes('.visibility-tools')&&css.includes('.page-hidden'),'teacher 
 assert(css.includes('.recall-controls'),'oral recall presentation controls');
 assert(css.includes('.warmup-viewer-grid'),'warmup single-screen layout exists');
 assert(src.includes('classroomMathSize'),'math fraction display scaling exists');
+assert(src.includes("sb.rpc('classroom_46_today'")&&src.includes("sb.rpc('classroom_unlock_today'"),'46 only fetches safely filtered projection and PIN validation');
+assert(css.includes('.classroom-lockbar')&&css.includes('.classroom-pin-tools'),'teacher-facing seven-digit PIN is available on 46 presenter');
+assert(!src.includes("pin==='1415926'"),'teacher PIN must never be stored in frontend');
 assert(src.includes("p.hidden===true")&&src.includes("p?.hidden!==true"),'hidden page marker is supported');
 assert(src.includes('function recallTemplate(p)')&&src.includes('function recallDisplayText(p'),'cloze display reads original knowledge markers');
 assert(src.includes('clozeTemplate:item.text'),'original marked source is retained');
@@ -46,14 +49,32 @@ const pub={title:'3.2 代数式的概念',sections:{warmup:[{id:'q1',title:'课�
 ],example:[{id:'q2',title:'例题1',body:'$2a$',images:[]}],practice:[],exit:[{id:'q3',title:'课堂检测',body:'$4a$',images:[]}]},published_at:'2026-10-10T01:00:00Z'};
 const draft={title:'教师草稿课题',sections:pub.sections};
 const teacherId='85b3350a-5457-4adb-be73-9c9c4e1c46e7',testerId='d12f28d3-a8d3-4fc3-a2e0-0aeab43e9920';
+let serverUnlocked=false; // Mock server holds per-day unlock state for these tests.
+const testPin='7654321'; // Test-only mock PIN, unrelated to the server-side secret.
 async function page(id,role,student_code){
  const d=new JSDOM(html,{url:'https://similar16.github.io/RATIOBOT-Math-Core/classroom.html',runScripts:'outside-only',pretendToBeVisual:true});
- const win=d.window,writes=[];
+ const win=d.window,writes=[],rpcCalls=[];
  win.__testWrites=writes;
+ win.__rpcCalls=rpcCalls;
  win.KnowledgeReview={bank:[{id:'k1',title:'有理数的定义',text:'{整数}和{分数}统称为{有理数}。'}]};
  win.QuestionContent={content:s=>'<div class="qb-text">'+s+'</div>',math:()=>{}};
  win.supabase={createClient:()=>({
   auth:{getUser:async()=>({data:{user:{id}}})},
+  async rpc(name,args){
+   rpcCalls.push({name,args});
+   if(name==='classroom_46_today'){
+    if(id!==testerId)return{data:null,error:{message:'forbidden'}};
+    const sections=JSON.parse(JSON.stringify(pub.sections));
+    if(!serverUnlocked)for(const stageName of ['intro','knowledge','example','practice','exit'])sections[stageName]=[];
+    return{data:{title:pub.title,sections,published_at:pub.published_at,unlocked:serverUnlocked},error:null};
+   }
+   if(name==='classroom_unlock_today'){
+    if(id!==testerId)return{data:null,error:{message:'forbidden'}};
+    if(args.p_pin===testPin){serverUnlocked=true;return{data:true,error:null};}
+    return{data:false,error:null};
+   }
+   return{data:null,error:{message:'unknown RPC'}};
+  },
   from:table=>{
    let writing=false;
    const x={
@@ -79,6 +100,26 @@ assert.equal(d.window.document.querySelectorAll('.stage-btn').length,6);
 assert(!d.window.document.querySelector('#pageBody'),'46 has no editing field');
 assert(!d.window.document.querySelector('#studentAnswer'),'no student response UI');
 assert(d.window.document.body.textContent.includes('课前诊断'));
+assert(d.window.document.querySelector('#classroomPin'),'PIN appears for teacher on 46 classroom device');
+assert(d.window.document.querySelector('[data-act="stage"][data-id="example"]').disabled,'example stage locked before server unlock');
+assert(d.window.__rpcCalls.some(c=>c.name==='classroom_46_today'),'student reads sanitized lesson RPC');
+assert(!d.window.__rpcCalls.some(c=>c.name==='classroom_unlock_today'),'opening page never unlocks automatically');
+assert(!d.window.document.body.textContent.includes('活动一'),'future sections never reach the 46 viewer while locked');
+d.window.document.querySelector('[data-act="next"]').click();
+assert(d.window.document.querySelector('#warmupViewer-0'),'next cannot bypass the warmup-only gate');
+// Invalid PIN never releases other lesson sections.
+let pwd=d.window.document.querySelector('#classroomPin');
+pwd.value='0000000';
+d.window.document.querySelector('[data-act="unlockToday"]').click();
+await new Promise(ok=>setTimeout(ok,40));
+assert(d.window.document.querySelector('#classroomPin'),'wrong code remains locked');
+assert(d.window.document.body.textContent.includes('口令不正确'));
+pwd=d.window.document.querySelector('#classroomPin');
+pwd.value=testPin;
+d.window.document.querySelector('[data-act="unlockToday"]').click();
+await new Promise(ok=>setTimeout(ok,50));
+assert(!d.window.document.querySelector('#classroomPin'),'correct code removes PIN prompt');
+assert(d.window.document.body.textContent.includes('今日课堂已开放全部环节'),'server confirmation unlocks the day');
 d.window.document.querySelector('[data-act="next"]').click();
 assert(d.window.document.body.textContent.includes('活动一'),'next moves into first classroom substage');
 assert.equal(d.window.document.querySelectorAll('.substage-tab').length,3,'46 sees only nonempty classroom branches');
@@ -146,7 +187,12 @@ pub.sections.exit=[
  {id:'recallCard',title:'知识点 · 有理数',body:'整数和分数统称为有理数。',images:[],branch:'recall',knowledgeId:'k1'},
  {id:'quickCard',title:'快速练习',body:'试计算 2+3',images:[],branch:'quick'}
 ];
+serverUnlocked=false;
 d=await page(testerId,'student','46');
+assert(!d.window.document.body.textContent.includes('备选讨论'),'hidden AND locked materials are absent');
+let pinSecond=d.window.document.querySelector('#classroomPin');
+pinSecond.value=testPin;d.window.document.querySelector('[data-act="unlockToday"]').click();
+await new Promise(ok=>setTimeout(ok,40));
 d.window.document.querySelector('[data-act="stage"][data-id="knowledge"]').click();
 assert(!d.window.document.querySelector('[data-act="branch"][data-id="discussion"]'),'hidden entire discussion category omitted from viewer');
 assert.equal(d.window.document.querySelectorAll('.substage-tab').length,3,'viewer sees only nonempty visible knowledge branches');
