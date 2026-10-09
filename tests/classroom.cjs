@@ -25,7 +25,7 @@ for(const name of ['活动','问题','尝试','探究','讨论','其他']){
 }
 assert(src.includes("label:'课堂环节'"),'main stage renamed without changing ID');
 assert(!src.includes("label:'知识点梳理'"),'old main stage label removed');
-assert(src.includes("branchOf(p)")&&src.includes("'other'"),'old knowledge items default to other');
+assert(src.includes("function branchOf(p,group='knowledge')")&&src.includes("group==='exit'?'quick':'other'"),'old knowledge items default to other; old exit items default to quick');
 
 assert(!entry.includes("a.href='classroom.html'+(access?'':'?student=1')"),'old student menu must be absent');
 
