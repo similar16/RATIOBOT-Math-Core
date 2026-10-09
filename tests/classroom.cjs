@@ -22,7 +22,7 @@ assert(css.includes('.stage-aside')&&css.includes('.viewer-question'),'step-base
 assert(css.includes('.substage-tabs')&&css.includes('min-height:29px'),'compact substage navigation');
 assert(css.includes('.visibility-tools')&&css.includes('.page-hidden'),'teacher visibility UI styles');
 assert(css.includes('.recall-controls'),'oral recall presentation controls');
-assert(src.includes("p.hidden===true")&&src.includes("p.hidden!==true"),'hidden page marker is supported');
+assert(src.includes("p.hidden===true")&&src.includes("p?.hidden!==true"),'hidden page marker is supported');
 assert(src.includes('function recallTemplate(p)')&&src.includes('function recallDisplayText(p'),'cloze display reads original knowledge markers');
 assert(src.includes('clozeTemplate:item.text'),'original marked source is retained');
 assert(src.includes('data-act="toggleBranchVisibility"')&&src.includes('data-act="togglePageVisibility"'),'teacher can hide categories and pages');
