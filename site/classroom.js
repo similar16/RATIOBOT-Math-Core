@@ -1,278 +1,274 @@
 (function(){
 'use strict';
-const API='https://bqtidgxpinhtkmrspres.supabase.co',KEY='sb_publishable_rtdSVt1mkCBTrS78kUvzNQ_slSc76Ye',TEST46='d12f28d3-a8d3-4fc3-a2e0-0aeab43e9920';
-const TYPES={warmup:'课前练习',intro:'知识点引入',knowledge:'知识点整理',example:'典型例题',practice:'巩固练习',exit:'随堂检测',blank:'自由页面'};
-const QUESTION=new Set(['warmup','practice','exit']);
-const app=document.getElementById('app'),sb=window.supabase?.createClient(API,KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
-let user=null,member=null,cls='',editor=false,lessons=[],lesson=null,at=0,dirty=false,saving=false,saveTimer=null,previewAnswer=false;
-let present=false,live=false,open=false,revealHint=false,revealAnswer=false,showStats=false,answers=[],ink='off',pen='#d78f82',canvas=null,drawing=false,tick=null,remaining=0,poller=null;
-let studentData=null,studentPick='',studentText='',studentPoller=null;
+const API='https://bqtidgxpinhtkmrspres.supabase.co';
+const KEY='sb_publishable_rtdSVt1mkCBTrS78kUvzNQ_slSc76Ye';
+const TEST46='d12f28d3-a8d3-4fc3-a2e0-0aeab43e9920';
+const STAGES=[
+ {id:'warmup',label:'课前练习'},
+ {id:'intro',label:'知识点引入'},
+ {id:'knowledge',label:'知识点梳理'},
+ {id:'example',label:'例题'},
+ {id:'practice',label:'课堂练习'},
+ {id:'exit',label:'随堂检测'}
+];
+const app=document.querySelector('#classroomApp');
+const sb=window.supabase?.createClient(API,KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
 const $=s=>document.querySelector(s);
-const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const fmt=s=>esc(s).replace(/\n/g,'<br>');
-const err=e=>e?.message||String(e);
-const sid=()=>window.crypto?.randomUUID?.()||'s'+Date.now().toString(36)+Math.random().toString(36).slice(2);
-const typeName=k=>TYPES[k]||TYPES.blank,slide=()=>lesson?.slides?.[at],opts=s=>String(s?.choices||'').split('\n').map(x=>x.trim()).filter(Boolean).slice(0,6);
-function status(t,bad=false){let e=$('#status');if(e){e.textContent=t;e.style.color=bad?'#ad4c42':'#516e60';}else console.log(t);}
-function math(e){if(e&&window.renderMathInElement){try{window.renderMathInElement(e,{delimiters:[{left:'$$',right:'$$',display:true},{left:'\\(',right:'\\)',display:false},{left:'$',right:'$',display:false}],throwOnError:false});}catch(x){console.warn(x);}}}
-function newSlide(type='blank'){return {id:sid(),type,title:typeName(type),prompt:'',choices:'',hint:'',steps:'',answer:'',notes:'',image:'',seconds:type==='warmup'?180:type==='exit'?120:0};}
-function sample(){return [
-{...newSlide('warmup'),title:'课前诊断 · 两问',prompt:'1. 用代数式表示：$x$ 的3倍与5的和。\n2. 当 $a=2$ 时，求 $4a-3$ 的值。',hint:'分清乘法与加法的先后关系。',answer:'$3x+5$；$5$'},
-{...newSlide('intro'),title:'知识点引入',prompt:'某种笔每支 $a$ 元，买3支需要多少钱？如果再买一本2元笔记本呢？',hint:'用字母表示变化的数量。'},
-{...newSlide('knowledge'),title:'观察与表达',prompt:'观察：$3a$、$3a+2$、$a^2-1$。\n它们表示了什么数量关系？与等式有何不同？',steps:'说清每个运算式对应的实际意义。'},
-{...newSlide('example'),title:'例题 · 表示周长',prompt:'某长方形的长比宽的2倍多1，设宽为 $x$，用代数式表示周长。',hint:'先表示长，再列周长式。',steps:'长：$2x+1$；周长：$2(x+2x+1)$。',answer:'$6x+2$'},
-{...newSlide('practice'),title:'巩固练习',prompt:'下列哪个式子表示“一个数 $a$ 的平方减去4”？',choices:'$a^2-4$\n$(a-4)^2$\n$4-a^2$\n$2a-4$',answer:'A',seconds:90},
-{...newSlide('exit'),title:'随堂检测 · 2分钟',prompt:'正方形的边长为 $2x-1$，请用代数式表示它的周长。',answer:'$8x-4$',seconds:120}
-];}
-function card(s,project=false,hint=false,solution=false){
-let out='<div class="'+(project?'screen-kicker':'eyebrow')+'">'+esc(typeName(s.type))+'</div><div class="'+(project?'screen-title':'section-title')+'">'+esc(s.title||'未命名')+'</div>';
-if(s.prompt)out+='<div class="question">'+fmt(s.prompt)+'</div>';
-if(s.image&&/^data:image\/(jpeg|png|webp);base64,/.test(s.image))out+='<img alt="课件插图" src="'+s.image+'">';
-const options=opts(s);if(options.length)out+='<div class="choice-list">'+options.map((x,i)=>'<div class="choice"><b>'+String.fromCharCode(65+i)+'</b> '+fmt(x)+'</div>').join('')+'</div>';
-if(hint&&s.hint)out+='<div class="hintbox"><b>思考提示</b><div>'+fmt(s.hint)+'</div></div>';
-if(solution&&(s.steps||s.answer))out+='<div class="answerbox"><b>思路与答案</b><div>'+fmt(s.steps||'')+(s.steps&&s.answer?'<hr>':'')+fmt(s.answer||'')+'</div></div>';
-return out;
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const today=()=>new Intl.DateTimeFormat('sv-SE',{timeZone:'Asia/Shanghai',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+const unique=()=>window.crypto?.randomUUID?.()||('p'+Date.now()+Math.random().toString(16).slice(2));
+const validDay=s=>/^\d{4}-\d{2}-\d{2}$/.test(s||'');
+let user=null,member=null,role='',classId='',date=today();
+let stage='warmup',pageIndex=0,draft=null,published=null,dirty=false,saving=null,timer=null,revision=0,busyImport=false,full=false,loading=false;
+function blankSections(){const x={};for(const s of STAGES)x[s.id]=[];return x;}
+function createPage(){return {id:unique(),title:'',body:'',images:[]};}
+function safePage(p){return {id:typeof p?.id==='string'&&p.id.length<100?p.id:unique(),title:String(p?.title||'').slice(0,160),body:String(p?.body||'').slice(0,14000),images:Array.isArray(p?.images)?p.images.filter(v=>typeof v==='string'&&/^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/.test(v)&&v.length<950000).slice(0,8):[]};}
+function normalizeSections(src){const x=blankSections();for(const s of STAGES){if(Array.isArray(src?.[s.id]))x[s.id]=src[s.id].slice(0,50).map(safePage);}return x;}
+function pages(){return draft?.sections?.[stage]||[];}
+function paper(){return pages()[pageIndex]||null;}
+function stageName(){return STAGES.find(s=>s.id===stage)?.label||'课堂';}
+function note(text,bad){const el=$('#msg');if(el){el.textContent=text;el.style.color=bad?'#b45046':'#537866';}else console.log(text);}
+function viewContent(p,el){if(!el)return;const cleaned=String(p?.body||'').replace(/\[(ANS|OPT|PROOF):([A-Za-z0-9_-]{1,32})\]/gi,'□');
+if(window.QuestionContent){el.innerHTML=window.QuestionContent.content(cleaned,p?.images||[]);window.QuestionContent.math(el);}
+else el.textContent=cleaned;}
+function top(title,teacher){
+return '<header class="topbar"><strong class="brand">▣ RATIOBOT · 课堂交互</strong><span class="crumb">'+esc(member?.classes?.name||'本班')+'</span><span class="status">'+(teacher?'教师发布端':'46号 · 课堂展示')+'</span><span class="spacer"></span><span id="msg"></span><a class="linkbtn" href="./">返回数学基地</a></header>';
+}
+function sidebar(){
+const ss=role==='teacher'?draft?.sections:published?.sections;
+return '<aside class="stage-aside"><div class="tiny-heading">CLASSROOM STEPS · 教学环节</div>'+
+STAGES.map((s,i)=>{const list=ss?.[s.id]||[],count=list.length,active=stage===s.id;
+return '<button type="button" class="stage-btn '+(active?'active':'')+'" data-act="stage" data-id="'+s.id+'" '+(role==='viewer'&&!count?'disabled':'')+'><b>'+(i+1)+'. '+s.label+'</b><small>'+count+' 页</small></button>';}).join('')+
+'<div class="stage-footer">RATIOBOT · 数学课堂<br>左侧选教学环节，右侧切换题目。<br>Ctrl / Cmd 不需要，方向键即可翻页。</div></aside>';
 }
 async function boot(){
-if(!sb){app.innerHTML='<main class="loading-card"><h2>云端组件暂不可用</h2><a href="./">返回首页</a></main>';return;}
+if(!sb){app.innerHTML='<div class="loading"><h2>云端暂不可用</h2><p>请返回首页刷新后重试。</p><a href="./">返回首页</a></div>';return;}
 try{
-const {data,error}=await sb.auth.getUser();if(error||!data?.user){app.innerHTML='<main class="loading-card"><h2>请先登录 RATIOBOT</h2><p>课堂系统复用原来的账号和班级，无需额外注册。</p><a class="btn primary" href="./#account">返回首页登录</a></main>';return;}
-user=data.user;
-const q=await sb.from('class_members').select('class_id,role,student_code,classes(name)').eq('user_id',user.id);
+ const u=await sb.auth.getUser();if(u.error||!u.data?.user){app.innerHTML='<div class="loading"><h2>请先登录数学基地</h2><p>46号沿用原账号；教师使用原教师账号。</p><a class="linkbtn" href="./#account">返回登录</a></div>';return;}
+ user=u.data.user;
+ const m=await sb.from('class_members').select('class_id,role,student_code,classes(name)').eq('user_id',user.id);
+ if(m.error)throw m.error;
+ const list=m.data||[],preferred=new URLSearchParams(location.search).get('class');
+ member=list.find(x=>x.class_id===preferred&&(x.role==='teacher'||user.id===TEST46&&x.student_code==='46'))||list.find(x=>x.role==='teacher')||list.find(x=>user.id===TEST46&&x.student_code==='46');
+ if(!member){app.innerHTML='<div class="loading"><h2>此账号无课堂权限</h2><p>目前仅正式教师账号可发布课件，46号测试账号可展示课件。其他学生端维持原样。</p><a class="linkbtn" href="./">返回数学基地</a></div>';return;}
+ role=member.role==='teacher'?'teacher':'viewer';classId=member.class_id;
+ if(role==='teacher')await loadDraft();else await loadPublic();
+}catch(e){app.innerHTML='<div class="loading"><h2>课堂加载失败</h2><p>'+esc(e.message||e)+'</p><a href="./">返回数学基地</a></div>';}
+}
+function stageSelect(id){
+ if(!STAGES.some(s=>s.id===id))return;
+ if(role==='viewer'&&!(published?.sections?.[id]||[]).length)return;
+ stage=id;pageIndex=0;render();
+}
+function changePage(dir){
+ const sections=role==='teacher'?draft?.sections:published?.sections;
+ if(!sections)return;
+ let arr=sections[stage]||[];
+ let next=pageIndex+dir;
+ if(next>=0&&next<arr.length){pageIndex=next;render();return;}
+ let i=STAGES.findIndex(s=>s.id===stage);
+ for(let j=i+Math.sign(dir);j>=0&&j<STAGES.length;j+=Math.sign(dir)){
+  const key=STAGES[j].id,list=sections[key]||[];
+  if(list.length){stage=key;pageIndex=dir>0?0:list.length-1;render();return;}
+ }
+}
+function mark(){if(role!=='teacher')return;dirty=true;revision++;note('草稿已修改 · 即将自动保存');clearTimeout(timer);timer=setTimeout(()=>{saveDraft();},1500);}
+async function saveDraft(force=false){
+ if(role!=='teacher'||!draft||(!dirty&&!force))return true;
+ if(saving){await saving;if(!dirty&&!force)return true;}
+ const state=revision,payload={class_id:classId,lesson_date:date,owner_id:user.id,title:String(draft.title||'').slice(0,140),sections:draft.sections,updated_at:new Date().toISOString()};
+ saving=(async()=>{try{
+ const q=await sb.from('classroom_day_drafts').upsert(payload,{onConflict:'class_id,lesson_date'});
+ if(q.error)throw q.error;
+ if(state===revision){dirty=false;note('云端草稿已保存 ✓');}
+ return true;
+ }catch(e){note('保存失败：'+(e?.message||e),true);return false;}})();
+ const ok=await saving;saving=null;if(dirty&&revision!==state){clearTimeout(timer);timer=setTimeout(saveDraft,900);}return ok;
+}
+async function loadDraft(){
+if(loading)return;loading=true;try{
+const [a,b]=await Promise.all([
+ sb.from('classroom_day_drafts').select('title,sections,updated_at').eq('class_id',classId).eq('lesson_date',date).maybeSingle(),
+ sb.from('classroom_day_public').select('title,sections,published_at').eq('class_id',classId).eq('lesson_date',date).maybeSingle()
+]);
+if(a.error)throw a.error;if(b.error)throw b.error;
+draft={title:a.data?.title||'',sections:normalizeSections(a.data?.sections)};
+published=b.data||null;dirty=false;revision=0;stage='warmup';pageIndex=0;render();
+}catch(e){app.innerHTML='<div class="loading"><h2>无法读取教师课件</h2><p>'+esc(e?.message||e)+'</p><a href="./">返回</a></div>';}finally{loading=false;}
+}
+async function loadPublic(reset=true){
+if(loading)return;loading=true;
+try{
+const q=await sb.from('classroom_day_public').select('title,sections,published_at').eq('class_id',classId).eq('lesson_date',date).maybeSingle();
 if(q.error)throw q.error;
-const ms=q.data||[],preferred=new URLSearchParams(location.search).get('class');
-member=ms.find(x=>x.class_id===preferred)||ms[0];
-if(!member)throw Error('当前账号尚未绑定班级。');
-cls=member.class_id;editor=member.role==='teacher'||(user.id===TEST46&&member.student_code==='46');
-if(!editor||new URLSearchParams(location.search).has('student')){studentShell();await fetchStudent();studentPoller=setInterval(()=>{if(!document.hidden)fetchStudent();},6000);}
-else{teacherShell();await loadLessons();}
-}catch(e){app.innerHTML='<main class="loading-card"><h2>课堂连接失败</h2><p>'+esc(err(e))+'</p><a href="./">返回首页</a></main>';}
+published=q.data?{...q.data,sections:normalizeSections(q.data.sections)}:null;
+if(reset){stage=STAGES.find(s=>(published?.sections?.[s.id]||[]).length)?.id||'warmup';pageIndex=0;}
+render();
+}catch(e){app.innerHTML='<div class="loading"><h2>无法读取当天课件</h2><p>'+esc(e?.message||e)+'</p><button data-act="reload">重新读取</button></div>';}
+finally{loading=false;}
 }
-function teacherShell(){
-app.innerHTML='<header class="top"><div class="brand">▣ RATIOBOT · 课堂交互</div><span class="tag">'+esc(member.classes?.name||'我的班级')+'</span><span id="status" class="status"></span><a class="btn" href="./">返回基地</a><a class="btn" href="classroom.html?student=1" target="_blank">学生视角</a><button class="primary" data-action="present">开始投屏</button></header>'+
-'<main class="studio"><aside class="panel sidebar"><div class="row space"><h3 style="margin:0">我的课件</h3><button class="primary slim" data-action="new">＋ 新建</button></div><div id="lessonList"></div><hr><button class="slim" data-action="sample">创建示例课</button><p class="small muted">自动云端保存；教师账号和 46 号测试账号均可备课。</p></aside><section class="panel"><div id="editor"></div></section></main>'+
-'<div class="projector hidden" id="projector"><div class="projector-bar"><strong id="presentTitle">课堂投屏</strong><span class="stretch"></span><span id="liveStatus" class="small"></span><button class="slim" data-action="previous">←</button><button class="slim primary" data-action="next">下一页 →</button><button class="slim" data-action="hint">提示</button><button class="slim green" data-action="solution">解析</button><button class="slim" id="acceptBtn" data-action="accept">开放作答</button><button class="slim" data-action="stats">统计</button><button class="slim" data-action="timer">计时</button><span id="timerLabel" class="timer">00:00</span><span class="ink-toolbar"><button class="slim" id="penBtn" data-action="pen">画笔</button><button class="ink-swatch" style="background:#d78f82" data-action="color" data-color="#d78f82" aria-label="红笔"></button><button class="ink-swatch" style="background:#6c9e91" data-action="color" data-color="#6c9e91" aria-label="绿笔"></button><button class="ink-swatch" style="background:#3e3540" data-action="color" data-color="#3e3540" aria-label="黑笔"></button><button class="slim" data-action="clear">擦板</button></span><button class="slim warn" data-action="end">结束</button></div><div class="screen" id="screen"><div id="screenInner" style="position:relative;z-index:1;pointer-events:none"></div><canvas class="ink-layer" id="inkCanvas"></canvas></div></div>';
+function heading(){
+return '<div class="eyebrow">'+(role==='teacher'?'LESSON PUBLISHER':'TODAY\'S LESSON')+'</div>'+
+'<h2>'+(role==='teacher'?'每日课堂进度 · 发布题目':esc(published?.title||'今日数学课堂'))+'</h2>';
 }
-async function loadLessons(){
-const q=await sb.from('classroom_lessons').select('*').eq('class_id',cls).order('updated_at',{ascending:false}).limit(100);
-if(q.error){status('加载失败：'+err(q.error),true);return;}lessons=q.data||[];lesson=lessons.find(x=>x.id===lesson?.id)||lessons[0]||null;
-at=Math.max(0,Math.min(at,(lesson?.slides?.length||1)-1));renderList();renderEditor();
+function editor(){
+const current=paper(),list=pages(),count=list.length;
+let html=top('课堂发布',true)+'<div class="shell">'+sidebar()+'<section class="workspace editor">'+heading();
+html+='<div class="toolbar"><label>课题名称 <input id="lessonTitle" maxlength="140" style="min-width:250px" value="'+esc(draft.title||'')+'" placeholder="例如：3.2 代数式的概念"></label></div>';
+html+='<div class="toolbar"><label>上课日期 <input id="lessonDate" type="date" value="'+esc(date)+'"></label><button data-act="save" class="smol">保存草稿</button><button data-act="publish" class="primary">发布 / 更新给46号</button>'+
+(published?'<button data-act="withdraw" class="smol">撤回发布</button>':'')+
+'<span class="pub-signal">'+(published?'✓ 该日已发布，可继续修改草稿后重新发布':'○ 未发布 · 46号暂不可见')+'</span></div>'+
+'<section class="panel"><div class="row" style="justify-content:space-between"><div><div class="eyebrow">STEP '+(STAGES.findIndex(s=>s.id===stage)+1)+'</div><h3>'+esc(stageName())+'</h3></div><button data-act="add" class="primary smol">＋ 添加题目页</button></div>'+
+'<div class="page-strip">'+(list.length?list.map((p,i)=>'<button class="page-pill '+(i===pageIndex?'active':'')+'" data-act="page" data-i="'+i+'"><small>第 '+(i+1)+' 页</small><strong>'+esc(p.title||'题目 '+(i+1))+'</strong></button>').join(''):'<p class="muted small">此环节还没有题目。点击“添加题目页”。</p>')+'</div>';
+if(current){
+html+='<div class="page-ops"><button class="smol" data-act="left">← 前移</button><button class="smol" data-act="right">后移 →</button><button class="smol" data-act="duplicate">复制本页</button><button class="smol" data-act="delete">删除本页</button><span class="muted small">每题占一页，顺序就是课堂展示顺序。</span></div>'+
+'<div class="edit-grid"><div><label>题目标题（可选）</label><input id="pageTitle" maxlength="160" value="'+esc(current.title)+'" placeholder="例如：例题 1">'+
+'<label>题目正文（支持 LaTeX 公式、表格、图片标记）</label><textarea id="pageBody" maxlength="14000" placeholder="直接输入或粘贴题目；数学公式用 $...$，也可以上传课本截图。">'+esc(current.body)+'</textarea>'+
+'<div class="import-actions"><label class="linkbtn">插入图片<input type="file" id="fileImage" accept="image/png,image/jpeg,image/webp" hidden></label>'+
+'<label class="linkbtn">导入 Word<input type="file" id="fileWord" accept=".docx" hidden></label>'+
+'<label class="linkbtn">图片识别文字<input type="file" id="fileOCR" accept="image/png,image/jpeg,image/webp" hidden></label></div>'+
+'<p class="small muted">截图可直接粘贴在题干框内。Word 和图片识别沿用神秘房间的导入组件，复杂数学公式需人工校对。</p>'+
+'<p class="small muted">图片标记示例：[IMG:1@85] 表示第 1 张图片，宽度 85%。</p></div>'+
+'<div><div class="preview-label">投屏预览 · 教师审核</div><div id="questionPreview" class="preview"><h3>'+esc(current.title||stageName()+' · 第'+(pageIndex+1)+'题')+'</h3><div id="previewBody"></div></div>'+
+'<div class="help"><strong>只发布题目</strong><br>此版本不设置答案、提示、自动判分或学生作答。一个环节可以加入多页。课本例题建议直接拍图或导入 Word，先校对再发布。</div></div></div>';
+}else html+='<div class="empty">没有题目页。先添加一页，然后输入题目。</div>';
+html+='</section></section></div>';
+app.innerHTML=html;
+if(current)viewContent(current,$('#previewBody'));
 }
-function renderList(){
-let e=$('#lessonList');if(!e)return;
-e.innerHTML=lessons.length?lessons.map(x=>'<button class="lesson-item '+(lesson?.id===x.id?'active':'')+'" data-action="chooseLesson" data-id="'+esc(x.id)+'"><strong>'+esc(x.title)+'</strong><span>'+esc(x.unit||'未分类')+' · '+(x.slides?.length||0)+' 页</span></button>').join(''):'<p class="small muted">还没有保存的课件。</p>';
+function viewer(){
+let title=published?.title||'今日数学课',list=published?.sections?.[stage]||[],p=list[pageIndex]||null;
+let html=top(title,false)+'<div class="shell">'+sidebar()+'<section class="workspace"><div class="viewer-heading"><div><div class="eyebrow">DATE · '+esc(date)+'</div><h2>'+esc(title)+'</h2></div>'+
+'<div class="row"><button data-act="reload" class="smol">刷新课件</button><button data-act="fullscreen" class="smol">'+(full?'退出全屏':'全屏')+'</button></div></div>';
+if(!published){html+='<div class="panel centered"><div class="empty"><h2>今日课件尚未发布</h2><p>请先从正式教师账号选择今天的日期，编辑课堂内容并点击“发布 / 更新给46号”。</p><button data-act="reload" class="primary">重新读取今日进度</button></div></div>';}
+else if(!p){html+='<div class="panel centered"><div class="empty"><h2>当前环节暂无题目</h2><p>选择左侧已有题目的环节。</p></div></div>';}
+else{
+html+='<div class="viewer-area panel"><div class="viewer-heading"><div class="screen-marker">'+esc(stageName())+' · '+(pageIndex+1)+' / '+list.length+'</div><div class="screen-marker">RATIOBOT CLASSROOM</div></div>'+
+'<div class="viewer-title">'+esc(p.title||stageName()+' · 第'+(pageIndex+1)+'题')+'</div><div id="viewerBody" class="viewer-question"></div>'+
+'<div class="viewer-foot"><div class="row"><button data-act="previous">← 上一页</button><button data-act="next" class="primary">下一页 →</button></div>'+
+'<span class="small muted">方向键换页 · 数字 1–6 快速切换环节</span></div></div>';
 }
-function renderEditor(){
-const e=$('#editor');if(!e)return;
-if(!lesson){e.innerHTML='<div class="empty"><h2>创建第一份课堂课件</h2><p>集课前练习、知识引入、例题、练习和检测于一体。</p><button class="primary" data-action="new">新建课件</button></div>';return;}
-if(!Array.isArray(lesson.slides)||!lesson.slides.length)lesson.slides=[newSlide()];
-at=Math.max(0,Math.min(at,lesson.slides.length-1));const s=slide();
-e.innerHTML='<div class="row space"><div><div class="eyebrow">LESSON DESIGN</div><h2>课件编辑器</h2></div><div class="row"><button class="slim green" data-action="save">保存课件</button><button class="slim" data-action="cloneLesson">复制课件</button><button class="slim" data-action="export">导出</button><label style="margin:0"><span class="btn slim">导入</span><input type="file" accept=".json,application/json" id="importFile" hidden></label><button class="slim warn" data-action="deleteLesson">删除</button></div></div>'+
-'<div class="editor-top"><div><label>课件名称</label><input data-field="lessonTitle" value="'+esc(lesson.title)+'"></div><div><label>章节 / 单元</label><input data-field="unit" value="'+esc(lesson.unit||'')+'" placeholder="如 3.2 代数式的概念"></div></div>'+
-'<div class="row space" style="margin-top:16px"><strong>页面编排 · '+lesson.slides.length+' 页</strong><div class="row"><select id="newType" style="max-width:155px">'+Object.entries(TYPES).map(([k,v])=>'<option value="'+k+'">'+v+'</option>').join('')+'</select><button class="slim primary" data-action="add">＋ 加一页</button></div></div>'+
-'<div class="slide-list">'+lesson.slides.map((v,i)=>'<button class="slide-tab '+(i===at?'active':'')+'" data-action="chooseSlide" data-i="'+i+'"><span>'+(i+1)+' · '+esc(typeName(v.type))+'</span>'+esc(v.title)+'</button>').join('')+'</div>'+
-'<div class="row" style="margin:0 0 12px"><button class="slim" data-action="left">↑ 前移</button><button class="slim" data-action="right">↓ 后移</button><button class="slim" data-action="copy">复制此页</button><button class="slim warn" data-action="remove">删除此页</button></div>'+
-'<div class="slide-editor"><div><div class="field-grid"><div><label>环节类型</label><select data-field="type">'+Object.entries(TYPES).map(([k,v])=>'<option value="'+k+'" '+(s.type===k?'selected':'')+'>'+v+'</option>').join('')+'</select></div><div><label>计时秒数（0=不限时）</label><input data-field="seconds" type="number" min="0" max="3600" value="'+Number(s.seconds||0)+'"></div></div>'+
-'<label>标题</label><input data-field="title" value="'+esc(s.title)+'">'+
-'<label>课堂问题 / 内容</label><textarea data-field="prompt" rows="5" placeholder="支持 $a^2$ 或 $$\\frac{1}{2}$$ 数学公式">'+esc(s.prompt)+'</textarea>'+
-'<label>选项（每行一项；留空则文本作答）</label><textarea data-field="choices" rows="3">'+esc(s.choices)+'</textarea>'+
-'<label>思考提示（点击后显示）</label><textarea data-field="hint" rows="2">'+esc(s.hint)+'</textarea>'+
-'<label>解析步骤 / 知识点</label><textarea data-field="steps" rows="3">'+esc(s.steps)+'</textarea>'+
-'<label>参考答案（学生端不可见）</label><textarea data-field="answer" rows="2">'+esc(s.answer)+'</textarea>'+
-'<label>教师私有备注</label><textarea data-field="notes" rows="2">'+esc(s.notes)+'</textarea>'+
-'<div class="upload"><label style="margin:0">插入图片（自动压缩）<input type="file" id="imageFile" accept="image/png,image/jpeg,image/webp"></label>'+(s.image?'<button class="slim warn" data-action="delImage">移除插图</button>':'')+'</div></div>'+
-'<div><div class="row space"><h3>实时预览</h3><button class="slim" data-action="previewAnswer">显示/隐藏解析</button></div><div id="preview" class="preview-card"></div><div class="teacher-help"><b>推荐教学节奏</b>：课前诊断 5–8 分钟 → 引入 → 探究知识点 → 例题分层 → 变式练习 → 2–3 题随堂检测。大屏提供逐步揭示、板书、计时与匿名答题统计。<br>作答记录不自动计入学生 R 积分。</div></div></div>'+
-'<p class="small muted" style="margin-top:12px">公式格式：<code>$3x+2$</code> 或 <code>$$\\frac{1}{2}$$</code>。所有课件保存在云端，不必另存 PPT。</p>';
-renderPreview();
+html+='</section></div>';app.innerHTML=html;
+if(p)viewContent(p,$('#viewerBody'));
+document.body.classList.toggle('fullscreen-mode',full);
 }
-function renderPreview(){let e=$('#preview');if(e&&slide()){e.innerHTML=card(slide(),false,previewAnswer,previewAnswer);math(e);}}
-function mark(){dirty=true;status('等待自动保存…');clearTimeout(saveTimer);saveTimer=setTimeout(save,1300);}
-async function save(){
-clearTimeout(saveTimer);if(!dirty||!lesson||saving)return;
-saving=true;dirty=false;const obj={title:String(lesson.title||'新课件').slice(0,140),unit:String(lesson.unit||'').slice(0,120),slides:lesson.slides,updated_at:new Date().toISOString()},id=lesson.id;
-try{const q=await sb.from('classroom_lessons').update(obj).eq('id',id);if(q.error)throw q.error;
-Object.assign(lessons.find(x=>x.id===id)||{},obj);status('已保存到云端 ✓');}
-catch(e){dirty=true;status('保存失败：'+err(e),true);}
-finally{saving=false;if(dirty)saveTimer=setTimeout(save,3500);}
+function render(){if(role==='teacher')editor();else viewer();}
+function inputChange(e){
+if(role!=='teacher'||!draft)return;
+if(e.target.id==='lessonTitle'){draft.title=e.target.value;mark();return;}
+if(!paper())return;
+if(e.target.id==='pageTitle'){paper().title=e.target.value;mark();renderPreviewOnly();}
+if(e.target.id==='pageBody'){paper().body=e.target.value;mark();renderPreviewOnly();}
 }
-async function create(source){
-if(dirty)await save();
-const obj={class_id:cls,owner_id:user.id,title:String(source?.title||'新课 · 互动课堂').slice(0,140),unit:String(source?.unit||'').slice(0,120),slides:source?.slides||['warmup','intro','knowledge','example','practice','exit'].map(newSlide)};
-const q=await sb.from('classroom_lessons').insert(obj).select().single();if(q.error){status('新建失败：'+err(q.error),true);return;}
-lesson=q.data;at=0;dirty=false;await loadLessons();status('已创建，开始编辑即可。');
+function renderPreviewOnly(){const page=paper();if(!page)return;const h=$('#questionPreview h3');if(h)h.textContent=page.title||stageName()+' · 第'+(pageIndex+1)+'题';viewContent(page,$('#previewBody'));}
+async function changeDate(v){
+if(!validDay(v)||v===date)return;
+if(role==='teacher'&&dirty){const ok=await saveDraft();if(!ok){note('草稿未保存，请先修复错误。',true);return;}}
+date=v;if(role==='teacher')await loadDraft();else await loadPublic(true);
 }
-function swap(d){let j=at+d;if(j<0||j>=lesson.slides.length)return;[lesson.slides[at],lesson.slides[j]]=[lesson.slides[j],lesson.slides[at]];at=j;mark();renderEditor();}
-function edit(el){
-if(!lesson)return;let f=el.dataset.field;if(!f)return;
-if(f==='lessonTitle')lesson.title=el.value;
-else if(f==='unit')lesson.unit=el.value;
-else if(f==='seconds')slide().seconds=Math.max(0,Math.min(3600,Number(el.value)||0));
-else if(f==='type'){slide().type=el.value;renderEditor();}
-else slide()[f]=el.value;
-mark();if(!['lessonTitle','unit','notes'].includes(f))renderPreview();
+async function publish(){
+if(!draft)return;
+if(dirty){const ok=await saveDraft();if(!ok)return;}
+const sections=blankSections();let total=0;
+for(const s of STAGES){for(const p of draft.sections[s.id]){
+if(!p.body.trim())continue;
+sections[s.id].push(safePage(p));total++;
+}}
+if(!total){note('请至少填写一道题后再发布。',true);return;}
+const payload={class_id:classId,lesson_date:date,publisher_id:user.id,title:String(draft.title||'数学课堂 · '+date).slice(0,140),sections,published_at:new Date().toISOString()};
+const q=await sb.from('classroom_day_public').upsert(payload,{onConflict:'class_id,lesson_date'}).select('published_at').single();
+if(q.error){note('发布失败：'+(q.error.message||'请重试'),true);return;}
+published={...payload,published_at:q.data?.published_at};render();note('✓ 已发布！46号打开 '+date+' 的课堂即可看到。');
 }
-function download(){
-const doc={schema:'ratiobot-classroom-1',title:lesson.title,unit:lesson.unit,slides:lesson.slides};
-const blob=new Blob([JSON.stringify(doc,null,2)],{type:'application/json'}),path=window.URL.createObjectURL(blob),link=document.createElement('a');link.href=path;link.download='课堂课件.json';link.click();setTimeout(()=>window.URL.revokeObjectURL(path),2000);
+async function withdraw(){
+if(!published||!window.confirm('确认撤回 '+date+' 的课堂？46号将不再能看到当天课件。'))return;
+const q=await sb.from('classroom_day_public').delete().eq('class_id',classId).eq('lesson_date',date);
+if(q.error){note('撤回失败：'+q.error.message,true);return;}
+published=null;render();note('已撤回发布。草稿仍保留。');
 }
-async function importJson(file){
-if(!file||file.size>3000000){status('文件过大（限 3 MB）',true);return;}
-try{let data=JSON.parse(await file.text());if(!Array.isArray(data.slides)||!data.slides.length||data.slides.length>80)throw Error('课件页数应为1–80');
-let slides=data.slides.map(s=>{let r=newSlide(TYPES[s.type]?s.type:'blank');for(let k of ['title','prompt','choices','hint','steps','answer','notes','image'])if(typeof s[k]==='string')r[k]=s[k].slice(0,k==='image'?300000:10000);r.seconds=Math.max(0,Math.min(3600,Number(s.seconds)||0));if(r.image&&!/^data:image\/(jpeg|png|webp);base64,/.test(r.image))r.image='';return r;});
-await create({title:String(data.title||'导入课件')+'（导入）',unit:data.unit||'',slides});}
-catch(e){status('导入失败：'+err(e),true);}
-}
-async function imageFile(file){
-if(!file)return;
-if(!['image/png','image/jpeg','image/webp'].includes(file.type)){status('仅支持 PNG/JPEG/WebP',true);return;}
+async function importPicture(file,ocr=false){
+if(!file||!paper()||busyImport)return;
+busyImport=true;note(ocr?'正在识别图片，请稍候…':'正在压缩课本图片…');
 try{
-let bmp=await createImageBitmap(file),factor=Math.min(1,1200/Math.max(bmp.width,bmp.height));let cv=document.createElement('canvas');
-cv.width=Math.round(bmp.width*factor);cv.height=Math.round(bmp.height*factor);let ctx=cv.getContext('2d');ctx.fillStyle='#fffdf8';ctx.fillRect(0,0,cv.width,cv.height);ctx.drawImage(bmp,0,0,cv.width,cv.height);bmp.close?.();
-let out=cv.toDataURL('image/jpeg',.68);if(out.length>220000)out=cv.toDataURL('image/jpeg',.42);if(out.length>270000)throw Error('图片仍过大，请先裁剪后导入');
-slide().image=out;mark();renderEditor();status('图片已压缩并加入本页。');
-}catch(e){status('图片处理失败：'+err(e),true);}
+const q=window.QuestionImport;if(!q)throw Error('图片导入组件未加载');
+const target=paper(),id=target.id;
+const result=ocr?await q.ocr(file,s=>note(s),{cancelled:false}):{images:[await q.imageData(file,{preserveAlpha:true})],text:'',note:'图片已插入'};
+const current=paper();if(!current||current.id!==id){note('当前页已切换，请重新导入。',true);return;}
+if(result.text?.trim())current.body+=(current.body.trim()?'\n\n':'')+result.text.trim();
+for(const image of (result.images||[])){
+ if(current.images.length>=8)break;
+ current.images.push(image);current.body+=(current.body.trim()?'\n\n':'')+'[IMG:'+current.images.length+'@85]';
 }
-function stopClock(){if(tick){clearInterval(tick);tick=null;}}
-function showClock(){let e=$('#timerLabel');if(e){e.textContent=String(Math.floor(remaining/60)).padStart(2,'0')+':'+String(remaining%60).padStart(2,'0');e.classList.toggle('low',remaining>0&&remaining<15);}}
-function resetClock(){stopClock();remaining=Number(slide()?.seconds||0);showClock();}
-function timer(){if(tick){stopClock();return;}if(!remaining)remaining=Number(slide()?.seconds||120);showClock();tick=setInterval(()=>{remaining=Math.max(0,remaining-1);showClock();if(!remaining)stopClock();},1000);}
-async function publish(end=false){
-if(!live||!lesson)return;
-const s=slide(),choices=opts(s);
-const obj={class_id:cls,presenter_id:user.id,lesson_id:end?null:lesson.id,title:end?'':lesson.title,slide_id:end?'':s.id,slide_title:end?'':s.title,prompt:end?'':s.prompt,choices:end?[]:choices,question_type:choices.length?'choice':'text',is_open:!end&&open&&QUESTION.has(s.type),updated_at:new Date().toISOString()};
-const q=await sb.from('classroom_live').upsert(obj,{onConflict:'class_id'});
-if(q.error)status('投屏发布失败：'+err(q.error),true);
+mark();render();note(result.note||'导入完成，请检查题目后发布。');
+}catch(e){note('导入失败：'+(e?.message||e),true);}finally{busyImport=false;}
 }
-function correct(a,s){
-let target=String(s.answer||'').replace(/\s/g,'').toLowerCase(),value=String(a.answer||'').replace(/\s/g,'').toLowerCase();if(!target)return null;
-let i=opts(s).findIndex(x=>x.replace(/\s/g,'').toLowerCase()===target);
-return value===target||(i>=0&&value===String.fromCharCode(97+i));
-}
-function statsHtml(s){
-let output='<div class="present-response"><b>匿名作答 · '+answers.length+' 人</b>',options=opts(s);
-if(options.length)output+='<div class="bars">'+options.map((_,i)=>{let n=answers.filter(a=>a.answer===String.fromCharCode(i+65)).length;return '<div class="bar-row"><b>'+String.fromCharCode(65+i)+'</b><div class="bar-track"><div class="bar-fill" style="width:'+(answers.length?Math.round(100*n/answers.length):0)+'%"></div></div><strong>'+n+' 人</strong></div>';}).join('')+'</div>';
-else if(answers.length)output+='<div class="anon-answers">'+answers.slice(0,45).map(a=>'<span>'+esc(a.answer).slice(0,500)+'</span>').join('')+'</div>';
-if(s.answer)output+='<p>严格匹配参考答案：<b>'+answers.filter(a=>correct(a,s)).length+' / '+answers.length+'</b></p><p class="small">文本题仅按字符严格比较，开放题需教师人工判断。</p>';
-return output+'</div>';
-}
-function renderScreen(){
-if(!present||!slide())return;
-const s=slide(),e=$('#screenInner');e.innerHTML=card(s,true,revealHint,revealAnswer)+(showStats?statsHtml(s):'')+'<div class="screen-foot"><span>'+(at+1)+' / '+lesson.slides.length+' · '+esc(lesson.unit||'')+'</span><span>← → 翻页 · H 提示 · A 解析 · P 画笔</span></div>';math(e);
-$('#presentTitle').textContent=lesson.title;
-$('#acceptBtn').disabled=!QUESTION.has(s.type);$('#acceptBtn').textContent=open?'关闭作答':'开放作答';
-$('#liveStatus').textContent=(open?'● 正在收集答案':'○ 当前页已投屏')+' · '+answers.length+' 人';
-$('#penBtn').textContent=ink==='pen'?'画笔已开':'画笔';canvas?.classList.toggle('active',ink==='pen');
-}
-async function poll(){
-if(!present||!lesson)return;
-const s=slide(),q=await sb.from('classroom_responses').select('user_id,answer,updated_at').eq('class_id',cls).eq('lesson_id',lesson.id).eq('slide_id',s.id).limit(100);
-if(q.error)return;
-let data=q.data||[],changed=JSON.stringify(data)!==JSON.stringify(answers);answers=data;
-if(changed&&showStats)renderScreen();else if($('#liveStatus'))$('#liveStatus').textContent=(open?'● 正在收集答案':'○ 已投屏')+' · '+answers.length+' 人';
-}
-async function begin(){
-if(!lesson)return;await save();present=true;live=true;open=false;revealHint=revealAnswer=showStats=false;answers=[];ink='off';
-$('#projector').classList.remove('hidden');installInk();resetClock();await publish();renderScreen();
-if(poller)clearInterval(poller);poller=setInterval(()=>{if(!document.hidden)poll();},3000);
-try{await $('#projector').requestFullscreen?.();}catch(e){}
-}
-async function end(){
-stopClock();if(poller)clearInterval(poller);poller=null;open=false;await publish(true);live=false;present=false;
-try{if(document.fullscreenElement)await document.exitFullscreen();}catch(e){}
-$('#projector').classList.add('hidden');status('授课已结束。');
-}
-async function move(d){
-let j=at+d;if(!lesson||j<0||j>=lesson.slides.length)return;
-at=j;open=false;answers=[];revealHint=revealAnswer=showStats=false;resetClock();clearInk();await publish();renderScreen();
-}
-function installInk(){
-canvas=$('#inkCanvas');let screen=$('#screen'),r=screen.getBoundingClientRect(),d=window.devicePixelRatio||1;
-canvas.width=Math.round(r.width*d);canvas.height=Math.round(r.height*d);
-let cx=canvas.getContext('2d');cx.scale(d,d);cx.lineCap='round';cx.lineJoin='round';
-canvas.onpointerdown=e=>{if(ink!=='pen')return;drawing=true;canvas.setPointerCapture(e.pointerId);const b=canvas.getBoundingClientRect();cx.beginPath();cx.moveTo(e.clientX-b.left,e.clientY-b.top);cx.strokeStyle=pen;cx.lineWidth=3;};
-canvas.onpointermove=e=>{if(!drawing)return;const b=canvas.getBoundingClientRect();cx.lineTo(e.clientX-b.left,e.clientY-b.top);cx.stroke();};
-canvas.onpointerup=canvas.onpointercancel=()=>{drawing=false;};
-}
-function clearInk(){if(canvas)canvas.getContext('2d').clearRect(0,0,canvas.width,canvas.height);}
-function studentShell(){
-app.innerHTML='<header class="top"><div class="brand">▣ RATIOBOT · 课堂作答</div><span class="tag">'+esc(member.classes?.name||'当前班级')+'</span><a class="btn" href="./">返回数学基地</a></header>'+
-'<main class="student-shell"><div class="student-heading"><div class="eyebrow">LIVE CLASSROOM</div><h1>随堂互动</h1><p class="muted">跟随教师进度。允许在作答开放期间修改答案。</p></div><section class="panel student-card" id="studentCard"><div class="empty">正在连接课堂…</div></section><p class="small muted">每 6 秒同步课堂状态。</p></main>';
-}
-async function fetchStudent(){
-const q=await sb.from('classroom_live').select('lesson_id,title,slide_id,slide_title,prompt,choices,question_type,is_open,updated_at').eq('class_id',cls).maybeSingle();
-if(q.error){$('#studentCard').innerHTML='<div class="empty">加载失败：'+esc(err(q.error))+'</div>';return;}
-let data=q.data;
-if(!data?.lesson_id||!data.slide_id){studentData=null;$('#studentCard').innerHTML='<div class="empty"><h2>暂时没有正在进行的课堂</h2><p>请等老师投屏后再作答。</p></div>';return;}
-let changed=!studentData||JSON.stringify(data)!==JSON.stringify(studentData);
-if(!studentData||studentData.slide_id!==data.slide_id){studentPick='';studentText='';}
-studentData=data;if(changed)renderStudent();
-}
-function renderStudent(){
-if(!studentData)return;const d=studentData,choices=Array.isArray(d.choices)?d.choices:[],box=$('#studentCard');
-let out='<div class="eyebrow">'+esc(d.title||'课堂')+'</div><h2>'+esc(d.slide_title||'当前页面')+'</h2>';
-if(d.is_open){
-out+='<div class="question">'+fmt(d.prompt)+'</div>';
-if(choices.length)out+='<div class="choice-list">'+choices.map((o,i)=>{let k=String.fromCharCode(65+i);return '<button class="choice '+(studentPick===k?'selected':'')+'" data-action="pick" data-value="'+k+'"><b>'+k+'</b> '+fmt(o)+'</button>';}).join('')+'</div>';
-else out+='<label>我的答案</label><textarea id="studentAnswer" maxlength="1500" placeholder="输入答案">'+esc(studentText)+'</textarea>';
-out+='<div class="foot-actions"><span class="status" id="studentNote">'+(studentText?'已提交，可修改':'请完成作答')+'</span><button class="primary" data-action="submit">提交答案</button></div>';
-}else out+='<div class="hintbox"><b>正在讲解 / 等待开放作答</b><p style="margin:5px 0 0">老师开放题目后，这里会出现作答区。</p></div>';
-box.innerHTML=out;math(box);
-}
-async function submit(){
-const d=studentData;if(!d?.is_open)return;
-const answer=d.question_type==='choice'?studentPick:String($('#studentAnswer')?.value||'').trim();
-if(!answer){$('#studentNote').textContent='请选择或填写答案。';return;}
-const q=await sb.from('classroom_responses').upsert({class_id:cls,lesson_id:d.lesson_id,slide_id:d.slide_id,user_id:user.id,answer,updated_at:new Date().toISOString()},{onConflict:'class_id,lesson_id,slide_id,user_id'});
-$('#studentNote').textContent=q.error?'提交失败：'+err(q.error):'✓ 已提交，可在开放期间修改';if(!q.error)studentText=answer;
-}
-document.addEventListener('input',e=>{if(e.target.dataset.field)edit(e.target);if(e.target.id==='studentAnswer')studentText=e.target.value;});
-document.addEventListener('change',e=>{if(e.target.dataset.field)edit(e.target);if(e.target.id==='imageFile')imageFile(e.target.files?.[0]);if(e.target.id==='importFile')importJson(e.target.files?.[0]);});
-document.addEventListener('click',async e=>{
-let b=e.target.closest('[data-action]');if(!b)return;
+async function importWord(file){
+if(!file||!paper()||busyImport)return;
+busyImport=true;note('正在读取 Word，请稍候…');
 try{
-switch(b.dataset.action){
-case 'new':await create();break;
-case 'sample':await create({title:'3.2 代数式的概念 · 示例课',unit:'第3章 · 代数式',slides:sample()});break;
-case 'chooseLesson':if(dirty)await save();lesson=lessons.find(l=>l.id===b.dataset.id);at=0;renderList();renderEditor();break;
-case 'chooseSlide':at=Number(b.dataset.i)||0;renderEditor();break;
-case 'add':lesson.slides.push(newSlide($('#newType').value));at=lesson.slides.length-1;mark();renderEditor();break;
-case 'left':swap(-1);break;
-case 'right':swap(1);break;
-case 'copy':{let x=JSON.parse(JSON.stringify(slide()));x.id=sid();lesson.slides.splice(at+1,0,x);at++;mark();renderEditor();break;}
-case 'remove':if(lesson.slides.length>1){lesson.slides.splice(at,1);at=Math.max(0,at-1);mark();renderEditor();}break;
-case 'delImage':slide().image='';mark();renderEditor();break;
-case 'save':dirty=true;await save();break;
-case 'cloneLesson':await create({title:lesson.title+'（副本）',unit:lesson.unit,slides:lesson.slides.map(s=>({...s,id:sid()}))});break;
-case 'deleteLesson':if(confirm('删除此课件及它关联的课堂作答记录？')){let q=await sb.from('classroom_lessons').delete().eq('id',lesson.id);if(q.error)throw q.error;lesson=null;dirty=false;await loadLessons();}break;
-case 'export':download();break;
-case 'previewAnswer':previewAnswer=!previewAnswer;renderPreview();break;
-case 'present':await begin();break;
-case 'end':await end();break;
-case 'previous':await move(-1);break;
-case 'next':await move(1);break;
-case 'hint':revealHint=!revealHint;renderScreen();break;
-case 'solution':revealAnswer=!revealAnswer;renderScreen();break;
-case 'accept':if(QUESTION.has(slide()?.type)){open=!open;await publish();renderScreen();poll();}break;
-case 'stats':showStats=!showStats;await poll();renderScreen();break;
-case 'timer':timer();break;
-case 'pen':ink=ink==='pen'?'off':'pen';renderScreen();break;
-case 'clear':clearInk();break;
-case 'color':pen=b.dataset.color;ink='pen';renderScreen();break;
-case 'pick':studentPick=b.dataset.value;renderStudent();break;
-case 'submit':await submit();break;
+const target=paper(),id=target.id,r=await window.QuestionImport.docx(file);
+if(!paper()||paper().id!==id){note('当前页已切换，请重新导入。',true);return;}
+const parsed=window.QuestionImport.parse(r.text||'');
+const title=parsed.title||'',body=parsed.body||r.text||'';
+if(title&&!target.title)target.title=title.slice(0,160);
+target.body+=(target.body.trim()?'\n\n':'')+body.trim();
+for(const pic of r.images||[]){if(target.images.length>=8)break;target.images.push(pic);target.body+=(target.body.trim()?'\n\n':'')+'[IMG:'+target.images.length+'@85]';}
+mark();render();note(r.note||'Word 题目已导入，发布前请校对。');
+}catch(e){note('Word 导入失败：'+(e?.message||e),true);}finally{busyImport=false;}
 }
-}catch(x){status('操作失败：'+err(x),true);}
+function addPage(){
+if(!draft)return;
+if(pages().length>=50){note('每个环节最多 50 页。',true);return;}
+pages().push(createPage());pageIndex=pages().length-1;mark();render();
+}
+async function clickAction(button){
+const act=button.dataset.act;
+if(act==='stage'){stageSelect(button.dataset.id);return;}
+if(act==='page'){pageIndex=Math.max(0,Math.min(Number(button.dataset.i)||0,pages().length-1));render();return;}
+if(act==='reload'){await loadPublic(true);note('已重新读取发布内容。');return;}
+if(act==='fullscreen'){
+ try{
+  if(!document.fullscreenElement)await document.documentElement.requestFullscreen();else await document.exitFullscreen();
+ }catch(e){note('浏览器不支持全屏：'+(e?.message||''),true);}
+ return;
+}
+if(act==='previous'||act==='next'){changePage(act==='next'?1:-1);return;}
+if(role!=='teacher')return;
+if(act==='add'){addPage();return;}
+if(act==='left'||act==='right'){
+const i=pageIndex,j=i+(act==='left'?-1:1),arr=pages();if(j<0||j>=arr.length)return;
+[arr[i],arr[j]]=[arr[j],arr[i]];pageIndex=j;mark();render();return;
+}
+if(act==='duplicate'){
+const p=paper();if(!p)return;const copy=safePage(p);copy.id=unique();pages().splice(pageIndex+1,0,copy);pageIndex++;mark();render();return;
+}
+if(act==='delete'){
+if(!paper()||!window.confirm('删除当前题目页？'))return;
+pages().splice(pageIndex,1);pageIndex=Math.max(0,Math.min(pageIndex,pages().length-1));mark();render();return;
+}
+if(act==='save'){await saveDraft(true);return;}
+if(act==='publish'){await publish();return;}
+if(act==='withdraw'){await withdraw();return;}
+}
+document.addEventListener('input',e=>inputChange(e));
+document.addEventListener('change',async e=>{
+if(e.target.id==='lessonDate'){await changeDate(e.target.value);return;}
+if(e.target.id==='fileImage'){await importPicture(e.target.files?.[0]);}
+if(e.target.id==='fileOCR'){await importPicture(e.target.files?.[0],true);}
+if(e.target.id==='fileWord'){await importWord(e.target.files?.[0]);}
 });
+document.addEventListener('paste',async e=>{
+if(role!=='teacher'||e.target.id!=='pageBody')return;
+const item=Array.from(e.clipboardData?.items||[]).find(it=>it.type.startsWith('image/'));
+if(item){e.preventDefault();await importPicture(item.getAsFile());}
+});
+document.addEventListener('click',e=>{const b=e.target.closest('[data-act]');if(b)clickAction(b).catch(x=>note(x.message||String(x),true));});
 document.addEventListener('keydown',e=>{
-if(!present||/INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName||''))return;
-if(['ArrowRight','ArrowLeft',' '].includes(e.key))e.preventDefault();
-if(e.key==='ArrowRight'||e.key===' ')move(1);
-else if(e.key==='ArrowLeft')move(-1);
-else if(e.key.toLowerCase()==='h'){revealHint=!revealHint;renderScreen();}
-else if(e.key.toLowerCase()==='a'){revealAnswer=!revealAnswer;renderScreen();}
-else if(e.key.toLowerCase()==='p'){ink=ink==='pen'?'off':'pen';renderScreen();}
+if(role!=='viewer'||/INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName||''))return;
+if(e.key==='ArrowRight'||e.key==='ArrowLeft'){e.preventDefault();changePage(e.key==='ArrowRight'?1:-1);}
+if(/^[1-6]$/.test(e.key))stageSelect(STAGES[Number(e.key)-1].id);
 });
+document.addEventListener('fullscreenchange',()=>{full=!!document.fullscreenElement;document.body.classList.toggle('fullscreen-mode',full);const b=$('[data-act="fullscreen"]');if(b)b.textContent=full?'退出全屏':'全屏';});
 window.addEventListener('beforeunload',e=>{if(dirty){e.preventDefault();e.returnValue='';}});
-window.addEventListener('pagehide',()=>{if(poller)clearInterval(poller);if(studentPoller)clearInterval(studentPoller);stopClock();});
 boot();
 })();
