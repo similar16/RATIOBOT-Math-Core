@@ -3,6 +3,11 @@ const assert=require('assert'),fs=require('fs'),path=require('path'),vm=require(
 const root=path.resolve(process.env.SITE_DIR||'site');
 const read=n=>fs.readFileSync(path.join(root,n),'utf8');
 const html=read('classroom.html'),src=read('classroom.js'),entry=read('classroom-entry.js'),css=read('classroom.css'),home=read('index.html');
+const textbook=read('textbook-pack.js');
+new vm.Script(textbook,{filename:'textbook-pack.js'});
+assert(html.includes('textbook-pack.js')&&html.includes('assets/import/jszip.min.js'),'teacher classroom loads ZIP importer');
+assert(src.includes('function ensurePageImageMarkers(raw,p)'),'image-only page display fallback exists');
+assert(textbook.includes("return '[IMG:'+(idx+1)"),'textbook importer sets image markers');
 new vm.Script(src,{filename:'classroom.js'});new vm.Script(entry,{filename:'classroom-entry.js'});
 assert(html.includes('id="classroomApp"'));
 assert(html.includes('question-content.js')&&html.includes('question-import.js'));
@@ -46,7 +51,7 @@ const pub={title:'3.2 代数式的概念',sections:{warmup:[{id:'q1',title:'课�
 {id:'ques1',branch:'question',title:'问题一',body:'问题题目B',images:[]},
 {id:'act2',branch:'activity',title:'活动二',body:'活动题目C',images:[]},
 {id:'old1',title:'旧知识点',body:'未分类的历史内容',images:[]}
-],example:[{id:'q2',title:'例题1',body:'$2a$',images:[]}],practice:[],exit:[{id:'q3',title:'课堂检测',body:'$4a$',images:[]}]},published_at:'2026-10-10T01:00:00Z'};
+],example:[{id:'q2',title:'例题1',body:'$2a$',images:['data:image/png;base64,aGVsbG8='],sourceKind:'textbook-2026'}],practice:[],exit:[{id:'q3',title:'课堂检测',body:'$4a$',images:[]}]},published_at:'2026-10-10T01:00:00Z'};
 const draft={title:'教师草稿课题',sections:pub.sections};
 const teacherId='85b3350a-5457-4adb-be73-9c9c4e1c46e7',testerId='d12f28d3-a8d3-4fc3-a2e0-0aeab43e9920';
 let serverUnlocked=false; // Mock server holds per-day unlock state for these tests.
@@ -134,6 +139,7 @@ d.window.document.querySelector('[data-act="previous"]').click();
 assert(d.window.document.body.textContent.includes('问题一'),'previous returns to earlier branch');
 d.window.document.querySelector('[data-act="stage"][data-id="example"]').click();
 assert(d.window.document.body.textContent.includes('例题1'),'other major stages remain navigable');
+assert(d.window.document.querySelector('#viewerBody').innerHTML.includes('[IMG:1@100]'),'textbook page displays image even when no marker exists in body');
 assert.equal(d.window.document.querySelectorAll('.substage-tab').length,0,'substage buttons do not leak into other stages');
 d.window.close();
 d=await page(teacherId,'teacher',null);
