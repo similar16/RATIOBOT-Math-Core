@@ -43,6 +43,11 @@ function convertLesson(L,i,byPath,classId){
   }
   var original=item.content?.kind==='original-image';
   var body=original?'':text(item.content?.text_latex||item.content?.text_plain||'');
+  // Images must be explicitly referenced: QuestionContent renders only [IMG:n@width].
+  // The original exercise/question is image-only, so this also makes its body visible.
+  if(assets.length)body+=(body.trim()?'\n\n':'')+assets.map(function(_,idx){
+   return '[IMG:'+(idx+1)+'@'+(original?100:85)+']';
+  }).join('\n\n');
   var pg=Number(item.page)||Number(L.printed_start)||0;
   var p={
    id:'textbook-'+keyFor(i)+'-'+(j+1),title:item.type+(item.label&&item.label!==item.type?' · '+item.label:'')+'｜教材P'+pg,
