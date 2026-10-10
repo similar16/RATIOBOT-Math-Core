@@ -107,9 +107,24 @@ function classroomMathSize(source){
  return String(source).replace(/(\$\$[\s\S]*?\$\$|\\\[[\s\S]*?\\\]|\\\([\s\S]*?\\\]|(?<!\\)\$(?:\\.|[^\n$])+?(?<!\\)\$)/g,
   part=>part.replace(/\\(?:tfrac|frac)(?![a-zA-Z])/g,'\\dfrac'));
 }
+function ensurePageImageMarkers(raw,p){
+ // Older lesson records and the 2026 image-only textbook columns store images
+ // in their own array but contain no [IMG] token in the editable text.
+ // Insert only missing markers in the display layer; never change teacher text.
+ let output=String(raw||'');
+ const used=new Set(Array.from(output.matchAll(/(?:^|\n)\s*\[IMG:(\d+)(?:@\d{1,3})?\]\s*(?=\n|$)/gi),m=>Number(m[1])));
+ const missing=[];
+ (Array.isArray(p?.images)?p.images:[]).forEach((src,i)=>{
+   if(typeof src==='string'&&src.startsWith('data:image/')&&!used.has(i+1)){
+     missing.push('[IMG:'+(i+1)+'@'+(p?.sourceKind==='textbook-2026'?100:85)+']');
+   }
+ });
+ if(missing.length)output+=(output.trim()?'\n\n':'')+missing.join('\n\n');
+ return output;
+}
 function viewContent(p,el,showAnswer=false){
  if(!el)return;
- const display=recallDisplayText(p,showAnswer);
+ const display=ensurePageImageMarkers(recallDisplayText(p,showAnswer),p);
  const cleaned=classroomMathSize(String(display).replace(/\[(ANS|OPT|PROOF):([A-Za-z0-9_-]{1,32})\]/gi,'□'));
  if(window.QuestionContent){el.innerHTML=window.QuestionContent.content(cleaned,p?.images||[]);window.QuestionContent.math(el);}
  else el.textContent=cleaned;
