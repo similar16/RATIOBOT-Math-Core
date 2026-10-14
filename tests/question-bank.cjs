@@ -3,7 +3,7 @@ const dom=new JSDOM('<!doctype html><select id="teacherClassSelect"><option>测�
 w.confirm=()=>true;w.JSZip=JSZip;for(const p of ['node_modules/katex/dist/katex.min.js','node_modules/katex/dist/contrib/auto-render.min.js'])w.eval(fs.readFileSync(p,'utf8'));
 for(const file of ['question-content','question-import','question-bank'])w.eval(fs.readFileSync('site/'+file+'.js','utf8'));
 let user={user:{id:'teacher1'},role:'teacher'},rows=[],calls=[],fail=false;
-const client={from(){let filters=[],payload,mode='read';const q={select(){return q},eq(k,v){filters.push([k,v]);return q},order(){return q},maybeSingle(){return run(true)},insert(v){payload=v;mode='insert';return q},update(v){payload=v;mode='update';return q},then(ok,bad){return run(false).then(ok,bad)}};async function run(single){if(fail)return {error:Error('offline')};let data=rows.filter(x=>filters.every(([k,v])=>x[k]===v));if(mode==='insert'){const row={id:'q'+(rows.length+1),...payload};rows.push(row);data=[row]}if(mode==='update')data.forEach(x=>Object.assign(x,payload));return {data:single?data[0]:JSON.parse(JSON.stringify(data)),error:null}}return q},async rpc(name,args){calls.push({name,args});return {data:'set1',error:null}}};
+const client={from(){let filters=[],payload,mode='read';const q={select(){return q},eq(k,v){filters.push([k,v]);return q},order(){return q},maybeSingle(){return run(true)},insert(v){payload=v;mode='insert';return q},update(v){payload=v;mode='update';return q},delete(){mode='delete';return q},then(ok,bad){return run(false).then(ok,bad)}};async function run(single){if(fail)return {error:Error('offline')};let data=rows.filter(x=>filters.every(([k,v])=>x[k]===v));if(mode==='insert'){const row={id:'q'+(rows.length+1),...payload};rows.push(row);data=[row]}if(mode==='update')data.forEach(x=>Object.assign(x,payload));if(mode==='delete'){const removed=new Set(data.map(x=>x.id));rows=rows.filter(x=>!removed.has(x.id));}return {data:single?data[0]:JSON.parse(JSON.stringify(data)),error:null}}return q},async rpc(name,args){calls.push({name,args});return {data:'set1',error:null}}};
 const ui=w.mountQuestionBank({client:()=>client,identity:()=>user}),$=s=>d.querySelector(s),tick=()=>new Promise(r=>setTimeout(r,10));
 function input(id,value){const n=$(id);if(n.matches('[contenteditable=true]'))n.textContent=value;else n.value=value;n.dispatchEvent(new w.Event('input',{bubbles:true}));}
 (async()=>{
@@ -13,6 +13,15 @@ function input(id,value){const n=$(id);if(n.matches('[contenteditable=true]'))n.
  assert.equal(w.QuestionContent.images(['javascript:alert(1)','https://external.invalid/a.png']), '');assert.equal(w.QuestionContent.safeImage('data:image/png;base64,'+'A'.repeat(2300000)),true);
  await ui.loadTeacher('class1');
  const bs=String.fromCharCode(92);assert.equal($('#qbFraction'),null);input('#qbBody','计算 $'+bs+'frac{1}{2}$ 与 $a^2$');assert.equal($('#qbBody').textContent.includes('$'+bs+'frac{1}{2}$'),true);assert.equal($('#qbBody').querySelector('.katex'),null);assert.equal($('#qbBody').querySelector('.qb-math-token'),null);assert.equal($('#qbPreview').querySelectorAll('.katex').length,2);
+ const tikzSource=String.raw`\\begin{tikzpicture}\n\\draw (0,0) -- (2,1);\n\\end{tikzpicture}`;
+ const tikzHtml=w.QuestionContent.content(tikzSource);
+ assert.match(tikzHtml,/language-tikz/);
+ assert.match(tikzHtml,/\\\\draw/);
+ assert.doesNotMatch(tikzHtml,/type="text\/tikz"/);
+ assert($('#qbInsertTikz'),'teacher toolbar offers TikZ source insertion');
+ $('#qbInsertTikz').click();
+ assert($('#qbPreview pre.language-tikz'),'TikZ preview shows a code target for the TeX renderer');
+ input('#qbBody','计算 $'+bs+'frac{1}{2}$ 与 $a^2$');
  w.prompt=()=> '4*9';$('#qbInsertTable').click();assert.equal($('#qbPreview').querySelectorAll('table tr').length,4);assert.equal($('#qbPreview').querySelectorAll('table tr:first-child th').length,9);const tableBlock=$('#qbBody .qb-rich-table-block'),rowSize=tableBlock.querySelector('[data-table-size="row"]'),colSize=tableBlock.querySelector('[data-table-size="col"]');assert.equal(tableBlock.dataset.rowHeight,'42');assert.equal(tableBlock.dataset.colWidth,'90');rowSize.value='54';rowSize.dispatchEvent(new w.Event('input',{bubbles:true}));colSize.value='120';colSize.dispatchEvent(new w.Event('input',{bubbles:true}));assert.equal(tableBlock.dataset.rowHeight,'54');assert.equal(tableBlock.dataset.colWidth,'120');assert.match($('#qbPreview .qb-sized-table').getAttribute('style'),/54px/);assert.match($('#qbPreview .qb-sized-table').getAttribute('style'),/120px/);
  w.prompt=()=> 'https://www.geogebra.org/m/RHYH3UQ8';$('#qbInsertGgb').click();const ggb=$('#qbPreview [data-ggb]');assert(ggb);assert.equal(ggb.querySelector('iframe'),null);ggb.querySelector('button').click();assert.match(ggb.querySelector('iframe').src,/geogebra.org\/material\/iframe\/id\/RHYH3UQ8/);
  assert.equal(w.QuestionContent.ggbId('https://evil.example/m/RHYH3UQ8'),'');
@@ -26,5 +35,12 @@ function input(id,value){const n=$(id);if(n.matches('[contenteditable=true]'))n.
  $('#qbNew').click();input('#qbTitle','另一题');input('#qbBody','计算2+2，选择答案：');w.prompt=()=> 'B';$('#qbBody').focus();$('#qbChoiceBox').click();assert($('#qbBody .qb-choice-token'));assert.equal($('#qbPreview [data-inline-choice]').value,'A');assert($('#qbProofBox'));$('#qbProofBox').click();assert($('#qbBody .qb-proof-token'));assert($('#qbPreview [data-proof-answer]'));input('#qbhint0','观察');input('#qbstep0','相加');input('#qbAnswer','4');$('[data-qb-inline-answer="a2"]').value='判定逻辑完整';$('[data-qb-inline-answer="a2"]').dispatchEvent(new w.Event('input',{bubbles:true}));$('#qbReviewed').checked=true;await $('#qbSave').onclick();assert.equal(rows.length,2);assert.equal(rows[1].inline_answers.some(x=>x.kind==='choice'&&x.answer==='B'),true);assert.equal(rows[1].inline_answers.some(x=>x.kind==='proof'),true);
  const selects=d.querySelectorAll('[data-qb-select]');selects.forEach(x=>{x.checked=true;x.onchange()});await $('#qbPublish').onclick();assert.equal(calls.length,1);assert.equal(calls[0].args.question_ids.length,2);assert.equal(calls[0].args.target_class,'class1');
  await $('[data-qb-edit="q1"]').onclick();assert.equal($('#qbTitle').value,'测试题（已修改）');$('#qbAddHint').click();assert.equal(d.querySelectorAll('[data-qb-hint]').length,2);input('#qbhint1','第二提示');$('[data-move="hints:1:-1"]').click();assert.match($('#qbhint0').textContent,/第二提示/);await $('#qbPublish').onclick();assert.equal(calls.length,1);assert.match($('#qbStatus').textContent,/尚未全部校对/);
+ assert($('[data-qb-remove="q2"]'),'teacher question list has delete control');
+ const oldPublishedCalls=calls.length;
+ await $('[data-qb-remove="q2"]').onclick();
+ assert.equal(rows.length,1,'deleting teacher question actually removes it from cloud bank mock');
+ assert(!d.querySelector('[data-qb-edit="q2"]'),'removed question disappears from list');
+ assert.equal(calls.length,oldPublishedCalls,'removing a bank original does not alter published challenge snapshots');
+ assert.match($('#qbStatus').textContent,/已删除/);
  user={role:'student',user:{id:'s1'}};ui.reset();assert.equal($('#teacherBankContent').textContent,'');w.close();console.log('PASS question bank: raw LaTeX editing, 4x9 table support, field-scoped images, inline controls, GGB, autosave and publication');
 })().catch(e=>{console.error(e);w.close();process.exitCode=1});
