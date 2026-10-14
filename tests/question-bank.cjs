@@ -13,10 +13,12 @@ function input(id,value){const n=$(id);if(n.matches('[contenteditable=true]'))n.
  assert.equal(w.QuestionContent.images(['javascript:alert(1)','https://external.invalid/a.png']), '');assert.equal(w.QuestionContent.safeImage('data:image/png;base64,'+'A'.repeat(2300000)),true);
  await ui.loadTeacher('class1');
  const bs=String.fromCharCode(92);assert.equal($('#qbFraction'),null);input('#qbBody','计算 $'+bs+'frac{1}{2}$ 与 $a^2$');assert.equal($('#qbBody').textContent.includes('$'+bs+'frac{1}{2}$'),true);assert.equal($('#qbBody').querySelector('.katex'),null);assert.equal($('#qbBody').querySelector('.qb-math-token'),null);assert.equal($('#qbPreview').querySelectorAll('.katex').length,2);
- const tikzSource=String.raw`\\begin{tikzpicture}\n\\draw (0,0) -- (2,1);\n\\end{tikzpicture}`;
+ const tikzSource=String.raw`\begin{tikzpicture}
+\draw (0,0) -- (2,1);
+\end{tikzpicture}`;
  const tikzHtml=w.QuestionContent.content(tikzSource);
  assert.match(tikzHtml,/language-tikz/);
- assert.match(tikzHtml,/\\\\draw/);
+ assert(tikzHtml.includes('\\draw'));
  assert.doesNotMatch(tikzHtml,/type="text\/tikz"/);
  assert($('#qbInsertTikz'),'teacher toolbar offers TikZ source insertion');
  $('#qbInsertTikz').click();
