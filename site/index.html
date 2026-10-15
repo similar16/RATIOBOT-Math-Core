@@ -2452,6 +2452,8 @@ setTimeout(()=>{try{renderHonorGrowth();updateRingsProfileHint();}catch(e){}},50
     else {if(!E.NUMBER_TYPES[state.config.numberType])state.config.numberType='integer';if(!['auto','0','1','2','3'].includes(state.config.brackets))state.config.brackets='auto';}
     makeOptions($('#stageOptions'),'stage','stage');makeOptions($('#numberOptions'),'numberType','numberType');makeOptions($('#difficultyOptions'),'difficulty','difficulty');makeOptions($('#bracketOptions'),'brackets','brackets');
     if(state.config.stage.startsWith('alg_')){window.AlgebraUI?.renderStageConfig(state.config);return;}
+    $('#startBtn').disabled=false;
+    if($('#algAccessText'))$('#algAccessText').hidden=true;
     $('#numberOptions').closest('.config-group').querySelector('.config-title span').textContent='数的类型';
     $('#bracketOptions').closest('.config-group').querySelector('.config-title span').textContent='结构括号';
     const allow=E.STAGES[state.config.stage].allowBrackets, powerOnly=state.config.stage==='power';
