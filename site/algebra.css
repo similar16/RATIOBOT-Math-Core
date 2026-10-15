@@ -1,9 +1,13 @@
-
-.alg-shell{background:#fffdf6;border:2px solid rgba(63,86,67,.19);border-radius:20px;margin:15px 0;padding:18px;box-shadow:0 6px 25px rgba(61,74,62,.08);color:#3e3540}
-.alg-shell h3{font-size:22px;margin:6px 0 10px}.alg-shell h4{margin:8px 0;font-size:17px}
-.alg-note{color:#667569;font-size:13px;line-height:1.65}.alg-tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(135px,1fr));gap:10px;margin:12px 0}.alg-chip{border:2px solid #d1d8cb;border-radius:12px;background:#faf8ef;padding:11px 12px;min-height:54px;text-align:center;font-size:17px;color:#3e3540;cursor:pointer}.alg-chip.selected{border-color:#368e7a;background:#def1e5}.alg-chip.correct{border-color:#347e60}.alg-chip:disabled{opacity:.55;cursor:not-allowed}
-.alg-row{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:12px 0}.alg-row label{font-size:14px;font-weight:700;display:flex;align-items:center;gap:8px;flex-wrap:wrap}.alg-row select,.alg-shell input{padding:10px;border:1.5px solid #b6c5b6;border-radius:9px;background:white;color:#3e3540;max-width:100%}.alg-shell input{font-size:19px;min-width:160px}.alg-shell button.alg-action{background:#558e80;border:0;border-radius:10px;color:#fff;font-weight:700;padding:11px 16px;cursor:pointer}.alg-shell button.alg-action:disabled{background:#aaa;cursor:not-allowed}.alg-shell button.alg-secondary{background:#eee6d8;border:1px solid #d5cabe;color:#3e3540;padding:10px 14px;border-radius:10px;cursor:pointer}
-.alg-math{margin:12px 0;font-size:25px;line-height:1.6;overflow:auto;padding:16px;border-radius:12px;background:#f5f7ed;text-align:center;white-space:nowrap}
-.alg-status{min-height:26px;color:#315e56;font-size:14px;font-weight:650;line-height:1.6}.alg-status.bad{color:#a55640}.alg-hidden{display:none!important}
-.alg-head{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}.alg-progress{height:8px;border-radius:99px;background:#e5e5dd;overflow:hidden}.alg-progress>i{display:block;height:100%;background:#63a293;transition:width .2s}.alg-step{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.alg-step>*{flex:0 1 auto}.alg-subtitle{font-weight:650;color:#526056}.alg-kbd{color:#627365;font-size:13px}.alg-teacher{background:#fff;padding:15px;border:1.5px solid #ccd7cb;border-radius:15px;margin:16px 0}.alg-door{margin:13px 0}.alg-door button{font-size:15px}
-@media(max-width:600px){.alg-shell{padding:13px;margin:10px 0}.alg-tiles{grid-template-columns:repeat(2,minmax(0,1fr))}.alg-math{font-size:20px}.alg-chip{font-size:15px;padding:10px 5px}.alg-row select{width:100%;min-width:0}}
+/* Algebra uses the native RATIOBOT screens and button hierarchy. */
+.alg-access-text{display:block;margin:8px 0 0;color:#467466;font-size:13px;line-height:1.6}
+.alg-access-text.bad,.alg-lab-result.bad{color:#a44a3a}
+.alg-demo-choice.selected{background:#e3f2e8!important;border-color:#578c79!important;box-shadow:0 0 0 2px #80bc9d inset}
+.alg-lab-result{min-height:30px;padding:10px 2px;color:#317762;font-weight:700;line-height:1.6}
+.algebra-game #expression{font-size:clamp(26px,4.3vw,42px);overflow:auto;white-space:nowrap;padding:12px 0}
+.algebra-game #answerInput{min-width:150px;max-width:100%;font-size:21px}
+.algebra-game #keypad{grid-template-columns:repeat(6,minmax(0,1fr));}
+.algebra-game #keypad button{min-width:0;padding:10px 2px}
+.algebra-game #keypad .wide{grid-column:span 2}
+.alg-teacher-integrated{margin-top:18px}
+.alg-teacher-integrated .review-release{display:flex;align-items:center;flex-wrap:wrap;gap:10px}
+@media(max-width:600px){.algebra-game #keypad{grid-template-columns:repeat(5,minmax(0,1fr))}.algebra-game #expression{font-size:clamp(22px,6vw,32px)}.algebra-game #answerInput{font-size:18px}.alg-demo-choice{font-size:16px}}
