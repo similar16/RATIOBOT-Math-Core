@@ -1729,6 +1729,9 @@ footer{text-align:center;padding:30px;color:#8C7E82;font:900 10px ui-monospace;l
     {id:'mul',icon:'×',title:'有理数乘法',short:'先定符号，再乘绝对值',steps:['同号得正，异号得负。','再把绝对值相乘。','有 0 因数时，积为 0。']},
     {id:'div',icon:'÷',title:'有理数除法',short:'除以非零数 = 乘它的倒数',steps:['先找出除数。','把除号换成乘号，同时把除数换成它的倒数。','再按乘法计算；0 除以任何非 0 数都等于 0。']},
     {id:'mix',icon:'( )',title:'加减乘除混合运算带括号',short:'括号 → 乘除 → 全变为加 → 计算',steps:['先选择并处理括号里的运算。','再选择乘除运算，同级从左向右。','剩余加减统一改写成加法，再计算。']},
+    {id:'alg_like',icon:'≡',title:'同类项判断',short:'字母相同，各字母指数也相同',steps:['先比较每项所含的字母种类。','再比较每个字母对应的指数，不看系数与字母排列顺序。','把同类项分为一组；不同次的项不能混合。']},
+    {id:'alg_merge',icon:'Σ',title:'合并同类项',short:'系数相加，字母部分不变',steps:['先圈出同类项，包括各项前面的正负号。','将同类项的系数相加。','字母与指数保留，系数为0时该项消失。']},
+    {id:'alg_bracket',icon:'( )',title:'去括号法则',short:'括号前的数与每一项相乘',steps:['先看括号前是加号、减号还是非1系数。','括号前是负号时每一项都要变号。','若有系数，逐项分配后再合并同类项。']},
     {id:'power',icon:'aⁿ',title:'乘方',short:'先判断结果正负，再算绝对值的乘方',steps:['正底数的幂为正；负底数看指数奇偶。','再计算底数绝对值的乘方。','指数只取 2–6 的正整数。']},
     {id:'super',icon:'★',title:'超级混合运算',short:'括号 → 乘方 → 乘除 → 加减',steps:['先处理最内层括号。','再处理乘方。','之后乘除，最后加减；同级从左到右。']}
   ];
@@ -2244,6 +2247,7 @@ setTimeout(()=>{try{renderHonorGrowth();updateRingsProfileHint();}catch(e){}},50
     else if(r.id==='mix') initMixedDemo();
     else if(r.id==='power') initPowerDemo();
     else if(r.id==='super') initSuperDemo();
+    else if(r.id.startsWith('alg_')) window.AlgebraUI?.renderRule(r.id);
     $('#labRobot').animate([{transform:'translateY(0)'},{transform:'translateY(-7px)'},{transform:'translateY(0)'}],{duration:500});
   }
 
@@ -2432,17 +2436,24 @@ setTimeout(()=>{try{renderHonorGrowth();updateRingsProfileHint();}catch(e){}},50
 
   // Config rendering
   const groups={
-    stage:[['add','仅有加法'],['addsub','加减混合'],['mul','仅有乘法'],['muldiv','乘除混合'],['mixed','加减乘除混合运算带括号'],['power','仅有乘方'],['supermixed','超级混合运算']],
+    stage:[['add','仅有加法'],['addsub','加减混合'],['mul','仅有乘法'],['muldiv','乘除混合'],['mixed','加减乘除混合运算带括号'],['power','仅有乘方'],['supermixed','超级混合运算'],['alg_b1','合并同类项'],['alg_b2','去括号化简'],['alg_b3','整式加减'],['alg_b4','代数式综合']],
     numberType:[['integer','全整数'],['intfrac','整数 + 分数'],['intdec','整数 + 小数'],['fracdec','分数 + 小数']],
     difficulty:[['easy','轻松'],['normal','标准'],['hard','挑战']],
     brackets:[['auto','自动'],['0','0 对'],['1','1 对'],['2','2 对'],['3','3 对']]
   };
   function makeOptions(el,group,key){
-    el.innerHTML=groups[group].map(([v,l])=>`<button class="option-btn ${state.config[key]===v?'active':''}" data-value="${v}">${l}</button>`).join('');
+    const isAlg=state.config.stage.startsWith('alg_');
+    const items=isAlg&&group==='numberType'?[['integer','整数系数'],['fraction','含分数系数'],['denominator','常数分母']]:isAlg&&group==='brackets'?[['3','3题'],['4','4题'],['5','5题'],['6','6题']]:groups[group];
+    el.innerHTML=items.map(([v,l])=>`<button class="option-btn ${state.config[key]===v?'active':''}" data-value="${v}">${l}</button>`).join('');
     el.querySelectorAll('button').forEach(b=>b.onclick=()=>{state.config[key]=b.dataset.value; renderConfig();});
   }
   function renderConfig(){
+    if(state.config.stage.startsWith('alg_')){if(!['integer','fraction','denominator'].includes(state.config.numberType))state.config.numberType='integer';if(!['3','4','5','6'].includes(state.config.brackets))state.config.brackets='5';if(state.config.numberType==='denominator'&&['alg_b1','alg_b2'].includes(state.config.stage))state.config.numberType='integer';}
+    else {if(!E.NUMBER_TYPES[state.config.numberType])state.config.numberType='integer';if(!['auto','0','1','2','3'].includes(state.config.brackets))state.config.brackets='auto';}
     makeOptions($('#stageOptions'),'stage','stage');makeOptions($('#numberOptions'),'numberType','numberType');makeOptions($('#difficultyOptions'),'difficulty','difficulty');makeOptions($('#bracketOptions'),'brackets','brackets');
+    if(state.config.stage.startsWith('alg_')){window.AlgebraUI?.renderStageConfig(state.config);return;}
+    $('#numberOptions').closest('.config-group').querySelector('.config-title span').textContent='数的类型';
+    $('#bracketOptions').closest('.config-group').querySelector('.config-title span').textContent='结构括号';
     const allow=E.STAGES[state.config.stage].allowBrackets, powerOnly=state.config.stage==='power';
     $('#bracketOptions').querySelectorAll('button').forEach(b=>b.disabled=!allow);
     $('#numberOptions').querySelectorAll('button').forEach(b=>b.disabled=false);
@@ -2458,6 +2469,7 @@ setTimeout(()=>{try{renderHonorGrowth();updateRingsProfileHint();}catch(e){}},50
 
   // Game lifecycle
   function configText(c=state.config){
+    if(c.stage.startsWith('alg_'))return window.AlgebraUI?.configText(c)||'代数式运算';
     const allow=E.STAGES[c.stage].allowBrackets, powerOnly=c.stage==='power';
     return `${E.STAGES[c.stage].label} · ${c.stage==='power'&&c.numberType==='integer'?'按难度递进':E.NUMBER_TYPES[c.numberType].label} · ${E.DIFFICULTY[c.difficulty].label}${allow?' · 括号 '+(c.brackets==='auto'?'自动':c.brackets+' 对'):''}`;
   }
@@ -2477,6 +2489,7 @@ setTimeout(()=>{try{renderHonorGrowth();updateRingsProfileHint();}catch(e){}},50
   }
   function startRound(configOverride){
     if(configOverride) state.config={...state.config,...configOverride};
+    if(state.config.stage.startsWith('alg_')){window.AlgebraUI?.startFromCore({...state.config});return;}
     state.questions=[];state.index=0;state.combo=0;state.bestCombo=0;state.firstCorrect=0;state.times=[];state.roundTagStats={};state.roundXP=0;state.roundRepairs=0;state.lastGrowth=null;
     let powerPlan=[];
     if(state.config.stage==='power'){
@@ -2601,6 +2614,7 @@ setTimeout(()=>{try{renderHonorGrowth();updateRingsProfileHint();}catch(e){}},50
   function weakestTag(stats){let w=null,rate=2;Object.entries(stats).forEach(([k,v])=>{if(v.attempts>=1&&v.correct/v.attempts<rate){rate=v.correct/v.attempts;w=k;}});return w;}
   function strongestTag(stats){let w=null,rate=-1;Object.entries(stats).forEach(([k,v])=>{if(v.attempts>=1&&v.correct/v.attempts>rate){rate=v.correct/v.attempts;w=k;}});return w;}
   $('#weakBtn').onclick=()=>{
+    if(state.config.stage.startsWith('alg_')){window.AlgebraUI?.repairFromResult();return;}
     const weak=weakestTag(state.roundTagStats);let stage=state.config.stage;
     if(['addition','subtraction'].includes(weak)) stage='addsub';
     else if(['multiplication_sign','division_reciprocal'].includes(weak)) stage='muldiv';
