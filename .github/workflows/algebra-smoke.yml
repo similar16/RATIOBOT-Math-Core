@@ -1,0 +1,24 @@
+name: Algebra UI Smoke
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'site/algebra-*.js'
+      - 'site/index.html'
+      - 'tests/algebra-ui.cjs'
+      - '.github/workflows/algebra-smoke.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Native lab and shared game interface
+        run: SITE_DIR=site node tests/algebra-ui.cjs
