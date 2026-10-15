@@ -32,6 +32,7 @@ function renderStageConfig(c){
  $('#configSummary').textContent=configText(c)+' · 全对可获 '+points+' R积分';
  $('#startBtn').disabled=true;
  let msg=$('#algAccessText');if(!msg){msg=document.createElement('small');msg.id='algAccessText';msg.className='alg-access-text';$('#configSummary').after(msg);}
+ msg.hidden=false;
  status('#algAccessText','正在确认本班开放进度…');
  const cls=validClass(),stage=c.stage;
  loadUnlock().then(level=>{
