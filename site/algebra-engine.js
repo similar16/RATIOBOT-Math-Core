@@ -50,7 +50,8 @@ function check(input, expected){try{
  const p=parse(input),standard=canonical(p),target=canonical(parse(expected));
  const correct=standard===target;
  const compact=String(input).replace(/\s/g,'').replace(/[−－]/g,'-');
- const monomialOnly=!/[()]/.test(compact)&&!/[*/]/.test(compact.replace(/\d+\/\d+/g,''));
+ const flat=compact.replace(/\d+\/\d+/g,'').replace(/(?:[a-z](?:\^\d+)?)+\/\d+/g,'');
+ const monomialOnly=!/[()*/]/.test(flat);
  const segments=compact.replace(/^-/, '').split(/(?=[+-])/).filter(Boolean);
  const reduced=monomialOnly && (Object.keys(p).length===0?compact==='0':segments.length===Object.keys(p).length);
  return {correct:correct&&reduced,equivalent:correct,normalized:standard,reason:correct&&!reduced?'等值，但还没有完成合并同类项。':correct?'正确':'结果不等值'};
@@ -92,7 +93,7 @@ function generate(opts={}){
  if(mod==='b4'){
  const a=members(diff,variables,mode,Math.max(2,Math.floor(amount/2))),b=members(diff,variables,mode,2);
  if(mode==='denominator'){expr='('+joinTerms(a)+')/2-('+joinTerms(b)+')/4';}
- else if(Math.random()<.5){const sub='('+joinTerms(a)+')';expr=pick(['2','3','-2'])+sub+'-'+sub+'+3'+sub;}
+ else if(diff!=='hard'||Math.random()<.5){const sub='('+joinTerms(a)+')';expr=pick(['2','3','-2'])+sub+'-'+sub+'+3'+sub;}
  else expr='('+joinTerms(a)+')-[' .replace('[','(')+'('+joinTerms(b)+')-('+joinTerms(a.slice(0,2))+'))';
  source=a.concat(b);
  }
@@ -100,7 +101,7 @@ function generate(opts={}){
  const result=parse(expr);
  const answer=canonical(result);
  if(!Object.keys(result).length&&Math.random()<.8)return generate({...opts,_retry:(opts._retry||0)+1});
- return {module:mod,difficulty:diff,coefficient:mode,expression:expr,answer,meta:{variableCount:variables.length,maxDegree:Math.max(0,...Object.keys(result).map(degree)),sourceTerms:source.length,groups:new Set(source.map(x=>x.key)).size,bracketDepth:Math.max(0,...[...expr].reduce((a,ch)=>{const prev=a.length?a[a.length-1]:0;a.push(ch==='('?prev+1:ch===')'?Math.max(0,prev-1):prev);return a;},[])),fractionStructure:mode==='denominator',hasCancellation:source.some((x,i)=>source.slice(i+1).some(y=>x.key===y.key&&x.coeff[0]===-y.coeff[0]&&x.coeff[1]===y.coeff[1]))}};
+ return {module:mod,difficulty:diff,coefficient:mode,expression:expr,answer,meta:{variableCount:new Set((expr.match(/[a-z]/g)||[])).size,maxDegree:Math.max(0,...source.map(x=>degree(x.key)),...Object.keys(result).map(degree)),sourceTerms:source.length,groups:new Set(source.map(x=>x.key)).size,bracketDepth:Math.max(0,...[...expr].reduce((a,ch)=>{const prev=a.length?a[a.length-1]:0;a.push(ch==='('?prev+1:ch===')'?Math.max(0,prev-1):prev);return a;},[])),fractionStructure:mode==='denominator',hasCancellation:source.some((x,i)=>source.slice(i+1).some(y=>x.key===y.key&&x.coeff[0]===-y.coeff[0]&&x.coeff[1]===y.coeff[1]))}};
 }
 function fullPoints(module,difficulty,coefficient,n=5){const m=MODULES[module]||MODULES.b1,i=DIFFS.indexOf(difficulty),b=m.base[Math.max(0,i)],extra=coefficient==='denominator'?3:coefficient==='fraction'?2:0;return Math.max(1,Math.round((b+extra)*n/5));}
 const API={MODULES,DIFFS,parse,canonical,check,generate,fullPoints,degree};
