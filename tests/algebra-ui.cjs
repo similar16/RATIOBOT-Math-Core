@@ -2,7 +2,7 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('n
 const {JSDOM}=require('jsdom'),root=process.env.SITE_DIR||'_site',A=require(path.resolve(root,'algebra-engine.js'));
 const html=fs.readFileSync(path.resolve(root,'index.html'),'utf8');
 for(const marker of ['alg_like','alg_merge','alg_bracket','alg_b1','alg_b2','alg_b3','alg_b4'])assert.ok(html.includes(marker),'missing '+marker);
-const ids=['qIndex','gameModeLabel','progressBar','combo','bossBadge','expression','feedback','resultAccuracy','resultCombo','resultTime','resultStudent','resultXP','resultLevelText','resultCoreText','resultXPBar','diagnoseText','levelUpFlash','configSummary','teacherPanelReview','ruleDemo'];
+const ids=['qIndex','gameModeLabel','progressBar','combo','bossBadge','expression','feedback','resultAccuracy','resultCombo','resultTime','resultStudent','resultXP','resultLevelText','resultCoreText','resultXPBar','diagnoseText','levelUpFlash','configSummary','bracketNote','teacherPanelReview','ruleDemo'];
 const buttons=['submitBtn','hintBtn','exitGame','againBtn','reconfigBtn','weakBtn','startBtn'];
 const markup='<div id="rules"><h3 id="ruleTitle">同类项判断</h3></div>'+
 '<div id="train"><div id="setupView"><div class="config-group"><div class="config-title"><span>数的类型</span></div><div id="numberOptions"></div></div><div class="config-group"><div class="config-title"><span>结构括号</span></div><div id="bracketOptions"></div></div><div id="stageOptions"><button class="active" data-value="alg_b1">代数式</button></div></div><div id="studentView"></div><div id="gameView"><input id="answerInput"><div id="keypad"><button id="oldKey">7</button></div></div><div id="resultView"></div></div>'+
