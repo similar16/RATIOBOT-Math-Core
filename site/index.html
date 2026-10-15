@@ -2837,13 +2837,14 @@ window.addEventListener('message',ev=>{const d=ev.data;if(!d||d.type!=='ratiobot
       p.economy.modules.algebra=p.economy.modules.algebra||{earned:0,clears:0,correct:0,questions:0};
       const met=p.economy.modules.algebra;met.earned=(met.earned||0)+gain;met.clears=(met.clears||0)+1;met.correct=(met.correct||0)+first;met.questions=(met.questions||0)+n;
       const xp=eligible?Math.round(6*(first+0.5*retry)):0;
-      p.xp=(p.xp||0)+xp;p.games++;p.questions+=n;
+      const beforeLevel=levelInfo(p.xp).level;
+      p.xp=(p.xp||0)+xp;p.games++;p.questions+=n;p.bestCombo=Math.max(Number(p.bestCombo||0),Number(result.bestCombo||0));
       const tag='alg_'+module;p.tags[tag]=p.tags[tag]||{attempts:0,correct:0};p.tags[tag].attempts+=n;p.tags[tag].correct+=first;
       const structure=(result.mistakes||[]).map(x=>x.structure||{}).slice(0,20);
       const td=todayKey();if(!p.activeDates.includes(td))p.activeDates.push(td);p.activeDates=p.activeDates.slice(-60);
-      p.history.unshift({at:new Date().toISOString(),game:'algebra',stage:'代数式·'+({b1:'合并同类项',b2:'去括号化简',b3:'整式加减',b4:'综合运算'}[module]),signature,module,numberType:cfg.coefficient,difficulty:cfg.difficulty,accuracy,first,retry,bestCombo:0,avgTime:Number(result.avgTime||0),rGain:gain,xp,questions:n,level:levelInfo(p.xp).level,errorStructures:structure});
+      p.history.unshift({at:new Date().toISOString(),game:'algebra',stage:'代数式·'+({b1:'合并同类项',b2:'去括号化简',b3:'整式加减',b4:'综合运算'}[module]),signature,module,numberType:cfg.coefficient,difficulty:cfg.difficulty,accuracy,first,retry,bestCombo:Number(result.bestCombo||0),avgTime:Number(result.avgTime||0),rGain:gain,xp,questions:n,level:levelInfo(p.xp).level,errorStructures:structure});
       p.history=p.history.slice(0,10);checkinMetrics(p);saveCurrentProfile(p);renderGrowth();renderStats();
-      return {gain,xp,reason:reason+' · 首次正确 '+first+'/'+n};
+      const after=levelInfo(p.xp);return {gain,xp,reason:reason+' · 首次正确 '+first+'/'+n,beforeLevel,afterLevel:after.level,levelPct:after.pct};
     }
   };
     migrateLegacy();const initP=currentProfile();if(initP){state.profileKey=currentProfileKey();state.classCode=initP.classCode;state.studentId=initP.studentId;}refreshPlayerUI();renderRules();renderConfig();renderStats();renderGrowth();renderAccount();initCloud();
