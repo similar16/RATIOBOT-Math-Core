@@ -32,7 +32,7 @@ function install(){
  $('#algOpen').onclick=async()=>{if(!student()){bridge.go('account');return;}await loadUnlock(true);$('#algDoor').classList.add('alg-hidden');$('#setupView').classList.add('hidden');$('#studentView').classList.add('hidden');$('#gameView').classList.add('hidden');$('#resultView').classList.add('hidden');$('#algPanel').classList.remove('alg-hidden');renderConfig();};
  labWrap.addEventListener('toggle',async()=>{if(labWrap.open){await loadUnlock(true);renderLab();}});
  $('#algTeacherSave').onclick=saveTeacher;$('#algTeacherReload').onclick=loadTeacher;
- $$('.teacher-tab').forEach(b=>b.addEventListener('click',()=>{if(b.dataset.teacherTab==='review')setTimeout(loadTeacher,0);}));
+ Array.from(document.querySelectorAll('.teacher-tab')).forEach(b=>b.addEventListener('click',()=>{if(b.dataset.teacherTab==='review')setTimeout(loadTeacher,0);}));
  $('#teacherClassSelect')?.addEventListener('change',()=>setTimeout(loadTeacher,0));
 }
 function restore(){run=null;$('#algPanel').classList.add('alg-hidden');$('#algDoor').classList.remove('alg-hidden');$('#setupView').classList.remove('hidden');}
