@@ -26,7 +26,7 @@ function renderStageConfig(c){
  $('#numberOptions').closest('.config-group').querySelector('.config-title span').textContent='系数类型';
  $('#bracketOptions').closest('.config-group').querySelector('.config-title span').textContent='每局题量';
  const unsuitable=['alg_b1','alg_b2'].includes(c.stage);
- $('#numberOptions [data-value="denominator"]').disabled=unsuitable;
+ const denominatorButton=$('#numberOptions [data-value="denominator"]');if(denominatorButton)denominatorButton.disabled=unsuitable;
  const n=Number(c.brackets)||5,kind=c.stage.slice(4),points=A.fullPoints(kind,c.difficulty,c.numberType,n);
  $('#bracketNote').textContent='3～6题一局。按首答正确率和订正情况结算；一局只产生一次积分。';
  $('#configSummary').textContent=configText(c)+' · 全对可获 '+points+' R积分';
