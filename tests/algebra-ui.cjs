@@ -1,42 +1,35 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
-const {JSDOM}=require('jsdom');
-const root=process.env.SITE_DIR||'_site',E=require(path.resolve(root,'algebra-engine.js'));
-const html='<section id="rules"><div class="lab-layout"></div></section><section id="train"><div id="setupView"></div><div id="studentView"></div><div id="gameView"></div><div id="resultView"></div></section><div id="teacherPanelReview"></div><button class="teacher-tab" data-teacher-tab="review"></button><select id="teacherClassSelect"><option value="test-class">Test</option></select>';
-const dom=new JSDOM(html,{url:'https://test.invalid/',runScripts:'outside-only',pretendToBeVisual:true});
-const w=dom.window,d=w.document;let role='student',settleCalls=0,syncCalls=0,through=0;
-w.AlgebraEngine=E;w.katex={renderToString:x=>x};w.confirm=()=>true;
-const profile={studentId:'46'},client={from(table){assert.equal(table,'classes');const q={select(){return q},eq(){return q},update(x){through=x.algebra_progress.through;return q},maybeSingle:async()=>({data:{id:'test-class',algebra_progress:{through}}})};return q}};
-w.RatioAlgebraBridge={identity:()=>({role,classId:'test-class'}),ready:()=>role==='student',profile:()=>profile,client:()=>client,go:()=>{},sync:async()=>{syncCalls++;return true;},complete:r=>{settleCalls++;assert.equal(r.first,5);assert.equal(r.questions,5);return {gain:r.requested,xp:30,reason:'测试结算'};}};
+const {JSDOM}=require('jsdom'),root=process.env.SITE_DIR||'_site',A=require(path.resolve(root,'algebra-engine.js'));
+const html=fs.readFileSync(path.resolve(root,'index.html'),'utf8');
+for(const marker of ['alg_like','alg_merge','alg_bracket','alg_b1','alg_b2','alg_b3','alg_b4'])assert.ok(html.includes(marker),'missing '+marker);
+const ids=['qIndex','gameModeLabel','progressBar','combo','bossBadge','expression','feedback','resultAccuracy','resultCombo','resultTime','resultStudent','resultXP','resultLevelText','resultCoreText','resultXPBar','diagnoseText','levelUpFlash','configSummary','teacherPanelReview','ruleDemo'];
+const buttons=['submitBtn','hintBtn','exitGame','againBtn','reconfigBtn','weakBtn','startBtn'];
+const markup='<div id="rules"><h3 id="ruleTitle">同类项判断</h3></div>'+
+'<div id="train"><div id="setupView"><div class="config-group"><div class="config-title"><span>数的类型</span></div><div id="numberOptions"></div></div><div class="config-group"><div class="config-title"><span>结构括号</span></div><div id="bracketOptions"></div></div><div id="stageOptions"><button class="active" data-value="alg_b1">代数式</button></div></div><div id="studentView"></div><div id="gameView"><input id="answerInput"><div id="keypad"><button id="oldKey">7</button></div></div><div id="resultView"></div></div>'+
+'<button class="teacher-tab" data-teacher-tab="review"></button><select id="teacherClassSelect"><option value="test-class">测试班</option></select>';
+const d=new JSDOM(markup,{url:'https://test.invalid/',runScripts:'outside-only',pretendToBeVisual:true});const w=d.window,doc=w.document,$=s=>doc.querySelector(s);
+for(const id of ids)if(!$('#'+id)){const el=doc.createElement('div');el.id=id;doc.body.appendChild(el);}
+for(const id of buttons){const el=doc.createElement('button');el.id=id;doc.body.appendChild(el);}
+w.AlgebraEngine=A;w.katex={renderToString:s=>s};w.confirm=()=>true;w.scrollTo=()=>{};
+let role='student',through=4,settlements=0;
+const p={studentId:'46',classCode:'ZY2901'};
+const client={from(table){assert.equal(table,'classes');const q={select(){return q},eq(){return q},update(row){through=row.algebra_progress.through;return q},maybeSingle:async()=>({data:{id:'test-class',algebra_progress:{through}}})};return q}};
+w.RatioAlgebraBridge={ready:()=>role==='student',identity:()=>({role,classId:'test-class'}),client:()=>client,profile:()=>p,go:()=>{},renderConfig:()=>{},sync:async()=>true,complete:d=>{settlements++;return {gain:d.requested,xp:30,reason:'已结算',beforeLevel:1,afterLevel:2,levelPct:50}}};
+const old=()=>{};for(const id of buttons)$('#'+id).onclick=old;
 w.eval(fs.readFileSync(path.resolve(root,'algebra-ui.js'),'utf8'));
-const pause=()=>new Promise(resolve=>setTimeout(resolve,0));
+const U=w.AlgebraUI,pause=()=>new Promise(ok=>setTimeout(ok,0));
 (async()=>{
- assert.ok(d.querySelector('#algLabWrap'),'laboratory mounted');
- assert.ok(d.querySelector('#algDoor'),'training portal mounted');
- assert.ok(d.querySelector('#algTeacher'),'teacher control mounted');
- const details=d.querySelector('#algLabWrap');details.open=true;details.dispatchEvent(new w.Event('toggle'));await pause();
- assert.ok(d.querySelectorAll('#algLab [data-pick]').length===5);
- for(const i of [0,2,3])d.querySelector('#algLab [data-pick="'+i+'"]').click();
- d.querySelector('#algLabCheck').click();
- assert.match(d.querySelector('#algLabResult').textContent,/分类正确/);
- d.querySelector('#algLab [data-alg-lab="1"]').click();
- d.querySelector('#algLab [data-pick="0"]').click();d.querySelector('#algLab [data-pick="1"]').click();
- d.querySelector('#algLabInput').value='0';d.querySelector('#algLabCheck').click();
- assert.match(d.querySelector('#algLabResult').textContent,/全部抵消/);
- d.querySelector('#algLab [data-alg-lab="2"]').click();
- d.querySelector('#algLab [data-choice="right"]').click();
- d.querySelector('#algLabFinalInput').value='9m-6n';d.querySelector('#algLabFinalCheck').click();
- assert.match(d.querySelector('#algLabFinalStatus').textContent,/正确/);
- d.querySelector('#algOpen').click();await pause();
- assert.ok(d.querySelector('#algStart'),'config mounted');
- d.querySelector('#algStart').click();await pause();
- for(let i=0;i<5;i++){const source=d.querySelector('.alg-math').textContent;
- const answer=E.canonical(E.parse(source));d.querySelector('#algAnswer').value=answer;d.querySelector('#algSubmit').click();
- assert.match(d.querySelector('#algFeedback').textContent,/正确/);
- d.querySelector('#algNext').click();await pause();}
- assert.equal(settleCalls,1,'settle exactly once');assert.ok(syncCalls>=1);
- assert.match(d.querySelector('#algPanel').textContent,/训练完成/);
- role='teacher';d.querySelector('#algTeacherReload').click();await pause();
- d.querySelector('#algTeacherThrough').value='3';d.querySelector('#algTeacherSave').click();await pause();
- assert.equal(through,3,'teacher release saved');
- console.log('Algebra lab interactions, full practice round, and teacher unlock: PASS');
+ assert.ok(U,'algebra interface registered');
+ await U.loadUnlock(true);U.renderStageConfig({stage:'alg_b1',numberType:'integer',difficulty:'normal',brackets:'5'});await pause();
+ assert.equal($('#startBtn').disabled,false);assert.match($('#configSummary').textContent,/合并同类项/);
+ await U.renderRule('alg_like');for(const i of [0,2,3])$('#ruleDemo [data-val="'+i+'"]').click();$('#algLabCheck').click();assert.match($('#algLabResult').textContent,/正确/);
+ $('#ruleTitle').textContent='合并同类项';await U.renderRule('alg_merge');for(const i of [0,3])$('#ruleDemo [data-val="'+i+'"]').click();$('#ruleDemo [data-merge="0"]').click();assert.match($('#algLabResult').textContent,/消失/);
+ $('#ruleTitle').textContent='去括号法则';await U.renderRule('alg_bracket');$('#ruleDemo [data-bracket="good"]').click();$('#ruleDemo [data-final="good"]').click();assert.match($('#algLabFinalResult').textContent,/正确/);
+ await U.startFromCore({stage:'alg_b1',numberType:'integer',difficulty:'normal',brackets:'5'});
+ assert.ok($('#keypad [data-key="x"]'),'algebra keyboard');
+ for(let i=0;i<5;i++){const answer=A.canonical(A.parse($('#expression').textContent));$('#answerInput').value=answer;$('#submitBtn').click();assert.match($('#feedback').textContent,/正确/);$('#submitBtn').click();await pause();}
+ assert.equal(settlements,1);assert.match($('#resultXP').textContent,/R积分/);
+ $('#reconfigBtn').click();assert.equal($('#keypad #oldKey').textContent,'7');assert.equal($('#submitBtn').onclick,old);assert.equal($('#exitGame').onclick,old);
+ role='teacher';$('#algTeacherReload').click();await pause();$('#algTeacherThrough').value='2';$('#algTeacherSave').click();await pause();assert.equal(through,2);
+ console.log('PASS algebra native rule tab integration, shared challenge HUD, original keypad restored and teacher unlock');
 })().catch(e=>{console.error(e);process.exitCode=1;});
