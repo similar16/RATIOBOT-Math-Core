@@ -52,3 +52,13 @@ for item in manifest:
 html=(root/'index.html').read_text()
 assert 'alt="${o.name}" loading="lazy"' in html
 print('PASS optimized image sizes, transparency and deferred outfit images')
+
+# New exploration stages retain alpha and are delivered as small independent sprites.
+for b in [4,5]:
+ for i in range(1,10):
+  p=root/f"assets/base{b}-{i}.webp"
+  assert p.stat().st_size < 100_000,p
+  with Image.open(p) as im:
+   im.load();assert im.size==(420,420) and im.mode=="RGBA",p
+   assert im.getpixel((0,0))[3]==0,p
+print("PASS 18 transparent web-sized ocean and forest stages")

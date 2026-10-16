@@ -104,7 +104,7 @@ function xpAt(lv){let n=0;for(let i=1;i<lv;i++)n+=260+(i-1)*85;return n;}
  assert.match(ringsFrame.getAttribute('src')||'',/rings\.html/);
  t.go('home');
  t.go('growth');
- for(let lv=1;lv<=90;lv++){const p=t.currentProfile();p.xp=xpAt(lv);t.saveCurrentProfile(p);t.renderGrowth();const h=t.honorInfoFromProfile(p);assert.equal(h.currentBase,Math.floor((lv-1)/9)+1);assert.equal(h.phase,(lv-1)%9+1);assert.equal(t.cloudLevelBase(p).base,h.currentBase);assert.equal(w.document.querySelectorAll('#baseStageGallery article').length,9);assert.equal(w.document.querySelectorAll('#baseCompleteGallery article').length,Math.min(3,Math.floor(lv/9)));assert.equal(w.document.querySelector('#growthLevel').textContent,String(h.phase));assert.ok(!/BASE\s*0\b/.test(w.document.body.textContent));}
+ for(let lv=1;lv<=90;lv++){const p=t.currentProfile();p.xp=xpAt(lv);t.saveCurrentProfile(p);t.renderGrowth();const h=t.honorInfoFromProfile(p);assert.equal(h.currentBase,Math.floor((lv-1)/9)+1);assert.equal(h.phase,(lv-1)%9+1);assert.equal(t.cloudLevelBase(p).base,h.currentBase);assert.equal(w.document.querySelectorAll('#baseStageGallery article').length,9);assert.equal(w.document.querySelectorAll('#baseCompleteGallery article').length,Math.min(5,Math.floor(lv/9)));assert.equal(w.document.querySelector('#growthLevel').textContent,String(h.phase));assert.ok(!/BASE\s*0\b/.test(w.document.body.textContent));}
  assert.equal(t.levelInfo(259).level,1);assert.equal(t.levelInfo(260).level,2);assert.equal(t.levelInfo(xpAt(90)+999999).level,90);
  for(const [id,target] of [['homeGrowthBtn','growth'],['homeStatsBtn','stats'],['homeProfileBtn','profile'],['playerBtn','profile'],['growthSwitchBtn','account'],['statsSwitchBtn','account']]){t.go('home');w.document.getElementById(id).click();assert.ok(w.document.getElementById(target).classList.contains('active'),id+' click routes to '+target);}
  const menu=w.document.querySelector('#studentMenuBtn'),panel=w.document.querySelector('#studentGameMenu');assert(menu&&panel);menu.click();assert.equal(panel.classList.contains('hidden'),false,'command menu opens');const profileMenu=[...panel.querySelectorAll('[data-go]')].find(x=>x.dataset.go==='profile');profileMenu.click();assert.ok(w.document.querySelector('#profile').classList.contains('active'),'menu profile route works');assert.equal(panel.classList.contains('hidden'),true,'command menu closes after routing');assert.equal(w.document.querySelectorAll('.game-nav-primary [data-go]').length,4,'only four primary gameplay tabs stay in top bar');assert.match(html,/compact game HUD tuning v2/);assert.doesNotMatch(html,/await loadStudentClassWall\(\);\n  \}\n  function studentForm/);
@@ -131,9 +131,9 @@ function xpAt(lv){let n=0;for(let i=1;i<lv;i++)n+=260+(i-1)*85;return n;}
  console.log('PASS pending login merges cloud history with local work instead of overwriting earlier cumulative data');
  student();
 
- for(let level=10;level<=27;level++){
+ for(let level=10;level<=45;level++){
   student();const p=t.currentProfile();p.xp=xpAt(level);p.equip={hat:'old-hat'};t.saveCurrentProfile(p);t.renderGrowth();t.refreshPlayerUI();
-  const source='assets/base'+(Math.floor((level-1)/9)+1)+'-'+((level-1)%9+1)+'.png?v=20260925';
+  const source='assets/base'+(Math.floor((level-1)/9)+1)+'-'+((level-1)%9+1)+(level>=28?'.webp?v=20261016':'.png?v=20260925');
   for(const selector of ['#growthRobot','#heroRobot','#playerBtn img','#checkinAvatarPreview'])assert.equal(w.document.querySelector(selector).getAttribute('src'),source,selector+' level '+level);
   assert.equal(t.peerAvatarSrc({level}),source);
   assert.equal(t.avatarSrcByLevel(level,true,null,true),source);

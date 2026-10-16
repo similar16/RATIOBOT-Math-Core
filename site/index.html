@@ -1850,10 +1850,10 @@ setTimeout(()=>{try{renderHonorGrowth();updateRingsProfileHint();}catch(e){}},50
   function hasCustomEquip(equip){return !!equip && Object.values(equip).some(v=>v && v!=='auto');}
   function presetAvatarLevel(level){return Math.min(9,Math.max(1,Number(level)||1));}
   const BASE_THEME_ART_VERSION='20260925';
-  function baseThemeImageSrc(base,stage){return `assets/base${base}-${stage}.png?v=${BASE_THEME_ART_VERSION}`;}
+  function baseThemeImageSrc(base,stage){return base===4||base===5?`assets/base${base}-${stage}.webp?v=20261016`:`assets/base${base}-${stage}.png?v=${BASE_THEME_ART_VERSION}`;}
   function avatarSrcByLevel(level,mini=false,equip=null,forceAuto=false){
     const globalLevel=Math.max(1,Math.min(90,Math.floor(Number(level)||1))),base=Math.floor((globalLevel-1)/9)+1,stage=(globalLevel-1)%9+1;
-    if(base===2||base===3)return baseThemeImageSrc(base,stage);
+    if(base>=2&&base<=5)return baseThemeImageSrc(base,stage);
     if(forceAuto || !hasCustomEquip(equip)) return GROWTH_AVATAR_ART[presetAvatarLevel(level)]||GROWTH_AVATAR_ART[1];
     return legacyAvatarSrcByLevel(level,mini,equip,forceAuto);
   }
@@ -1936,8 +1936,8 @@ setTimeout(()=>{try{renderHonorGrowth();updateRingsProfileHint();}catch(e){}},50
     {base:1,name:'成长家园',need:9,atlas:true,desc:'从基础小方一步步拥有帽子、伙伴、花园、汽车与完整家园。',stages:['基础小方','帽子','能量咖啡','知识书','小狗伙伴','迷你伙伴','小花园','小汽车','完整家园']},
     {base:2,name:'田园伙伴',need:18,atlas:true,desc:'从背带裤出发，逐级加入草帽、鸡蛋篮、农具、伙伴、菜园、果树与完整农场。',stages:['背带裤','草帽','鸡蛋篮','农具耙','猫咪伙伴','菜园与小鸡','小马伙伴','苹果树','完整农场']},
     {base:3,name:'星际探索',need:27,atlas:true,desc:'从初次出发一路成长到完整星际基地，所有前置元素持续保留。',stages:['基础小方','宇航服与头盔','手持探测器','外星伙伴','月球车','后方小机器人','火箭','月面基地背景','空间站']},
-    {base:4,name:'深海研究站',need:36,atlas:'',desc:'9 级成长槽已建立，主题形象待继续设计。',stages:Array.from({length:9},(_,i)=>`深海成长 ${i+1}`)},
-    {base:5,name:'森林营地',need:45,atlas:'',desc:'9 级成长槽已建立，主题形象待继续设计。',stages:Array.from({length:9},(_,i)=>`森林成长 ${i+1}`)},
+    {base:4,name:'深海研究站',need:36,atlas:true,desc:'从潜水探险到建成海底研究站，每级保留已获得的装备、伙伴与潜水艇。',stages:['基础小方','潜水头盔与氧气瓶','探照手电','数据平板','章鱼伙伴','水下机器人','珊瑚花园','潜水艇','完整研究站']},
+    {base:5,name:'森林营地',need:45,atlas:true,desc:'戴上探险帽，带着营灯与笔记本，和伙伴一起逐级建成森林营地。',stages:['基础小方','森林探险帽','露营提灯','自然笔记本','松鼠伙伴','营地机器人','森林小景','露营车','完整营地']},
     {base:6,name:'城市创意街',need:54,atlas:'',desc:'9 级成长槽已建立，主题形象待继续设计。',stages:Array.from({length:9},(_,i)=>`城市成长 ${i+1}`)},
     {base:7,name:'极地探险站',need:63,atlas:'',desc:'9 级成长槽已建立，主题形象待继续设计。',stages:Array.from({length:9},(_,i)=>`极地成长 ${i+1}`)},
     {base:8,name:'海岛乐园',need:72,atlas:'',desc:'9 级成长槽已建立，主题形象待继续设计。',stages:Array.from({length:9},(_,i)=>`海岛成长 ${i+1}`)},
@@ -2089,7 +2089,7 @@ setTimeout(()=>{try{renderHonorGrowth();updateRingsProfileHint();}catch(e){}},50
     box.innerHTML=[...base,...growth].map(b=>`<article class="unified-badge ${b.earned?'earned':''}"><div class="ub-icon">${userBadgeImg50(b.name)}</div><div><b>${b.name}</b><span>${b.desc}</span><em>${b.type} · ${b.earned?'已点亮':'未点亮'}</em></div></article>`).join('');
   }
   function baseSpritePosition(stage){stage=Math.max(1,Math.min(9,Number(stage)||1));const i=stage-1,col=i%3,row=Math.floor(i/3);return `${col*50}% ${row*50}%`;}
-  function baseImage(theme,stage){return theme.base===1?GROWTH_AVATAR_ART[stage]:theme.base<=3?baseThemeImageSrc(theme.base,stage):'';}
+  function baseImage(theme,stage){return theme.base===1?GROWTH_AVATAR_ART[stage]:theme.base<=5?baseThemeImageSrc(theme.base,stage):'';}
   function baseSpriteHtml(theme,stage,extra=''){const src=baseImage(theme,stage);return src?`<img class="base-sprite ${extra}" src="${src}" alt="BASE ${theme.base} · Lv.${stage} ${theme.stages[stage-1]}" loading="lazy" decoding="async" fetchpriority="low">`:`<div class="base-sprite placeholder ${extra}">?</div>`;}
   function renderBaseHero(hp){const old=$('#growthRobot'),sprite=$('#baseHeroSprite'),p=currentProfile();if(!old||!sprite)return;if(equippedFestival(p)){old.classList.remove('base-theme-hidden');sprite.classList.add('hidden');old.src=framedAvatarForProfile(p,GROWTH_AVATAR_ART[1]);return;}old.classList.add('base-theme-hidden');sprite.classList.remove('hidden');sprite.innerHTML=baseSpriteHtml(hp.level,hp.phase);}
   function renderBaseStageGallery(hp){const theme=hp.level,box=$('#baseStageGallery');if(!box||!theme)return;$('#baseThemeTitle').textContent=`BASE ${theme.base} · ${theme.name}`;$('#baseThemeDesc').textContent=theme.desc;$('#baseThemeCount').textContent=`${hp.phase} / 9`;box.innerHTML=theme.stages.map((name,i)=>{const st=i+1,unlocked=st<=hp.phase,cur=st===hp.phase;return `<article class="base-stage-card ${unlocked?'complete':'locked'} ${cur?'current':''}">${baseSpriteHtml(theme,st)}<small>LEVEL ${st}</small><b>${name}</b></article>`}).join('');}
