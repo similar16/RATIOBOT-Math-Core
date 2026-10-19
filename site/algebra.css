@@ -3,7 +3,15 @@
 .alg-access-text.bad,.alg-lab-result.bad{color:#a44a3a}
 .alg-demo-choice.selected{background:#e3f2e8!important;border-color:#578c79!important;box-shadow:0 0 0 2px #80bc9d inset}
 .alg-lab-result{min-height:30px;padding:10px 2px;color:#317762;font-weight:700;line-height:1.6}
-.algebra-game #expression{font-size:clamp(26px,4.3vw,42px);overflow:auto;white-space:nowrap;padding:12px 0}
+.algebra-game #expression{display:block;min-width:0;max-width:100%;font-size:clamp(26px,4.3vw,42px);overflow-x:auto;white-space:normal;padding:18px 0;line-height:1.8}
+/* Wrap only at KaTeX's mathematical break points, never inside a fraction or power.
+   The native expression's inline-flex child rule otherwise makes the whole formula atomic. */
+.algebra-game #expression > .katex{display:block;white-space:normal}
+.algebra-game #expression > .katex > .katex-html,
+#ruleDemo .demo-expression > .katex > .katex-html{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:center;row-gap:.6em;white-space:normal}
+.algebra-game #expression .katex-base,
+#ruleDemo .demo-expression .katex-base{flex:0 0 auto;white-space:nowrap}
+#ruleDemo .demo-expression{min-width:0;max-width:100%;overflow-x:auto}
 .algebra-game #answerInput{min-width:150px;max-width:100%;font-size:21px}
 .algebra-game #keypad{grid-template-columns:repeat(6,minmax(0,1fr));}
 .algebra-game #keypad button{min-width:0;padding:10px 2px}

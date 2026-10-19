@@ -1,6 +1,12 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
 const {JSDOM}=require('jsdom'),root=process.env.SITE_DIR||'_site',A=require(path.resolve(root,'algebra-engine.js'));
 const html=fs.readFileSync(path.resolve(root,'index.html'),'utf8');
+const algebraCss=fs.readFileSync(path.resolve(root,'algebra.css'),'utf8');
+assert.match(algebraCss,/#expression > \.katex\{display:block;white-space:normal\}/,'formula root must not stay an unbreakable inline-flex item');
+assert.match(algebraCss,/\.katex-html\{display:flex;flex-wrap:wrap;/,'long formulas wrap between mathematical groups');
+assert.match(algebraCss,/\.katex-base\{flex:0 0 auto;white-space:nowrap\}/,'fractions and powers stay intact');
+const rendered=require('katex').renderToString('2x^2+3xy-5y^2+6x^2-7xy+8y^2',{output:'html'});
+assert.ok((rendered.match(/class="katex-base"/g)||[]).length>1,'real KaTeX renderer supplies safe break groups');
 for(const marker of ['alg_like','alg_merge','alg_bracket','alg_b1','alg_b2','alg_b3','alg_b4'])assert.ok(html.includes(marker),'missing '+marker);
 const ids=['qIndex','gameModeLabel','progressBar','combo','bossBadge','expression','feedback','resultAccuracy','resultCombo','resultTime','resultStudent','resultXP','resultLevelText','resultCoreText','resultXPBar','diagnoseText','levelUpFlash','configSummary','bracketNote','teacherPanelReview','ruleDemo'];
 const buttons=['submitBtn','hintBtn','exitGame','againBtn','reconfigBtn','weakBtn','startBtn'];
