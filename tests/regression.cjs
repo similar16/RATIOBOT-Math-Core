@@ -228,6 +228,16 @@ function xpAt(lv){let n=0;for(let i=1;i<lv;i++)n+=260+(i-1)*85;return n;}
  w.reviewUI.next();fixture.classes[0].review_progress={through:0,dates:{}};inputs().forEach((x,j)=>x.value=j?'负数':'正数');await w.reviewUI.submit();assert.match(w.document.querySelector('#reviewStatus').textContent,/调整了学习进度/);assert.equal(t.currentProfile().economy.credits,10);
  console.log('PASS review UI: teacher release, locked directory, wrong resets, five correct repair, history/R/snapshot/repaired-date sync, duplicate submit, revoked progress');
  t.cloudState.role='teacher';t.teacherSwitchTab('bank');assert(w.document.querySelector('#teacherPanelBank').classList.contains('active'));t.go('train');assert(w.document.querySelector('#teacher').classList.contains('active'));w.document.querySelector('#teacherNavigation [data-teacher-tab="daily"]').click();assert(w.document.querySelector('#teacherPanelDaily').classList.contains('active'));console.log('PASS teacher bank entry, dedicated navigation and student-route isolation');
+ for(const file of ['special-practice-data.js','special-practice-engine.js','special-practice.js'])w.eval(fs.readFileSync(root+'/'+file,'utf8'));
+ for(const sid of ['1','45','46']){
+  student();t.saveCurrentProfile(t.blankProfile('TEST',sid,''));t.go('specialPractice');assert(w.document.querySelector('#specialPractice').classList.contains('active'));
+  assert.equal(w.document.querySelectorAll('#specialPractice [data-code]').length,12);
+  const card=w.SpecialPracticeCards.find(c=>c.code==='A9'),before=t.currentProfile().questions;
+  const r={runId:'sp-fixture-'+sid,cardId:card.id,values:card.answers,avgTime:5};w.RatioPracticeBridge.complete(r);w.RatioPracticeBridge.complete(r);
+  const saved=t.currentProfile();assert.equal(saved.questions,before+5);assert.equal(saved.history[0].game,'specialPractice');assert.equal(saved.economy.modules.specialPractice.best[card.id],5);
+  await w.RatioPracticeBridge.sync();const snap=writes.filter(x=>x.table==='progress_snapshots').at(-1).row;assert.equal(snap.economy.modules.specialPractice.records[0].correct,5);
+ }
+ console.log('PASS specialist cards for accounts 1/45/46, duplicate settlement guard, training history and cloud snapshot');
  student();await w.document.querySelector('#logoutBtn').onclick();assert.equal(t.currentProfile(),null);assert.equal(t.cloudState.user,null);assert.equal(w.document.querySelector('#ringsFrame').getAttribute('src'),'about:blank');
  console.log('PASS logout clears current identity and old game frame');
  w.close();
