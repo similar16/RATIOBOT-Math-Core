@@ -231,7 +231,7 @@ function xpAt(lv){let n=0;for(let i=1;i<lv;i++)n+=260+(i-1)*85;return n;}
  for(const file of ['special-practice-data.js','special-practice-engine.js','special-practice.js'])w.eval(fs.readFileSync(root+'/'+file,'utf8'));
  for(const sid of ['1','45','46']){
   student();t.saveCurrentProfile(t.blankProfile('TEST',sid,''));t.go('specialPractice');assert(w.document.querySelector('#specialPractice').classList.contains('active'));
-  assert.equal(w.document.querySelectorAll('#specialPractice [data-code]').length,12);
+  assert.equal(w.document.querySelectorAll('#specialPractice [data-code]').length,14);
   const card=w.SpecialPracticeCards.find(c=>c.code==='A9'),before=t.currentProfile().questions;
   const r={runId:'sp-fixture-'+sid,cardId:card.id,values:card.answers,avgTime:5};w.RatioPracticeBridge.complete(r);w.RatioPracticeBridge.complete(r);
   const saved=t.currentProfile();assert.equal(saved.questions,before+5);assert.equal(saved.history[0].game,'specialPractice');assert.equal(saved.economy.modules.specialPractice.best[card.id],5);
