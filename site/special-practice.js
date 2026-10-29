@@ -7,17 +7,15 @@ const frac=s=>String(s).replace(/^(-?)(\d+)\/(\d+)$/,'$1\\frac{$2}{$3}');
 let run=null,owner='',token=0,loading=false;
 const identity=()=>B.ready()?B.key():'';
 const progress=()=>B.profile()?.economy?.modules?.specialPractice||{};
-const allCategories=[...new Set(cards.map(c=>c.code))];
-const featured=['B4','B5'];
-const categories=[...featured.filter(c=>allCategories.includes(c)),...allCategories.filter(c=>!featured.includes(c))];
+const categories=[...new Set(cards.map(c=>c.code))].sort((a,b)=>a.localeCompare(b,'en',{numeric:true}));
 function check(){if(identity()!==owner||!B.ready()){reset();B.go('account');return false;}return true;}
-function header(){return '<div class="page-heading"><div><div class="eyebrow">SPECIAL PRACTICE</div><h2>专项加练</h2><p>共'+categories.length+'类专项，每次5题。合并同类项和去括号已开放，位于列表最前面。</p></div><button type="button" class="ghost" id="spHome">返回首页</button></div>';}
+function header(){return '<div class="page-heading"><div><div class="eyebrow">PART G · SPECIAL PRACTICE</div><h2>专项加练</h2><p>共'+categories.length+'类专项，每次5题。按编号顺序排列，与纸质练习卡一致。</p></div><button type="button" class="ghost" id="spHome">返回首页</button></div>';}
 function common(){page.querySelector('#spHome').onclick=()=>B.go('home');}
 function history(){const records=progress().records||[];return '<div class="sp-history"><h3>最近专项练习</h3>'+(records.slice(0,10).map(r=>'<div class="sp-record">'+esc(r.title)+' · '+esc(r.cardId)+' · '+r.correct+'/5 · '+esc(new Date(r.at).toLocaleString('zh-CN'))+'</div>').join('')||'<p>完成第一组后，记录会保存在当前学生账号。</p>')+'</div>';}
 function menu(){
  if(!B.ready()){page.innerHTML=header()+'<div class="sp-empty">请先登录学生账号。</div>';common();return;}
  owner=identity();run=null;token++;const best=progress().best||{};
- page.innerHTML=header()+'<div class="sp-grid">'+categories.map(code=>{const c=cards.find(c=>c.code===code),done=cards.filter(x=>x.code===code&&best[x.id]===5).length;return '<button type="button" class="sp-category" data-code="'+code+'"><span class="sp-tag" style="--sp-color:#'+c.color+'">'+code+'</span><b>'+esc(c.title)+(featured.includes(code)?' · 新增':'')+'</b><small>10套 · 每套5题 · 已全对 '+done+'/10 套</small></button>';}).join('')+'</div>'+history();common();page.querySelectorAll('[data-code]').forEach(b=>b.onclick=()=>choose(b.dataset.code));
+ page.innerHTML=header()+'<div class="sp-grid">'+categories.map(code=>{const c=cards.find(c=>c.code===code),done=cards.filter(x=>x.code===code&&best[x.id]===5).length;return '<button type="button" class="sp-category" data-code="'+code+'"><span class="sp-tag" style="--sp-color:#'+c.color+'">'+code+'</span><b>'+esc(c.title)+'</b><small>10套 · 每套5题 · 已全对 '+done+'/10 套</small></button>';}).join('')+'</div>'+history();common();page.querySelectorAll('[data-code]').forEach(b=>b.onclick=()=>choose(b.dataset.code));
 }
 function choose(code){
  if(!check())return;const group=cards.filter(c=>c.code===code),best=progress().best||{},todo=group.filter(c=>best[c.id]!==5),pool=todo.length?todo:group;start(pool[Math.floor(Math.random()*pool.length)]);
