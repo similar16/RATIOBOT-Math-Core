@@ -26,6 +26,14 @@ function linear(input){
  return out;
 }
 function linearEqual(a,b){const x=linear(a),y=linear(b);return !!(x&&y&&['a','x','y','constant'].every(k=>(x[k]||0)===(y[k]||0)));}
-function grade(card,values){return card.answers.map((expected,i)=>expected.every((a,j)=>['B4','B5'].includes(card.code)?linearEqual(values[i]?.[j],a):card.code==='C2'?clean(values[i]?.[j]).toUpperCase()===a:equal(values[i]?.[j],a,card.code==='A9')));}
+function grade(card,values){
+ return card.answers.map((expected,i)=>{
+  const entered=values[i]||[];
+  if(card.code==='B7'){
+   return entered.length===expected.length && expected.every(root=>entered.some(value=>equal(value,root)));
+  }
+  return expected.every((a,j)=>['B4','B5'].includes(card.code)?linearEqual(entered[j],a):card.code==='C2'?clean(entered[j]).toUpperCase()===a:equal(entered[j],a,card.code==='A9'));
+ });
+}
 root.SpecialPracticeEngine={number,equal,linear,linearEqual,grade};if(typeof module!=='undefined')module.exports=root.SpecialPracticeEngine;
 })(typeof window!=='undefined'?window:globalThis);
