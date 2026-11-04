@@ -112,17 +112,18 @@ function renderPaperTab(){
 function renderReportsTab(){
  if(!t.paper)return '<p class="mb-empty">请先创建或选择一份试卷。</p>';
  const questions=t.questions.filter(q=>q.kind==='regular'),allowed=questions.map(q=>q.question_no);
+ const realRoster=t.roster.filter(r=>String(Number(r.student_code))!=='46');
  const count=new Map(allowed.map(n=>[n,0])),reportCodes=new Set();
- for(const row of t.roster){const rr=t.reports.filter(r=>r.student_code===row.student_code),list=E.mergeReports(rr,allowed);if(rr.length)reportCodes.add(row.student_code);list.forEach(n=>count.set(n,(count.get(n)||0)+1));}
+ for(const row of realRoster){const rr=t.reports.filter(r=>r.student_code===row.student_code),list=E.mergeReports(rr,allowed);if(rr.length)reportCodes.add(row.student_code);list.forEach(n=>count.set(n,(count.get(n)||0)+1));}
  const sample=t.roster[0]?.student_code||'1';
- return '<div class="paper-stats"><div><small>班级人数</small><strong>'+t.roster.length+'</strong></div><div><small>已登记</small><strong>'+reportCodes.size+'</strong></div><div><small>未登记</small><strong>'+Math.max(0,t.roster.length-reportCodes.size)+'</strong></div><div><small>合并后错题次数</small><strong>'+[...count.values()].reduce((a,b)=>a+b,0)+'</strong></div></div>'
+ return '<div class="paper-stats"><div><small>班级人数</small><strong>'+realRoster.length+'</strong></div><div><small>已登记</small><strong>'+reportCodes.size+'</strong></div><div><small>未登记</small><strong>'+Math.max(0,realRoster.length-reportCodes.size)+'</strong></div><div><small>合并后错题次数</small><strong>'+[...count.values()].reduce((a,b)=>a+b,0)+'</strong></div></div>'
  +'<h4>按题号统计 · 老师与学生登记取并集，不重复计数</h4><div class="paper-heat">'+[...count.entries()].map(([n,v])=>'<div title="第'+esc(n)+'题"><b>'+esc(n)+'</b><strong>'+v+'</strong><small>人出错</small></div>').join('')+'</div>'
  +'<div class="paper-two-col"><div><h4>老师逐人登记</h4><form id="paperSingleReport" class="paper-report-form"><label>学生学号<select name="student">'+t.roster.map(r=>'<option value="'+esc(r.student_code)+'">'+esc(r.student_code)+'号 '+esc(r.student_name||'')+'</option>').join('')+'</select></label>'
  +'<label>错题题号（逗号分隔，留空可清除老师的统计）<input name="wrong" placeholder="例如 2,5,8"></label><button type="submit" class="primary small">保存老师统计</button></form></div>'
  +'<div><h4>批量登记 1–45 号错题</h4><p class="paper-muted">支持「学号: 错题号」格式；也可上传 CSV，每行两列为学号与错题号。不会覆盖学生自行登记的题目。</p>'
  +'<textarea id="paperReportsBulk" rows="6" placeholder="'+esc(sample)+': 1,3,8&#10;2: 4,9&#10;3:"></textarea><div class="paper-actions"><input type="file" id="paperReportsFile" accept=".csv,.tsv,.txt"><button id="paperReportsImport" class="ghost small">导入教师统计</button></div></div></div>'
  +'<h4>逐人检查</h4><div class="paper-table"><table><thead><tr><th>学号</th><th>教师</th><th>学生</th><th>合并错题号</th><th>登记</th></tr></thead><tbody>'
- +t.roster.map(r=>{const a=t.reports.find(x=>x.student_code===r.student_code&&x.source==='teacher'),b=t.reports.find(x=>x.student_code===r.student_code&&x.source==='student');
+ +realRoster.map(r=>{const a=t.reports.find(x=>x.student_code===r.student_code&&x.source==='teacher'),b=t.reports.find(x=>x.student_code===r.student_code&&x.source==='student');
  const merged=E.mergeReports([a,b].filter(Boolean),allowed);
  return '<tr><td>'+esc(r.student_code)+'号 '+esc(r.student_name||'')+'</td><td>'+esc((a?.wrong_numbers||[]).join(', ')||'—')+'</td><td>'+esc((b?.wrong_numbers||[]).join(', ')||'—')+'</td><td><b>'+esc(merged.join(', ')||'—')+'</b></td><td><button type="button" class="ghost small" data-paper-fill="'+esc(r.student_code)+'">选此学生</button></td></tr>';}).join('')+'</tbody></table></div>';
 }
@@ -135,7 +136,7 @@ function renderPlansTab(){
  const merged=E.mergeReports(t.reports.filter(x=>x.student_code===t.editingStudent),allowed);
  return '<div class="paper-plan-head"><h4>自动推荐 → 教师调整 → 发布个人重测卷</h4><p>每人最多 5 题；错题超出 5 题按教师设定优先级选取，少于 5 题用已编写的深度题补足。没有深度题时不强制凑题。</p>'
  +'<div class="paper-actions"><button class="primary small" id="paperGenerate">生成 / 更新未发布的草稿</button><button class="ghost small" id="paperRelease">发布已审核草稿</button><button class="ghost small" id="paperPrint">打印全班一人一页</button><button class="ghost small" id="paperExport">导出统计 CSV</button></div>'
- +'<div class="paper-plan-status">草稿 '+drafts+' 人 · 已发布 '+already+' 人 · 班级名册 '+t.roster.length+' 人</div></div>'
+ +'<div class="paper-plan-status">草稿 '+drafts+' 人 · 已发布 '+already+' 人 · 实际学生 '+t.roster.filter(r=>String(Number(r.student_code))!=='46').length+' 人（46号不计）</div></div>'
  +'<div class="paper-table"><table><thead><tr><th>学生</th><th>合并错题</th><th>个人重测题</th><th>状态</th><th>审核</th></tr></thead><tbody>'
  +t.roster.map(r=>{const rr=t.reports.filter(x=>x.student_code===r.student_code),merged=E.mergeReports(rr,allowed),p=t.plans.find(x=>x.student_code===r.student_code),num=[...(p?.selected_numbers||[]),...(p?.extra_numbers||[])];
  return '<tr><td>'+esc(r.student_code)+'号 '+esc(r.student_name||'')+'</td><td>'+esc(rr.length?merged.join(', ')||'全对':'未登记')+'</td><td>'+esc(num.join(', ')||'未选题')+' <small>'+num.length+'/5</small></td><td>'+(p?.published?'已发布':p?'待审核':'未生成')+'</td><td><button class="ghost small" data-paper-plan="'+esc(r.student_code)+'">审核调整</button></td></tr>';}).join('')+'</tbody></table></div>'
@@ -343,7 +344,7 @@ async function generatePlans(){
  if(!t.paper||!teacherReady())return;
  if(!window.confirm('将按原题优先级和深度题生成每人最多5题草稿；已发布的个人卷不受影响，但未发布草稿会重新生成。是否继续？'))return;
  const items=[],all=t.questions,regular=all.filter(q=>q.kind==='regular').map(q=>q.question_no);
- for(const row of t.roster){
+ for(const row of t.roster.filter(r=>String(Number(r.student_code))!=='46')){
   const reports=t.reports.filter(x=>x.student_code===row.student_code),old=t.plans.find(p=>p.student_code===row.student_code);
   if(old?.published||!reports.length)continue;
   const p=E.plan(reports,all,5);
@@ -375,7 +376,7 @@ async function releasePlans(){
 function printSheets(teacherMode=true,studentCode=''){
  const paper=teacherMode?t.paper:s.paper,questions=teacherMode?t.questions:s.questions,plans=teacherMode?t.plans:[s.plan];
  if(!paper)return;
- const roster=teacherMode?t.roster:[{student_code:studentCode,student_name:s.studentCode===studentCode?'':''}];
+ const roster=teacherMode?t.roster.filter(r=>String(Number(r.student_code))!=='46'):[{student_code:studentCode,student_name:s.studentCode===studentCode?'':''}];
  const windowPrint=window.open?.('','_blank');if(!windowPrint){msg(teacherMode?TR:SR,'浏览器拦截了打印窗口，请允许弹出窗口。');return;}
  const pages=roster.map((row,i)=>{
   const plan=plans.find(p=>p?.student_code===row.student_code),items=plan?E.describePlan(paper,plan,questions):[];
@@ -392,13 +393,13 @@ function exportCsv(){
  if(!t.paper)return;
  const allowed=t.questions.filter(x=>x.kind==='regular').map(q=>q.question_no);
  const lines=[['学号','姓名','教师统计','学生自报','合并错题','重测原题','深度题','已发布']];
- for(const r of t.roster){
+ for(const r of t.roster.filter(r=>String(Number(r.student_code))!=='46')){
   const reports=t.reports.filter(x=>x.student_code===r.student_code),teacher=reports.find(x=>x.source==='teacher'),student=reports.find(x=>x.source==='student'),p=t.plans.find(x=>x.student_code===r.student_code);
   lines.push([r.student_code,r.student_name,teacher?.wrong_numbers.join(' ')||'',student?.wrong_numbers.join(' ')||'',E.mergeReports(reports,allowed).join(' '),(p?.selected_numbers||[]).join(' '),(p?.extra_numbers||[]).join(' '),p?.published?'是':'否']);
  }
  const value='\uFEFF'+lines.map(row=>row.map(x=>'"'+String(x??'').replace(/"/g,'""').replace(/^\s*[=+\-@]/,z=>"'"+z)+'"').join(',')).join('\r\n');
  const url=URL.createObjectURL(new Blob([value],{type:'text/csv;charset=utf-8'})),a=document.createElement('a');a.href=url;a.download='RATIOBOT_试卷错题_'+day()+'.csv';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
- msg(TR,'已导出名册中 '+t.roster.length+' 人的双来源错题与个人选题。');
+ msg(TR,'已导出真实学生的双来源错题与个人选题，已排除46号测试记录。');
 }
 function bindPlansTab(){
  TR.querySelector('#paperGenerate')?.addEventListener('click',generatePlans);
