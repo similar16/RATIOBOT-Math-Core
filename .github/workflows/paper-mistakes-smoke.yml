@@ -21,6 +21,13 @@ jobs:
         with:
           node-version: '22'
           cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
       - run: npm ci
+      - run: pip install Pillow==11.3.0
+      - run: npm run build
       - name: Paper-first teacher and student regression
-        run: SITE_DIR=site npm test
+        run: SITE_DIR=_site npm test
+      - name: Built assets smoke
+        run: SITE_DIR=_site python tests/assets.py
