@@ -17,6 +17,8 @@ assert.deepEqual(E.plan([{wrong_numbers:['2','4']}],questions).extra_numbers,['D
 assert.equal(E.plan([{wrong_numbers:['2']}],questions).missing,2);
 assert.deepEqual(E.plan([{wrong_numbers:['2']}],questions.filter(q=>q.kind==='regular')).extra_numbers,[]);
 assert.equal(E.describePlan(null,{selected_numbers:['1'],extra_numbers:['D1']},questions).length,2);
+assert.equal(E.describePlan(null,{selected_numbers:['1']},[{question_no:'1',variant_body:'新变式',variant_answer:'',answer:'原题答案'}])[0].answer,'');
+assert.deepEqual(E.normalized('7(2),12A',['7(2)','12A']).numbers,['7(2)','12A']);
 const dom=new JSDOM('<section id="paperStudent"></section><section id="teacherPaperMistakes"></section>',{url:'https://example.invalid',runScripts:'outside-only'});
 const w=dom.window;
 w.confirm=()=>true;
