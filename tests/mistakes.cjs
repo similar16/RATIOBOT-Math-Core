@@ -2,7 +2,7 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('n
 const {JSDOM}=require('jsdom');
 const dir=process.env.SITE_DIR||'site',html=fs.readFileSync(path.join(dir,'index.html'),'utf8');
 const js=fs.readFileSync(path.join(dir,'mistakes.js'),'utf8'),css=fs.readFileSync(path.join(dir,'mistakes.css'),'utf8');
-assert.match(html,/id="mistakes"/);assert.match(html,/id="teacherMistakesContent"/);
+assert.match(html,/id="mistakes"/);assert.match(html,/id="teacherPracticeMistakesContent"/);
 assert.match(html,/data-go="mistakes"/);assert.match(html,/data-teacher-tab="mistakes"/);
 assert.match(html,/mistakes\.js/);assert.match(html,/mistakes\.css/);
 assert.ok(css.includes('@media'));
