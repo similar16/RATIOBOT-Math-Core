@@ -2773,7 +2773,7 @@ state.questionWrong=true;state.wrongAttempts++;state.combo=0;$('#combo').textCon
   function teacherSwitchTab(name){
     if(cloudState.role==='teacher')go('teacher',{bypass:true});
     $$('.teacher-tab').forEach(b=>b.classList.toggle('active',b.dataset.teacherTab===name));
-    ['publish','data','accounts','review','daily','bank','appearance'].forEach(k=>$('#teacherPanel'+k[0].toUpperCase()+k.slice(1))?.classList.toggle('active',k===name));
+    ['publish','data','accounts','review','mistakes','daily','bank','appearance'].forEach(k=>$('#teacherPanel'+k[0].toUpperCase()+k.slice(1))?.classList.toggle('active',k===name));
   }
   function teacherEsc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
   async function teacherAuth(){if(!cloudClient){cloudMsg('#teacherMsg','云端组件未加载，请刷新页面后重试。','bad');return}const email=FIXED_TEACHER_EMAIL,password=$('#teacherPassword').value;if(!password){cloudMsg('#teacherMsg','请输入教师密码。','bad');return}cloudMsg('#teacherMsg','正在登录教师端…');try{let res=await cloudClient.auth.signInWithPassword({email,password});if(res.error)throw res.error;if(String(res.data.user?.email||'').toLowerCase()!==FIXED_TEACHER_EMAIL)throw new Error('不是固定教师账号');cloudState.user=res.data.user;cloudState.role='teacher';$('#teacherPassword').value='';refreshCloudUI();await loadTeacherClasses();go('teacher',{bypass:true});teacherSwitchTab('bank');cloudMsg('#teacherMsg','✓ 教师登录成功，已进入教师控制台。','good')}catch(e){cloudMsg('#teacherMsg','教师用户名或密码不正确。','bad')}}
