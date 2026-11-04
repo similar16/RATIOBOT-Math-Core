@@ -61,7 +61,7 @@ function describePlan(paper,planItem,questions){
  const lookup=new Map(questions.map(q=>[q.question_no,q]));
  const num=[...(planItem?.selected_numbers||[]),...(planItem?.extra_numbers||[])];
  return num.map(n=>{const q=lookup.get(n);if(!q)return {number:n,text:'请核对试卷题号 '+n,answer:''};
- return {number:q.question_no,depth:q.kind==='depth',text:q.variant_body?.trim()||q.body?.trim()||'请完成原试卷第 '+n+' 题',answer:q.variant_answer?.trim()||q.answer?.trim()||'',source:q.variant_body?.trim()?'变式题':q.kind==='depth'?'深度思考题':'原题'};});
+ const variant=!!q.variant_body?.trim();return {number:q.question_no,depth:q.kind==='depth',text:variant?q.variant_body.trim():(q.body?.trim()||'请完成原试卷第 '+n+' 题'),answer:variant?(q.variant_answer?.trim()||''):(q.answer?.trim()||''),source:variant?'变式题':q.kind==='depth'?'深度思考题':'原题'};});
 }
 function escape(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 const api={list,normalized,rowsFromText,csv,mergeReports,plan,describePlan,order,escape};
