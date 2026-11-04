@@ -41,6 +41,17 @@ async function submit(e){
  loading=true;
  try{
   B.complete({runId:current.runId,cardId:c.id,title:c.title,code:c.code,correct,values,flags,avgTime:(Date.now()-current.started)/5000});
+  // 只收录首次提交中判错的题，变式取同专题另一套。
+  flags.forEach((ok,i)=>{
+   if(ok)return;
+   const others=cards.filter(z=>z.code===c.code&&z.id!==c.id&&z.questions?.[i]&&z.answers?.[i]);
+   const alternative=others.length?others[(Math.max(1,Number(c.set)||1)-1)%others.length]:null;
+   void window.MistakeBook?.capture({
+     sourceKey:'special:'+c.id+':'+i,source:'G区 专项加练',kind:'special-'+c.code,topic:c.code+' · '+c.title,
+     question:c.questions[i],correctAnswer:c.answers[i].join('||'),studentAnswer:values[i].join('||'),
+     variantQuestion:alternative?.questions[i]||'',variantAnswer:alternative?.answers[i]?.join('||')||''
+   });
+  });
   current.submitted=true;form.querySelectorAll('input,button').forEach(n=>n.disabled=true);
   flags.forEach((ok,i)=>{const f=page.querySelector('#spFeedback'+i);f.classList.toggle('correct',ok);f.innerHTML=ok?'✓ 正确':'再看一看。正确答案：'+c.answers[i].map((a,j)=>'<span class="sp-answer">'+(c.labels?esc(c.labels[i][j])+' = ':'')+(c.code==='C2'?esc(a):math(frac(a.replace(/−/g,'-').replace(/π/g,'\\pi'))))+'</span>').join('，')+(c.code==='A9'?'（需要约成最简形式）':'');});
   page.querySelector('#spResult').innerHTML='<div class="sp-result"><h3>答对 '+correct+' / 5 题</h3><p>'+(correct===5?'本组全部正确，可以结束今天的专项练习。':'先核对错题，弄清原因后再练一组。')+'</p><p id="spSync">本机已保存，正在同步…</p><button class="primary" id="spNext" type="button">换一套</button> <button class="ghost" id="spDone" type="button">返回目录</button></div>';
