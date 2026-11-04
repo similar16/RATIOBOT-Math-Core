@@ -1,0 +1,24 @@
+name: H Mistake Book Smoke
+on:
+  pull_request:
+    paths:
+      - 'site/mistakes.js'
+      - 'site/mistakes.css'
+      - 'site/index.html'
+      - 'tests/mistakes.cjs'
+      - 'package.json'
+      - '.github/workflows/mistake-smoke.yml'
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Mistake book functionality and identity isolation
+        run: SITE_DIR=site node tests/mistakes.cjs
