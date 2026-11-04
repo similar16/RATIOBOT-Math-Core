@@ -156,7 +156,7 @@ function renderTeacher(){
  if(r.error||!r.data?.length){sel.value=old;teacherStatus('优先级保存失败。');}else{x.priority=Number(sel.value);teacherStatus('✓ 优先级已更新。');}
  });
  teacher.querySelector('#mbTeacherAssign').onsubmit=async e=>{
- e.preventDefault();const f=e.currentTarget,fd=new FormData(f),target=String(fd.get('student')||''),chosen=roster.find(r=>r.user_id===target);if(!chosen)return teacherStatus('请选择已注册学生。');const button=f.querySelector('button');button.disabled=true;
+ e.preventDefault();const f=e.currentTarget,fd=new FormData(f),target=String(fd.get('student')||''),chosen=roster.find(r=>r.user_id===target);if(!chosen)return teacherStatus('请选择已注册学生。');const count=teacherList.filter(r=>r.user_id===target&&r.selected_for_retest).length;if(count>=5)return teacherStatus('这名学生已选满5题，请先取消一道重点题。');const button=f.querySelector('button');button.disabled=true;
  const r=await B.client().from('mistake_items').insert({class_id:teacherClass,user_id:target,source_key:'teacher:'+Date.now().toString(36)+Math.random().toString(36).slice(2),source:'教师布置',kind:'manual',topic:String(fd.get('topic')||''),question:String(fd.get('question')||''),correct_answer:String(fd.get('correct_answer')||''),variant_question:String(fd.get('variant_question')||''),variant_answer:String(fd.get('variant_answer')||''),selected_for_retest:true,due_on:today(),times_wrong:0}).select('id');
  if(r.error||!r.data?.length){button.disabled=false;teacherStatus('分配失败：'+(r.error?.message||'未保存'));}else await loadTeacher(teacherClass);
  };
@@ -165,7 +165,7 @@ function exportCsv(){
  const arr=teacherList.filter(x=>x.selected_for_retest&&(!teacherFilter||x.user_id===teacherFilter));
  if(!arr.length)return teacherStatus('请先在“重测”列勾选需要导出的题目。');
  const items=[['学号','姓名','知识点','原题','参考答案','变式题','变式答案','错题来源','错误次数']].concat(arr.map(x=>{const n=getStudent(x)||{};return [n.student_code||'',n.student_name||'',x.topic,x.question,x.correct_answer,x.variant_question,x.variant_answer,x.source,x.times_wrong];}));
- const csv='\uFEFF'+items.map(row=>row.map(val=>'"'+String(val??'').replace(/"/g,'""').replace(/^[=+\-@]/,"'$&")+'"').join(',')).join('\r\n');
+ const csv='\uFEFF'+items.map(row=>row.map(val=>'"'+String(val??'').replace(/"/g,'""').replace(/^\s*[=+\-@]/,m=>"'"+m)+'"').join(',')).join('\r\n');
  const blob=new Blob([csv],{type:'text/csv;charset=utf-8'}),url=URL.createObjectURL(blob),anchor=document.createElement('a');
  anchor.href=url;anchor.download='RATIOBOT_重点错题_'+today()+'.csv';document.body.append(anchor);anchor.click();anchor.remove();setTimeout(()=>URL.revokeObjectURL(url),500);
  teacherStatus('已导出 '+arr.length+' 道重点错题。');
