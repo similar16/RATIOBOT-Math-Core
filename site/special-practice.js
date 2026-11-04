@@ -9,7 +9,7 @@ const identity=()=>B.ready()?B.key():'';
 const progress=()=>B.profile()?.economy?.modules?.specialPractice||{};
 const categories=[...new Set(cards.map(c=>c.code))].sort((a,b)=>a.localeCompare(b,'en',{numeric:true}));
 function check(){if(identity()!==owner||!B.ready()){reset();B.go('account');return false;}return true;}
-function header(){return '<div class="page-heading"><div><div class="eyebrow">PART G · SPECIAL PRACTICE</div><h2>专项加练</h2><p>共'+categories.length+'类专项，每次5题。按编号顺序排列，与纸质练习卡一致。</p></div><button type="button" class="ghost" id="spHome">返回首页</button></div>';}
+function header(){return '<div class="page-heading"><div><div class="eyebrow">PART G · SPECIAL PRACTICE</div><h2>专项加练</h2><p>共'+categories.length+'类专项，每次5题。每类50组，随机抽取题组，保留第1—5题的原有难度顺序。</p></div><button type="button" class="ghost" id="spHome">返回首页</button></div>';}
 function common(){page.querySelector('#spHome').onclick=()=>B.go('home');}
 function history(){const records=progress().records||[];return '<div class="sp-history"><h3>最近专项练习</h3>'+(records.slice(0,10).map(r=>'<div class="sp-record">'+esc(r.title)+' · '+esc(r.cardId)+' · '+r.correct+'/5 · '+esc(new Date(r.at).toLocaleString('zh-CN'))+'</div>').join('')||'<p>完成第一组后，记录会保存在当前学生账号。</p>')+'</div>';}
 function menu(){
@@ -54,7 +54,7 @@ async function submit(e){
   });
   current.submitted=true;form.querySelectorAll('input,button').forEach(n=>n.disabled=true);
   flags.forEach((ok,i)=>{const f=page.querySelector('#spFeedback'+i);f.classList.toggle('correct',ok);f.innerHTML=ok?'✓ 正确':'再看一看。正确答案：'+c.answers[i].map((a,j)=>'<span class="sp-answer">'+(c.labels?esc(c.labels[i][j])+' = ':'')+(c.code==='C2'?esc(a):math(frac(a.replace(/−/g,'-').replace(/π/g,'\\pi'))))+'</span>').join('，')+(c.code==='A9'?'（需要约成最简形式）':'');});
-  page.querySelector('#spResult').innerHTML='<div class="sp-result"><h3>答对 '+correct+' / 5 题</h3><p>'+(correct===5?'本组全部正确，可以结束今天的专项练习。':'先核对错题，弄清原因后再练一组。')+'</p><p id="spSync">本机已保存，正在同步…</p><button class="primary" id="spNext" type="button">换一套</button> <button class="ghost" id="spDone" type="button">返回目录</button></div>';
+  page.querySelector('#spResult').innerHTML='<div class="sp-result"><h3>答对 '+correct+' / 5 题</h3><p>'+(correct===5?'本组全部正确，可以结束今天的专项练习。':'先核对错题，弄清原因后再练一组。')+'</p><p id="spSync">本机已保存，正在同步…</p><button class="primary" id="spNext" type="button">随机再练一组</button> <button class="ghost" id="spDone" type="button">返回目录</button></div>';
   page.querySelector('#spNext').onclick=()=>{const pool=cards.filter(x=>x.code===c.code&&x.id!==c.id);start(pool[Math.floor(Math.random()*pool.length)]);};page.querySelector('#spDone').onclick=menu;
   const t=token,ok=await B.sync();if(t===token&&identity()===owner&&page.querySelector('#spSync'))page.querySelector('#spSync').textContent=ok?'记录已同步到学生账号。':'本机已保存，暂未同步；联网后系统会重试。';
  }catch(err){if(identity()===owner&&page.querySelector('#spNotice'))page.querySelector('#spNotice').textContent='保存失败：'+err.message+'，请重试。';}finally{loading=false;}
