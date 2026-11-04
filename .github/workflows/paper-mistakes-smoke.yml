@@ -1,0 +1,33 @@
+name: Paper-First Mistake Module Smoke
+on:
+  pull_request:
+    paths:
+      - 'site/paper-mistakes*.js'
+      - 'site/paper-mistakes.css'
+      - 'site/mistakes.js'
+      - 'site/index.html'
+      - 'tests/paper-mistakes.cjs'
+      - 'tests/mistakes.cjs'
+      - 'package.json'
+      - '.github/workflows/paper-mistakes-smoke.yml'
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: npm ci
+      - run: pip install Pillow==11.3.0
+      - run: npm run build
+      - name: Paper-first teacher and student regression
+        run: SITE_DIR=_site npm test
+      - name: Built assets smoke
+        run: SITE_DIR=_site python tests/assets.py

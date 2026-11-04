@@ -2,7 +2,7 @@
 (function(){
 'use strict';
 const B=window.RatioMistakeBridge;
-const root=document.querySelector('#mistakes'),teacher=document.querySelector('#teacherMistakesContent');
+const root=document.querySelector('#practiceMistakes'),teacher=document.querySelector('#teacherPracticeMistakesContent');
 if(!B||!root||!teacher)return;
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','"':'&#39;'}[c]));
 const safe=s=>String(s??'').slice(0,4000).trim();
