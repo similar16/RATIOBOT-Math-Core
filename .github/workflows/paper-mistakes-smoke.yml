@@ -1,0 +1,26 @@
+name: Paper-First Mistake Module Smoke
+on:
+  pull_request:
+    paths:
+      - 'site/paper-mistakes*.js'
+      - 'site/paper-mistakes.css'
+      - 'site/mistakes.js'
+      - 'site/index.html'
+      - 'tests/paper-mistakes.cjs'
+      - 'tests/mistakes.cjs'
+      - 'package.json'
+      - '.github/workflows/paper-mistakes-smoke.yml'
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Paper-first teacher and student regression
+        run: SITE_DIR=site node tests/paper-mistakes.cjs && SITE_DIR=site node tests/mistakes.cjs
