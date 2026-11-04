@@ -23,4 +23,4 @@ jobs:
           cache: npm
       - run: npm ci
       - name: Paper-first teacher and student regression
-        run: SITE_DIR=site node tests/paper-mistakes.cjs && SITE_DIR=site node tests/mistakes.cjs
+        run: SITE_DIR=site npm test
