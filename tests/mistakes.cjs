@@ -6,7 +6,7 @@ assert.match(html,/id="mistakes"/);assert.match(html,/id="teacherMistakesContent
 assert.match(html,/data-go="mistakes"/);assert.match(html,/data-teacher-tab="mistakes"/);
 assert.match(html,/mistakes\.js/);assert.match(html,/mistakes\.css/);
 assert.ok(css.includes('@media'));
-const dom=new JSDOM('<div id="mistakes"></div><div id="teacherMistakesContent"></div>',{url:'https://example.com',runScripts:'outside-only'});
+const dom=new JSDOM('<div id="practiceMistakes"></div><div id="teacherPracticeMistakesContent"></div>',{url:'https://example.com',runScripts:'outside-only'});
 const w=dom.window;let who='student-A',role='student',rows=[];
 let nextId=0;
 const copy=x=>JSON.parse(JSON.stringify(x));
@@ -35,10 +35,10 @@ async function run(){
  assert.equal(await w.MistakeBook.capture({kind:'arithmetic',question:'1+2',correctAnswer:'3',studentAnswer:'5'}),true);
  assert.equal(rows.length,1);assert.equal(rows[0].times_wrong,2);
  await w.MistakeBook.open();await new Promise(r=>setImmediate(r));
- assert.match(w.document.querySelector('#mistakes').textContent,/错题修复站/);
- assert.match(w.document.querySelector('#mistakes').textContent,/1\+2/);
- who='student-B';await w.MistakeBook.refresh();assert.doesNotMatch(w.document.querySelector('#mistakes').textContent,/1\+2/);
- role='teacher';await w.MistakeBook.refresh();assert.match(w.document.querySelector('#mistakes').textContent,/请先登录学生账号/);
+ assert.match(w.document.querySelector('#practiceMistakes').textContent,/错题修复站/);
+ assert.match(w.document.querySelector('#practiceMistakes').textContent,/1\+2/);
+ who='student-B';await w.MistakeBook.refresh();assert.doesNotMatch(w.document.querySelector('#practiceMistakes').textContent,/1\+2/);
+ role='teacher';await w.MistakeBook.refresh();assert.match(w.document.querySelector('#practiceMistakes').textContent,/请先登录学生账号/);
  console.log('Mistake book smoke, dedupe and identity isolation: OK');
 }
 run().catch(e=>{console.error(e);process.exitCode=1;});
