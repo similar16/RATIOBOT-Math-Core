@@ -122,6 +122,14 @@ function submit(){
  try{A.parse(raw);}catch(e){feedback(e.message||'表达式未识别，请检查格式。','bad');return;}
  const q=run.questions[run.index],r=A.check(raw,q.answer);
  if(r.correct){correctAnswer(run.attempts===0&&run.hintCount===0);return;}
+ if(run.attempts===0){
+  let alt=null;try{alt=A.generate(run.config);}catch(e){}
+  void window.MistakeBook?.capture({
+   source:'B区 代数式挑战',kind:'algebra',topic:names[run.config.module]||'整式运算',
+   question:q.expression,correctAnswer:q.answer,studentAnswer:raw,
+   variantQuestion:alt?.expression||'',variantAnswer:alt?.answer||''
+  });
+ }
  run.attempts++;run.combo=0;$('#combo').textContent='0';
  run.mistakes.push({module:q.module,structure:q.meta,equivalent:r.equivalent,reason:r.reason});
  if(run.attempts>=3){run.answered=true;run.times.push((Date.now()-run.started)/1000);$('#answerInput').disabled=true;$('#submitBtn').textContent='看懂了，下一题 →';feedback('参考答案：'+q.answer+'。下一题再试试。','bad');}
