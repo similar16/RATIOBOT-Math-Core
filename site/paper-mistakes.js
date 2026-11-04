@@ -95,7 +95,7 @@ function renderPaperTab(){
  return '<div class="paper-toolbar"><b>'+esc(p.title)+'</b><span class="mb-chip">'+(p.published?'已对学生发布':'教师草稿')+'</span><button id="paperPublish" type="button" class="primary small">'+(p.published?'撤回试卷':'发布试卷给学生')+'</button></div>'
  +'<div class="paper-file-row"><label>原试卷 PDF / Word / 图片（≤12MB）<input type="file" id="paperFileInput" accept=".pdf,.docx,.png,.jpg,.jpeg,.webp"></label>'+fileLinkButton(p)+'</div>'
  +'<p class="paper-muted">题目以教师发布的这份试卷为准。可直接录题号统计；需要在线展示与打印完整重测题时，再补充题干、变式与答案。</p>'
- +'<div class="paper-two-col"><div><h4>② 原卷题目与优先级</h4><div class="paper-question-list">'+t.questions.map(q=>'<button type="button" class="paper-question-row '+(q.question_no===t.editing?'selected':'')+'" data-paper-edit="'+esc(q.question_no)+'"><b>'+(q.kind==='depth'?'深度 '+esc(q.question_no):'第 '+esc(q.question_no)+' 题')+'</b><span>'+esc((q.body||'尚未录入题干').slice(0,54))+'</span><small>'+(['','优先','普通','较低'][q.priority]||'普通')+'</small></button>').join('')+'</div><button class="ghost small" id="paperAddDepth">＋ 增加一道深度思考题</button></div>'
+ +'<div class="paper-two-col"><div><h4>② 原卷题目与优先级</h4><div class="paper-question-list">'+t.questions.map(q=>'<button type="button" class="paper-question-row '+(q.question_no===t.editing?'selected':'')+'" data-paper-edit="'+esc(q.question_no)+'"><b>'+(q.kind==='depth'?'深度 '+esc(q.question_no):'第 '+esc(q.question_no)+' 题')+'</b><span>'+esc((q.body||'尚未录入题干').slice(0,54))+'</span><small>'+(['','优先','普通','较低'][q.priority]||'普通')+'</small></button>').join('')+'</div><div class="paper-actions"><button class="ghost small" id="paperAddRegular">＋ 添加原卷小题号</button><button class="ghost small" id="paperAddDepth">＋ 增加一道深度思考题</button></div></div>'
  +'<div><h4>③ 编辑题目 / 对应变式</h4>'+(edit?'<form id="paperEditQuestion" class="paper-question-editor"><b>'+(edit.kind==='depth'?'深度题 ':'原卷第 ')+esc(edit.question_no)+' 题</b>'
  +'<label>知识点 / 原题（支持 $LaTeX$）<textarea name="body" rows="4" maxlength="8000" placeholder="可选：没有电子稿时直接按原试卷题号引用">'+esc(edit.body)+'</textarea></label>'
  +'<label>原题参考答案<textarea name="answer" rows="2" maxlength="2000">'+esc(edit.answer)+'</textarea></label>'
@@ -251,10 +251,19 @@ async function saveQuestion(ev){
  try{check(await db().from('paper_questions').update(payload).eq('id',q.id).select('id'));Object.assign(q,payload);t.message='✓ 第 '+q.question_no+' 题已保存。';renderTeacher();}
  catch(e){msg(TR,'保存失败：'+(e.message||''));f.querySelector('button').disabled=false;}
 }
+async function addRegular(){
+ if(!teacherReady()||!t.paper)return;
+ const no=String(window.prompt?.('请输入原试卷的小题号，如 7(2)、12A：')||'').trim();
+ if(!no)return;
+ if(!/^\d{1,3}(?:\(\d{1,2}\)|[A-Za-z])?$/.test(no))return msg(TR,'题号格式不正确，请使用 7(2)、12A 等形式。');
+ if(t.questions.some(x=>x.question_no===no))return msg(TR,'这个题号已经存在，请直接点击编辑。');
+ try{check(await db().from('paper_questions').insert({paper_id:t.paper.id,question_no:no,kind:'regular'}).select('id'));const pid=t.paper.id;await selectTeacherPaper(pid);t.editing=no;renderTeacher();}
+ catch(e){msg(TR,'新增小题号失败：'+(e.message||''));}
+}
 async function addDepth(){
  if(!teacherReady()||!t.paper)return;
  const number='D'+(Math.max(0,...t.questions.filter(x=>/^D\d+$/.test(x.question_no)).map(x=>Number(x.question_no.slice(1))))+1);
- try{check(await db().from('paper_questions').insert({paper_id:t.paper.id,question_no:number,kind:'depth',body:'请在此编写深度思考题'}).select('id'));await selectTeacherPaper(t.paper.id);t.editing=number;t.message='请完善 '+number+' 的题目和参考答案。';renderTeacher();}
+ try{check(await db().from('paper_questions').insert({paper_id:t.paper.id,question_no:number,kind:'depth',body:''}).select('id'));await selectTeacherPaper(t.paper.id);t.editing=number;t.message='请完善 '+number+' 的题目和参考答案。';renderTeacher();}
  catch(e){msg(TR,'增加深度题失败：'+(e.message||''));}
 }
 async function bulkQuestionImport(){
@@ -264,8 +273,8 @@ async function bulkQuestionImport(){
  const valid=[],errors=[],lookup=new Map(t.questions.map(q=>[q.question_no,q]));
  const rows=table[0]?.[0]?.includes('题号')?table.slice(1):table;
  for(const row of rows){
-  const no=String(row[0]||'').trim(),old=lookup.get(no),depth=/^D[1-9]\d*$/.test(no);
-  if(!old&&!depth){errors.push('未知题号 '+no);continue;}
+  const no=String(row[0]||'').trim(),old=lookup.get(no),depth=/^D[1-9]\d*$/.test(no),regular=/^\d{1,3}(?:\(\d{1,2}\)|[A-Za-z])?$/.test(no);
+  if(!old&&!depth&&!regular){errors.push('无效题号 '+no);continue;}
   const priority=Number(row[5]||old?.priority||2);if(![1,2,3].includes(priority)){errors.push(no+' 的优先级只能为1、2、3');continue;}
   valid.push({paper_id:t.paper.id,question_no:no,kind:old?.kind||(depth?'depth':'regular'),body:String(row[1]??old?.body??''),answer:String(row[2]??old?.answer??''),variant_body:String(row[3]??old?.variant_body??''),variant_answer:String(row[4]??old?.variant_answer??''),priority});
  }
@@ -282,6 +291,7 @@ function bindPaperTab(){
  TR.querySelectorAll('[data-paper-edit]').forEach(b=>b.onclick=()=>{t.editing=b.dataset.paperEdit;renderTeacher();});
  TR.querySelector('#paperEditQuestion')?.addEventListener('submit',saveQuestion);
  TR.querySelector('#paperAddDepth').onclick=addDepth;
+ TR.querySelector('#paperAddRegular').onclick=addRegular;
  TR.querySelector('#paperBulkImport').onclick=bulkQuestionImport;
  TR.querySelector('#paperBulkFile').onchange=async e=>{const file=e.target.files?.[0];if(file){if(file.size>2000000)return msg(TR,'文本导入文件不得超过2MB');TR.querySelector('#paperBulkText').value=await file.text();}};
 }
