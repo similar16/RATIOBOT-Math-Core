@@ -423,9 +423,534 @@ const chapter3Rows=[
   ]
 ];
 bank.push(...chapter3Rows.map(([lesson,title,text,page],i)=>({id:"ch3-"+(i+1),order:48+i,chapter:3,lesson,title,text,page,parts:text.split(/\{([^{}]+)\}/g)})));
-const sections=lessons.map((title,i)=>({chapter:2,lesson:i+1,title})).concat([{chapter:3,lesson:2,title:"代数式的概念"},{chapter:3,lesson:3,title:"整式的加减"}]);
+const chapter456Rows=[
+  {
+    "chapter": 4,
+    "lesson": 1,
+    "page": 106,
+    "title": "等式",
+    "text": "像2x=3y，S=xy，12a+3b=58这样，表示{相等关系}的式子叫作{等式}（equation）。",
+    "id": "ch4-1",
+    "order": 70
+  },
+  {
+    "chapter": 4,
+    "lesson": 1,
+    "page": 107,
+    "title": "等式的基本性质",
+    "text": "1. 等式两边都{加上（或减去）}{同一个数或整式}，所得结果仍是{等式}。",
+    "id": "ch4-2",
+    "order": 71
+  },
+  {
+    "chapter": 4,
+    "lesson": 1,
+    "page": 107,
+    "title": "等式的基本性质",
+    "text": "2. 等式两边都{乘（或除以）}{同一个数}（{除数不能为0}），所得结果仍是{等式}。",
+    "id": "ch4-3",
+    "order": 72
+  },
+  {
+    "chapter": 4,
+    "lesson": 1,
+    "page": 107,
+    "title": "等式的基本性质",
+    "text": "用字母可以表示为：\n如果 a=b，那么 {a±m=b±m}；\n如果 a=b，那么 {am=bm}；\n如果 a=b，且 {m≠0}，那么 {a/m=b/m}。",
+    "answerFigure": "assets/review/p107-formulas.png",
+    "id": "ch4-4",
+    "order": 73
+  },
+  {
+    "chapter": 4,
+    "lesson": 1,
+    "page": 109,
+    "title": "未知数",
+    "text": "在上面的等式中，都是用字母表示要求的{未知的量}，这样的字母叫作{未知数}（unknown number）。解决上述问题的关键是求出未知数的值。",
+    "id": "ch4-5",
+    "order": 74
+  },
+  {
+    "chapter": 4,
+    "lesson": 1,
+    "page": 109,
+    "title": "方程",
+    "text": "像2x+1=x+5，a+b=12，2a+b=20，0.618x²=1.6这样，{含有未知数的等式}叫作{方程}（equation）。",
+    "id": "ch4-6",
+    "order": 75
+  },
+  {
+    "chapter": 4,
+    "lesson": 1,
+    "page": 111,
+    "title": "方程的解与解方程",
+    "text": "能使方程{两边的值相等}的未知数的值叫作{方程的解}（solution of equation），如x=4是方程2x+1=5+x的解。求方程的解的过程叫作{解方程}（solving equation）。",
+    "id": "ch4-7",
+    "order": 76
+  },
+  {
+    "chapter": 4,
+    "lesson": 2,
+    "page": 113,
+    "title": "一元一次方程",
+    "text": "在上一节认识的方程中，像2x+1=x+5，x+1/7x=19这样，等号两边都是{整式}，且只含有{一个未知数}，未知数的次数都是{1}的方程，叫作{一元一次方程}（linear equation with one unknown）。",
+    "id": "ch4-8",
+    "order": 77
+  },
+  {
+    "chapter": 4,
+    "lesson": 2,
+    "page": 115,
+    "title": "移项",
+    "text": "像这样，方程中的某些项{改变符号}后，可以从方程的一边移到{另一边}，这样的变形叫作{移项}（moving terms）。",
+    "id": "ch4-9",
+    "order": 78
+  },
+  {
+    "chapter": 4,
+    "lesson": 2,
+    "page": 115,
+    "title": "移项",
+    "text": "在解一元一次方程时，移项的目的是把{含有未知数的项}移到方程的{一边}，把{常数项}移到{另一边}。",
+    "id": "ch4-10",
+    "order": 79
+  },
+  {
+    "chapter": 4,
+    "lesson": 2,
+    "page": 115,
+    "title": "解一元一次方程",
+    "text": "解一元一次方程就是通过{变形}，最终将方程转化为{x=c}（c为常数）的形式。",
+    "id": "ch4-11",
+    "order": 80
+  },
+  {
+    "chapter": 4,
+    "lesson": 2,
+    "page": 116,
+    "title": "解一元一次方程——去括号",
+    "text": "在解一元一次方程时，如果方程中有括号，为了将方程转化为{x=c}（c为常数）的形式，一般需要先根据{去括号法则}{去括号}。",
+    "id": "ch4-12",
+    "order": 81
+  },
+  {
+    "chapter": 4,
+    "lesson": 2,
+    "page": 118,
+    "title": "解一元一次方程的步骤",
+    "text": "一般地，解一元一次方程的步骤是：{去分母}、{去括号}、{移项}、{合并同类项}、{把未知数的系数化为1}。通过这些步骤可以将一元一次方程转化为x=c（c为常数）的形式。",
+    "answerFigure": "assets/review/p118-flow.png",
+    "id": "ch4-13",
+    "order": 82
+  },
+  {
+    "chapter": 5,
+    "lesson": 1,
+    "page": 141,
+    "title": "多面体",
+    "text": "多面体是由{若干个面}围成的{封闭图形}，相邻两个面的公共边称为{棱}，棱与棱的交点称为{顶点}。",
+    "id": "ch5-1",
+    "order": 83
+  },
+  {
+    "chapter": 5,
+    "lesson": 1,
+    "page": 141,
+    "title": "点、线、面",
+    "text": "{点}（point）、{线}（line）、{面}（surface）是构成几何体的{基本要素}。",
+    "id": "ch5-2",
+    "order": 84
+  },
+  {
+    "chapter": 6,
+    "lesson": 1,
+    "page": 154,
+    "title": "两点确定一条直线",
+    "text": "{两点}确定{一条直线}。",
+    "id": "ch6-1",
+    "order": 85
+  },
+  {
+    "chapter": 6,
+    "lesson": 1,
+    "page": 156,
+    "title": "两点之间，线段最短",
+    "text": "两点之间的所有连线中，{线段}{最短}。\n简单说成：两点之间，线段最短。",
+    "id": "ch6-2",
+    "order": 86
+  },
+  {
+    "chapter": 6,
+    "lesson": 1,
+    "page": 156,
+    "title": "两点之间的距离",
+    "text": "两点之间{线段的长度}叫作这两点之间的{距离}（distance）。",
+    "id": "ch6-3",
+    "order": 87
+  },
+  {
+    "chapter": 6,
+    "lesson": 1,
+    "page": 159,
+    "title": "中点",
+    "text": "如果一个点把一条线段分成{两条相等的线段}，那么这个点叫作这条线段的{中点}（middle point）。",
+    "id": "ch6-4",
+    "order": 88
+  },
+  {
+    "chapter": 6,
+    "lesson": 1,
+    "page": 159,
+    "title": "中点",
+    "text": "如图，如果C是线段AB的{中点}，\n那么 {AC=BC=½AB} 或 {AB=2AC=2BC}。",
+    "figure": "assets/review/p159-midpoint.png",
+    "id": "ch6-5",
+    "order": 89
+  },
+  {
+    "chapter": 6,
+    "lesson": 2,
+    "page": 162,
+    "title": "角",
+    "text": "有{公共端点}的{两条射线}组成的图形叫作{角}（angle），这个公共端点是角的{顶点}，这两条射线是角的两条{边}。",
+    "id": "ch6-6",
+    "order": 90
+  },
+  {
+    "chapter": 6,
+    "lesson": 2,
+    "page": 163,
+    "title": "始边和终边",
+    "text": "如图6-14，角也可以看成是一条{射线}绕着它的{端点}{旋转}到另一个位置所成的图形。起始位置和终止位置的射线分别叫作角的始边和终边。",
+    "figure": "assets/review/p163-rotation.png",
+    "id": "ch6-7",
+    "order": 91
+  },
+  {
+    "chapter": 6,
+    "lesson": 2,
+    "page": 163,
+    "title": "平角与周角",
+    "text": "如图6-15（1），当角的终边和始边成{一条直线}时，这个角叫作{平角}。如图6-15（2），当角的终边{旋转一周}后与始边重合时，这个角叫作{周角}。",
+    "figure": "assets/review/p163-flat-full.png",
+    "id": "ch6-8",
+    "order": 92
+  },
+  {
+    "chapter": 6,
+    "lesson": 2,
+    "page": 163,
+    "title": "角度制",
+    "text": "角的度量一般采用{角度制}，常用的{度}量单位是度、{分}、{秒}，分别用“°”“′”“″”表示，其中1°={60′}，1′={60″}。",
+    "id": "ch6-9",
+    "order": 93
+  },
+  {
+    "chapter": 6,
+    "lesson": 2,
+    "page": 163,
+    "title": "等角",
+    "text": "如果两个角的{度数相等}，那么就称这两个角相等，简称{等角}。两个等角可以{重合}，可以重合的角也都相等。",
+    "id": "ch6-10",
+    "order": 94
+  },
+  {
+    "chapter": 6,
+    "lesson": 2,
+    "page": 163,
+    "title": "周角、平角、直角",
+    "text": "一个周角等于{360°}，一个平角等于{180°}，一个直角等于{90°}。",
+    "id": "ch6-11",
+    "order": 95
+  },
+  {
+    "chapter": 6,
+    "lesson": 2,
+    "page": 165,
+    "title": "补角",
+    "text": "如果两个角的度数之和等于{180°}，那么这两个角互为{补角}（supplementary angle），简称{互补}。例如，∠1=60°，∠2=120°，则∠1和∠2互为补角。",
+    "id": "ch6-12",
+    "order": 96
+  },
+  {
+    "chapter": 6,
+    "lesson": 2,
+    "page": 165,
+    "title": "余角",
+    "text": "如果两个角的度数之和等于{90°}，那么这两个角互为{余角}（complementary angle），简称{互余}。例如，∠3=20°，∠4=70°，则∠3和∠4互为余角。",
+    "id": "ch6-13",
+    "order": 97
+  },
+  {
+    "chapter": 6,
+    "lesson": 2,
+    "page": 165,
+    "title": "同角（等角）的补角相等",
+    "text": "{同角（等角）}的{补角}{相等}。",
+    "id": "ch6-14",
+    "order": 98
+  },
+  {
+    "chapter": 6,
+    "lesson": 2,
+    "page": 165,
+    "title": "同角（等角）的余角相等",
+    "text": "{同角（等角）}的{余角}{相等}。",
+    "id": "ch6-15",
+    "order": 99
+  },
+  {
+    "chapter": 6,
+    "lesson": 2,
+    "page": 168,
+    "title": "角的平分线",
+    "text": "如果从角的{顶点}出发的一条{射线}把这个角分成{两个相等的角}，那么这条射线叫作这个角的{平分线}（angular bisector）。",
+    "id": "ch6-16",
+    "order": 100
+  },
+  {
+    "chapter": 6,
+    "lesson": 2,
+    "page": 168,
+    "title": "角的平分线",
+    "text": "如图，如果OC是∠AOB的{平分线}，\n那么 {∠AOC=∠BOC=½∠AOB}，\n或 {∠AOB=2∠AOC=2∠BOC}。",
+    "figure": "assets/review/p168-bisector.png",
+    "id": "ch6-17",
+    "order": 101
+  },
+  {
+    "chapter": 6,
+    "lesson": 3,
+    "page": 171,
+    "title": "对顶角",
+    "text": "两条直线相交所成的四个角中，有{公共顶点}没有{公共边}的两个角叫作{对顶角}（opposite angles）。在图6-25中，∠1和∠3是对顶角，∠2和∠4也是对顶角。",
+    "figure": "assets/review/p171-opposite.png",
+    "id": "ch6-18",
+    "order": 102
+  },
+  {
+    "chapter": 6,
+    "lesson": 3,
+    "page": 171,
+    "title": "对顶角相等",
+    "text": "{对顶角}{相等}。",
+    "id": "ch6-19",
+    "order": 103
+  },
+  {
+    "chapter": 6,
+    "lesson": 3,
+    "page": 173,
+    "title": "垂直",
+    "text": "如果两条直线相交所成的四个角中有一个角是{直角}，那么就称这两条直线{互相垂直}，其中的一条直线叫作另一条直线的{垂线}（perpendicular line），它们的交点叫作{垂足}（foot of a perpendicular）。",
+    "id": "ch6-20",
+    "order": 104
+  },
+  {
+    "chapter": 6,
+    "lesson": 3,
+    "page": 173,
+    "title": "垂直",
+    "text": "在图6-29中，两条直线互相垂直，记作“{a⊥b}”或“{AB⊥CD}”，垂足是{O}。",
+    "figure": "assets/review/p173-perpendicular.png",
+    "id": "ch6-21",
+    "order": 105
+  },
+  {
+    "chapter": 6,
+    "lesson": 3,
+    "page": 174,
+    "title": "垂直",
+    "text": "在{同一平面内}，过一点{有且只有一条}直线与已知直线{垂直}。",
+    "id": "ch6-22",
+    "order": 106
+  },
+  {
+    "chapter": 6,
+    "lesson": 3,
+    "page": 176,
+    "title": "垂线段",
+    "text": "如图6-35，过直线l外一点P作l的{垂线}，{垂足}为O，线段PO叫作点P到直线l的{垂线段}（vertical line segment）。",
+    "figure": "assets/review/p176-segment.png",
+    "id": "ch6-23",
+    "order": 107
+  },
+  {
+    "chapter": 6,
+    "lesson": 3,
+    "page": 176,
+    "title": "垂线段最短",
+    "text": "直线外一点与直线上各点连接的所有线段中，{垂线段}{最短}。",
+    "id": "ch6-24",
+    "order": 108
+  },
+  {
+    "chapter": 6,
+    "lesson": 3,
+    "page": 177,
+    "title": "点到直线的距离",
+    "text": "直线外一点到这条直线的{垂线段的长度}叫作{点到直线的距离}。例如，在图6-35中，垂线段PO的长度就是点P到直线l的距离。直线上的点到这条直线的距离为{0}。",
+    "figure": "assets/review/p176-segment.png",
+    "id": "ch6-25",
+    "order": 109
+  },
+  {
+    "chapter": 6,
+    "lesson": 4,
+    "page": 180,
+    "title": "平行线",
+    "text": "在{同一平面内}，{不相交}的两条直线叫作{平行线}（parallel lines）。",
+    "id": "ch6-26",
+    "order": 110
+  },
+  {
+    "chapter": 6,
+    "lesson": 4,
+    "page": 180,
+    "title": "平行线",
+    "text": "在图6-38中，a，b两条直线互相平行，记作“{a∥b}”或“{AB∥CD}”。",
+    "figure": "assets/review/p180-parallel.png",
+    "id": "ch6-27",
+    "order": 111
+  },
+  {
+    "chapter": 6,
+    "lesson": 4,
+    "page": 181,
+    "title": "平行线基本事实1",
+    "text": "过{直线外一点}{有且只有一条}直线与这条直线{平行}。",
+    "id": "ch6-28",
+    "order": 112
+  },
+  {
+    "chapter": 6,
+    "lesson": 4,
+    "page": 183,
+    "title": "同位角",
+    "text": "如图6-45，两条直线a，b被第三条直线c所截，形成{八个角}。具有{∠1和∠2}这种位置关系的一对角叫作{同位角}（corresponding angles）。在图6-45中，∠3和∠4，∠5和∠6，∠7和∠8分别是同位角。",
+    "figure": "assets/review/p183-corresponding.png",
+    "id": "ch6-29",
+    "order": 113
+  },
+  {
+    "chapter": 6,
+    "lesson": 4,
+    "page": 183,
+    "title": "平行线基本事实2",
+    "text": "两条直线被第三条直线所截，如果{同位角相等}，那么这两条直线{平行}。（简单说成：同位角相等，两直线平行。）",
+    "answerFigure": "assets/review/p183-rule.png",
+    "id": "ch6-30",
+    "order": 114
+  },
+  {
+    "chapter": 6,
+    "lesson": 4,
+    "page": 185,
+    "title": "内错角与同旁内角",
+    "text": "如图6-49，具有{∠4和∠5}这种位置关系的一对角叫作{内错角}（alternate interior angles），具有{∠2和∠5}这种位置关系的一对角叫作{同旁内角}（interior angles on the same side）。",
+    "figure": "assets/review/p185-angles.png",
+    "id": "ch6-31",
+    "order": 115
+  },
+  {
+    "chapter": 6,
+    "lesson": 4,
+    "page": 186,
+    "title": "平行线的判定定理",
+    "text": "两条直线被第三条直线所截，如果{内错角相等}，那么这两条直线{平行}。（简单说成：内错角相等，两直线平行。）",
+    "answerFigure": "assets/review/p186-alternate.png",
+    "id": "ch6-32",
+    "order": 116
+  },
+  {
+    "chapter": 6,
+    "lesson": 4,
+    "page": 186,
+    "title": "平行线的判定定理",
+    "text": "两条直线被第三条直线所截，如果{同旁内角互补}，那么这两条直线{平行}。（简单说成：同旁内角互补，两直线平行。）",
+    "answerFigure": "assets/review/p186-interior.png",
+    "id": "ch6-33",
+    "order": 117
+  },
+  {
+    "chapter": 6,
+    "lesson": 4,
+    "page": 188,
+    "title": "平行线的性质定理1",
+    "text": "两条{平行直线}被第三条直线所截，{同位角相等}。（简单说成：两直线平行，同位角相等。）",
+    "id": "ch6-34",
+    "order": 118
+  },
+  {
+    "chapter": 6,
+    "lesson": 4,
+    "page": 188,
+    "title": "平行线的性质定理2",
+    "text": "两条{平行直线}被第三条直线所截，{内错角相等}。（简单说成：两直线平行，内错角相等。）",
+    "answerFigure": "assets/review/p189-alternate.png",
+    "id": "ch6-35",
+    "order": 119
+  },
+  {
+    "chapter": 6,
+    "lesson": 4,
+    "page": 188,
+    "title": "平行线的性质定理2",
+    "text": "两条{平行直线}被第三条直线所截，{同旁内角互补}。（简单说成：两直线平行，同旁内角互补。）",
+    "answerFigure": "assets/review/p189-interior.png",
+    "id": "ch6-36",
+    "order": 120
+  },
+  {
+    "chapter": 6,
+    "lesson": 5,
+    "page": 193,
+    "title": "多边形",
+    "text": "在平面内，由{不在同一条直线上}的{三条或三条以上}的线段{首尾顺次相接}组成的图形叫作{多边形}（polygon）。这些线段叫作多{边}形的边（side），线段的公共端点叫作多边形的{顶点}（vertex）。",
+    "id": "ch6-37",
+    "order": 121
+  },
+  {
+    "chapter": 6,
+    "lesson": 5,
+    "page": 193,
+    "title": "内角与外角",
+    "text": "多边形{相邻两边}组成的角叫作多边形的{内角}（inner angle），多边形的边与它邻边的{延长线}组成的角叫作多边形的{外角}（external angle）。",
+    "id": "ch6-38",
+    "order": 122
+  },
+  {
+    "chapter": 6,
+    "lesson": 5,
+    "page": 194,
+    "title": "多边形的外角与内角",
+    "text": "多边形的外角与{相邻的内角}{互为补角}。",
+    "id": "ch6-39",
+    "order": 123
+  },
+  {
+    "chapter": 6,
+    "lesson": 5,
+    "page": 194,
+    "title": "对角线",
+    "text": "连接多边形{不相邻}的两个顶点的线段叫作多边形的{对角线}（diagonal）。",
+    "id": "ch6-40",
+    "order": 124
+  },
+  {
+    "chapter": 6,
+    "lesson": 5,
+    "page": 194,
+    "title": "正多边形",
+    "text": "和正方形类似，{各边相等}、{各内角也相等}的多边形叫作{正多边形}（regular polygon）。",
+    "id": "ch6-41",
+    "order": 125
+  }
+];
+bank.push(...chapter456Rows.map(x=>({...x,parts:x.text.split(/\{([^{}]+)\}/g)})));
+const sections=lessons.map((title,i)=>({chapter:2,lesson:i+1,title})).concat([{chapter:3,lesson:2,title:"代数式的概念"},{chapter:3,lesson:3,title:"整式的加减"}]).concat([{"chapter": 4, "lesson": 1, "title": "等式与方程"}, {"chapter": 4, "lesson": 2, "title": "一元一次方程及其解法"}, {"chapter": 5, "lesson": 1, "title": "观察 抽象"}, {"chapter": 6, "lesson": 1, "title": "直线、射线、线段"}, {"chapter": 6, "lesson": 2, "title": "角"}, {"chapter": 6, "lesson": 3, "title": "相交线"}, {"chapter": 6, "lesson": 4, "title": "平行线"}, {"chapter": 6, "lesson": 5, "title": "多边形"}]);
 const day=(d=new Date())=>new Intl.DateTimeFormat('sv-SE',{timeZone:'Asia/Shanghai'}).format(d);
-const normalize=s=>String(s??'').replace(/ⁿ/g,'^n').normalize('NFKC').trim().replace(/\s/g,'').replace(/零/g,'0').replace(/[−–]/g,'-').replace(/\*/g,'×').replace(/<=/g,'≤').replace(/>=/g,'≥').replace(/!=/g,'≠').replace(/ⁿ/g,'^n');
+const normalize=s=>String(s??'').replace(/ⁿ/g,'^n').normalize('NFKC').replace(/⁄/g,'/').trim().replace(/\s/g,'').replace(/零/g,'0').replace(/[−–]/g,'-').replace(/\*/g,'×').replace(/<=/g,'≤').replace(/>=/g,'≥').replace(/!=/g,'≠').replace(/ⁿ/g,'^n');
 function eligible(progress,all=bank,today=day()){return all.filter(x=>x.order<=Number(progress?.through||0)&&progress?.dates?.[x.id]&&progress.dates[x.id]<=today);}
 function batch(progress,all=bank,rng=Math.random,today=day(),previous=''){
  const pool=eligible(progress,all,today);if(!pool.length)return [];
