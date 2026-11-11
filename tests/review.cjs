@@ -1,6 +1,6 @@
 const assert=require('node:assert/strict'),E=require('../site/review-engine.js');
 const today='2026-09-20';let seed=12345;const rng=()=>((seed=(Math.imul(seed,1664525)+1013904223)>>>0)/4294967296);
-assert.equal(E.bank.length,69);for(const x of E.bank){assert.ok(x.parts.length>=5);for(let i=0;i<30;i++){const q=E.question(x,rng);assert.ok(q.blanks.length>=2&&q.blanks.length<=6);assert.equal(new Set(q.blanks).size,q.blanks.length);assert.ok(E.grade(q,q.blanks.map(n=>x.parts[n])).ok);}}
+assert.equal(E.bank.length,125);for(const x of E.bank){assert.ok(x.parts.length>=5);for(let i=0;i<30;i++){const q=E.question(x,rng);assert.ok(q.blanks.length>=2&&q.blanks.length<=6);assert.equal(new Set(q.blanks).size,q.blanks.length);assert.ok(E.grade(q,q.blanks.map(n=>x.parts[n])).ok);}}
 assert.deepEqual(E.batch({through:0,dates:{}},undefined,rng,today),[]);
 const p={through:25,dates:Object.fromEntries(E.bank.map(x=>[x.id,x.order>=21?today:'2026-09-01']))};
 for(let i=0;i<100;i++){const b=E.batch(p,undefined,rng,today);assert.equal(b.length,5);assert.ok(b.every(x=>x.order<=25));assert.ok(b.slice(0,2).every(x=>x.order>=21));assert.equal(new Set(b.map(x=>x.id)).size,5);}
@@ -13,7 +13,7 @@ const s=profile();let streak=0;function answer(id,wrong=false){const q=E.questio
 for(let i=0;i<4;i++)assert.equal(answer('a'+i).r.repaired,'');assert.equal(answer('wrong',true).r.streak,0);assert.equal(s.economy.checkin.days['2026-09-19'],undefined);
 for(let i=0;i<4;i++)assert.equal(answer('b'+i).r.repaired,'');const last=answer('win');assert.equal(last.r.repaired,'2026-09-19');assert.equal(s.economy.checkin.days['2026-09-19'].points,0);assert.ok(E.makeupTarget(s,today).error);assert.equal(E.settle(s,last.run,last.ans,{today}).duplicate,true);assert.ok(s.economy.credits<=40);assert.equal(s.history[0].game,'knowledge');
 const cap=profile();cap.economy.checkin.days[today]={points:39};const q=E.question(E.bank[0],rng),r=E.settle(cap,{id:'cap',q,started:Date.now()},q.blanks.map(n=>q.item.parts[n]),{today});assert.equal(r.gain,1);assert.equal(cap.economy.credits,1);assert.equal(cap.economy.checkin.days[today].points,40);assert.equal(cap.economy.events.midAutumn2026.days[today].knowledgeBlanks,q.blanks.length);
-console.log('PASS review: all 69 cards, random 2–6 blanks, locked/future exclusion, recent-first, 4/5 chapter quota, sparse fallback, strict grading, 5-in-row repair/reset, duplicate prevention, 40-R cap, Mid-Autumn blank counter');
+console.log('PASS review: all 125 cards, random 2–6 blanks, locked/future exclusion, recent-first, 4/5 chapter quota, sparse fallback, strict grading, 5-in-row repair/reset, duplicate prevention, 40-R cap, Mid-Autumn blank counter');
 
 const manifest=require('./review-source-manifest.json'),{createHash}=require('node:crypto');
 for(const expected of manifest){const card=E.bank.find(x=>x.id===expected.id);assert.equal(card.page,expected.page);assert.equal(createHash('sha256').update(card.parts.join('')).digest('hex'),expected.sha256,'Exact DOCX wording and punctuation: '+card.id);}
@@ -27,3 +27,19 @@ assert.equal(E.eligible(released,undefined,today).length,47);
 assert.ok(E.eligible(released,undefined,today).every(x=>x.chapter===2));
 released.through=52;for(let i=0;i<100;i++){const b=E.batch(released,undefined,rng,today);assert.ok(b.filter(x=>x.chapter===3).length>=4);assert.ok(b.every(x=>x.order<=52));assert.equal(new Set(b.map(x=>x.id)).size,5);}
 console.log('PASS actual chapter 3 bank: old progress remains locked, 3.2 boundary and 4/5 chapter quota');
+
+// Chapters 4–6: stable append, section release boundaries, sparse chapter 5.
+const added=require('./review-chapters-4-6-source.json'),fs=require('node:fs');
+assert.equal(added.length,56);
+for(const expected of added){const actual=E.bank.find(x=>x.id===expected.id);for(const key of Object.keys(expected))assert.deepEqual(actual[key],expected[key]);for(const key of ['figure','answerFigure'])if(actual[key])assert.ok(fs.existsSync(require('node:path').join(__dirname,'../site',actual[key])));}
+assert.deepEqual(E.bank.map(x=>x.order),Array.from({length:125},(_,i)=>i+1));
+assert.equal(new Set(E.bank.map(x=>x.id)).size,125);
+const prior={through:69,dates:Object.fromEntries(E.bank.slice(0,69).map(x=>[x.id,today]))};assert.equal(E.eligible(prior,undefined,today).length,69);
+for(const section of E.sections.filter(x=>x.chapter>=4)){
+ const end=E.bank.filter(x=>x.chapter===section.chapter&&x.lesson===section.lesson).at(-1).order;
+ const progress={through:end,dates:Object.fromEntries(E.bank.filter(x=>x.order<=end).map(x=>[x.id,today]))};
+ assert.equal(E.eligible(progress,undefined,today).length,end);
+ for(let n=0;n<30;n++){const batch=E.batch(progress,undefined,rng,today);assert.ok(batch.every(x=>x.order<=end));assert.equal(new Set(batch.map(x=>x.id)).size,5);if(section.chapter!==5)assert.ok(batch.slice(0,4).every(x=>x.chapter===section.chapter));else assert.ok(batch.slice(0,4).every(x=>[4,5].includes(x.chapter)));}
+}
+assert.equal(E.normalize('½'),E.normalize('1/2'));
+console.log('PASS chapters 4–6: 56 original-text cards, image assets, old progress unchanged, all section boundaries and chapter 5 fallback');
