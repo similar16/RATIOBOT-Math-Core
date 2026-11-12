@@ -28,7 +28,16 @@ for(const c of [cards[0],cards.find(c=>c.code==='A9'),cards.find(c=>c.code==='B1
  w.SpecialPracticeUI.start(c);if(c.code==='C3')assert.equal(w.document.querySelectorAll('.sp-axis').length,5);if(c.code==='B8')assert.match(w.document.querySelector('form').textContent,/已知/);const form=w.document.querySelector('form');c.answers.forEach((row,i)=>row.forEach((a,j)=>{if(c.code==='C2')form.querySelector('[name=q'+i+'][value='+a+']').checked=true;else form.elements['q'+i+'_'+j].value=a;}));form.dispatchEvent(new w.Event('submit',{cancelable:true}));assert.match(w.document.querySelector('#spResult').textContent,/5 \/ 5/);form.dispatchEvent(new w.Event('submit',{cancelable:true}));await new Promise(r=>setTimeout(r,0));
 }
 assert.equal(saves,206);w.SpecialPracticeUI.start(cards[0]);key='2';w.document.querySelector('form').dispatchEvent(new w.Event('submit',{cancelable:true}));assert.equal(saves,206);assert.equal(w.document.querySelector('#specialPractice').textContent,'');
-const html=fs.readFileSync(path.join(root,'index.html'),'utf8');assert.ok(!html.includes('12类专项'));assert.match(html,/新增 B7 由绝对值或平方求 x/);const home=new JSDOM(html).window.document;assert.deepEqual(Array.from(home.querySelectorAll('#home .portal-num')).slice(0,7).map(x=>x.textContent),['A','B','C','D','E','F','G']);assert.equal(home.querySelector('#studentGameMenu [data-go="specialPractice"] span').textContent,'G');assert.match(html,/data-go="specialPractice"/);assert.match(html,/specialPractice','mistakes'\]/);assert.match(html,/window\.SpecialPracticeUI\?\.reset/);
+const html=fs.readFileSync(path.join(root,'index.html'),'utf8');
+const home=new JSDOM(html).window.document;
+assert.deepEqual(Array.from(home.querySelectorAll('#home .portal-num')).slice(0,7).map(x=>x.textContent),['A','B','C','D','E','F','G']);
+const homeEntry=home.querySelector('#home [data-go="specialPractice"]');
+const menuEntry=home.querySelector('#studentGameMenu [data-go="specialPractice"]');
+assert.equal(menuEntry.querySelector('span').textContent,'G');
+assert.match(homeEntry.querySelector('p').textContent,/第4章解方程/);
+assert.match(menuEntry.querySelector('small').textContent,/第4章解方程/);
+assert.match(html,/specialPractice','mistakes'\]/);
+assert.match(html,/window\.SpecialPracticeUI\?\.reset/);
 console.log('PASS 4500 canonical answers, fraction simplification, pi coefficients, ABC, 18 modules, duplicate-submit and account-switch guards');
 
 })().catch(e=>{console.error(e);process.exitCode=1;});

@@ -50,7 +50,7 @@ const identity=()=>B.ready()?B.key():'';
 const progress=()=>B.profile()?.economy?.modules?.specialPractice||{};
 const categories=[...new Set(cards.map(c=>c.code))].sort((a,b)=>a.localeCompare(b,'en',{numeric:true}));
 function check(){if(identity()!==owner||!B.ready()){reset();B.go('account');return false;}return true;}
-function header(){return '<div class="page-heading"><div><div class="eyebrow">PART G · SPECIAL PRACTICE</div><h2>专项加练</h2><p>共'+categories.length+'类专项，每次5题。每类50组，随机抽取题组，保留第1—5题的原有难度顺序。</p></div><button type="button" class="ghost" id="spHome">返回首页</button></div>';}
+function header(){return '<div class="page-heading"><div><div class="eyebrow">PART G · SPECIAL PRACTICE</div><h2>专项加练</h2><p>共'+categories.length+'类常规专项，每次5题。每类50组，随机抽取题组，保留第1—5题的原有难度顺序。</p></div><button type="button" class="ghost" id="spHome">返回首页</button></div>';}
 function common(){page.querySelector('#spHome').onclick=()=>B.go('home');}
 function history(){const records=progress().records||[];return '<div class="sp-history"><h3>最近专项练习</h3>'+(records.slice(0,10).map(r=>'<div class="sp-record">'+esc(r.title)+' · '+esc(r.cardId)+' · '+r.correct+'/5 · '+esc(new Date(r.at).toLocaleString('zh-CN'))+'</div>').join('')||'<p>完成第一组后，记录会保存在当前学生账号。</p>')+'</div>';}
 function menu(){
