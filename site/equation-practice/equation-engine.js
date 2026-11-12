@@ -2,13 +2,15 @@
 (function (root) {
   'use strict';
 
+  const setCount = 50;
+  const questionCount = 5;
   const topics = [
-    { id: 'equality', name: '等式与方程', pages: '4.1 · 第106—112页', goal: '代入检验，练习等式两边的同一变形。' },
-    { id: 'simple', name: '简单方程', pages: '4.2 · 第113—114页', goal: '从 ax = b 到 ax + b = c，练习系数化为1。' },
-    { id: 'move', name: '移项', pages: '4.2 · 第114—115页', goal: '把含未知数的项和常数项分开，留意移项变号。' },
-    { id: 'expand', name: '去括号', pages: '4.2 · 第116—117页', goal: '从单侧括号到两侧括号，练习负因数的分配。' },
-    { id: 'clear', name: '去分母', pages: '4.2 · 第117—120页', goal: '等式两边的每一项都乘同一个数，包括整数项。' },
-    { id: 'mixed', name: '混合训练', pages: '4.2 · 第118—120页', goal: '独立判断从哪一步开始，完成整道题。' },
+    { id: 'equality', code: 'D1', name: '等式与方程', pages: '4.1 · 第106—112页', goal: '代入检验，练习等式两边的同一变形。' },
+    { id: 'simple', code: 'D2', name: '简单方程', pages: '4.2 · 第113—114页', goal: '从 ax = b 到 ax + b = c，练习系数化为1。' },
+    { id: 'move', code: 'D3', name: '移项', pages: '4.2 · 第114—115页', goal: '把含未知数的项和常数项分开，留意移项变号。' },
+    { id: 'expand', code: 'D4', name: '去括号', pages: '4.2 · 第116—117页', goal: '从单侧括号到两侧括号，练习负因数的分配。' },
+    { id: 'clear', code: 'D5', name: '去分母', pages: '4.2 · 第117—120页', goal: '等式两边的每一项都乘同一个数，包括整数项。' },
+    { id: 'mixed', code: 'D6', name: '混合训练', pages: '4.2 · 第118—120页', goal: '独立判断从哪一步开始，完成整道题。' },
   ];
 
   function gcd(a, b) {
@@ -324,32 +326,86 @@
     throw Error('未知训练类型。');
   }
 
-  function makeSet(topic, rng = Math.random, previous = []) {
-    if (!topics.some(item => item.id === topic)) throw Error('未知训练类型。');
-    const order = topic === 'mixed' ? ['simple', 'move', 'expand', 'clear', 'clear'] : Array(5).fill(topic);
+  function makeSet(topic, rng) {
+    const seen = new Set();
+    const order = topic === 'mixed' ? ['simple', 'move', 'expand', 'clear', 'clear'] : Array(questionCount).fill(topic);
     if (topic === 'mixed') {
       for (let i = order.length - 1; i > 0; i--) {
         const j = Math.floor(rng() * (i + 1));
         [order[i], order[j]] = [order[j], order[i]];
       }
     }
-    const seen = new Set(previous.map(q => q.tex));
     let clearCount = 0;
     return order.map((kind, index) => {
       const variant = topic !== 'mixed' ? index
         : kind === 'clear' ? (clearCount++ ? 4 : 2) : 2 + Math.floor(rng() * 3);
-      let fallback;
-      for (let attempt = 0; attempt < 150; attempt++) {
+      for (let attempt = 0; attempt < 500; attempt++) {
         const q = makeQuestion(kind, variant, rng);
         if (!q) continue;
-        fallback ||= q;
         if (abs(q.answer).n > 24n * q.answer.d || q.answer.d > 24n || seen.has(q.tex)) continue;
         seen.add(q.tex);
         return q;
       }
-      if (!fallback) throw Error('本组题目生成失败，请换一组。');
-      return fallback;
+      throw Error('题库生成失败，请刷新后重试。');
     });
+  }
+
+  // Each seed identifies one fixed set in both deployments.
+  const setSeeds = {
+    D1: [
+      0x88b6ed4a, 0x3c7e7c21, 0xd389670c, 0xc9a3f6fb, 0xe53868e5, 0x98748500, 0x6457b45f, 0x05fba834, 0x3c4f3603, 0xa4abe52d,
+      0x77de84a8, 0x7da21c1a, 0xf366bcb1, 0xf51e0e5c, 0x0faa560b, 0x4d70b3ee, 0xa516ea75, 0xa5707950, 0xc8d0b279, 0x03f53984,
+      0xc2b17713, 0x75be9156, 0x032902f8, 0x08b43eea, 0xa3816141, 0x9619c9ac, 0x34701bbe, 0x46bc1005, 0x52dac1a0, 0x8350887f,
+      0x22385ed4, 0xb1c83c23, 0xe6c4704d, 0x777a55ba, 0x6af769d1, 0xde60d995, 0xef286ca2, 0xa57708f6, 0xa7da7c4c, 0x9fd7875e,
+      0x4fce4e40, 0x77175243, 0x2fd9a6f1, 0x3c65aa42, 0x9c71a353, 0x68625096, 0xde46522a, 0x180b8266, 0xc6ef368d, 0xe45e38fa,
+    ],
+    D2: [
+      0xf0557411, 0xd2ad9e3c, 0xc1eb2ece, 0x4440d173, 0xfb686836, 0xdb09ba57, 0x6eab13ca, 0xf3bb70a1, 0x2d34ce9e, 0x7dfd5780,
+      0x7f2be469, 0x7cec62b4, 0x6757ae83, 0x76360206, 0xb501a728, 0xeaba0f93, 0xa29ec578, 0x09e4ca77, 0x9980619b, 0x015751a6,
+      0xa5915c3a, 0x3df0e60e, 0x53151070, 0x73fd690f, 0x42323b71, 0x45cc0939, 0xaca79001, 0x5b02ad92, 0x450b830d, 0x8fdfba59,
+      0x03db2a00, 0xb5e3a813, 0xa428f1bd, 0x200ce8d2, 0xec4aad23, 0x6e9512d1, 0xc402798f, 0x976b514c, 0xbb1bcd9f, 0xaf3b3449,
+      0x3b27e963, 0xd9f78aad, 0x7a26ec28, 0x60294a78, 0x300a2b97, 0xbf5d8359, 0x82889bd7, 0xb0465ae5, 0x9c9c9234, 0xc06855be,
+    ],
+    D3: [
+      0xf3730205, 0x9e910ba0, 0x370e4a7f, 0x003e55d2, 0x774cfb09, 0xc877718e, 0x189c4b95, 0x240927f0, 0x9d3f9a8f, 0xa835c6a2,
+      0xd2ef2d3b, 0xa95cc15e, 0xad5e3925, 0x29999840, 0x6a252e9f, 0x6dd19d9c, 0x9975452e, 0x8271cab5, 0xfea75c90, 0xb8900442,
+      0xab2cad81, 0xda5dfcfe, 0x7ad00045, 0x5cd122bf, 0xaf96688d, 0x17a252fa, 0x79cf066b, 0x88f3e8ce, 0xc70ee130, 0x2d886236,
+      0x916a3c57, 0x48cc7b8c, 0x1c905765, 0x0c06c6b2, 0x6c439083, 0xd9dd2331, 0xcadb5c6e, 0x02740eef, 0x2ca9f73d, 0xa7c73f6a,
+      0xcc79039b, 0x3026e43e, 0x8a931e20, 0xaa0acba6, 0xc25ffa87, 0x4b91a815, 0x1532bfb3, 0x2ade8818, 0xad7b1ce1, 0xa4be8fde,
+    ],
+    D4: [
+      0x941cb5a5, 0xef60eac0, 0xeea35f1f, 0xbca821f2, 0x1f2118a9, 0x697189f4, 0x89ac572f, 0x68831ac2, 0x64b29b39, 0xabea8b44,
+      0x04791dd3, 0xa2128916, 0x16cf01c9, 0x2d9492e3, 0x17abdae6, 0x49d6b50d, 0x36be5308, 0xb28bd97a, 0xfa818bf3, 0xa748e09d,
+      0xb3f5e958, 0x247cdcd7, 0x67c2d44a, 0x4390bd32, 0x0e14302d, 0x68cc22e7, 0x4d43c31a, 0x362637b1, 0xa6d94d5c, 0xa4185884,
+      0xdf252cf7, 0xfa0b9c41, 0xd1a0c8ac, 0x8a59ac1b, 0xcc3272be, 0x0a082a26, 0x72fc64d1, 0xb8e1d32b, 0x393cce8e, 0x8ab00495,
+      0xc3fa8a98, 0x98c8fb4c, 0x35443225, 0x027d3d40, 0x3e728f9f, 0x60561d29, 0x0ba1222e, 0x1309a7af, 0x6cd33142, 0xb83abfb9,
+    ],
+    D5: [
+      0xb8df65c4, 0x92773653, 0x7a3cc796, 0x26b0d9fd, 0xf3f9d338, 0xcabefd37, 0x5b64b92a, 0x176d1681, 0x50f519fe, 0x8b0a7945,
+      0x8ee703bf, 0xa6de9b14, 0x555a4630, 0xbba1bee2, 0xd9c5b0d9, 0x44d7e473, 0x9e174d1d, 0x142c6bd8, 0x7dc07d57, 0xb4762ba1,
+      0xf831a59e, 0x4699c1b4, 0xafcdb906, 0x8a49899a, 0xb4dd9ad0, 0x142431f9, 0x1c42503d, 0x6fed0c6a, 0x9873732c, 0x8e8b013e,
+      0xf36f1bff, 0x01b247a3, 0x300f9bab, 0xafba3f70, 0x13a9fe76, 0x2154ad97, 0x9ea4ee0a, 0x42d4aea5, 0x538efef4, 0x5a1b1dc3,
+      0x8990e2ed, 0xe9d2b671, 0x81f7f82f, 0x958815b8, 0xe49ea86c, 0xb9dc2c60, 0xc60097e6, 0x5c724e0d, 0xc456dfeb, 0x5d4e344f,
+    ],
+    D6: [
+      0xa604214a, 0x4a30bb0c, 0xe1b9d786, 0x9825806f, 0x574c0d84, 0x0e408556, 0xc4a316f8, 0x017b72ea, 0xb8570541, 0xf79755a0,
+      0x77dc0c7f, 0xd3c9e726, 0x027ed44d, 0xdd2dfc07, 0xdc1aec24, 0xb002948a, 0x4a95d04c, 0x4803f09f, 0x31d53974, 0xf8f4935a,
+      0xb75a4af1, 0xd0923e4b, 0x2e00ff2e, 0x66e0be37, 0x7ee8f245, 0x2787bee0, 0xf840e4bf, 0xaf23cf49, 0xab6a3c63, 0xdf881811,
+      0x0dcf4bd5, 0x7a8b9964, 0x0f679573, 0xee5c258c, 0xec9ae8df, 0x8912f606, 0xc701d5ad, 0x949a6cdc, 0x432d50ef, 0x5582b8a3,
+      0xbd9ea0cd, 0xc593cbc8, 0x0ea9fc87, 0x89065a0e, 0x85011a15, 0x891fee97, 0x6b30a7a5, 0xa2e86546, 0xfe6bfbed, 0x9e7adf71,
+    ],
+  };
+
+  function getSet(code, number) {
+    const topic = topics.find(item => item.code === code);
+    if (!topic) throw Error('未知训练类型。');
+    if (!Number.isInteger(number) || number < 1 || number > setCount) throw Error('套号超出范围。');
+    let seed = setSeeds[code][number - 1];
+    const next = () => {
+      seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
+      return seed / 2 ** 32;
+    };
+    return makeSet(topic.id, next);
   }
 
   function checkNumber(text, target, variable) {
@@ -428,7 +484,7 @@
     throw Error('本题直接填写方程的解。');
   }
 
-  const api = { topics, makeSet, checkNumber, checkVerification, checkProperty, checkStep, numericTex };
+  const api = { topics, setCount, questionCount, getSet, checkNumber, checkVerification, checkProperty, checkStep, numericTex };
   if (typeof module !== 'undefined') module.exports = api;
   else root.MathIsleEquationEngine = api;
 })(typeof window === 'undefined' ? globalThis : window);

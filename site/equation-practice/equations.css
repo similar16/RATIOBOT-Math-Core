@@ -50,7 +50,18 @@
 #equations .equation-topic small { display: block; font-size: 15px; line-height: 1.5; color: var(--muted); }
 #equations .equation-topic-arrow { color: var(--eq-action); font-size: 20px; }
 #equations .equation-title, #equations .equation-progress { display: flex; align-items: center; gap: 12px; margin: 0 0 12px; }
-#equations .equation-title { justify-content: space-between; }
+#equations .equation-title { justify-content: space-between; flex-wrap: wrap; }
+#equations .equation-run-tools { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+#equations .equation-set-picker { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); }
+#equations .equation-set-picker select {
+  min-height: 44px;
+  padding: 6px 10px;
+  background: var(--eq-surface);
+  border: 1px solid var(--eq-border);
+  border-radius: 8px;
+  color: var(--ink);
+  font: inherit;
+}
 #equations .equation-progress { color: var(--muted); }
 #equations .equation-progress progress { flex: 1; max-width: 260px; height: 8px; accent-color: var(--eq-action); }
 #equations .equation-workbench { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(270px, 1fr); align-items: start; gap: 14px; }

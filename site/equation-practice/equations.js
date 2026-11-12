@@ -18,6 +18,8 @@
     };
 
     let run = null;
+    const topicLabel = topic => topic.code + ' · ' + topic.name;
+    const setLabel = (topic, number) => topic.code + '-' + String(number).padStart(2, '0');
 
     const prompts = {
       isolate: '先移走含未知数的一边的常数项，写出变形后的方程。',
@@ -37,11 +39,11 @@
         '<section class="equation-hero">',
         '<p class="equation-chapter">第4章 · 一元一次方程</p>',
         '<h1 tabindex="-1">解方程专项</h1>',
-        '<p>每组5题。先练关键一步，再独立解方程。</p>',
+        '<p>每类 ' + E.setCount + ' 套，每套 ' + E.questionCount + ' 题。</p>',
         '</section><ol class="equation-topics">',
-        E.topics.map((topic, i) =>
-          '<li><button type="button" class="equation-topic" data-topic="' + topic.id + '">' +
-          '<span class="equation-topic-number" aria-hidden="true">' + (i + 1) + '</span>' +
+        E.topics.map(topic =>
+          '<li><button type="button" class="equation-topic" data-topic="' + topic.code + '">' +
+          '<span class="equation-topic-number">' + topic.code + '</span>' +
           '<span><strong>' + topic.name + '</strong><small>' + topic.goal + '</small></span>' +
           '<span class="equation-topic-arrow" aria-hidden="true">→</span></button></li>'
         ).join(''),
@@ -52,15 +54,53 @@
       });
     }
 
-    function start(topicId, previous = []) {
+    function start(code, number = 1) {
+      const questions = E.getSet(code, number);
+      const topic = E.topics.find(item => item.code === code);
       clearDrafts();
-      const topic = E.topics.find(item => item.id === topicId);
-      const questions = E.makeSet(topicId, Math.random, previous);
       run = {
-        id: ++sequence, topic, questions, index: 0, results: [],
+        id: ++sequence, topic, number, questions, index: 0, results: [],
         wrong: false, done: false, accepted: '', keyboardOpen: true,
       };
       renderQuestion();
+      window.scrollTo(0, 0);
+    }
+
+    function returnToTopics() {
+      showTopics();
+      app.querySelector('h1').focus({ preventScroll: true });
+      window.scrollTo(0, 0);
+    }
+
+    function setPicker() {
+      const options = Array.from({ length: E.setCount }, (_, index) => {
+        const number = index + 1;
+        return '<option value="' + number + '"' + (run.number === number ? ' selected' : '') +
+          '>' + setLabel(run.topic, number) + '</option>';
+      }).join('');
+      return '<label class="equation-set-picker">套号 <select id="equation-set" aria-label="套号">' +
+        options + '</select></label>';
+    }
+
+    function hasWorkInSet() {
+      if (run.index || run.done || run.wrong || run.accepted) return true;
+      if (ink.pages.get('equations:' + run.id + ':' + run.index)?.strokes.length) return true;
+      return [...app.querySelectorAll('.equation-form math-field, .equation-form input, .equation-form select')]
+        .some(field => field.value && field.value.trim());
+    }
+
+    function bindSetPicker(confirmSwitch) {
+      const picker = app.querySelector('#equation-set');
+      picker.onchange = () => {
+        if (!canUse()) return;
+        const number = Number(picker.value);
+        if (number === run.number) return;
+        if (confirmSwitch && hasWorkInSet() && !window.confirm('切换套号会放弃本套当前进度。要切换吗？')) {
+          picker.value = String(run.number);
+          return;
+        }
+        start(run.topic.code, number);
+      };
     }
 
     function phase(q) {
@@ -135,6 +175,7 @@
       const q = run.questions[run.index];
       const current = phase(q);
       const progress = run.index + Number(run.done);
+      const total = run.questions.length;
       const finished = run.results[run.index];
       const accepted = run.accepted ? '<p class="equation-accepted"><span>上一步</span>' + math(run.accepted) + '</p>' : '';
       const form = '<form class="equation-form" id="equation-form">' + formBody(q, current) +
@@ -148,22 +189,20 @@
           (finished.status === 'revealed' ? '可以对照步骤，再试同类题。' : '答对了。') +
           '</p>' + steps(q, finished.status === 'revealed') +
           '<div class="equation-actions"><button type="button" id="equation-next" class="btn">' +
-          (run.index === 4 ? '查看本组结果' : '下一题') + '</button></div>'
+          (run.index === total - 1 ? '查看本套结果' : '下一题') + '</button></div>'
         : '';
       app.innerHTML = '<div class="equation-title"><div><p class="equation-chapter">' + run.topic.pages +
-        '</p><h1 tabindex="-1">' + run.topic.name + '</h1></div>' +
-        '<button type="button" id="equation-topics" class="btn secondary">选题型</button></div>' +
-        '<div class="equation-progress"><span>第 ' + (run.index + 1) + ' / 5 题</span>' +
-        '<progress value="' + progress + '" max="5" aria-label="本组完成进度"></progress></div>' +
+        '</p><h1 tabindex="-1">' + topicLabel(run.topic) + '</h1></div>' +
+        '<div class="equation-run-tools">' + setPicker() +
+        '<button type="button" id="equation-topics" class="btn secondary">选题型</button></div></div>' +
+        '<div class="equation-progress"><span>第 ' + (run.index + 1) + ' / ' + total + ' 题</span>' +
+        '<progress value="' + progress + '" max="' + total + '" aria-label="本套完成进度"></progress></div>' +
         '<div class="equation-workbench"><section class="panel exercise" aria-label="当前题目">' +
         '<div class="core-formula" tabindex="0">' + math(q.tex, true) + '</div>' + accepted +
         (run.done ? complete : form) + '</section><aside id="equation-ink"></aside></div>';
 
-      app.querySelector('#equation-topics').onclick = () => {
-        showTopics();
-        app.querySelector('h1').focus({ preventScroll: true });
-        window.scrollTo(0, 0);
-      };
+      app.querySelector('#equation-topics').onclick = returnToTopics;
+      bindSetPicker(true);
       ink.mount(app.querySelector('#equation-ink'), 'equations:' + run.id + ':' + run.index);
       if (run.done) {
         const next = app.querySelector('#equation-next');
@@ -269,7 +308,7 @@
     }
 
     function nextQuestion() {
-      if (run.index === 4) return results();
+      if (run.index === run.questions.length - 1) return results();
       run.index++;
       run.done = false;
       run.wrong = false;
@@ -282,26 +321,29 @@
       const names = { first: '首答全对', corrected: '订正后答对', revealed: '看过步骤' };
       const first = run.results.filter(item => item.status === 'first').length;
       const corrected = run.results.filter(item => item.status === 'corrected').length;
-      const skipped = 5 - first - corrected;
+      const total = run.questions.length;
+      const skipped = total - first - corrected;
       const nextTopic = E.topics[E.topics.indexOf(run.topic) + 1];
+      const lastSet = run.number === E.setCount;
+      const nextNumber = lastSet ? run.number : run.number + 1;
       app.innerHTML = '<div class="equation-title"><div><p class="equation-chapter">' +
-        run.topic.name + '</p><h1 tabindex="-1">本组结果</h1></div></div>' +
-        '<section class="panel equation-result"><p><strong>首答全对 ' + first + ' / 5</strong>' +
+        topicLabel(run.topic) + ' · ' + setLabel(run.topic, run.number) +
+        '</p><h1 tabindex="-1">本套结果</h1></div>' + setPicker() + '</div>' +
+        '<section class="panel equation-result"><p><strong>首答全对 ' + first + ' / ' + total + '</strong>' +
         (corrected ? ' · 订正后答对 ' + corrected + ' 题' : '') + (skipped ? ' · 看过步骤 ' + skipped + ' 题' : '') +
         '</p><div class="equation-actions">' +
-        '<button class="btn" type="button" id="equation-again">换一组同类题</button>' +
-        (nextTopic ? '<button type="button" class="btn secondary" id="equation-next-topic">下一类 · ' + nextTopic.name + '</button>' : '') +
+        '<button class="btn" type="button" id="equation-again">' +
+        (lastSet ? '重练本套' : '下一套 · ' + setLabel(run.topic, nextNumber)) + '</button>' +
+        (nextTopic ? '<button type="button" class="btn secondary" id="equation-next-topic">下一类 · ' + nextTopic.code + '</button>' : '') +
         '<button class="text-button" type="button" id="equation-topics">返回题型</button>' +
         '</div><ol class="equation-results-list">' +
         run.questions.map((q, i) => '<li><details><summary><span>第 ' + (i + 1) + ' 题</span>' +
           math(q.tex) + '<small>' + names[run.results[i].status] + '</small></summary>' + steps(q, true) +
           '</details></li>').join('') + '</ol></section>';
-      app.querySelector('#equation-again').onclick = () => start(run.topic.id, run.questions);
-      if (nextTopic) app.querySelector('#equation-next-topic').onclick = () => start(nextTopic.id);
-      app.querySelector('#equation-topics').onclick = () => {
-        showTopics();
-        app.querySelector('h1').focus({ preventScroll: true });
-      };
+      app.querySelector('#equation-again').onclick = () => start(run.topic.code, nextNumber);
+      if (nextTopic) app.querySelector('#equation-next-topic').onclick = () => start(nextTopic.code);
+      app.querySelector('#equation-topics').onclick = returnToTopics;
+      bindSetPicker(false);
       app.querySelector('h1').focus({ preventScroll: true });
       window.scrollTo(0, 0);
     }

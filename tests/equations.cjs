@@ -1,5 +1,6 @@
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
+const { createHash } = require('node:crypto');
 const vm = require('node:vm');
 const path = require('node:path');
 const site = path.resolve(process.env.SITE_DIR || 'site');
@@ -39,12 +40,6 @@ assert.throws(() => E.checkNumber('3/0', rational(0), 'x'), /分母不能为0/);
 assert.throws(() => E.checkNumber('x-x+1', rational(1), 'x'), /填一个数/);
 assert.throws(() => toInput('\\frac{2}{}'), /补全/);
 
-let seed = 0x451fa33e;
-function random() {
-  seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
-  return seed / 2 ** 32;
-}
-
 function satisfies(q) {
   function evaluate(p) {
     const n = p.a.n * q.answer.n * p.b.d + p.b.n * p.a.d * q.answer.d;
@@ -55,14 +50,22 @@ function satisfies(q) {
   return left.n * right.d === right.n * left.d;
 }
 
-for (const { id } of E.topics) {
-  let previous = [];
-  for (let set = 0; set < 150; set++) {
-    const qs = E.makeSet(id, random, previous);
-    assert.equal(qs.length, 5);
-    assert.equal(new Set(qs.map(q => q.tex)).size, qs.length);
-    assert(!qs.some(q => previous.some(old => old.tex === q.tex)));
+assert.deepEqual(E.topics.map(topic => topic.code), ['D1','D2','D3','D4','D5','D6']);
+assert.equal(E.setCount, 50);
+assert.equal(E.questionCount, 5);
+assert.throws(() => E.getSet('D0', 1), /未知训练类型/);
+assert.throws(() => E.getSet('D1', 0), /套号超出范围/);
+assert.throws(() => E.getSet('D6', 51), /套号超出范围/);
+const seen = new Set();
+const catalogue = [];
+for (const { code } of E.topics) {
+  for (let set = 1; set <= E.setCount; set++) {
+    const qs = E.getSet(code, set);
+    assert.equal(qs.length, E.questionCount);
     for (const q of qs) {
+      assert(!seen.has(q.tex), code + '-' + set + ': ' + q.tex);
+      seen.add(q.tex);
+      catalogue.push([code, set, q.tex, q.focus, E.numericTex(q.answer), q.candidate ? E.numericTex(q.candidate) : null]);
       assert(satisfies(q), q.tex);
       const last = q.lines.at(-1)?.tex || q.tex;
       const [unknown, value] = last.split('=');
@@ -86,10 +89,12 @@ for (const { id } of E.topics) {
         if (q.operation === 'divide') assert.throws(() => E.checkProperty(q, 'divide', '0'), /不能为0/);
       }
     }
-    previous = qs;
   }
 }
-console.log('PASS 4,500 equation variants, reference steps, transformations and exact fraction entry');
+assert.equal(seen.size, 1500);
+assert.equal(createHash('sha256').update(JSON.stringify(catalogue)).digest('hex'),
+  '3de30896c53ce806d9b2b0066811ec1f769ccb3d44e2efa5a862ab92f9e76936');
+console.log('PASS D1–D6, 300 fixed sets, 1,500 unique questions, exact answers and steps');
 
 const { JSDOM } = require('jsdom');
 
@@ -145,12 +150,22 @@ async function exerciseNavigation() {
     assert.equal(loads.length, 5);
     assert.equal(w.document.querySelectorAll('.equation-topic').length, 6);
 
-    seed = 0xa12de654;
-    const [question] = E.makeSet('clear', random);
-    seed = 0xa12de654;
-    w.Math.random = random;
-    get('[data-topic="clear"]').click();
+    const chooseSet = number => {
+      const picker = get('#equation-set');
+      picker.value = String(number);
+      picker.dispatchEvent(new w.Event('change', { bubbles: true }));
+    };
+    assert.deepEqual([...w.document.querySelectorAll('.equation-topic')].map(button => button.dataset.topic),
+      ['D1','D2','D3','D4','D5','D6']);
+    get('[data-topic="D5"]').click();
     await tick();
+    assert.equal(get('#equation-set').options.length, 50);
+    assert.equal(get('#equation-set').selectedOptions[0].textContent, 'D5-01');
+    chooseSet(50);
+    await tick();
+    assert.equal(get('#equation-set').selectedOptions[0].textContent, 'D5-50');
+    const [question] = E.getSet('D5', 50);
+    assert.equal(get('.core-formula annotation').textContent, question.tex);
     let keypad = get('.keypad-disclosure');
     assert.equal(keypad.open, true);
     assert.equal(keypad.querySelector('summary').textContent, '隐藏公式键盘');
@@ -168,6 +183,10 @@ async function exerciseNavigation() {
     keypad = get('.keypad-disclosure');
     assert.equal(keypad.open, false, 'keep the keyboard hidden between steps');
     assert(get('#eq-value-math'));
+    w.confirm = () => false;
+    chooseSet(49);
+    assert.equal(get('#equation-set').value, '50', 'cancelling a set switch keeps work');
+    assert(get('#eq-value-math'));
 
     get('#eq-value-math').value = E.numericTex(question.answer);
     get('#equation-form').requestSubmit();
@@ -180,10 +199,27 @@ async function exerciseNavigation() {
     await tick();
     assert.equal(keypad.querySelector('summary').textContent, '隐藏公式键盘');
 
+    for (let index = 1; index < E.questionCount; index++) {
+      get('#equation-reveal').click();
+      get('#equation-next').click();
+    }
+    assert.match(get('.equation-title').textContent, /D5-50/);
+    assert.equal(get('#equation-again').textContent, '重练本套');
+    get('#equation-again').click();
+    assert.equal(get('.core-formula annotation').textContent, question.tex);
+    chooseSet(49);
+    assert.equal(get('#equation-set').value, '49');
+    for (let index = 0; index < E.questionCount; index++) {
+      get('#equation-reveal').click();
+      get('#equation-next').click();
+    }
+    assert.equal(get('#equation-again').textContent, '下一套 · D5-50');
+    get('#equation-again').click();
+    assert.equal(get('.core-formula annotation').textContent, question.tex);
     get('#spEquationBack').click();
     get('#spEquationPractice').click();
     await tick();
-    get('[data-topic="simple"]').click();
+    get('[data-topic="D2"]').click();
     await tick();
     assert.equal(get('.keypad-disclosure').open, true, 'new groups default to open');
     assert.equal(loads.length, 5, 'a successful module load is reused');
@@ -193,7 +229,7 @@ async function exerciseNavigation() {
     assert.deepEqual(routes, ['account']);
     assert.equal(get('#equations'), null);
     assert.equal(get('#specialPractice').textContent, '');
-    console.log('PASS authorized G-area entry, lazy loading, keypad visibility across steps and questions, and account switch cleanup');
+    console.log('PASS numbered set navigation, keypad state, lazy loading, and account switch cleanup');
   } finally {
     w.close();
   }
