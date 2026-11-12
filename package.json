@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "build": "node build.cjs",
-    "test": "node tests/regression.cjs && node tests/rings.cjs && node tests/review.cjs && node tests/daily.cjs && node tests/question-bank.cjs && node tests/appearance.cjs && node tests/student-profile.cjs && node tests/ocr.cjs && node tests/classroom.cjs && node tests/algebra.cjs && node tests/algebra-ui.cjs && node tests/special-practice.cjs && node tests/mistakes.cjs && node tests/paper-mistakes.cjs"
+    "test": "node tests/regression.cjs && node tests/rings.cjs && node tests/review.cjs && node tests/daily.cjs && node tests/question-bank.cjs && node tests/appearance.cjs && node tests/student-profile.cjs && node tests/ocr.cjs && node tests/classroom.cjs && node tests/algebra.cjs && node tests/algebra-ui.cjs && node tests/special-practice.cjs && node tests/equations.cjs && node tests/mistakes.cjs && node tests/paper-mistakes.cjs"
   },
   "repository": {
     "type": "git",
@@ -28,6 +28,7 @@
     "@tesseract.js-data/eng": "1.0.0",
     "jszip": "3.10.2",
     "katex": "0.18.7",
+    "mathlive": "0.111.4",
     "tesseract.js": "6.0.1"
   },
   "private": true

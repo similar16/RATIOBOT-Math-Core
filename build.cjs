@@ -37,11 +37,23 @@ for(const name of ['tesseract.min.js','worker.min.js'])fs.copyFileSync('node_mod
 for(const name of fs.readdirSync('node_modules/tesseract.js-core'))if(name.endsWith('.wasm.js'))fs.copyFileSync('node_modules/tesseract.js-core/'+name,vendor+'/core/'+name);
 for(const lang of ['chi_sim','eng'])fs.copyFileSync('node_modules/@tesseract.js-data/'+lang+'/4.0.0_best_int/'+lang+'.traineddata.gz',vendor+'/lang/'+lang+'.traineddata.gz');
 fs.cpSync('node_modules/katex/dist',vendor+'/katex',{recursive:true});
+// The equation editor is requested only by the equation exercise.
+const mathlive='_site/assets/mathlive/'+require('./package.json').dependencies.mathlive;
+fs.mkdirSync(mathlive,{recursive:true});
+for(const file of ['mathlive.min.js','LICENSE.txt'])fs.copyFileSync('node_modules/mathlive/'+file,mathlive+'/'+file);
+fs.cpSync('node_modules/mathlive/fonts',mathlive+'/fonts',{recursive:true});
 for(const [pkg,name] of [['jszip','LICENSE.markdown'],['tesseract.js','LICENSE.md'],['tesseract.js-core','LICENSE'],['katex','LICENSE']]){const source='node_modules/'+pkg+'/'+name;if(fs.existsSync(source))fs.copyFileSync(source,vendor+'/'+pkg+'-LICENSE.txt');}
 // Generate content-versioned display assets; keep source PNGs intact.
 execFileSync('python',['scripts/optimize-images.py'],{stdio:'inherit'});
 // Tie local JS/CSS requests to their contents so old browser caches cannot mix releases.
 const {createHash}=require('crypto');
+const equationBundle=createHash('sha256');
+for(const file of fs.readdirSync('_site/equation-practice').sort()){
+ equationBundle.update(file).update(fs.readFileSync('_site/equation-practice/'+file));
+}
+const practiceScript='_site/special-practice.js';
+const practiceSource=fs.readFileSync(practiceScript,'utf8');
+fs.writeFileSync(practiceScript,practiceSource.replace('__EQUATION_PRACTICE_VERSION__',equationBundle.digest('hex').slice(0,12)));
 let entry=fs.readFileSync('_site/index.html','utf8');
 entry=entry.replace(/(src|href)="([^":?]+\.(?:js|css))"/g,(all,attr,file)=>{
  const target='_site/'+file;if(!fs.existsSync(target))return all;

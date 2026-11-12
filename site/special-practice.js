@@ -5,6 +5,47 @@ const page=document.querySelector('#specialPractice'),esc=s=>String(s??'').repla
 const math=s=>{try{return window.katex.renderToString(String(s),{throwOnError:false,output:'html'});}catch(e){return esc(s);}};
 const frac=s=>String(s).replace(/^(-?)(\d+)\/(\d+)$/,'$1\\frac{$2}{$3}');
 let run=null,owner='',token=0,loading=false;
+let equationPractice=null;
+const equationAssets=new Map();
+const equationBase=new URL('equation-practice/',document.currentScript?.src||document.baseURI);
+const equationVersion='__EQUATION_PRACTICE_VERSION__';
+
+function loadEquationAsset(name){
+ const url=new URL(name,equationBase);
+ url.searchParams.set('v',equationVersion);
+ if(equationAssets.has(name))return equationAssets.get(name);
+ const promise=new Promise((resolve,reject)=>{
+  const style=name.endsWith('.css'),element=document.createElement(style?'link':'script');
+  if(style){element.rel='stylesheet';element.href=url.href}else element.src=url.href;
+  element.onload=resolve;
+  element.onerror=()=>{element.remove();equationAssets.delete(name);reject(Error('解方程专项资源未加载。'));};
+  document.head.append(element);
+ });
+ equationAssets.set(name,promise);
+ return promise;
+}
+function closeEquations(){
+ equationPractice?.destroy();
+ equationPractice=null;
+}
+async function openEquations(){
+ if(!check())return;
+ const opening=++token;
+ page.innerHTML='<div class="sp-toolbar"><button type="button" class="ghost" id="spEquationBack">← 返回专项加练</button></div>'+
+  '<div id="equations"><p role="status">正在加载解方程专项…</p></div>';
+ const host=page.querySelector('#equations');
+ page.querySelector('#spEquationBack').onclick=()=>{menu();page.querySelector('#spEquationPractice')?.focus();};
+ try{
+  await Promise.all(['equation-engine.js','math-entry.js','handwriting.js','equations.js','equations.css'].map(loadEquationAsset));
+  if(opening!==token||!check())return;
+  equationPractice=window.MathIsleEquationPractice.mount(host,check);
+  host.querySelector('h1')?.focus({preventScroll:true});
+ }catch{
+  if(opening!==token||!check())return;
+  host.innerHTML='<p role="status">解方程专项未加载，请重试。</p><button type="button" class="ghost">重新加载</button>';
+  host.querySelector('button').onclick=openEquations;
+ }
+}
 const identity=()=>B.ready()?B.key():'';
 const progress=()=>B.profile()?.economy?.modules?.specialPractice||{};
 const categories=[...new Set(cards.map(c=>c.code))].sort((a,b)=>a.localeCompare(b,'en',{numeric:true}));
@@ -13,9 +54,10 @@ function header(){return '<div class="page-heading"><div><div class="eyebrow">PA
 function common(){page.querySelector('#spHome').onclick=()=>B.go('home');}
 function history(){const records=progress().records||[];return '<div class="sp-history"><h3>最近专项练习</h3>'+(records.slice(0,10).map(r=>'<div class="sp-record">'+esc(r.title)+' · '+esc(r.cardId)+' · '+r.correct+'/5 · '+esc(new Date(r.at).toLocaleString('zh-CN'))+'</div>').join('')||'<p>完成第一组后，记录会保存在当前学生账号。</p>')+'</div>';}
 function menu(){
+ closeEquations();run=null;token++;
  if(!B.ready()){page.innerHTML=header()+'<div class="sp-empty">请先登录学生账号。</div>';common();return;}
- owner=identity();run=null;token++;const best=progress().best||{};
- page.innerHTML=header()+'<div class="sp-grid">'+categories.map(code=>{const group=cards.filter(c=>c.code===code),c=group[0],done=group.filter(x=>best[x.id]===5).length;return '<button type="button" class="sp-category" data-code="'+code+'"><span class="sp-tag" style="--sp-color:#'+c.color+'">'+code+'</span><b>'+esc(c.title)+'</b><small>'+group.length+'套 · 每套5题 · 已全对 '+done+'/'+group.length+' 套</small></button>';}).join('')+'</div>'+history();common();page.querySelectorAll('[data-code]').forEach(b=>b.onclick=()=>choose(b.dataset.code));
+ owner=identity();const best=progress().best||{};
+ page.innerHTML=header()+'<div class="sp-grid"><button type="button" class="sp-category" id="spEquationPractice"><span class="sp-tag" style="--sp-color:#167582">第4章</span><b>解方程专项</b><small>6类 · 每组5题</small></button>'+categories.map(code=>{const group=cards.filter(c=>c.code===code),c=group[0],done=group.filter(x=>best[x.id]===5).length;return '<button type="button" class="sp-category" data-code="'+code+'"><span class="sp-tag" style="--sp-color:#'+c.color+'">'+code+'</span><b>'+esc(c.title)+'</b><small>'+group.length+'套 · 每套5题 · 已全对 '+done+'/'+group.length+' 套</small></button>';}).join('')+'</div>'+history();common();page.querySelector('#spEquationPractice').onclick=openEquations;page.querySelectorAll('[data-code]').forEach(b=>b.onclick=()=>choose(b.dataset.code));
 }
 function choose(code){
  if(!check())return;const group=cards.filter(c=>c.code===code),best=progress().best||{},todo=group.filter(c=>best[c.id]!==5),pool=todo.length?todo:group;start(pool[Math.floor(Math.random()*pool.length)]);
@@ -28,7 +70,7 @@ function input(c,i){
  return labels.map((label,j)=>'<label>'+label+'<input required autocomplete="off" aria-label="第'+(i+1)+'题'+label+'" name="q'+i+'_'+j+'" maxlength="40" placeholder="'+(c.code==='B1'&&j===0?'如 -2/3 或 3π':['B4','B5','C3'].includes(c.code)?'如 2x+3':'如 -3/4')+'"></label>').join('');
 }
 function start(c){
- if(!check())return;token++;run={card:c,owner,started:Date.now(),submitted:false,runId:'sp-'+Date.now()+'-'+Math.random().toString(36).slice(2)};
+ if(!check())return;closeEquations();token++;run={card:c,owner,started:Date.now(),submitted:false,runId:'sp-'+Date.now()+'-'+Math.random().toString(36).slice(2)};
  page.innerHTML=header()+'<div class="sp-toolbar"><button type="button" class="ghost" id="spBack">← 专项目录</button><span class="sp-tag" style="--sp-color:#'+c.color+'">'+c.code+'</span><h3>'+esc(c.title)+'</h3><label>套号 <select id="spSet">'+cards.filter(x=>x.code===c.code).map(x=>'<option value="'+x.id+'" '+(x.id===c.id?'selected':'')+'>'+String(x.set).padStart(2,'0')+'</option>').join('')+'</select></label></div><p class="sp-hint">'+(c.code==='B8'?'根据已知条件，直接写出所求代数式的值。':c.code==='C3'?'依据数轴和所给条件化简，合并同类项。输入示例：3a-b。':c.code==='B7'?'求出所有符合等式的 x 值，每格填一个解，顺序不限。':c.code==='B6'?'下列各式的值都与 x 的取值无关。直接填写各参数的值，分数可用 / 输入。':['B4','B5','C3'].includes(c.code)?'直接写出化简结果，同类项要合并。输入示例：2x+3。':c.code==='A9'?'先约分，再相乘，答案写成最简形式。分数输入示例：-3/4。':c.code==='B1'?'填写系数与次数，π可输入pi。':c.code==='B2'?'填写项数与次数。':'直接写出答案。分数可用 / 输入。')+'</p>'+(c.value?'<div class="sp-formula">已知 '+math('a='+frac(c.value))+'</div>':'')+axis(c)+'<form id="spForm">'+c.questions.map((q,i)=>'<article class="sp-question"><b>第'+(i+1)+'题</b>'+(c.conditions?.[i]?'<p>已知 '+math(c.conditions[i])+'</p>':'')+(c.diagrams?.[i]?axis({diagram:c.diagrams[i]}):'')+'<div class="sp-formula">'+math(q)+'</div><div class="sp-inputs">'+input(c,i)+'</div><div id="spFeedback'+i+'" class="sp-feedback" aria-live="polite"></div></article>').join('')+'<button id="spSubmit" class="primary" type="submit">提交5题</button><div id="spNotice" role="status"></div></form><div id="spResult"></div>';common();
  page.querySelector('#spBack').onclick=()=>{if(!run.submitted&&!window.confirm('返回目录？未提交的答案不会保存。'))return;menu();};
  page.querySelector('#spSet').onchange=e=>{if(!run.submitted&&!window.confirm('切换套号？未提交的答案不会保存。')){e.target.value=c.id;return;}start(cards.find(x=>x.id===e.target.value));};
@@ -60,6 +102,6 @@ async function submit(e){
   const t=token,ok=await B.sync();if(t===token&&identity()===owner&&page.querySelector('#spSync'))page.querySelector('#spSync').textContent=ok?'记录已同步到学生账号。':'本机已保存，暂未同步；联网后系统会重试。';
  }catch(err){if(identity()===owner&&page.querySelector('#spNotice'))page.querySelector('#spNotice').textContent='保存失败：'+err.message+'，请重试。';}finally{loading=false;}
 }
-function reset(){run=null;owner='';token++;loading=false;page.innerHTML='';}
+function reset(){closeEquations();run=null;owner='';token++;loading=false;page.innerHTML='';}
 window.SpecialPracticeUI={open:menu,reset,start:card=>{owner=identity();start(card);}};
 })();
