@@ -3,7 +3,7 @@
 
   let sequence = 0;
 
-  function mount(app, canUse = () => true) {
+  function mount(app, canUse = () => true, { code, onBack } = {}) {
     const E = window.MathIsleEquationEngine;
     const entry = window.MathIsleMathEntry;
     const ink = window.MathIsleHandwriting;
@@ -20,6 +20,7 @@
     let run = null;
     const topicLabel = topic => topic.code + ' · ' + topic.name;
     const setLabel = (topic, number) => topic.code + '-' + String(number).padStart(2, '0');
+    const backLabel = onBack ? '返回专项目录' : '选题型';
 
     const prompts = {
       isolate: '先移走含未知数的一边的常数项，写出变形后的方程。',
@@ -67,6 +68,10 @@
     }
 
     function returnToTopics() {
+      if (onBack) {
+        onBack(run.topic.code);
+        return;
+      }
       showTopics();
       app.querySelector('h1').focus({ preventScroll: true });
       window.scrollTo(0, 0);
@@ -194,7 +199,7 @@
       app.innerHTML = '<div class="equation-title"><div><p class="equation-chapter">' + run.topic.pages +
         '</p><h1 tabindex="-1">' + topicLabel(run.topic) + '</h1></div>' +
         '<div class="equation-run-tools">' + setPicker() +
-        '<button type="button" id="equation-topics" class="btn secondary">选题型</button></div></div>' +
+        '<button type="button" id="equation-topics" class="btn secondary">' + backLabel + '</button></div></div>' +
         '<div class="equation-progress"><span>第 ' + (run.index + 1) + ' / ' + total + ' 题</span>' +
         '<progress value="' + progress + '" max="' + total + '" aria-label="本套完成进度"></progress></div>' +
         '<div class="equation-workbench"><section class="panel exercise" aria-label="当前题目">' +
@@ -335,7 +340,8 @@
         '<button class="btn" type="button" id="equation-again">' +
         (lastSet ? '重练本套' : '下一套 · ' + setLabel(run.topic, nextNumber)) + '</button>' +
         (nextTopic ? '<button type="button" class="btn secondary" id="equation-next-topic">下一类 · ' + nextTopic.code + '</button>' : '') +
-        '<button class="text-button" type="button" id="equation-topics">返回题型</button>' +
+        '<button class="text-button" type="button" id="equation-topics">' +
+        (onBack ? backLabel : '返回题型') + '</button>' +
         '</div><ol class="equation-results-list">' +
         run.questions.map((q, i) => '<li><details><summary><span>第 ' + (i + 1) + ' 题</span>' +
           math(q.tex) + '<small>' + names[run.results[i].status] + '</small></summary>' + steps(q, true) +
@@ -355,7 +361,8 @@
     }
     app.addEventListener('click', requireSession, true);
     app.addEventListener('submit', requireSession, true);
-    showTopics();
+    if (code && E.topics.some(topic => topic.code === code)) start(code);
+    else showTopics();
 
     return {
       destroy() {

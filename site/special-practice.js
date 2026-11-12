@@ -24,40 +24,82 @@ function loadEquationAsset(name){
  equationAssets.set(name,promise);
  return promise;
 }
+function addEquationCards(grid){
+ const E=window.MathIsleEquationEngine;
+ grid.insertAdjacentHTML('beforeend',E.topics.map(({code,name})=>
+  '<button type="button" class="sp-category" data-equation-code="'+code+'">'+
+  '<span class="sp-tag" style="--sp-color:#167582">'+code+'</span><b>'+esc(name)+'</b>'+
+  '<small>'+E.setCount+'套 · 每套'+E.questionCount+'题</small></button>'
+ ).join(''));
+ grid.querySelectorAll('[data-equation-code]').forEach(button=>{
+  button.onclick=()=>openEquations(button.dataset.equationCode);
+ });
+}
+function loadEquationCards(grid){
+ if(window.MathIsleEquationEngine){addEquationCards(grid);return;}
+ const opening=token;
+ const status=document.createElement('div');
+ status.className='sp-hint';
+ grid.after(status);
+ const active=()=>opening===token&&grid.isConnected&&identity()===owner&&B.ready();
+ async function load(){
+  status.innerHTML='<p role="status">正在加载第4章题型…</p>';
+  try{
+   await loadEquationAsset('equation-engine.js');
+   if(!active())return;
+   addEquationCards(grid);
+   status.remove();
+  }catch{
+   if(!active())return;
+   status.innerHTML='<p role="status">第4章题型未加载。</p><button type="button" class="ghost">重新加载</button>';
+   status.querySelector('button').onclick=load;
+  }
+ }
+ void load();
+}
+function returnToMenu(code){
+ menu();
+ page.querySelector('[data-equation-code="'+code+'"]')?.focus();
+}
 function closeEquations(){
  equationPractice?.destroy();
  equationPractice=null;
 }
-async function openEquations(){
+async function openEquations(code){
  if(!check())return;
  const opening=++token;
  page.innerHTML='<div class="sp-toolbar"><button type="button" class="ghost" id="spEquationBack">← 返回专项加练</button></div>'+
   '<div id="equations"><p role="status">正在加载解方程专项…</p></div>';
  const host=page.querySelector('#equations');
- page.querySelector('#spEquationBack').onclick=()=>{menu();page.querySelector('#spEquationPractice')?.focus();};
+ const back=page.querySelector('#spEquationBack');
+ back.onclick=()=>returnToMenu(code);
  try{
-  await Promise.all(['equation-engine.js','math-entry.js','handwriting.js','equations.js','equations.css'].map(loadEquationAsset));
+  await Promise.all(['math-entry.js','handwriting.js','equations.js','equations.css'].map(loadEquationAsset));
   if(opening!==token||!check())return;
-  equationPractice=window.MathIsleEquationPractice.mount(host,check);
+  equationPractice=window.MathIsleEquationPractice.mount(host,check,{code,onBack:returnToMenu});
+  back.parentElement.remove();
   host.querySelector('h1')?.focus({preventScroll:true});
  }catch{
   if(opening!==token||!check())return;
   host.innerHTML='<p role="status">解方程专项未加载，请重试。</p><button type="button" class="ghost">重新加载</button>';
-  host.querySelector('button').onclick=openEquations;
+  host.querySelector('button').onclick=()=>openEquations(code);
  }
 }
 const identity=()=>B.ready()?B.key():'';
 const progress=()=>B.profile()?.economy?.modules?.specialPractice||{};
 const categories=[...new Set(cards.map(c=>c.code))].sort((a,b)=>a.localeCompare(b,'en',{numeric:true}));
 function check(){if(identity()!==owner||!B.ready()){reset();B.go('account');return false;}return true;}
-function header(){return '<div class="page-heading"><div><div class="eyebrow">PART G · SPECIAL PRACTICE</div><h2>专项加练</h2><p>共'+categories.length+'类常规专项，每次5题。每类50组，随机抽取题组，保留第1—5题的原有难度顺序。</p></div><button type="button" class="ghost" id="spHome">返回首页</button></div>';}
+function header(){return '<div class="page-heading"><div><div class="eyebrow">PART G · SPECIAL PRACTICE</div><h2>专项加练</h2><p>每类50套，每套5题。选定题型后，可在练习页切换套号。</p></div><button type="button" class="ghost" id="spHome">返回首页</button></div>';}
 function common(){page.querySelector('#spHome').onclick=()=>B.go('home');}
 function history(){const records=progress().records||[];return '<div class="sp-history"><h3>最近专项练习</h3>'+(records.slice(0,10).map(r=>'<div class="sp-record">'+esc(r.title)+' · '+esc(r.cardId)+' · '+r.correct+'/5 · '+esc(new Date(r.at).toLocaleString('zh-CN'))+'</div>').join('')||'<p>完成第一组后，记录会保存在当前学生账号。</p>')+'</div>';}
 function menu(){
  closeEquations();run=null;token++;
  if(!B.ready()){page.innerHTML=header()+'<div class="sp-empty">请先登录学生账号。</div>';common();return;}
  owner=identity();const best=progress().best||{};
- page.innerHTML=header()+'<div class="sp-grid"><button type="button" class="sp-category" id="spEquationPractice"><span class="sp-tag" style="--sp-color:#167582">第4章</span><b>解方程专项</b><small>D1–D6 · 每类50套 · 每套5题</small></button>'+categories.map(code=>{const group=cards.filter(c=>c.code===code),c=group[0],done=group.filter(x=>best[x.id]===5).length;return '<button type="button" class="sp-category" data-code="'+code+'"><span class="sp-tag" style="--sp-color:#'+c.color+'">'+code+'</span><b>'+esc(c.title)+'</b><small>'+group.length+'套 · 每套5题 · 已全对 '+done+'/'+group.length+' 套</small></button>';}).join('')+'</div>'+history();common();page.querySelector('#spEquationPractice').onclick=openEquations;page.querySelectorAll('[data-code]').forEach(b=>b.onclick=()=>choose(b.dataset.code));
+ page.innerHTML=header()+'<div class="sp-grid">'+categories.map(code=>{const group=cards.filter(c=>c.code===code),c=group[0],done=group.filter(x=>best[x.id]===5).length;return '<button type="button" class="sp-category" data-code="'+code+'"><span class="sp-tag" style="--sp-color:#'+c.color+'">'+code+'</span><b>'+esc(c.title)+'</b><small>'+group.length+'套 · 每套5题 · 已全对 '+done+'/'+group.length+' 套</small></button>';}).join('')+'</div>'+history();
+ common();
+ page.querySelectorAll('[data-code]').forEach(b=>b.onclick=()=>choose(b.dataset.code));
+ loadEquationCards(page.querySelector('.sp-grid'));
 }
 function choose(code){
  if(!check())return;const group=cards.filter(c=>c.code===code),best=progress().best||{},todo=group.filter(c=>best[c.id]!==5),pool=todo.length?todo:group;start(pool[Math.floor(Math.random()*pool.length)]);

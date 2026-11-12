@@ -113,7 +113,7 @@ async function exerciseNavigation() {
     let ready = false;
     let key = 'class|1';
     w.scrollTo = () => {};
-    w.SpecialPracticeCards = [];
+    w.SpecialPracticeCards = [{ code: 'A1', title: '两数加减', color: 'dce7e3' }];
     w.SpecialPracticeEngine = {};
     w.katex = require('katex');
     w.RatioPracticeBridge = {
@@ -140,24 +140,34 @@ async function exerciseNavigation() {
     w.eval(fs.readFileSync(path.join(site, 'special-practice.js'), 'utf8'));
 
     w.SpecialPracticeUI.open();
-    assert.equal(get('#spEquationPractice'), null);
+    assert.equal(get('[data-equation-code]'), null);
     assert.equal(loads.length, 0);
 
     ready = true;
     w.SpecialPracticeUI.open();
-    get('#spEquationPractice').click();
     await tick();
-    assert.equal(loads.length, 5);
-    assert.equal(w.document.querySelectorAll('.equation-topic').length, 6);
+    const directory = get('.sp-grid');
+    assert.equal(get('[data-code="A1"]').parentElement, directory);
+    assert.deepEqual([...directory.querySelectorAll(':scope > .sp-category[data-equation-code]')]
+      .map(button => button.dataset.equationCode), E.topics.map(topic => topic.code));
+    assert.deepEqual(loads, ['equation-engine.js'], 'only the bank is needed for the directory');
+    for (const { code } of E.topics) {
+      get('[data-equation-code="' + code + '"]').click();
+      await tick();
+      assert.equal(get('.equation-topic'), null, 'no extra topic picker');
+      assert.equal(get('#equation-set').options.length, 50);
+      assert.equal(get('#equation-set').selectedOptions[0].textContent, code + '-01');
+      get('#equation-topics').click();
+      assert.equal(w.document.activeElement.dataset.equationCode, code);
+    }
+    assert.equal(loads.length, 5, 'assets are shared by all six types');
 
     const chooseSet = number => {
       const picker = get('#equation-set');
       picker.value = String(number);
       picker.dispatchEvent(new w.Event('change', { bubbles: true }));
     };
-    assert.deepEqual([...w.document.querySelectorAll('.equation-topic')].map(button => button.dataset.topic),
-      ['D1','D2','D3','D4','D5','D6']);
-    get('[data-topic="D5"]').click();
+    get('[data-equation-code="D5"]').click();
     await tick();
     assert.equal(get('#equation-set').options.length, 50);
     assert.equal(get('#equation-set').selectedOptions[0].textContent, 'D5-01');
@@ -216,10 +226,13 @@ async function exerciseNavigation() {
     assert.equal(get('#equation-again').textContent, '下一套 · D5-50');
     get('#equation-again').click();
     assert.equal(get('.core-formula annotation').textContent, question.tex);
-    get('#spEquationBack').click();
-    get('#spEquationPractice').click();
-    await tick();
-    get('[data-topic="D2"]').click();
+    for (let index = 0; index < E.questionCount; index++) {
+      get('#equation-reveal').click();
+      get('#equation-next').click();
+    }
+    get('#equation-topics').click();
+    assert.equal(w.document.activeElement.dataset.equationCode, 'D5');
+    get('[data-equation-code="D2"]').click();
     await tick();
     assert.equal(get('.keypad-disclosure').open, true, 'new groups default to open');
     assert.equal(loads.length, 5, 'a successful module load is reused');
