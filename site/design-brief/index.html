@@ -1,0 +1,817 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="数屿 MathIsle 面向初中生的设计灵感征集。参考游戏、数学网站和标志设计，为首页、蓝鲸助手、方程训练或其他学习创意交一份草稿。">
+  <meta name="theme-color" content="#293744">
+  <title>数屿设计灵感征集招标书</title>
+  <style>
+    :root {
+      --font: Lato, "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", system-ui, sans-serif;
+      --brand-blue: #69AFC8;
+      --brand-yellow: #F5D66F;
+      --brand-coral: #EB8078;
+      --ink: #23343D;
+      --muted: #566870;
+      --surface: #FFFFFF;
+      --canvas: #F7F9FA;
+      --line: #E1E9EC;
+      --control-line: #8099A3;
+      --blue-text: #255B70;
+      --blue-tint: #E6F2F6;
+      --blue-hover: #D7EBF2;
+      --coral-text: #963B36;
+      --coral-tint: #FCEEEB;
+      --gold-text: #705014;
+      --gold-tint: #FCF3D7;
+      --primary-hover: #F0CB56;
+      --primary-pressed: #E8BE42;
+      --focus: #2A6278;
+      --nav-bg: #293744;
+      --nav-field: #3A4855;
+      --nav-line: #5C6975;
+      --hero-bg: #F8F3EF;
+      --hero-edge: #EADDD5;
+      --radius-small: 4px;
+      --radius-control: 8px;
+      --radius-panel: 12px;
+      --shadow-popover: 0 8px 24px rgb(35 52 61 / 13%);
+      --overlay: rgb(35 52 61 / 34%);
+      --nav-height: 72px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+    html { scroll-padding-top: calc(var(--nav-height) + 20px); }
+    body { margin: 0; font: 14px/1.5 var(--font); color: var(--ink); background: var(--canvas); }
+    a { color: var(--blue-text); text-underline-offset: 3px; }
+    button { color: inherit; font: inherit; }
+    img { display: block; max-width: 100%; }
+    h1, h2, h3, h4, p { margin: 0; }
+    :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; box-shadow: 0 0 0 2px var(--surface); }
+    .wrap { width: calc(100% - 64px); max-width: 1120px; margin-left: auto; margin-right: auto; }
+    .skip { position: fixed; z-index: 30; top: 12px; left: 16px; padding: 9px 14px; border-radius: 8px; color: var(--ink); background: var(--brand-yellow); transform: translateY(-180%); }
+    .skip:focus { transform: none; }
+    .site-header { position: sticky; z-index: 10; top: 0; color: #F7FAFC; background: var(--nav-bg); border-bottom: 1px solid var(--nav-line); }
+    .topbar { display: flex; justify-content: space-between; align-items: center; min-height: var(--nav-height); gap: 16px; }
+    .brand { display: inline-flex; align-items: baseline; gap: 8px; color: #FFF; text-decoration: none; white-space: nowrap; }
+    .brand b { font-size: 20px; font-weight: 760; line-height: 1.25; letter-spacing: .05em; }
+    .brand span { font-size: 13px; font-weight: 700; color: #DCE7ED; letter-spacing: .02em; }
+    .topbar nav { display: flex; align-items: center; gap: 4px; }
+    .topbar nav a { padding: 10px 12px; border-radius: var(--radius-control); color: #E4ECF0; text-decoration: none; white-space: nowrap; }
+    .topbar nav a:hover { background: var(--nav-field); }
+    .topbar a:focus-visible { outline-color: var(--brand-blue); box-shadow: 0 0 0 2px var(--nav-bg); }
+
+    main { padding: 32px 0 56px; }
+    .hero { position: relative; display: grid; align-items: center; min-height: 255px; padding: 32px 36px; overflow: hidden; border: 1px solid var(--hero-edge); border-radius: var(--radius-panel); background: var(--hero-bg); isolation: isolate; }
+    .hero-copy { position: relative; z-index: 1; max-width: 570px; }
+    .hero-context { margin-bottom: 10px; color: var(--coral-text); font-size: 13px; font-weight: 700; }
+    .hero h1 { font-size: clamp(29px, 3.2vw, 42px); line-height: 1.15; font-weight: 760; letter-spacing: -.035em; }
+    .hero-desc { max-width: 450px; margin-top: 12px; color: var(--muted); font-size: 15px; line-height: 1.65; }
+    .hero-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 20px; }
+    .button { display: inline-flex; min-height: 40px; align-items: center; justify-content: center; gap: 8px; padding: 8px 16px; border: 1px solid transparent; border-radius: var(--radius-control); font-weight: 700; line-height: 20px; text-decoration: none; transition: background-color 100ms ease-in-out, border-color 100ms ease-in-out; }
+    .button-primary { color: var(--ink); background: var(--brand-yellow); }
+    .button-primary:hover { background: var(--primary-hover); }
+    .button-primary:active { background: var(--primary-pressed); }
+    .button-secondary { border-color: var(--line); color: var(--blue-text); background: var(--surface); }
+    .button-secondary:hover { border-color: var(--brand-blue); background: var(--blue-tint); }
+    .button-secondary:active { background: var(--blue-hover); }
+    .hero-art { position: absolute; right: 12px; bottom: 1px; z-index: 0; width: 49%; max-width: 542px; pointer-events: none; }
+    .hero-art svg { display: block; width: 100%; height: auto; }
+
+    .major { margin-top: 36px; }
+    .section-title { font-size: 24px; line-height: 1.28; letter-spacing: -.02em; font-weight: 760; }
+    .section-copy { margin-top: 6px; color: var(--muted); }
+    .reference-jump { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+    .reference-jump a { padding: 6px 10px; border: 1px solid var(--line); border-radius: var(--radius-control); color: var(--blue-text); background: var(--surface); text-decoration: none; font-size: 13px; }
+    .reference-jump a:hover { border-color: var(--brand-blue); background: var(--blue-tint); }
+    .reference-group { margin-top: 24px; }
+    .group-title { margin-bottom: 10px; font-size: 17px; font-weight: 760; line-height: 1.35; }
+    .grid { display: grid; gap: 16px; }
+    .grid-three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .grid-four { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .panel { min-width: 0; border: 1px solid var(--line); border-radius: var(--radius-panel); background: var(--surface); }
+    .example { overflow: hidden; }
+    .picture { display: grid; position: relative; place-items: center; width: 100%; margin: 0; padding: 0; border: 0; background: var(--canvas); }
+    button.picture { cursor: zoom-in; }
+    button.picture:focus-visible { outline-offset: -4px; }
+    .picture img { width: 100%; height: 100%; object-fit: contain; }
+    .picture-frame { aspect-ratio: 16 / 9; overflow: hidden; }
+    .picture-frame img { position: absolute; top: 0; left: 0; }
+    .picture-game { background: var(--nav-bg); }
+    .picture-game img { object-fit: cover; }
+    .picture-site { aspect-ratio: 16 / 10; }
+    .picture-site img { object-fit: contain; }
+    .example-info { display: grid; padding: 13px 14px 14px; gap: 4px; }
+    .example-info h4 { font-size: 15px; line-height: 1.35; font-weight: 760; overflow-wrap: anywhere; }
+    .example-info p { color: var(--muted); font-size: 13px; line-height: 1.5; }
+    .source-link { display: inline-flex; align-items: baseline; gap: 4px; width: fit-content; max-width: 100%; margin-top: 2px; font-size: 12px; font-weight: 700; text-decoration: none; overflow-wrap: anywhere; }
+    .source-link:hover { text-decoration: underline; }
+    .picture:not(.picture-game) { border-bottom: 1px solid var(--line); }
+    .logo-examples { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .logo-example { display: grid; grid-template-columns: minmax(132px, .85fr) minmax(0, 1.15fr); }
+    .logo-example .picture { display: block; height: 142px; overflow: hidden; border-right: 1px solid var(--line); border-bottom: 0; background: var(--surface); }
+    .logo-example .picture img { padding: 9px; }
+    .logo-example .example-info { align-content: center; }
+
+    .tasks { margin-top: 44px; }
+    .task-grid { margin-top: 14px; }
+    .task { padding: 16px; }
+    .task h3 { margin: 8px 0 6px; font-size: 17px; font-weight: 760; line-height: 1.4; }
+    .task p { color: var(--muted); line-height: 1.6; }
+    .priority { display: inline-block; padding: 3px 7px; border-radius: var(--radius-small); color: var(--coral-text); background: var(--coral-tint); font-size: 12px; font-weight: 700; }
+    .priority-optional { color: var(--blue-text); background: var(--blue-tint); }
+    .priority-advanced { color: var(--gold-text); background: var(--gold-tint); }
+    .equation { margin-top: 16px; padding: 22px; }
+    .equation h3 { margin-top: 8px; font-size: 21px; line-height: 1.35; font-weight: 760; }
+    .study-note { margin-top: 13px; padding: 10px 13px; border-left: 3px solid var(--brand-yellow); border-radius: var(--radius-control); color: var(--gold-text); background: var(--gold-tint); }
+    .study-note a { color: inherit; }
+    .study-note p + p { margin-top: 3px; }
+    .equation h4 { font-size: 15px; line-height: 1.45; font-weight: 760; }
+    .equation-grid { align-items: start; grid-template-columns: minmax(0, .94fr) minmax(0, 1.06fr); gap: 16px; margin: 15px 0; }
+    .equation-deliverable, .equation-example { min-width: 0; padding: 14px 16px; border-radius: var(--radius-control); }
+    .equation-deliverable { background: var(--canvas); }
+    .equation-deliverable ol { margin: 7px 0 8px; padding-left: 1.45em; }
+    .equation-deliverable li + li { margin-top: 3px; }
+    .equation-example { background: var(--blue-tint); }
+    .equation-steps { margin: 7px 0 0; padding: 0; list-style: none; }
+    .equation-steps li { display: grid; grid-template-columns: minmax(0, 8.5rem) minmax(0, 1fr); gap: 8px; align-items: baseline; }
+    .equation-steps li + li { margin-top: 3px; }
+    .equation-steps li > span:first-child { color: var(--muted); }
+    .equation-example .hint { margin-top: 9px; padding-top: 8px; border-top: 1px solid #C4DDE6; }
+    .equation-note { margin-top: 6px; color: var(--muted); font-size: 13px; }
+    .math { font-family: "STIX Two Text", "Cambria Math", "Times New Roman", serif; font-size: 1.1em; white-space: nowrap; }
+    .math var { font-family: inherit; }
+
+    .disclosure { min-width: 0; border: 1px solid var(--line); border-radius: var(--radius-control); background: var(--surface); }
+    .disclosure > summary { position: relative; display: flex; min-height: 46px; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 2px 12px; padding: 10px 37px 10px 14px; border-radius: var(--radius-control); color: var(--blue-text); cursor: pointer; list-style: none; }
+    .disclosure > summary::-webkit-details-marker { display: none; }
+    .disclosure > summary::after { content: ""; position: absolute; top: 50%; right: 17px; width: 7px; height: 7px; border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor; transform: translateY(-72%) rotate(45deg); }
+    .disclosure[open] > summary { border-bottom: 1px solid var(--line); border-bottom-right-radius: 0; border-bottom-left-radius: 0; }
+    .disclosure[open] > summary::after { transform: translateY(-25%) rotate(225deg); }
+    .disclosure > summary:hover { background: var(--blue-tint); }
+    .disclosure > summary:focus-visible { outline-offset: -3px; }
+    .disclosure > summary span { color: var(--muted); font-size: 12px; }
+    .training { background: var(--canvas); }
+    .training-body { padding: 15px 16px 17px; }
+    .training-body section { margin-top: 16px; }
+    .training-body h4 { margin-bottom: 5px; }
+    .training-body p { color: var(--muted); }
+    .training-body p + p { margin-top: 6px; }
+    .training-table { width: 100%; margin: 10px 0; border-collapse: collapse; text-align: left; font-size: 13px; }
+    .training-table th, .training-table td { padding: 7px 9px; border-bottom: 1px solid var(--line); vertical-align: top; }
+    .training-table thead th { background: var(--blue-tint); }
+    .training-table tbody th { font-weight: 700; }
+    .rule-table tbody th { width: 23%; }
+    .training-list { margin: 8px 0 0; padding-left: 1.4em; color: var(--muted); }
+    .training-list li + li { margin-top: 5px; }
+    .training-list strong { margin-right: .5em; color: var(--ink); }
+    .extra { margin-top: 16px; padding: 17px 16px; }
+    .extra h3 { font-size: 17px; font-weight: 760; line-height: 1.35; }
+    .extra > p { margin-top: 6px; color: var(--muted); }
+    .extra ul { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; list-style: none; margin: 13px 0 0; padding: 0; }
+    .extra li { min-width: 0; padding: 9px 10px; border: 1px solid var(--line); border-radius: var(--radius-control); background: var(--canvas); font-size: 13px; }
+    .extra li a { display: inline-flex; gap: 5px; align-items: baseline; font-weight: 700; text-decoration: none; }
+    .extra li a:hover { text-decoration: underline; }
+    .extra li p { margin-top: 3px; color: var(--muted); }
+    .submit { margin-top: 34px; }
+    .submit p { margin-top: 7px; }
+    .submit .timing { color: var(--muted); }
+    .time-rule { margin-top: 26px; padding: 20px 22px; border: 1px solid #F3CBC5; border-left: 4px solid var(--brand-coral); border-radius: var(--radius-panel); color: var(--coral-text); background: var(--coral-tint); }
+    .time-rule h2 { font-size: 20px; line-height: 1.35; font-weight: 760; }
+    .time-rule p { margin-top: 7px; font-size: 16px; font-weight: 700; line-height: 1.6; }
+    .time-rule strong { display: block; }
+    .time-rule .rule-note { margin-top: 5px; font-size: 14px; font-weight: 400; }
+
+    .archive { margin-top: 18px; }
+    .archive-count { margin-left: 5px; font-weight: 400; white-space: nowrap; }
+    .archive > summary .archive-warning { color: var(--coral-text); font-size: 13px; font-weight: 700; }
+    .archive-body { padding: 15px 16px 18px; }
+    .archive-note { color: var(--muted); font-size: 13px; }
+    .archive .reference-jump { margin-top: 10px; }
+    .archive-group { margin-top: 17px; }
+    .archive-group h3 { font-size: 15px; }
+    .archive-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-top: 8px; }
+    .archive-card { min-width: 0; margin: 0; overflow: hidden; border: 1px solid var(--line); border-radius: var(--radius-control); }
+    .archive-picture { aspect-ratio: 16 / 10; }
+    .archive-picture img { padding: 4px; }
+    .archive-caption { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 2px 6px; padding: 7px 9px 8px; font-size: 12px; }
+    .archive-caption small { color: var(--blue-text); font-size: 11px; }
+
+    .lightbox { width: min(1100px, calc(100% - 28px)); max-height: calc(100dvh - 28px); padding: 0; border: 1px solid var(--line); border-radius: var(--radius-panel); color: var(--ink); background: var(--surface); box-shadow: var(--shadow-popover); }
+    .lightbox::backdrop { background: var(--overlay); }
+    .lightbox header { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 10px 16px; border-bottom: 1px solid var(--line); }
+    .lightbox h2 { font-size: 16px; line-height: 1.35; }
+    .lightbox .close { cursor: pointer; }
+    .lightbox img { width: auto; height: auto; max-height: min(77vh, 900px); margin: 0 auto; object-fit: contain; }
+    .lightbox-body { padding: 12px; background: var(--canvas); }
+
+    @media (max-width: 980px) {
+      .wrap { width: calc(100% - 48px); }
+      .hero { padding-inline: 28px; }
+      .hero-copy { max-width: 54%; }
+      .hero-art { width: 49%; right: 6px; }
+      .grid-four { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .archive-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .logo-example { grid-template-columns: minmax(110px, .78fr) minmax(0, 1.22fr); }
+      .logo-example .picture { height: 137px; }
+    }
+
+    @media (max-width: 700px) {
+      :root { --nav-height: 58px; }
+      .wrap { width: calc(100% - 32px); }
+      main { padding: 16px 0 32px; }
+      .hero { min-height: 0; padding: 24px 20px 20px; grid-template-columns: minmax(0, 1fr); }
+      .hero-copy { max-width: 490px; }
+      .hero-art { right: -39px; bottom: 0; width: 53%; max-width: 293px; opacity: .38; }
+      .hero-desc { max-width: 34ch; }
+      .grid { gap: 12px; }
+      .grid-three { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .task-grid { grid-template-columns: minmax(0, 1fr); }
+      .equation-grid { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+      .logo-example { grid-template-columns: minmax(0, 1fr); }
+      .logo-example .picture { height: 120px; border-right: 0; border-bottom: 1px solid var(--line); }
+      .archive-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; }
+    }
+
+    @media (max-width: 460px) {
+      :root { --nav-height: 90px; }
+      .topbar { flex-direction: column; align-items: flex-start; justify-content: center; gap: 2px; padding-block: 8px; }
+      .brand b { font-size: 18px; }
+      .topbar nav { width: 100%; justify-content: space-between; gap: 0; }
+      .topbar nav a { padding: 8px 6px; }
+      .topbar nav a:first-child { margin-left: -6px; }
+      .topbar nav a:last-child { margin-right: -6px; }
+      .hero-art { right: -22px; bottom: -7px; width: 55%; opacity: .30; }
+      .hero-desc { font-size: 14px; }
+      .major { margin-top: 28px; }
+      .reference-group { margin-top: 20px; }
+      .grid-three { grid-template-columns: minmax(0, 1fr); }
+      .grid-four { grid-template-columns: minmax(0, 1fr); }
+      .logo-examples { grid-template-columns: minmax(0, 1fr); }
+      .logo-example { grid-template-columns: minmax(107px, .85fr) minmax(0, 1.15fr); }
+      .logo-example .picture { height: 132px; border-right: 1px solid var(--line); border-bottom: 0; }
+      .equation { padding: 15px 13px; }
+      .equation-deliverable, .equation-example, .training-body, .archive-body { padding-inline: 10px; }
+      .equation-steps li { grid-template-columns: minmax(0, 1.04fr) minmax(0, 1fr); }
+      .training-table th, .training-table td { padding-inline: 5px; }
+      .extra ul { grid-template-columns: minmax(0, 1fr); gap: 7px; }
+      .time-rule { padding: 16px 14px; }
+      .time-rule p { font-size: 15px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { transition: none !important; }
+    }
+
+    @media print {
+      :root { --nav-height: auto; }
+      body { background: white; }
+      .wrap { width: 100%; }
+      .site-header { position: static; border: 0; background: white; }
+      .brand b, .brand span { color: var(--ink); }
+      .site-header nav, .hero-actions, .reference-jump, .skip, .lightbox, .archive:not([open]) { display: none; }
+      .topbar { min-height: 0; margin-bottom: 12pt; }
+      main { padding: 0; }
+      .hero { min-height: 0; padding: 16pt; }
+      .hero-art { opacity: .25; }
+      .example, .task, .extra, .time-rule, .equation-grid, .training-table tr, .archive-card { break-inside: avoid; }
+      h1, h2, h3, h4 { break-after: avoid; }
+      .time-rule, .picture, .hero { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+    }
+  </style>
+</head>
+<body id="top">
+  <a class="skip" href="#main">跳到正文</a>
+  <header class="site-header">
+    <div class="wrap topbar">
+      <a class="brand" href="#top" aria-label="数屿 MathIsle 返回页首"><b>数屿</b><span lang="en">MathIsle</span></a>
+      <nav aria-label="页面导航">
+        <a href="#references">参考案例</a>
+        <a href="#tasks">征集任务</a>
+        <a href="#submit">怎么投稿</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main" class="wrap">
+    <section class="hero" aria-labelledby="page-title">
+      <div class="hero-copy">
+        <p class="hero-context">数屿教师发起 · 面向初中生</p>
+        <h1 id="page-title">数屿设计灵感征集招标书</h1>
+        <p class="hero-desc">数屿是同学们自己找讲解、做练习的数学网站。你可以设计学习首页、蓝鲸助手或标志，也可以想一套练方程的新办法。</p>
+        <div class="hero-actions">
+          <a class="button button-primary" href="#references">先看参考 <span aria-hidden="true">↓</span></a>
+          <a class="button button-secondary" href="#tasks">直接看任务</a>
+          <a class="button button-secondary" href="../"><span aria-hidden="true">←</span> 返回 RatioBot</a>
+        </div>
+      </div>
+      <div class="hero-art" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 280" fill="none" aria-hidden="true" focusable="false"><path d="M160 162l186 105" fill="none" stroke="#23343D" stroke-width="0.7" stroke-linecap="round" stroke-linejoin="round" opacity=".13"/><path d="M214 162l186 105" fill="none" stroke="#23343D" stroke-width="0.7" stroke-linecap="round" stroke-linejoin="round" opacity=".13"/><path d="M268 162l186 105" fill="none" stroke="#23343D" stroke-width="0.7" stroke-linecap="round" stroke-linejoin="round" opacity=".13"/><path d="M322 162l186 105" fill="none" stroke="#23343D" stroke-width="0.7" stroke-linecap="round" stroke-linejoin="round" opacity=".13"/><path d="M376 162l186 105" fill="none" stroke="#23343D" stroke-width="0.7" stroke-linecap="round" stroke-linejoin="round" opacity=".13"/><path d="M430 162l186 105" fill="none" stroke="#23343D" stroke-width="0.7" stroke-linecap="round" stroke-linejoin="round" opacity=".13"/><path d="M484 162l186 105" fill="none" stroke="#23343D" stroke-width="0.7" stroke-linecap="round" stroke-linejoin="round" opacity=".13"/><path d="M110 235l235 -130" fill="none" stroke="#23343D" stroke-width="0.7" stroke-linecap="round" stroke-linejoin="round" opacity=".13"/><path d="M171 235l235 -130" fill="none" stroke="#23343D" stroke-width="0.7" stroke-linecap="round" stroke-linejoin="round" opacity=".13"/><path d="M232 235l235 -130" fill="none" stroke="#23343D" stroke-width="0.7" stroke-linecap="round" stroke-linejoin="round" opacity=".13"/><path d="M293 235l235 -130" fill="none" stroke="#23343D" stroke-width="0.7" stroke-linecap="round" stroke-linejoin="round" opacity=".13"/><path d="M354 235l235 -130" fill="none" stroke="#23343D" stroke-width="0.7" stroke-linecap="round" stroke-linejoin="round" opacity=".13"/><path d="M415 235l235 -130" fill="none" stroke="#23343D" stroke-width="0.7" stroke-linecap="round" stroke-linejoin="round" opacity=".13"/><polygon points="157,181 291,254 457,163 327,88" fill="#23343D" stroke="none" stroke-width="1.6" stroke-linejoin="round" opacity=".17"/><polygon points="170,171 292,241 428,162 307,93" fill="#FCFBF7" stroke="#69AFC8" stroke-width="1.6" stroke-linejoin="round" /><polygon points="240,153 268.578,169.5 313.578,146.5 285,130" fill="#23343D" stroke="none" stroke-width="1.6" stroke-linejoin="round" opacity=".20"/><polygon points="240,85 268.578,101.5 240,118.0 211.422,101.5" fill="#FCFBF7" stroke="#69AFC8" stroke-width="1.6" stroke-linejoin="round" /><polygon points="211.422,101.5 240,118.0 240,186.0 211.422,169.5" fill="#FCFBF7" stroke="#69AFC8" stroke-width="1.6" stroke-linejoin="round" /><polygon points="240,118.0 268.578,101.5 268.578,169.5 240,186.0" fill="#FCFBF7" stroke="#69AFC8" stroke-width="1.6" stroke-linejoin="round" /><text x="224.2821" y="171.5" fill="#69AFC8" font-size="16" font-family="Georgia,serif" text-anchor="middle">x</text><polygon points="296,186 318.516,199.0 363.516,176.0 341,163" fill="#23343D" stroke="none" stroke-width="1.6" stroke-linejoin="round" opacity=".20"/><polygon points="296,160 318.516,173.0 296,186.0 273.484,173.0" fill="#FCFBF7" stroke="#EB8078" stroke-width="1.6" stroke-linejoin="round" /><polygon points="273.484,173.0 296,186.0 296,212.0 273.484,199.0" fill="#FCFBF7" stroke="#EB8078" stroke-width="1.6" stroke-linejoin="round" /><polygon points="296,186.0 318.516,173.0 318.516,199.0 296,212.0" fill="#FCFBF7" stroke="#EB8078" stroke-width="1.6" stroke-linejoin="round" /><text x="283.6162" y="201.0" fill="#EB8078" font-size="16" font-family="Georgia,serif" text-anchor="middle">1</text><polygon points="341,160 363.516,173.0 408.516,150.0 386,137" fill="#23343D" stroke="none" stroke-width="1.6" stroke-linejoin="round" opacity=".20"/><polygon points="341,134 363.516,147.0 341,160.0 318.484,147.0" fill="#FCFBF7" stroke="#EB8078" stroke-width="1.6" stroke-linejoin="round" /><polygon points="318.484,147.0 341,160.0 341,186.0 318.484,173.0" fill="#FCFBF7" stroke="#EB8078" stroke-width="1.6" stroke-linejoin="round" /><polygon points="341,160.0 363.516,147.0 363.516,173.0 341,186.0" fill="#FCFBF7" stroke="#EB8078" stroke-width="1.6" stroke-linejoin="round" /><text x="328.6162" y="175.0" fill="#EB8078" font-size="16" font-family="Georgia,serif" text-anchor="middle">1</text><polygon points="359,67 503,149 503,221 359,139" fill="#FCFBF7" stroke="#B79A3B" stroke-width="1.6" stroke-linejoin="round" /><polygon points="503,149 509,145 509,217 503,221" fill="#FCFBF7" stroke="#B79A3B" stroke-width="1.6" stroke-linejoin="round" /><g transform="matrix(1 .57 0 1 371 80)"><text x="0" y="18" fill="#23343D" font-size="18" font-family="Georgia,serif" >2(x + 3)</text><path d="M0 29h115" fill="none" stroke="#B79A3B" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round" /><text x="0" y="48" fill="#EB8078" font-size="18" font-family="Georgia,serif" >= 2x + 6</text></g><path d="M140 138l14 8m-7-11v14M452 224l18 10m-18-3 18 10" fill="none" stroke="#EB8078" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" /><polygon points="530,202 555.114,216.5 600.114,193.5 575,179" fill="#23343D" stroke="none" stroke-width="1.6" stroke-linejoin="round" opacity=".20"/><polygon points="530,173 555.114,187.5 530,202.0 504.886,187.5" fill="#FCFBF7" stroke="#B79A3B" stroke-width="1.6" stroke-linejoin="round" /><polygon points="504.886,187.5 530,202.0 530,231.0 504.886,216.5" fill="#FCFBF7" stroke="#B79A3B" stroke-width="1.6" stroke-linejoin="round" /><polygon points="530,202.0 555.114,187.5 555.114,216.5 530,231.0" fill="#FCFBF7" stroke="#B79A3B" stroke-width="1.6" stroke-linejoin="round" /><text x="516.1873" y="218.5" fill="#B79A3B" font-size="16" font-family="Georgia,serif" text-anchor="middle">3</text></svg></div>
+    </section>
+
+    <section class="major" id="references" aria-labelledby="references-title">
+      <h2 class="section-title" id="references-title">先看参考</h2>
+      <p class="section-copy">挑一两个感兴趣的看看。点图片可以放大。</p>
+      <nav class="reference-jump" aria-label="参考类别">
+        <a href="#games">游戏画面</a>
+        <a href="#learning-sites">数学网站</a>
+        <a href="#marks">标志设计</a>
+      </nav>
+
+      <section class="reference-group" id="games" aria-labelledby="games-title">
+        <h3 class="group-title" id="games-title">游戏画面</h3>
+        <div class="grid grid-three">
+          <article class="panel example">
+            <button class="picture picture-frame picture-game" type="button" data-preview="《纪念碑谷》游戏画面" data-full="images/reference-6e09529ee23d.webp" aria-label="放大《纪念碑谷》游戏画面">
+              <img src="images/reference-1fa887594bdb.webp" alt="深蓝背景上，紫色几何台阶和红色方块树组成一座建筑" width="1000" height="562" loading="lazy">
+            </button>
+            <div class="example-info">
+              <h4>纪念碑谷</h4>
+              <p>看台阶和方块怎样搭出一眼能认出的地标。</p>
+              <a class="source-link" href="https://ustwo.com/work/monument-valley/" target="_blank" rel="noopener noreferrer">游戏官方图源 <span aria-hidden="true">↗</span></a>
+            </div>
+          </article>
+          <article class="panel example">
+            <button class="picture picture-frame picture-game" type="button" data-preview="Walkr 游戏界面与星球" aria-label="放大 Walkr 游戏界面与星球">
+              <img src="images/reference-854ce79fb1dd.webp" alt="Walkr 游戏手机界面，旁边并列一颗有飞船和陨石坑的星球" width="1024" height="576" loading="lazy">
+            </button>
+            <div class="example-info">
+              <h4 lang="en">Walkr</h4>
+              <p>看每个目的地怎样做出自己的样子。</p>
+              <a class="source-link" href="https://sparkful.app/walkr" target="_blank" rel="noopener noreferrer">游戏官方图源 <span aria-hidden="true">↗</span></a>
+            </div>
+          </article>
+          <article class="panel example">
+            <button class="picture picture-frame picture-game" type="button" data-preview="《森林小岛》岛屿与动物画面" data-full="images/reference-50375645d8d2.webp" data-full-alt="《森林小岛》官方游戏图，左边展示岛屿变化，右边展示近距离观察动物" aria-label="放大《森林小岛》岛屿与动物画面">
+              <img src="images/reference-3362c835e0a8.webp" alt="《森林小岛》官方游戏图，海面中有草地、水湾和许多小动物" width="600" height="364" loading="lazy">
+            </button>
+            <div class="example-info">
+              <h4>森林小岛</h4>
+              <p>看动物、岸线和色彩怎样让岛有自己的氛围。</p>
+              <a class="source-link" href="https://apps.apple.com/us/app/forest-island/id1581726035" target="_blank" rel="noopener noreferrer">游戏官方图源 <span aria-hidden="true">↗</span></a>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="reference-group" id="learning-sites" aria-labelledby="sites-title">
+        <h3 class="group-title" id="sites-title">数学网站的首页和练习页</h3>
+        <div class="grid grid-four">
+          <article class="panel example">
+            <button class="picture picture-frame picture-site" type="button" data-preview="MathsGenie 数学入口" aria-label="放大 MathsGenie 数学入口">
+              <img src="images/reference-e038a1ea10f1.webp" alt="MathsGenie 数学首页将试卷、题库和小测分成入口" width="1260" height="764" loading="lazy">
+            </button>
+            <div class="example-info">
+              <h4 lang="en">MathsGenie</h4>
+              <p>首页把试卷、题库和小测放在哪儿？</p>
+              <a class="source-link" href="https://mathsgenie.co.uk/gcse/maths" target="_blank" rel="noopener noreferrer">看数学首页 <span aria-hidden="true">↗</span></a>
+            </div>
+          </article>
+          <article class="panel example">
+            <button class="picture picture-frame picture-site" type="button" data-preview="Brilliant 找规律练习" aria-label="放大 Brilliant 找规律练习">
+              <img src="images/reference-6afdef3321a3.webp" alt="Brilliant 一次展示一道数列题，题目下方是五个可选答案" width="946" height="687" loading="lazy">
+            </button>
+            <div class="example-info">
+              <h4 lang="en">Brilliant</h4>
+              <p>一页一道题。看题目和选项之间留了多少空间。</p>
+              <a class="source-link" href="https://brilliant.org/practice/grade-1/addition/complete-addition-patterns/" target="_blank" rel="noopener noreferrer">看找规律练习 <span aria-hidden="true">↗</span></a>
+            </div>
+          </article>
+          <article class="panel example">
+            <button class="picture picture-frame picture-site" type="button" data-preview="GeoGebra 去括号练习" aria-label="放大 GeoGebra 去括号练习">
+              <img src="images/reference-1a079db7c7c5.webp" alt="GeoGebra 去括号练习，代数式下方有 Hint 提示按钮" width="763" height="666" loading="lazy">
+            </button>
+            <div class="example-info">
+              <h4 lang="en">GeoGebra Math Practice</h4>
+              <p>卡在去括号的一步时，从哪里找提示？</p>
+              <a class="source-link" href="https://geogebra.org/mathpractice/en/practice?topic=algebraicExpressions.distribution&amp;level=1" target="_blank" rel="noopener noreferrer">看去括号练习 <span aria-hidden="true">↗</span></a>
+            </div>
+          </article>
+          <article class="panel example">
+            <button class="picture picture-frame picture-site" type="button" data-preview="Math Practice Online 分数加法练习" aria-label="放大 Math Practice Online 分数加法练习">
+              <img src="images/reference-85ec05cd3a9d.webp" alt="异分母分数加法页面，题目右侧是分数输入框，下方是数字键盘和检查按钮" width="900" height="922" loading="lazy">
+            </button>
+            <div class="example-info">
+              <h4 lang="en">Math Practice Online</h4>
+              <p>看分数怎么输入，键盘和检查按钮放在哪儿。</p>
+              <a class="source-link" href="https://mathpracticeonline.com/fractions/adding-fractions/unlike-denominators/practice/" target="_blank" rel="noopener noreferrer">看分数加法练习 <span aria-hidden="true">↗</span></a>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="reference-group" id="marks" aria-labelledby="marks-title">
+        <h3 class="group-title" id="marks-title">标志设计案例</h3>
+        <div class="grid logo-examples">
+          <article class="panel example logo-example">
+            <button class="picture picture-frame" type="button" data-preview="Apple 早期彩色版与单色版" aria-label="放大 Apple 标志的彩色版与单色版">
+              <img src="images/reference-e13c6be836ee.webp" alt="Apple 的早期彩条苹果和之后的黑色苹果，二者有相似轮廓和缺口" width="800" height="420" loading="lazy">
+            </button>
+            <div class="example-info">
+              <h4>Apple · 一个缺口</h4>
+              <p>设计师 Rob Janoff 用缺口帮助人们一眼认出苹果。换成单色，轮廓还是认得出来。</p>
+              <a class="source-link" href="https://www.robjanoff.com/apple.html" target="_blank" rel="noopener noreferrer">设计师的案例 <span aria-hidden="true">↗</span></a>
+            </div>
+          </article>
+          <article class="panel example logo-example">
+            <button class="picture picture-frame" type="button" data-preview="伦敦地铁圆标" aria-label="放大伦敦地铁圆标">
+              <img src="images/reference-704d5e808ba0.webp" alt="伦敦地铁标志，红色圆环中央穿过一条写着 UNDERGROUND 的蓝色横带" width="523" height="425" loading="lazy">
+            </button>
+            <div class="example-info">
+              <h4>伦敦地铁 · 圆环与横带</h4>
+              <p>圆环让人认出是交通标识，横带还能放文字。同一套形状可以出现在不同车站。</p>
+              <a class="source-link" href="https://madeby.tfl.gov.uk/2024/06/07/our-brand-assets/" target="_blank" rel="noopener noreferrer">交通局的设计说明 <span aria-hidden="true">↗</span></a>
+            </div>
+          </article>
+        </div>
+      </section>
+
+    </section>
+
+    <section class="major tasks" id="tasks" aria-labelledby="tasks-title">
+      <h2 class="section-title" id="tasks-title">选一个点子试试</h2>
+      <p class="section-copy">个人或小组都可以参加。</p>
+      <div class="grid grid-three task-grid">
+        <article class="panel task">
+          <span class="priority">优先征集</span>
+          <h3>双岛主界面</h3>
+          <p>画一张你想打开的首页，标出从哪里进章节或练习。可以画代数岛和几何岛，也可以自由发挥，换布局、航线和找章节的方式。</p>
+        </article>
+        <article class="panel task">
+          <span class="priority">优先征集</span>
+          <h3>蓝鲸助手</h3>
+          <p>画一只你设计的蓝鲸。选一个场景，画出它在做什么，或者写一句它会说的话。</p>
+        </article>
+        <article class="panel task">
+          <span class="priority priority-optional">备选征集</span>
+          <h3>数屿 Logo</h3>
+          <p>为「数屿 MathIsle」设计一个原创标志。你可以从任何形状、文字或想法开始。</p>
+        </article>
+      </div>
+
+      <article class="panel equation" id="equation-design" aria-labelledby="equation-title">
+        <span class="priority priority-advanced">高级任务</span>
+        <h3 id="equation-title">请设计方程的训练方案</h3>
+        <p class="section-copy">选一种一元一次方程，想想同学怎么入门、怎么练，答错后又怎么自己改。</p>
+        <div class="study-note">
+          <p><strong>动笔前请仔细研读<a href="#training-standard">《原有有理数运算训练的设定标准》</a>。</strong></p>
+          <p>留意题目怎么出、难度怎么分、答案怎么验、答错怎么提示，看看一份严谨的训练方案把规则写到了多细。</p>
+        </div>
+        <div class="grid equation-grid">
+          <section class="equation-deliverable" aria-labelledby="equation-deliverable-title">
+            <h4 id="equation-deliverable-title">交一份小方案</h4>
+            <ol>
+              <li>选一个练习点，比如移项、系数化为 1、去括号或去分母。</li>
+              <li>写 <strong>3–5 道带答案的样题</strong>，用一句话说明先练哪道、为什么。</li>
+              <li>挑一道题，写出一种常见错法和一句能帮同学继续做的提示。</li>
+            </ol>
+            <p class="equation-note">手写、打字、画流程或界面草图都可以。</p>
+          </section>
+          <section class="equation-example" aria-labelledby="equation-example-title">
+            <h4 id="equation-example-title">示例 · 把一道题拆开练</h4>
+            <ol class="equation-steps">
+              <li><span>看原方程</span><span class="math">3<var>x</var> − 5 = 7</span></li>
+              <li><span>两边都加 5</span><span class="math">3<var>x</var> = 12</span></li>
+              <li><span>两边都除以 3</span><span class="math"><var>x</var> = 4</span></li>
+              <li><span>代回原方程验算</span><span class="math">3 × 4 − 5 = 7</span></li>
+            </ol>
+            <p class="hint">如果写成 <span class="math">3<var>x</var> = 7 − 5</span>，可以提示“左边要消去 −5，两边应该加上哪个数？”</p>
+          </section>
+        </div>
+
+        <details class="disclosure training" id="training-standard">
+          <summary><strong>原有有理数运算训练的设定标准</strong><span>参考 · 分步教学、出题、反馈</span></summary>
+          <div class="training-body">
+            <p>旧版 RATIOBOT 有理数运算训练分两部分。A 区用一道题带着同学学法则，B 区按选定的条件出一组题。下面的规则可以用来想自己的方程方案。</p>
+
+            <section aria-labelledby="training-a-title">
+              <h4 id="training-a-title">A 区 · 法则实验室</h4>
+              <p>一次只让同学做一个判断或变形，选完马上反馈。变形时保留原式，让同学看清哪一处发生了变化。旧版示范用黄色标正数、绿色标负数，遇到 0 单独判断。</p>
+              <table class="training-table rule-table" aria-label="A 区各题型的示范步骤">
+                <thead><tr><th scope="col">法则</th><th scope="col">怎样拆步骤</th></tr></thead>
+                <tbody>
+                  <tr><th scope="row">加法</th><td>先看同号或异号，再判断结果是正、负或 0。同号加绝对值，异号用较大的绝对值减较小的。可用数轴核对。</td></tr>
+                  <tr><th scope="row">减法</th><td>找出减数，把“减去这个数”改写成“加上它的相反数”，再按加法法则算。</td></tr>
+                  <tr><th scope="row">加减混合</th><td>找出每个减号后的数，统一改成加法。把正数、负数分组，分别求和，再把两组结果相加。</td></tr>
+                  <tr><th scope="row">乘法</th><td>先判符号。同号得正，异号得负，再乘绝对值。有一个因数为 0，积就是 0。</td></tr>
+                  <tr><th scope="row">除法</th><td>先找非零除数，把除法改成乘它的倒数。0 除以非零数得 0，作为单独的判断练习。</td></tr>
+                  <tr><th scope="row">带括号的四则混合</th><td>先算括号内，再算乘除。把剩下的减法改写成加相反数后计算。同级运算从左到右。</td></tr>
+                  <tr><th scope="row">乘方</th><td>先判符号。负底数看指数奇偶，再算底数绝对值的乘方。用展开的连乘帮助理解。</td></tr>
+                  <tr><th scope="row">超级混合</th><td>从最内层括号开始，按“括号 → 乘方 → 乘除 → 加减”判断顺序，同级从左到右。可以只练判断先后。</td></tr>
+                </tbody>
+              </table>
+            </section>
+
+            <section aria-labelledby="training-b-title">
+              <h4 id="training-b-title">B 区 · 核心训练</h4>
+              <ul class="training-list">
+                <li><strong>运算类型</strong>可选仅加、加减混合、仅乘、乘除混合、四则混合、仅乘方、超级混合。</li>
+                <li><strong>数的类型</strong>可选全整数、整数＋分数、整数＋小数、分数＋小数。混合题包含两类数，小数用一位小数。仅乘方使用整数底数，底数绝对值不超过 10，指数取 2–6。</li>
+                <li><strong>括号与步数</strong>四则混合和超级混合可设置 0–3 对结构括号，负数自身的括号另算。超级混合通常 4–6 项、1–2 个乘方，自动设置时优先用 1–2 对括号。</li>
+              </ul>
+              <table class="training-table difficulty-table" aria-label="B 区常规题的三个难度">
+                <thead><tr><th scope="col">难度</th><th scope="col">常规项数</th><th scope="col">整数绝对值上限</th><th scope="col">分母候选</th></tr></thead>
+                <tbody>
+                  <tr><th scope="row">轻松</th><td>3</td><td>10</td><td>2、3、4、5</td></tr>
+                  <tr><th scope="row">标准</th><td>3–5</td><td>20</td><td>2、3、4、5、6、8</td></tr>
+                  <tr><th scope="row">挑战</th><td>5–6</td><td>50</td><td>2、3、4、5、6、8、9、10、12</td></tr>
+                </tbody>
+              </table>
+              <p class="equation-note">表中是基础配置。纯乘和乘除混合的整数范围更小，括号多的题会按需增加项数，分母候选是约分前取数的范围。</p>
+              <ul class="training-list">
+                <li><strong>出题检查</strong>确保除数非零，分数乘除优先安排可以交叉约分的题。常规四则题检查中间结果，最终答案绝对值控制在 100 以内，取整数、能准确写成一位小数的数，或分母不超过 12、分子绝对值不超过 60 的最简分数。</li>
+                <li><strong>一轮怎么练</strong>一局 10 题。轻松或标准局的第 10 题升一档，挑战局仍用挑战难度。输入可用整数、小数、最简分数或带分数，数值正确但分数可约时会提示整理。</li>
+                <li><strong>怎样反馈</strong>第一次答错提醒用哪条法则，第二次提示具体一步，第三次给出答案。分别记首次正确和订正成功，结束后看首次正确率、最长连续答对、平均用时和需要再练的法则。</li>
+              </ul>
+            </section>
+
+            <section aria-labelledby="transfer-title">
+              <h4 id="transfer-title">怎样用到方程</h4>
+              <p>可以先用一道题演示等式两边同加减，或同乘除以一个非零数，再出一组同类题。难度可以只改一个条件，比如从 <span class="math"><var>x</var> − 5 = 7</span> 到 <span class="math">3<var>x</var> − 5 = 7</span>，再到 <span class="math">−3<var>x</var> − 5 = 7</span>。写好答案后代回原方程检查。答错时先提示具体哪一步，再用同类变式检查是否改懂。</p>
+              <p>已有的简易方程练习把 120 道题按 5 道一组排列，先做 20 道一步方程，再做 100 道两步方程。你可以自己决定一组几道、怎样进阶。</p>
+            </section>
+          </div>
+        </details>
+      </article>
+
+      <article class="panel extra" aria-labelledby="extra-title">
+        <h3 id="extra-title">一切其他创意也欢迎</h3>
+        <p>按钮、动效、题目玩法、错题提示、地图导航、新功能，都可以附上。想试试写网页，也可以从这些例子开始。</p>
+        <ul aria-label="网页开发案例">
+          <li><a href="https://csszengarden.com/" target="_blank" rel="noopener noreferrer"><span lang="en">CSS Zen Garden</span> <span aria-hidden="true">↗</span></a><p>同一份内容，换一套 CSS 就能变成另一种页面。</p></li>
+          <li><a href="https://p5js.org/examples/3D-Orbit-Control/" target="_blank" rel="noopener noreferrer"><span lang="en">p5.js · Orbit Control</span> <span aria-hidden="true">↗</span></a><p>拖动鼠标换角度，看看网页怎样展示立体模型。</p></li>
+          <li><a href="https://quickdraw.withgoogle.com/" target="_blank" rel="noopener noreferrer"><span lang="en">Quick, Draw!</span> <span aria-hidden="true">↗</span></a><p>在网页上画画，看看 AI 怎样边画边猜。</p></li>
+        </ul>
+      </article>
+    </section>
+
+    <section class="submit" id="submit" aria-labelledby="submit-title">
+      <h2 class="section-title" id="submit-title">怎么投稿</h2>
+      <p>一张草图、一张模型截图、一段文字或一个网页链接都可以。写上姓名或组名，用一句话说清你想做什么。</p>
+      <p class="timing">截止时间和交稿方式以老师通知为准。</p>
+    </section>
+
+    <aside class="time-rule" aria-labelledby="time-title">
+      <h2 id="time-title">学习和休息优先</h2>
+      <p><strong>必须在家长认同的时间内完成。</strong><strong>任何情况下都不得以此为借口耽误学习和休息时间！</strong></p>
+      <p class="rule-note">约定时间到了就停。交草图也可以，留待以后再完善。</p>
+    </aside>
+
+    <details class="disclosure archive" id="design-archive">
+      <summary>
+        <strong>查看数屿设定图 <span class="archive-count">29 张</span></strong>
+        <span class="archive-warning">慎点！看完容易被思路限制住</span>
+      </summary>
+      <div class="archive-body">
+        <p class="archive-note">点图片可以放大。</p>
+        <nav class="reference-jump" aria-label="设定图类别">
+          <a href="#archive-maps">双岛航线</a>
+          <a href="#archive-illustrations">数学插画</a>
+          <a href="#archive-characters">蓝鲸助手</a>
+          <a href="#archive-brand">标志与品牌草图</a>
+          <a href="#archive-ui">网站界面草图</a>
+        </nav>
+        <section class="archive-group" id="archive-maps" aria-labelledby="archive-maps-title">
+          <h3 id="archive-maps-title">双岛航线</h3>
+          <div class="grid archive-grid">
+            <figure class="archive-card" data-origin="first-batch">
+              <button class="picture picture-frame archive-picture" type="button" data-preview="七上双岛航线 · 蓝鲸在方程站" aria-label="放大七上双岛航线 · 蓝鲸在方程站">
+                <img src="images/reference-aec238836e94.webp" width="1536" height="864" loading="lazy" decoding="async" alt="七上双岛航线 · 蓝鲸在方程站">
+              </button>
+              <figcaption class="archive-caption"><span>七上双岛航线 · 蓝鲸在方程站</span><small>上次提供</small></figcaption>
+            </figure>
+            <figure class="archive-card" data-origin="second-batch">
+              <button class="picture picture-frame archive-picture" type="button" data-preview="七上双岛航线 · 折纸蓝鲸" aria-label="放大七上双岛航线 · 折纸蓝鲸">
+                <img src="images/reference-c0900b2f7840.webp" width="1800" height="1005" loading="lazy" decoding="async" alt="七上双岛航线 · 折纸蓝鲸">
+              </button>
+              <figcaption class="archive-caption"><span>七上双岛航线 · 折纸蓝鲸</span><small>本次提供</small></figcaption>
+            </figure>
+          </div>
+        </section>
+        <section class="archive-group" id="archive-illustrations" aria-labelledby="archive-illustrations-title">
+          <h3 id="archive-illustrations-title">数学插画</h3>
+          <div class="grid archive-grid">
+            <figure class="archive-card" data-origin="first-batch">
+              <button class="picture picture-frame archive-picture" type="button" data-preview="直角三角形拼图" aria-label="放大直角三角形拼图">
+                <img src="images/reference-e841480e85b2.webp" width="1800" height="1344" loading="lazy" decoding="async" alt="直角三角形拼图">
+              </button>
+              <figcaption class="archive-caption"><span>直角三角形拼图</span><small>上次提供</small></figcaption>
+            </figure>
+            <figure class="archive-card" data-origin="first-batch">
+              <button class="picture picture-frame archive-picture" type="button" data-preview="温度计与有理数减法" aria-label="放大温度计与有理数减法">
+                <img src="images/reference-5a394a11e49f.webp" width="1800" height="1344" loading="lazy" decoding="async" alt="温度计与有理数减法">
+              </button>
+              <figcaption class="archive-caption"><span>温度计与有理数减法</span><small>上次提供</small></figcaption>
+            </figure>
+            <figure class="archive-card" data-origin="first-batch">
+              <button class="picture picture-frame archive-picture" type="button" data-preview="螺旋与斐波那契数列" aria-label="放大螺旋与斐波那契数列">
+                <img src="images/reference-7fe8781e7939.webp" width="1800" height="1344" loading="lazy" decoding="async" alt="螺旋与斐波那契数列">
+              </button>
+              <figcaption class="archive-caption"><span>螺旋与斐波那契数列</span><small>上次提供</small></figcaption>
+            </figure>
+            <figure class="archive-card" data-origin="first-batch">
+              <button class="picture picture-frame archive-picture" type="button" data-preview="等式天平" aria-label="放大等式天平">
+                <img src="images/reference-77cf272c3be9.webp" width="1800" height="1344" loading="lazy" decoding="async" alt="等式天平">
+              </button>
+              <figcaption class="archive-caption"><span>等式天平</span><small>上次提供</small></figcaption>
+            </figure>
+            <figure class="archive-card" data-origin="first-batch">
+              <button class="picture picture-frame archive-picture" type="button" data-preview="圆柱与体积" aria-label="放大圆柱与体积">
+                <img src="images/reference-3c9aa2ceee22.webp" width="1800" height="1344" loading="lazy" decoding="async" alt="圆柱与体积">
+              </button>
+              <figcaption class="archive-caption"><span>圆柱与体积</span><small>上次提供</small></figcaption>
+            </figure>
+            <figure class="archive-card" data-origin="first-batch">
+              <button class="picture picture-frame archive-picture" type="button" data-preview="直尺、三角尺与角" aria-label="放大直尺、三角尺与角">
+                <img src="images/reference-1b8b805db6f1.webp" width="1800" height="1344" loading="lazy" decoding="async" alt="直尺、三角尺与角">
+              </button>
+              <figcaption class="archive-caption"><span>直尺、三角尺与角</span><small>上次提供</small></figcaption>
+            </figure>
+          </div>
+        </section>
+        <section class="archive-group" id="archive-characters" aria-labelledby="archive-characters-title">
+          <h3 id="archive-characters-title">蓝鲸助手</h3>
+          <div class="grid archive-grid">
+            <figure class="archive-card" data-origin="previous">
+              <button class="picture picture-frame archive-picture" type="button" data-preview="原设计方案里的小蓝鲸" aria-label="放大原设计方案里的小蓝鲸">
+                <img src="images/reference-99bc49d5fb28.webp" width="900" height="565" loading="lazy" decoding="async" alt="小蓝鲸草图，身体圆润、尾鳍上扬">
+              </button>
+              <figcaption class="archive-caption"><span>原设计方案里的小蓝鲸</span></figcaption>
+            </figure>
+            <figure class="archive-card" data-origin="first-batch">
+              <button class="picture picture-frame archive-picture" type="button" data-preview="蓝鲸三视图、∞ 姿态与互动动作" aria-label="放大蓝鲸三视图、∞ 姿态与互动动作">
+                <img src="images/reference-0a18b31aa11b.webp" width="1800" height="1005" loading="lazy" decoding="async" alt="蓝鲸三视图、∞ 姿态与互动动作">
+              </button>
+              <figcaption class="archive-caption"><span>蓝鲸三视图、∞ 姿态与互动动作</span><small>上次提供</small></figcaption>
+            </figure>
+          </div>
+        </section>
+        <section class="archive-group" id="archive-brand" aria-labelledby="archive-brand-title">
+          <h3 id="archive-brand-title">标志与品牌草图</h3>
+          <div class="grid archive-grid">
+            <figure class="archive-card" data-origin="first-batch">
+              <button class="picture picture-frame archive-picture" type="button" data-preview="早期标志构成与应用规范" aria-label="放大早期标志构成与应用规范">
+                <img src="images/reference-44117cf15bc5.webp" width="1800" height="1005" loading="lazy" decoding="async" alt="早期标志构成与应用规范">
+              </button>
+              <figcaption class="archive-caption"><span>早期标志构成与应用规范</span><small>上次提供</small></figcaption>
+            </figure>
+            <figure class="archive-card" data-origin="first-batch">
+              <button class="picture picture-frame archive-picture" type="button" data-preview="早期标志设计思路与应用" aria-label="放大早期标志设计思路与应用">
+                <img src="images/reference-af0b0a35791a.webp" width="1800" height="1005" loading="lazy" decoding="async" alt="早期标志设计思路与应用">
+              </button>
+              <figcaption class="archive-caption"><span>早期标志设计思路与应用</span><small>上次提供</small></figcaption>
+            </figure>
+            <figure class="archive-card" data-origin="previous">
+              <button class="picture picture-frame archive-picture" type="button" data-preview="简约双圆标志" aria-label="放大简约双圆标志">
+                <img src="images/reference-25cfb39fb93d.webp" width="1440" height="1176" loading="lazy" decoding="async" alt="简约双圆标志">
+              </button>
+              <figcaption class="archive-caption"><span>简约双圆标志</span></figcaption>
+            </figure>
+            <figure class="archive-card" data-origin="second-batch">
+              <button class="picture picture-frame archive-picture" type="button" data-preview="彩色渐变双环标志" aria-label="放大彩色渐变双环标志">
+                <img src="images/reference-2737567e4648.webp" width="1440" height="1440" loading="lazy" decoding="async" alt="彩色渐变双环标志">
+              </button>
+              <figcaption class="archive-caption"><span>彩色渐变双环标志</span><small>本次提供</small></figcaption>
+            </figure>
+            <figure class="archive-card" data-origin="second-batch">
+              <button class="picture picture-frame archive-picture" type="button" data-preview="一线双屿、八字航线与根号小岛" aria-label="放大一线双屿、八字航线与根号小岛">
+                <img src="images/reference-c1aef41ef5d5.webp" width="1436" height="1800" loading="lazy" decoding="async" alt="一线双屿、八字航线与根号小岛">
+              </button>
+              <figcaption class="archive-caption"><span>一线双屿、八字航线与根号小岛</span><small>本次提供</small></figcaption>
+            </figure>
+            <figure class="archive-card" data-origin="second-batch">
+              <button class="picture picture-frame archive-picture" type="button" data-preview="数屿的线条标志 · 四种方向" aria-label="放大数屿的线条标志 · 四种方向">
+                <img src="images/reference-80012971e766.webp" width="1474" height="1800" loading="lazy" decoding="async" alt="数屿的线条标志 · 四种方向">
+              </button>
+              <figcaption class="archive-caption"><span>数屿的线条标志 · 四种方向</span><small>本次提供</small></figcaption>
+            </figure>
+            <figure class="archive-card" data-origin="second-batch">
+              <button class="picture picture-frame archive-picture" type="button" data-preview="蓝鲸与数学符号标志" aria-label="放大蓝鲸与数学符号标志">
+                <img src="images/reference-f1c90a898ea7.webp" width="512" height="512" loading="lazy" decoding="async" alt="蓝鲸与数学符号标志">
+              </button>
+              <figcaption class="archive-caption"><span>蓝鲸与数学符号标志</span><small>本次提供</small></figcaption>
+            </figure>
+            <figure class="archive-card" data-origin="second-batch">
+              <button class="picture picture-frame archive-picture" type="button" data-preview="海浪双环标志" aria-label="放大海浪双环标志">
+                <img src="images/reference-75d5c4662ed0.webp" width="607" height="554" loading="lazy" decoding="async" alt="海浪双环标志">
+              </button>
+              <figcaption class="archive-caption"><span>海浪双环标志</span><small>本次提供</small></figcaption>
+            </figure>
+            <figure class="archive-card" data-origin="second-batch">
+              <button class="picture picture-frame archive-picture" type="button" data-preview="教育品牌分析与海浪双环应用" aria-label="放大教育品牌分析与海浪双环应用">
+                <img src="images/reference-0f5ccf3fe16c.webp" width="1312" height="1199" loading="lazy" decoding="async" alt="教育品牌分析与海浪双环应用">
+              </button>
+              <figcaption class="archive-caption"><span>教育品牌分析与海浪双环应用</span><small>本次提供</small></figcaption>
+            </figure>
+            <figure class="archive-card" data-origin="second-batch">
+              <button class="picture picture-frame archive-picture" type="button" data-preview="品牌色卡 · 黄、珊瑚、蓝" aria-label="放大品牌色卡 · 黄、珊瑚、蓝">
+                <img src="images/reference-efc5fe838b44.webp" width="791" height="382" loading="lazy" decoding="async" alt="品牌色卡 · 黄、珊瑚、蓝">
+              </button>
+              <figcaption class="archive-caption"><span>品牌色卡 · 黄、珊瑚、蓝</span><small>本次提供</small></figcaption>
+            </figure>
+            <figure class="archive-card" data-origin="second-batch">
+              <button class="picture picture-frame archive-picture" type="button" data-preview="灯塔双环标志" aria-label="放大灯塔双环标志">
+                <img src="images/reference-af992abec45e.webp" width="1406" height="1119" loading="lazy" decoding="async" alt="灯塔双环标志">
+              </button>
+              <figcaption class="archive-caption"><span>灯塔双环标志</span><small>本次提供</small></figcaption>
+            </figure>
+          </div>
+        </section>
+        <section class="archive-group" id="archive-ui" aria-labelledby="archive-ui-title">
+          <h3 id="archive-ui-title">网站界面草图</h3>
+          <div class="grid archive-grid">
+            <figure class="archive-card" data-origin="previous">
+              <button class="picture picture-frame archive-picture" type="button" data-preview="学生首页 · 蓝黄布局" aria-label="放大学生首页 · 蓝黄布局">
+                <img src="images/reference-60dba374352b.webp" width="1440" height="901" loading="lazy" decoding="async" alt="学生首页 · 蓝黄布局">
+              </button>
+              <figcaption class="archive-caption"><span>学生首页 · 蓝黄布局</span></figcaption>
+            </figure>
+            <figure class="archive-card" data-origin="previous">
+              <button class="picture picture-frame archive-picture" type="button" data-preview="学生首页 · 学习面板" aria-label="放大学生首页 · 学习面板">
+                <img src="images/reference-d6a79ab1585f.webp" width="1440" height="921" loading="lazy" decoding="async" alt="学生首页 · 学习面板">
+              </button>
+              <figcaption class="archive-caption"><span>学生首页 · 学习面板</span></figcaption>
+            </figure>
+            <figure class="archive-card" data-origin="previous">
+              <button class="picture picture-frame archive-picture" type="button" data-preview="合并同类项 · 练习与草稿纸" aria-label="放大合并同类项 · 练习与草稿纸">
+                <img src="images/reference-f80c3b83ccaf.webp" width="1440" height="901" loading="lazy" decoding="async" alt="合并同类项 · 练习与草稿纸">
+              </button>
+              <figcaption class="archive-caption"><span>合并同类项 · 练习与草稿纸</span></figcaption>
+            </figure>
+            <figure class="archive-card" data-origin="previous">
+              <button class="picture picture-frame archive-picture" type="button" data-preview="合并同类项 · 练习与提示" aria-label="放大合并同类项 · 练习与提示">
+                <img src="images/reference-98d4e2c65e4c.webp" width="1440" height="921" loading="lazy" decoding="async" alt="合并同类项 · 练习与提示">
+              </button>
+              <figcaption class="archive-caption"><span>合并同类项 · 练习与提示</span></figcaption>
+            </figure>
+            <figure class="archive-card" data-origin="previous">
+              <button class="picture picture-frame archive-picture" type="button" data-preview="成长页与黄色机器人" aria-label="放大成长页与黄色机器人">
+                <img src="images/reference-09449e379f0b.webp" width="1440" height="901" loading="lazy" decoding="async" alt="成长页与黄色机器人">
+              </button>
+              <figcaption class="archive-caption"><span>成长页与黄色机器人</span></figcaption>
+            </figure>
+            <figure class="archive-card" data-origin="previous">
+              <button class="picture picture-frame archive-picture" type="button" data-preview="学生学习面板 · 早期配色稿" aria-label="放大学生学习面板 · 早期配色稿">
+                <img src="images/reference-cb8bd3bd1431.webp" width="947" height="1024" loading="lazy" decoding="async" alt="学生学习面板 · 早期配色稿">
+              </button>
+              <figcaption class="archive-caption"><span>学生学习面板 · 早期配色稿</span></figcaption>
+            </figure>
+            <figure class="archive-card" data-origin="previous">
+              <button class="picture picture-frame archive-picture" type="button" data-preview="学生学习面板 · 早期品牌稿" aria-label="放大学生学习面板 · 早期品牌稿">
+                <img src="images/reference-89a96d0d1cc5.webp" width="947" height="1024" loading="lazy" decoding="async" alt="学生学习面板 · 早期品牌稿">
+              </button>
+              <figcaption class="archive-caption"><span>学生学习面板 · 早期品牌稿</span></figcaption>
+            </figure>
+            <figure class="archive-card" data-origin="second-batch">
+              <button class="picture picture-frame archive-picture" type="button" data-preview="教师端 · 班级概览（示例数据）" aria-label="放大教师端 · 班级概览（示例数据）">
+                <img src="images/reference-5b5178c54e06.webp" width="1536" height="961" loading="lazy" decoding="async" alt="教师端 · 班级概览（示例数据）">
+              </button>
+              <figcaption class="archive-caption"><span>教师端 · 班级概览（示例数据）</span><small>本次提供</small></figcaption>
+            </figure>
+          </div>
+        </section>
+      </div>
+    </details>
+  </main>
+
+  <dialog class="lightbox" aria-labelledby="lightbox-title">
+    <header>
+      <h2 id="lightbox-title">参考图片</h2>
+      <form method="dialog"><button class="button button-secondary close" type="submit">关闭</button></form>
+    </header>
+    <div class="lightbox-body"><img alt=""></div>
+  </dialog>
+
+  <script>
+    const trainingStandard = document.querySelector("#training-standard");
+    document.querySelector('.study-note a').addEventListener("click", () => {
+      trainingStandard.open = true;
+    });
+
+    const lightbox = document.querySelector(".lightbox");
+    const lightboxTitle = lightbox.querySelector("h2");
+    const lightboxImage = lightbox.querySelector("img");
+    let previewTrigger = null;
+
+    for (const button of document.querySelectorAll("[data-preview]")) {
+      button.addEventListener("click", () => {
+        const image = button.querySelector("img");
+        previewTrigger = button;
+        lightboxTitle.textContent = button.dataset.preview;
+        lightboxImage.alt = button.dataset.fullAlt || image.alt;
+        lightboxImage.src = button.dataset.full || image.currentSrc || image.src;
+        lightbox.showModal();
+      });
+    }
+
+    lightbox.addEventListener("click", (event) => {
+      if (event.target === lightbox) lightbox.close();
+    });
+
+    lightbox.addEventListener("close", () => {
+      lightboxImage.removeAttribute("src");
+      previewTrigger?.focus();
+    });
+  </script>
+</body>
+</html>

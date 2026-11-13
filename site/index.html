@@ -77,6 +77,16 @@ button:focus-visible,input:focus-visible{outline:3px solid rgba(53,184,200,.35);
 .icon-btn{font-size:20px}
 main{width:min(1260px,calc(100% - 32px));margin:0 auto}
 .page{display:none;padding:48px 0 82px}.page.active{display:block}.hidden{display:none!important}
+.design-brief-banner{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  margin-bottom:18px;padding:12px 16px;border:2px solid var(--ink);border-radius:14px;
+  color:var(--ink);background:var(--teal-soft);box-shadow:var(--shadow-small);text-decoration:none;
+}
+.design-brief-banner:hover{background:var(--yellow)}
+.design-brief-banner strong,.design-brief-banner small{display:block}
+.design-brief-banner small{margin-top:3px;line-height:1.5}
+.design-brief-teacher{display:inline-block;margin-top:8px;text-decoration:none}
+.design-brief-banner:focus-visible,.design-brief-teacher:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
 .eyebrow{font-size:11px;letter-spacing:.17em;color:var(--coral);font-weight:1000}
 .hero{min-height:590px;display:grid;grid-template-columns:1.05fr .95fr;align-items:center;gap:36px}
 .hero h1{
@@ -906,6 +916,10 @@ footer{text-align:center;padding:30px;color:#8C7E82;font:900 10px ui-monospace;l
 
   <main>
     <section id="home" class="page active">
+      <a class="design-brief-banner" href="./design-brief/">
+        <span><strong>设计灵感征集</strong><small>看看参考案例，为数屿画一张草图。</small></span>
+        <span aria-hidden="true">→</span>
+      </a>
       <div class="hero">
         <div class="hero-copy">
           <div class="eyebrow">RATIONAL NUMBER · CORE SYSTEM</div>
@@ -1205,7 +1219,10 @@ footer{text-align:center;padding:30px;color:#8C7E82;font:900 10px ui-monospace;l
 <section id="teacher" class="page">
       <div class="teacher-console">
         <div class="teacher-console-head">
-          <div><div class="eyebrow">RATIOBOT · TEACHER CONTROL</div><h2>教师控制台</h2><p>发布班级名册、查看学习数据、管理学生账号。学生端内容不会混在这里。</p></div>
+          <div>
+            <div class="eyebrow">RATIOBOT · TEACHER CONTROL</div><h2>教师控制台</h2><p>发布班级名册、查看学习数据、管理学生账号。学生端内容不会混在这里。</p>
+            <a class="ghost small design-brief-teacher" href="./design-brief/">设计灵感征集 <span aria-hidden="true">→</span></a>
+          </div>
           <div><div id="teacherConsoleStatus" class="teacher-session-chip">● 教师已登录 · similar320@gmail.com</div><div style="margin-top:8px;text-align:right"><button id="teacherConsoleLogoutBtn" class="ghost small">退出教师端</button></div></div>
         </div>
         <div id="teacherLoginSuccess" class="teacher-login-success">✓ 教师登录成功，已进入专属控制台。</div>
