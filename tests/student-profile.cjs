@@ -26,6 +26,25 @@ assert.match(d.querySelector('#studentProfileContent').textContent,/可选头像
 assert.match(d.querySelector('#studentProfileContent').textContent,/外观收藏/);
 const choice=d.querySelector('[data-avatar-choice="assets/student-avatar-08.png"]');choice.click();
 assert.equal(d.querySelector('.mission-avatar-img').getAttribute('src'),'assets/student-avatar-08.png');
+const autumn=w.RatioAutumnBreak=require('../site/autumn-break.js');
+let autumnEquipped=false,requestedFrame;
+const legacyState=w.RatioProfileBridge.frameState;
+Object.assign(w.RatioProfileBridge,{
+ frameState:()=>({...legacyState(),autumn:{unlocked:true,equipped:autumnEquipped}}),
+ frameCollection:()=>[{id:'autumnbreak2026',name:'秋假限定 · 2026',asset:autumn.preview,unlocked:true,equipped:autumnEquipped}],
+ toggleFrameById:async id=>{requestedFrame=id;frameEquipped=false;autumnEquipped=!autumnEquipped;},
+});
+w.StudentProfileCard.render();
+assert.equal(d.querySelector('.profile-frame-thumb img').getAttribute('src'),autumn.preview);
+const autumnButton=()=>d.querySelector('[data-profile-frame="autumnbreak2026"]');
+(async()=>{
+assert.equal(autumnButton().textContent,'重新佩戴');
+await autumnButton().onclick();
+assert.equal(requestedFrame,'autumnbreak2026');
+assert.equal(autumnButton().textContent,'摘下头像框');
+assert.equal(d.querySelector('.mission-frame-img').getAttribute('src'),autumn.asset);
+await autumnButton().onclick();
+assert.equal(d.querySelector('.mission-frame-img'),null);
 w.StudentProfileCard.hydrate({...row,user_id:'u46',custom_avatar:null},{classId:'c1',className:'七年级29班',studentCode:'46'},client);
 w.StudentProfileCard.render();
 assert.equal(w.StudentProfileCard.avatarSrc('fallback'),'assets/teacher-avatar-fixed.png');
@@ -33,4 +52,5 @@ assert.match(d.querySelector('#studentProfileContent').textContent,/教师测试
 assert.equal(d.querySelectorAll('[data-avatar-choice]').length,0,'46号教师测试账号不应显示学生头像选择');
 assert.equal(d.querySelector('.mission-avatar-img').getAttribute('src'),'assets/teacher-avatar-fixed.png');
 const built=process.env.SITE_DIR||'_site';for(let i=1;i<=10;i++){const n=String(i).padStart(2,'0');assert.ok(fs.existsSync(built+'/assets/student-avatar-'+n+'.png'),'built portrait '+n+' must exist as standalone PNG');}
-console.log('PASS student profile: 10 visible PNG choices, teacher test avatar, multi-frame permanent collection, no avatar upload');w.close();
+console.log('PASS student profile: 10 visible PNG choices, teacher test avatar, original autumn artwork, equip and remove from permanent collection');
+})().catch(error=>{console.error(error);process.exitCode=1;}).finally(()=>w.close());

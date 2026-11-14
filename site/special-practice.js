@@ -112,7 +112,7 @@ function input(c,i){
  return labels.map((label,j)=>'<label>'+label+'<input required autocomplete="off" aria-label="第'+(i+1)+'题'+label+'" name="q'+i+'_'+j+'" maxlength="40" placeholder="'+(c.code==='B1'&&j===0?'如 -2/3 或 3π':['B4','B5','C3'].includes(c.code)?'如 2x+3':'如 -3/4')+'"></label>').join('');
 }
 function start(c){
- if(!check())return;closeEquations();token++;run={card:c,owner,started:Date.now(),submitted:false,runId:'sp-'+Date.now()+'-'+Math.random().toString(36).slice(2)};
+ if(!check())return;closeEquations();token++;run={card:c,owner,started:performance.now(),submitted:false,runId:'sp-'+Date.now()+'-'+Math.random().toString(36).slice(2)};
  page.innerHTML=header()+'<div class="sp-toolbar"><button type="button" class="ghost" id="spBack">← 专项目录</button><span class="sp-tag" style="--sp-color:#'+c.color+'">'+c.code+'</span><h3>'+esc(c.title)+'</h3><label>套号 <select id="spSet">'+cards.filter(x=>x.code===c.code).map(x=>'<option value="'+x.id+'" '+(x.id===c.id?'selected':'')+'>'+String(x.set).padStart(2,'0')+'</option>').join('')+'</select></label></div><p class="sp-hint">'+(c.code==='B8'?'根据已知条件，直接写出所求代数式的值。':c.code==='C3'?'依据数轴和所给条件化简，合并同类项。输入示例：3a-b。':c.code==='B7'?'求出所有符合等式的 x 值，每格填一个解，顺序不限。':c.code==='B6'?'下列各式的值都与 x 的取值无关。直接填写各参数的值，分数可用 / 输入。':['B4','B5','C3'].includes(c.code)?'直接写出化简结果，同类项要合并。输入示例：2x+3。':c.code==='A9'?'先约分，再相乘，答案写成最简形式。分数输入示例：-3/4。':c.code==='B1'?'填写系数与次数，π可输入pi。':c.code==='B2'?'填写项数与次数。':'直接写出答案。分数可用 / 输入。')+'</p>'+(c.value?'<div class="sp-formula">已知 '+math('a='+frac(c.value))+'</div>':'')+axis(c)+'<form id="spForm">'+c.questions.map((q,i)=>'<article class="sp-question"><b>第'+(i+1)+'题</b>'+(c.conditions?.[i]?'<p>已知 '+math(c.conditions[i])+'</p>':'')+(c.diagrams?.[i]?axis({diagram:c.diagrams[i]}):'')+'<div class="sp-formula">'+math(q)+'</div><div class="sp-inputs">'+input(c,i)+'</div><div id="spFeedback'+i+'" class="sp-feedback" aria-live="polite"></div></article>').join('')+'<button id="spSubmit" class="primary" type="submit">提交5题</button><div id="spNotice" role="status"></div></form><div id="spResult"></div>';common();
  page.querySelector('#spBack').onclick=()=>{if(!run.submitted&&!window.confirm('返回目录？未提交的答案不会保存。'))return;menu();};
  page.querySelector('#spSet').onchange=e=>{if(!run.submitted&&!window.confirm('切换套号？未提交的答案不会保存。')){e.target.value=c.id;return;}start(cards.find(x=>x.id===e.target.value));};
@@ -122,7 +122,7 @@ async function submit(e){
  e.preventDefault();if(!check()||!run||run.submitted||loading)return;const current=run,c=current.card,form=page.querySelector('#spForm');
  const values=c.questions.map((q,i)=>c.answers[i].map((a,j)=>c.code==='C2'?form.querySelector('[name="q'+i+'"]:checked')?.value||'':form.elements['q'+i+'_'+j].value));
  if(values.some(row=>row.some(v=>!v.trim()))){page.querySelector('#spNotice').textContent='请先完成全部5题。';return;}
- const elapsed=Date.now()-current.started,flags=E.grade(c,values),correct=flags.filter(Boolean).length;
+ const elapsed=performance.now()-current.started,flags=E.grade(c,values),correct=flags.filter(Boolean).length;
  loading=true;
  try{
   B.complete({runId:current.runId,cardId:c.id,title:c.title,code:c.code,correct,values,flags,avgTime:elapsed/5000});

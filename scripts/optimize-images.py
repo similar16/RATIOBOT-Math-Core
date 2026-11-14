@@ -11,6 +11,8 @@ replacements={}; stats=[]
 for rel in sorted(paths):
  # Portrait paths are persisted identifiers, not just display URLs.
  if 'student-avatar-' in rel or 'teacher-avatar-' in rel:continue
+ # The autumn frame is served at the artwork's original resolution.
+ if rel=='assets/autumn-break-frame-2026.png':continue
  p=root/rel
  if not p.exists(): continue
  with Image.open(p) as source:

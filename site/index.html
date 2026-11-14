@@ -952,7 +952,7 @@ footer{text-align:center;padding:30px;color:#8C7E82;font:900 10px ui-monospace;l
       </div>
 
       <section class="midautumn-home-banner autumn-break-banner" id="autumnHome" hidden>
-        <img src="assets/autumn-break-frame-2026.png" alt="南瓜头像框">
+        <img src="assets/autumn-break-frame-2026-original.jpeg" alt="南瓜头像框" loading="lazy" decoding="async">
         <div><h3>秋假限时任务 · 南瓜头像框</h3><p>11 月 14–19 日（北京时间）。D1 每套 30 秒内全对，D2 每套 40 秒内全对，各累计 10 次。</p><b id="autumnHomeStatus"></b></div>
         <button class="primary" data-go="specialPractice">去专项加练 →</button>
       </section>
@@ -1123,7 +1123,7 @@ footer{text-align:center;padding:30px;color:#8C7E82;font:900 10px ui-monospace;l
           <div class="economy-card xp"><small>XP · 长期成长</small><b>升级人物与数学基地</b><p>XP 永久累计、不消费。每 9 个等级完成一个主题 BASE：Lv1–9 为 BASE1，Lv10–18 为 BASE2……Lv82–90 为 BASE10。每个 BASE 都有 9 个逐步累积的形象级别。</p></div>
           <div class="economy-card r"><small>R积分 · 每日货币</small><b id="rWalletSummary">余额 0 · 今日 0/40</b><p>R积分每天最多获得 40；20 分点亮当天打卡，40 分满卡。R积分不再推进基地，未来只用于头像边框、卡面、背景、领奖台和基地装饰等非战力收藏。</p></div>
 <section class="midautumn-event autumn-break-banner" id="autumnGrowth" hidden>
-  <div class="midautumn-event-head"><div><h3>秋假限时任务 · 南瓜头像框</h3><p>11 月 14–19 日（北京时间）。D1 每套 30 秒内全对，D2 每套 40 秒内全对，各累计 10 次。</p></div><img src="assets/autumn-break-frame-2026.png" alt="南瓜头像框"></div>
+  <div class="midautumn-event-head"><div><h3>秋假限时任务 · 南瓜头像框</h3><p>11 月 14–19 日（北京时间）。D1 每套 30 秒内全对，D2 每套 40 秒内全对，各累计 10 次。</p></div><img src="assets/autumn-break-frame-2026-original.jpeg" alt="南瓜头像框" loading="lazy" decoding="async"></div>
   <p id="autumnGrowthStatus" role="status"></p>
   <button class="primary" data-go="specialPractice">去专项加练</button>
   <button class="ghost" id="autumnEquip" type="button">佩戴南瓜头像框</button>
@@ -2052,8 +2052,8 @@ setTimeout(()=>{try{renderHonorGrowth();updateRingsProfileHint();}catch(e){}},50
   function renderAutumnBreak(p){
     const now=Date.now(),event=autumnBreakState(p),A=window.RatioAutumnBreak;
     const progress=`D1 ${event.runs.D1.length}/10 · D2 ${event.runs.D2.length}/10`;
-    $('#autumnHome').hidden=!A.active(now)&&!event.unlocked;
-    $('#autumnGrowth').hidden=now<A.start||(!A.active(now)&&!event.unlocked&&!event.runs.D1.length&&!event.runs.D2.length);
+    $('#autumnHome').hidden=!A.active(now);
+    $('#autumnGrowth').hidden=now<A.start||(!A.active(now)&&!A.hasProgress(event));
     $('#autumnHomeStatus').textContent=$('#autumnGrowthStatus').textContent=!p?'登录学生账号后开始累计':event.unlocked?progress+' · 南瓜头像框已永久解锁':progress+(now>=A.end?' · 活动已结束':'');
     const button=$('#autumnEquip');button.hidden=!event.unlocked;
     button.textContent=equippedFestival(p)==='autumn'?'摘下南瓜头像框':'佩戴南瓜头像框';
@@ -2136,7 +2136,7 @@ setTimeout(()=>{try{renderHonorGrowth();updateRingsProfileHint();}catch(e){}},50
     badgeImg(name){return userBadgeImg50(name);},
     defaultAvatar(){const p=currentProfile();if(!p)return GROWTH_AVATAR_ART[1];const lv=levelInfo(p.xp||0).level,def=avatarSrcByLevel(lv,true,p.equip,true);if(window.AppearanceManager?.hasAvatars?.())return window.AppearanceManager.avatarForLevel(lv,def);let id=p?.economy?.checkin?.equippedOutfit,o=CHECKIN_OUTFITS.find(x=>x.id===id);return o?.src||def;},
     today(){const p=currentProfile();if(!p)return{points:0,checked:false,full:false};const r=ensureTodayRecord(p);return{points:Number(r.points||0),checked:!!r.checked,full:!!r.full};},
-    frameCollection(){const p=currentProfile();if(!p)return[];const m=midAutumnEvent(p),n=nationalDayEvent(p),a=autumnBreakState(p);return[{id:'midautumn2026',name:'中秋限定 · 2026',asset:'assets/midautumn-frame-2026-clear.png?v=20260926-clear',unlocked:!!m.unlocked,equipped:equippedFestival(p)==='midautumn',note:'月兔头像框'},{id:'nationalday2026',name:'国庆限定 · 2026',asset:'assets/national-day-frame-2026.png',unlocked:!!n.unlocked,equipped:equippedFestival(p)==='national',note:'星旗头像框 · 含实体冰箱贴资格'},{id:'autumnbreak2026',name:'秋假限定 · 2026',asset:window.RatioAutumnBreak.asset,unlocked:a.unlocked,equipped:equippedFestival(p)==='autumn',note:'南瓜头像框'}]},
+    frameCollection(){const p=currentProfile();if(!p)return[];const m=midAutumnEvent(p),n=nationalDayEvent(p),a=autumnBreakState(p);return[{id:'midautumn2026',name:'中秋限定 · 2026',asset:'assets/midautumn-frame-2026-clear.png?v=20260926-clear',unlocked:!!m.unlocked,equipped:equippedFestival(p)==='midautumn',note:'月兔头像框'},{id:'nationalday2026',name:'国庆限定 · 2026',asset:'assets/national-day-frame-2026.png',unlocked:!!n.unlocked,equipped:equippedFestival(p)==='national',note:'星旗头像框 · 含实体冰箱贴资格'},{id:'autumnbreak2026',name:'秋假限定 · 2026',asset:window.RatioAutumnBreak.preview,unlocked:a.unlocked,equipped:equippedFestival(p)==='autumn',note:'南瓜头像框'}]},
     async toggleFrameById(id){
       const p=currentProfile();if(!p)return false;
       const events={midautumn2026:midAutumnEvent(p),nationalday2026:nationalDayEvent(p),autumnbreak2026:autumnBreakState(p)};
@@ -2749,7 +2749,7 @@ state.questionWrong=true;state.wrongAttempts++;state.combo=0;$('#combo').textCon
   function cloudSyncProfile(p=currentProfile(),force=false){const uid=cloudState.user?.id;if(!uid||!p)return Promise.resolve(false);const snapshot=structuredClone(p);cloudSyncQueue=cloudSyncQueue.catch(()=>false).then(()=>performCloudSync(snapshot,uid));return cloudSyncQueue;}
   function scheduleCloudSync(p){if(!cloudState.user||cloudState.role!=='student')return;clearTimeout(cloudState.syncTimer);const uid=cloudState.user.id;cloudState.syncTimer=setTimeout(()=>{if(uid===cloudState.user?.id)cloudSyncProfile(p)},500)}
   window.addEventListener('online',()=>{if(currentProfile()?.pendingCloud)cloudSyncProfile()});
-  function profileHasProgress(p){p=ensureProfileShape(p);return !!p&&(Number(p.games||0)>0||Number(p.questions||0)>0||Number(p.xp||0)>0||Number(p.economy?.lifetimeCredits||0)>0||Number(p.economy?.credits||0)>0||(p.history||[]).length>0||(p.badges||[]).length>0);}
+  function profileHasProgress(p){p=ensureProfileShape(p);return !!p&&(Number(p.games||0)>0||Number(p.questions||0)>0||Number(p.xp||0)>0||Number(p.economy?.lifetimeCredits||0)>0||Number(p.economy?.credits||0)>0||(p.history||[]).length>0||(p.badges||[]).length>0||window.RatioAutumnBreak.hasProgress(p.economy?.events?.autumnBreak2026));}
   function findLocalMigrationCandidate(cls,id){
     const db=loadDB(),exact=makeProfileKey(cls,id);if(profileHasProgress(db.profiles[exact]))return {key:exact,profile:ensureProfileShape(db.profiles[exact]),kind:'exact'};
     const localKey=makeProfileKey('LOCAL',id);if(profileHasProgress(db.profiles[localKey]))return {key:localKey,profile:ensureProfileShape(db.profiles[localKey]),kind:'legacy-local'};
@@ -2779,7 +2779,7 @@ state.questionWrong=true;state.wrongAttempts++;state.combo=0;$('#combo').textCon
     if(!cloudClient||!cloudState.user)return;try{await window.AppearanceManager?.load?.(cloudClient,cloudState.classId)}catch(e){console.warn('appearance load failed',e)}
     const localKey=makeProfileKey(cls,id),db=loadDB();let local=db.profiles[localKey]?ensureProfileShape(db.profiles[localKey]):null;
     let {data:pr}=await cloudClient.from('profiles').select('*').eq('user_id',cloudState.user.id).maybeSingle();window.StudentProfileCard?.hydrate?.(pr,{classId:cloudState.classId,className:cloudState.className,studentCode:String(id)},cloudClient);let {data:snap}=await cloudClient.from('progress_snapshots').select('*').eq('user_id',cloudState.user.id).maybeSingle();
-    const cloudHas=!!snap&&(Number(snap.game_stats?.games||0)>0||Number(pr?.xp||0)>0||Number(snap.economy?.lifetimeCredits||0)>0);cloudState.displayName=pr?.display_name||cloudState.displayName||`${id}号小方`;
+    const cloudHas=!!snap&&(Number(snap.game_stats?.games||0)>0||Number(pr?.xp||0)>0||Number(snap.economy?.lifetimeCredits||0)>0||window.RatioAutumnBreak.hasProgress(snap.economy?.events?.autumnBreak2026));cloudState.displayName=pr?.display_name||cloudState.displayName||`${id}号小方`;
     const candidate=findLocalMigrationCandidate(cls,id);
     if(candidate&&!pr?.migrated_from_local){
       cloudMsg('#cloudMigrationMsg',candidate.kind==='exact'?'检测到本机旧进度，正在首次迁移到云端…':'检测到旧版/LOCAL 进度，正在合并到当前学生并迁移…');

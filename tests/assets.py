@@ -53,6 +53,20 @@ html=(root/'index.html').read_text()
 assert 'alt="${o.name}" loading="lazy"' in html
 print('PASS optimized image sizes, transparency and deferred outfit images')
 
+for frame in ['autumn-break-frame-2026-original.jpeg', 'autumn-break-frame-2026.png']:
+ p=root/'assets'/frame
+ assert p.read_bytes()==(Path('site/assets')/frame).read_bytes()
+ with Image.open(p) as im:
+  im.load()
+  assert im.size==(1254,1254)
+  if p.suffix=='.png':assert im.mode=='RGBA' and im.getpixel((627,627))[3]==0
+assert hashlib.sha256((root/'assets/autumn-break-frame-2026-original.jpeg').read_bytes()).hexdigest()=='806ba3cb609d0832b88276678ba0ddc79982929345f304d8f5412de47528af69'
+assert html.count('src="assets/autumn-break-frame-2026-original.jpeg"')==2
+assert "url('assets/autumn-break-frame-2026.png')" in html
+assert 'assets/autumn-break-frame-2026.png' in (root/'autumn-break.js').read_text()
+assert not any('autumn-break-frame' in item['source'] for item in manifest)
+print('PASS original autumn artwork in event previews and full-size overlay')
+
 # New exploration stages retain alpha and are delivered as small independent sprites.
 for b in [4,5]:
  for i in range(1,10):

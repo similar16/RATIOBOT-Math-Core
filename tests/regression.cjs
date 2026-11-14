@@ -249,6 +249,52 @@ function xpAt(lv){let n=0;for(let i=1;i<lv;i++)n+=260+(i-1)*85;return n;}
   await w.RatioPracticeBridge.sync();const snap=writes.filter(x=>x.table==='progress_snapshots').at(-1).row;assert.equal(snap.economy.modules.specialPractice.records[0].correct,5);
  }
  console.log('PASS specialist cards for accounts 1/45/46, duplicate settlement guard, training history and cloud snapshot');
+ student();
+ const autumn=w.RatioAutumnBreak,practice=w.RatioPracticeBridge;
+ assert.equal(autumn.start,Date.parse('2026-11-13T16:00:00Z'));
+ assert.equal(autumn.end,Date.parse('2026-11-19T16:00:00Z'));
+ const complete=(code,id,elapsed=autumn.limits[code],at=autumn.start,correct=5)=>
+  practice.completeEquation({id,code,correct,elapsed,at});
+ assert.equal(complete('D1','before',30000,autumn.start-1),'');
+ assert.equal(complete('D2','after',40000,autumn.end),'');
+ assert.equal(complete('D3','other',1000),'');
+ assert.match(complete('D1','slow',30001),/D1 0\/10 · 本次未达标/);
+ assert.match(complete('D2','wrong',40000,autumn.start,4),/D2 0\/10 · 本次未达标/);
+ assert.match(complete('D1','d1-0'),/D1 1\/10 · 本次达标/);
+ assert.match(complete('D1','d1-0'),/D1 1\/10/);
+ for(let i=1;i<11;i++)complete('D1','d1-'+i);
+ for(let i=0;i<9;i++)complete('D2','d2-'+i);
+ assert.equal(w.RatioProfileBridge.frameState().autumn.unlocked,false);
+ assert.match(complete('D2','d2-9',40000,autumn.end-1),/南瓜头像框已解锁/);
+ const autumnProgress=t.currentProfile().economy.events.autumnBreak2026;
+ assert.equal(autumnProgress.runs.D1.length,10);
+ assert.equal(autumnProgress.runs.D2.length,10);
+ assert.equal(await w.RatioProfileBridge.toggleFrameById('autumnbreak2026'),true);
+ const autumnSnapshot=writes.filter(x=>x.table==='progress_snapshots').at(-1).row;
+ assert.equal(autumnSnapshot.economy.events.autumnBreak2026.equipped,true);
+ assert.match(writes.filter(x=>x.table==='profiles').at(-1).row.avatar_key,/frame:autumnbreak2026$/);
+ assert.equal(autumnSnapshot.game_stats.games,0,'the accounts can have only autumn progress');
+ fixture.profiles=[{xp:0,migrated_from_local:true}];
+ fixture.progress_snapshots=[autumnSnapshot];
+ t.saveCurrentProfile(t.blankProfile('TEST','1',''));
+ await t.cloudLoadStudentData('TEST','1');
+ assert.equal(w.RatioProfileBridge.frameState().autumn.equipped,true,'pending empty device must merge cloud-only autumn progress');
+ w.localStorage.removeItem('ratiobot_student_db_v8');
+ await t.cloudLoadStudentData('TEST','1');
+ assert.equal(w.RatioProfileBridge.frameState().autumn.equipped,true,'a fresh device restores an autumn-only account');
+ delete fixture.profiles;delete fixture.progress_snapshots;
+ const dateNow=w.Date.now;
+ try{
+  w.Date.now=()=>autumn.start;
+  t.refreshPlayerUI();
+  assert.equal(w.document.querySelector('#autumnHome').hidden,false);
+  assert.match(w.document.querySelector('#autumnHomeStatus').textContent,/D1 10\/10 · D2 10\/10/);
+  w.Date.now=()=>autumn.end;
+  t.refreshPlayerUI();
+  assert.equal(w.document.querySelector('#autumnHome').hidden,true);
+  assert.equal(w.document.querySelector('#autumnGrowth').hidden,false);
+ }finally{w.Date.now=dateNow;}
+ console.log('PASS autumn window, D1/D2 thresholds, duplicate and cap, unlock, equip and cloud-only restore');
  student();await w.document.querySelector('#logoutBtn').onclick();assert.equal(t.currentProfile(),null);assert.equal(t.cloudState.user,null);assert.equal(w.document.querySelector('#ringsFrame').getAttribute('src'),'about:blank');
  console.log('PASS logout clears current identity and old game frame');
  w.close();
