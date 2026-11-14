@@ -4,7 +4,7 @@ const start=Date.parse('2026-11-14T00:00:00+08:00');
 const end=Date.parse('2026-11-20T00:00:00+08:00');
 const limits={D1:30000,D2:40000};
 const goal=10;
-const asset='assets/autumn-break-frame-2026.svg';
+const asset='assets/autumn-break-frame-2026.png';
 const active=at=>at>=start&&at<end;
 const time=ms=>(Math.ceil(ms/10)/100).toFixed(2)+' 秒';
 
