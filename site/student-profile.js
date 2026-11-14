@@ -19,9 +19,9 @@ function card(){return normalizeCard(row?.profile_card)}
 function rowFrameKind(){const k=String(row?.avatar_key||'');return k.includes('frame:nationalday2026')?'national':k.includes('frame:midautumn2026')?'midAutumn':''}
 function bridge(){return window.RatioProfileBridge||{}}
 function frameState(){try{const x=bridge().frameState?.();if(x?.midAutumn||x?.national)return x;return{midAutumn:x||{unlocked:rowFrameKind()==='midAutumn',equipped:rowFrameKind()==='midAutumn'},national:{unlocked:rowFrameKind()==='national',equipped:rowFrameKind()==='national'}}}catch(e){return{midAutumn:{unlocked:rowFrameKind()==='midAutumn',equipped:rowFrameKind()==='midAutumn'},national:{unlocked:rowFrameKind()==='national',equipped:rowFrameKind()==='national'}}}}
-function frameKind(){const fs=frameState();return fs.national?.equipped?'national':fs.midAutumn?.equipped?'midAutumn':''}
+function frameKind(){const fs=frameState();return fs.autumn?.equipped?'autumn':fs.national?.equipped?'national':fs.midAutumn?.equipped?'midAutumn':''}
 function frameOn(){return !!frameKind()}
-function frameSrc(){return frameKind()==='national'?'assets/national-day-frame-2026.png?v=20261001':'assets/midautumn-frame-2026-clear.png?v=20260926-clear'}
+function frameSrc(){return frameKind()==='autumn'?window.RatioAutumnBreak.asset:frameKind()==='national'?'assets/national-day-frame-2026.png?v=20261001':'assets/midautumn-frame-2026-clear.png?v=20260926-clear'}
 async function toggleFrame(kind){try{return await bridge().toggleFrame?.(kind)}catch(e){throw e}}
 function earnedBadges(){try{return bridge().earnedBadges?.()||[]}catch(e){return[]}}
 function badgeHtml(name){try{return bridge().badgeImg?.(name)||''}catch(e){}return '<span class="profile-badge-fallback">★</span>'}

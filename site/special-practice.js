@@ -76,7 +76,7 @@ async function openEquations(code){
  try{
   await Promise.all(['math-entry.js','handwriting.js','equations.js','equations.css'].map(loadEquationAsset));
   if(opening!==token||!check())return;
-  equationPractice=window.MathIsleEquationPractice.mount(host,check,{code,onBack:returnToMenu});
+  equationPractice=window.MathIsleEquationPractice.mount(host,check,{code,onBack:returnToMenu,onComplete:B.completeEquation});
   back.parentElement.remove();
   host.querySelector('h1')?.focus({preventScroll:true});
  }catch{
@@ -122,10 +122,10 @@ async function submit(e){
  e.preventDefault();if(!check()||!run||run.submitted||loading)return;const current=run,c=current.card,form=page.querySelector('#spForm');
  const values=c.questions.map((q,i)=>c.answers[i].map((a,j)=>c.code==='C2'?form.querySelector('[name="q'+i+'"]:checked')?.value||'':form.elements['q'+i+'_'+j].value));
  if(values.some(row=>row.some(v=>!v.trim()))){page.querySelector('#spNotice').textContent='请先完成全部5题。';return;}
- const flags=E.grade(c,values),correct=flags.filter(Boolean).length;
+ const elapsed=Date.now()-current.started,flags=E.grade(c,values),correct=flags.filter(Boolean).length;
  loading=true;
  try{
-  B.complete({runId:current.runId,cardId:c.id,title:c.title,code:c.code,correct,values,flags,avgTime:(Date.now()-current.started)/5000});
+  B.complete({runId:current.runId,cardId:c.id,title:c.title,code:c.code,correct,values,flags,avgTime:elapsed/5000});
   // 只收录首次提交中判错的题，变式取同专题另一套。
   flags.forEach((ok,i)=>{
    if(ok)return;
@@ -139,7 +139,7 @@ async function submit(e){
   });
   current.submitted=true;form.querySelectorAll('input,button').forEach(n=>n.disabled=true);
   flags.forEach((ok,i)=>{const f=page.querySelector('#spFeedback'+i);f.classList.toggle('correct',ok);f.innerHTML=ok?'✓ 正确':'再看一看。正确答案：'+c.answers[i].map((a,j)=>'<span class="sp-answer">'+(c.labels?esc(c.labels[i][j])+' = ':'')+(c.code==='C2'?esc(a):math(frac(a.replace(/−/g,'-').replace(/π/g,'\\pi'))))+'</span>').join('，')+(c.code==='A9'?'（需要约成最简形式）':'');});
-  page.querySelector('#spResult').innerHTML='<div class="sp-result"><h3>答对 '+correct+' / 5 题</h3><p>'+(correct===5?'本组全部正确，可以结束今天的专项练习。':'先核对错题，弄清原因后再练一组。')+'</p><p id="spSync">本机已保存，正在同步…</p><button class="primary" id="spNext" type="button">随机再练一组</button> <button class="ghost" id="spDone" type="button">返回目录</button></div>';
+  page.querySelector('#spResult').innerHTML='<div class="sp-result"><h3>答对 '+correct+' / 5 题</h3><p>用时 '+(window.RatioAutumnBreak?.time(elapsed)??(elapsed/1000).toFixed(2)+' 秒')+'</p><p>'+(correct===5?'本组全部正确，可以结束今天的专项练习。':'先核对错题，弄清原因后再练一组。')+'</p><p id="spSync">本机已保存，正在同步…</p><button class="primary" id="spNext" type="button">随机再练一组</button> <button class="ghost" id="spDone" type="button">返回目录</button></div>';
   page.querySelector('#spNext').onclick=()=>{const pool=cards.filter(x=>x.code===c.code&&x.id!==c.id);start(pool[Math.floor(Math.random()*pool.length)]);};page.querySelector('#spDone').onclick=menu;
   const t=token,ok=await B.sync();if(t===token&&identity()===owner&&page.querySelector('#spSync'))page.querySelector('#spSync').textContent=ok?'记录已同步到学生账号。':'本机已保存，暂未同步；联网后系统会重试。';
  }catch(err){if(identity()===owner&&page.querySelector('#spNotice'))page.querySelector('#spNotice').textContent='保存失败：'+err.message+'，请重试。';}finally{loading=false;}
