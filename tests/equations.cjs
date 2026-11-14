@@ -56,6 +56,27 @@ assert.equal(E.questionCount, 5);
 assert.throws(() => E.getSet('D0', 1), /未知训练类型/);
 assert.throws(() => E.getSet('D1', 0), /套号超出范围/);
 assert.throws(() => E.getSet('D6', 51), /套号超出范围/);
+assert.deepEqual(E.topics.slice(0, 2).map(topic => topic.name), ['一步解方程', '两步解方程']);
+for (let set = 1; set <= E.setCount; set++) {
+  const oneStep = E.getSet('D1', set);
+  const twoStep = E.getSet('D2', set);
+  assert(oneStep.some(q => q.lines[0].label === '移项'));
+  assert(oneStep.some(q => q.lines[0].label === '系数化为1'));
+  for (const q of oneStep) {
+    assert.equal(q.lines.length, 1);
+    assert.equal(q.answer.d, 1n);
+    assert.equal(q.right.a.n, 0n);
+    assert((q.left.b.n === 0n) !== (q.left.a.n === q.left.a.d));
+  }
+  assert.equal(twoStep.filter(q => q.left.a.d > 1n).length, 1);
+  assert.equal(twoStep.filter(q => q.right.a.n !== 0n).length, 1);
+  for (const q of twoStep) {
+    assert.equal(q.lines.length, 2);
+    assert.equal(q.answer.d, 1n);
+    assert(q.left.b.n || q.right.a.n);
+    assert.notEqual(q.isolated[0].a.n, q.isolated[0].a.d);
+  }
+}
 const seen = new Set();
 const catalogue = [];
 for (const { code } of E.topics) {
@@ -93,7 +114,7 @@ for (const { code } of E.topics) {
 }
 assert.equal(seen.size, 1500);
 assert.equal(createHash('sha256').update(JSON.stringify(catalogue)).digest('hex'),
-  '3de30896c53ce806d9b2b0066811ec1f769ccb3d44e2efa5a862ab92f9e76936');
+  '752bda51a7d913f60450e022357e6177cb60aa18d43a0a26fe3641161eabf805');
 console.log('PASS D1–D6, 300 fixed sets, 1,500 unique questions, exact answers and steps');
 
 const { JSDOM } = require('jsdom');
@@ -184,52 +205,56 @@ async function exerciseNavigation() {
     await tick();
     assert.equal(keypad.querySelector('summary').textContent, '显示公式键盘');
 
-    const step = question.lines.find(line => line.label.startsWith('去分母'));
-    const [left, right] = step.tex.split('=');
-    get('#eq-left-math').value = left;
-    get('#eq-right-math').value = right;
-    get('#equation-form').requestSubmit();
+    function fillQuestion(q) {
+      const step = q.lines.find(line => /^(移项|去括号|去分母)/.test(line.label));
+      if (get('#eq-left-math')) {
+        const [left, right] = step.tex.split('=');
+        get('#eq-left-math').value = left;
+        get('#eq-right-math').value = right;
+      }
+      get('#eq-value-math').value = E.numericTex(q.answer);
+    }
+    async function finishSet(number, start = 0) {
+      const questions = E.getSet('D5', number);
+      await tick();
+      for (let index = start; index < questions.length; index++) {
+        fillQuestion(questions[index]);
+        get('#equation-next').click();
+        await tick();
+        if (index < questions.length - 1) assert.equal(get('.equation-results-list'), null);
+      }
+    }
+
+    get('#equation-next').click();
+    assert.equal(get('.equation-progress span').textContent, '第 1 / 5 题');
+    fillQuestion(question);
+    get('#eq-value-math').value = '999';
+    get('#equation-next').click();
     await tick();
-    keypad = get('.keypad-disclosure');
-    assert.equal(keypad.open, false, 'keep the keyboard hidden between steps');
-    assert(get('#eq-value-math'));
+    assert.equal(get('.equation-results-list'), null, 'no grading after a wrong answer until the full set is submitted');
+    assert.equal(get('.keypad-disclosure').open, false);
+    get('#equation-previous').click();
+    await tick();
+    assert.equal(get('#eq-value-math').value, '999');
     w.confirm = () => false;
     chooseSet(49);
     assert.equal(get('#equation-set').value, '50', 'cancelling a set switch keeps work');
-    assert(get('#eq-value-math'));
-
-    get('#eq-value-math').value = E.numericTex(question.answer);
-    get('#equation-form').requestSubmit();
     get('#equation-next').click();
     await tick();
-    keypad = get('.keypad-disclosure');
-    assert.equal(keypad.open, false, 'keep the keyboard hidden between questions');
-    keypad.querySelector('summary').click();
-    assert.equal(keypad.open, true);
-    await tick();
-    assert.equal(keypad.querySelector('summary').textContent, '隐藏公式键盘');
-
-    for (let index = 1; index < E.questionCount; index++) {
-      get('#equation-reveal').click();
-      get('#equation-next').click();
-    }
+    await finishSet(50, 1);
+    assert.match(get('.equation-result strong').textContent, /4 \/ 5/);
+    assert.match(get('.equation-results-list small').textContent, /步骤正确 · 答案有误/);
     assert.match(get('.equation-title').textContent, /D5-50/);
     assert.equal(get('#equation-again').textContent, '重练本套');
     get('#equation-again').click();
     assert.equal(get('.core-formula annotation').textContent, question.tex);
     chooseSet(49);
     assert.equal(get('#equation-set').value, '49');
-    for (let index = 0; index < E.questionCount; index++) {
-      get('#equation-reveal').click();
-      get('#equation-next').click();
-    }
+    await finishSet(49);
     assert.equal(get('#equation-again').textContent, '下一套 · D5-50');
     get('#equation-again').click();
     assert.equal(get('.core-formula annotation').textContent, question.tex);
-    for (let index = 0; index < E.questionCount; index++) {
-      get('#equation-reveal').click();
-      get('#equation-next').click();
-    }
+    await finishSet(50);
     get('#equation-topics').click();
     assert.equal(w.document.activeElement.dataset.equationCode, 'D5');
     get('[data-equation-code="D2"]').click();
@@ -238,7 +263,7 @@ async function exerciseNavigation() {
     assert.equal(loads.length, 5, 'a successful module load is reused');
 
     key = 'class|2';
-    get('#equation-hint').click();
+    get('#equation-next').click();
     assert.deepEqual(routes, ['account']);
     assert.equal(get('#equations'), null);
     assert.equal(get('#specialPractice').textContent, '');
