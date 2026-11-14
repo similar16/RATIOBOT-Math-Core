@@ -162,7 +162,7 @@
       for (const input of formElement.querySelectorAll('input')) {
         input.dataset.latex = run.drafts[run.index]?.[input.name] ?? '';
       }
-      formElement.addEventListener('math-entry-ready', () => { run.started ??= performance.now(); }, { once: true });
+      formElement.addEventListener('math-entry-ready', () => { currentRun.started ??= performance.now(); }, { once: true });
       entry.install(formElement, 'equation', true, {
         open: currentRun.keyboardOpen,
         onToggle: open => { currentRun.keyboardOpen = open; },

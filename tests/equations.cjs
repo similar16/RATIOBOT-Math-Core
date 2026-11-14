@@ -131,6 +131,13 @@ async function exerciseNavigation() {
     const tick = () => new Promise(resolve => setTimeout(resolve, 5));
     const loads = [];
     const routes = [];
+    const attempts = [];
+    let now = 0;
+    Object.defineProperty(w.performance, 'now', { value: () => now });
+    const autumn = require(path.join(site, 'autumn-break.js'));
+    w.RatioAutumnBreak = autumn;
+    w.Date.now = () => autumn.start;
+    let eventState;
     let ready = false;
     let key = 'class|1';
     w.scrollTo = () => {};
@@ -142,6 +149,12 @@ async function exerciseNavigation() {
       key: () => key,
       profile: () => ({ economy: { modules: {} } }),
       go: route => routes.push(route),
+      completeEquation: result => {
+        attempts.push(result);
+        const { state, counted } = autumn.record(eventState, result);
+        eventState = state;
+        return counted ? '本次达标' : '';
+      },
     };
     w.MathfieldElement = w.HTMLElement;
     const append = w.document.head.append.bind(w.document.head);
@@ -214,8 +227,8 @@ async function exerciseNavigation() {
       }
       get('#eq-value-math').value = E.numericTex(q.answer);
     }
-    async function finishSet(number, start = 0) {
-      const questions = E.getSet('D5', number);
+    async function finishSet(number, start = 0, code = 'D5') {
+      const questions = E.getSet(code, number);
       await tick();
       for (let index = start; index < questions.length; index++) {
         fillQuestion(questions[index]);
@@ -243,6 +256,7 @@ async function exerciseNavigation() {
     await tick();
     await finishSet(50, 1);
     assert.match(get('.equation-result strong').textContent, /4 \/ 5/);
+    assert.match(get('.equation-result').textContent, /用时 0\.00 秒/);
     assert.match(get('.equation-results-list small').textContent, /步骤正确 · 答案有误/);
     assert.match(get('.equation-title').textContent, /D5-50/);
     assert.equal(get('#equation-again').textContent, '重练本套');
@@ -261,6 +275,28 @@ async function exerciseNavigation() {
     await tick();
     assert.equal(get('.keypad-disclosure').open, true, 'new groups default to open');
     assert.equal(loads.length, 5, 'a successful module load is reused');
+
+    now += 40000;
+    await finishSet(1, 0, 'D2');
+    assert.match(get('.equation-result').textContent, /答对 5 \/ 5 题 · 用时 40\.00 秒/);
+    assert.equal(get('.equation-result [role="status"]').textContent, '本次达标');
+    assert.equal(attempts.at(-1).elapsed, 40000);
+    get('#equation-again').click();
+    await tick();
+    now += 40001;
+    await finishSet(2, 0, 'D2');
+    assert.match(get('.equation-result').textContent, /用时 40\.01 秒/);
+    assert.equal(get('.equation-result [role="status"]'), null);
+    assert.equal(eventState.runs.D2.length, 1);
+    get('#equation-topics').click();
+    get('[data-equation-code="D1"]').click();
+    await tick();
+    now += 30000;
+    await finishSet(1, 0, 'D1');
+    assert.match(get('.equation-result').textContent, /答对 5 \/ 5 题 · 用时 30\.00 秒/);
+    assert.equal(eventState.runs.D1.length, 1);
+    get('#equation-again').click();
+    await tick();
 
     key = 'class|2';
     get('#equation-next').click();
