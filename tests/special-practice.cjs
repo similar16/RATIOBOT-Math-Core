@@ -31,7 +31,7 @@ assert.equal(saves,206);w.SpecialPracticeUI.start(cards[0]);key='2';w.document.q
 const html=fs.readFileSync(path.join(root,'index.html'),'utf8');
 const home=new JSDOM(html).window.document;
 assert.deepEqual(Array.from(home.querySelectorAll('#home .portal-num')).slice(0,7).map(x=>x.textContent),['A','B','C','D','E','F','G']);
-const homeEntry=home.querySelector('#home [data-go="specialPractice"]');
+const homeEntry=home.querySelector('#home .portal-card[data-go="specialPractice"]');
 const menuEntry=home.querySelector('#studentGameMenu [data-go="specialPractice"]');
 assert.equal(menuEntry.querySelector('span').textContent,'G');
 assert.match(homeEntry.querySelector('p').textContent,/第4章解方程/);
