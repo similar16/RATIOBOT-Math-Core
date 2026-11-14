@@ -234,6 +234,7 @@
           ? '要把未知数的系数化为1，等式两边都除以原来的系数。'
           : '找出要消去的项。等式两边同时减去这一项。';
       }
+      if (run.topic.code === 'D1' && q.left.b.n) return '移走含未知数一边的常数项，移项时要变号。';
       if (run.accepted || q.focus === 'answer') return '先得到一个系数乘未知数等于一个数的式子，再把两边都除以未知数的系数。';
       if (q.focus === 'clear') {
         const decimalDenominator = q.lines[0]?.label.includes('分母化为整数');

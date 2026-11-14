@@ -56,6 +56,27 @@ assert.equal(E.questionCount, 5);
 assert.throws(() => E.getSet('D0', 1), /未知训练类型/);
 assert.throws(() => E.getSet('D1', 0), /套号超出范围/);
 assert.throws(() => E.getSet('D6', 51), /套号超出范围/);
+assert.deepEqual(E.topics.slice(0, 2).map(topic => topic.name), ['一步解方程', '两步解方程']);
+for (let set = 1; set <= E.setCount; set++) {
+  const oneStep = E.getSet('D1', set);
+  const twoStep = E.getSet('D2', set);
+  assert(oneStep.some(q => q.lines[0].label === '移项'));
+  assert(oneStep.some(q => q.lines[0].label === '系数化为1'));
+  for (const q of oneStep) {
+    assert.equal(q.lines.length, 1);
+    assert.equal(q.answer.d, 1n);
+    assert.equal(q.right.a.n, 0n);
+    assert((q.left.b.n === 0n) !== (q.left.a.n === q.left.a.d));
+  }
+  assert.equal(twoStep.filter(q => q.left.a.d > 1n).length, 1);
+  assert.equal(twoStep.filter(q => q.right.a.n !== 0n).length, 1);
+  for (const q of twoStep) {
+    assert.equal(q.lines.length, 2);
+    assert.equal(q.answer.d, 1n);
+    assert(q.left.b.n || q.right.a.n);
+    assert.notEqual(q.isolated[0].a.n, q.isolated[0].a.d);
+  }
+}
 const seen = new Set();
 const catalogue = [];
 for (const { code } of E.topics) {
@@ -93,7 +114,7 @@ for (const { code } of E.topics) {
 }
 assert.equal(seen.size, 1500);
 assert.equal(createHash('sha256').update(JSON.stringify(catalogue)).digest('hex'),
-  '3de30896c53ce806d9b2b0066811ec1f769ccb3d44e2efa5a862ab92f9e76936');
+  '752bda51a7d913f60450e022357e6177cb60aa18d43a0a26fe3641161eabf805');
 console.log('PASS D1–D6, 300 fixed sets, 1,500 unique questions, exact answers and steps');
 
 const { JSDOM } = require('jsdom');
