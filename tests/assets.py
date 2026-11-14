@@ -59,13 +59,17 @@ for frame in ['autumn-break-frame-2026-original.jpeg', 'autumn-break-frame-2026.
  with Image.open(p) as im:
   im.load()
   assert im.size==(1254,1254)
-  if p.suffix=='.png':assert im.mode=='RGBA' and im.getpixel((627,627))[3]==0
+  if p.suffix=='.png':
+   assert im.mode=='RGBA' and im.getpixel((627,627))[3]==0
+   assert im.getpixel((0,0))[3]==0
 assert hashlib.sha256((root/'assets/autumn-break-frame-2026-original.jpeg').read_bytes()).hexdigest()=='806ba3cb609d0832b88276678ba0ddc79982929345f304d8f5412de47528af69'
-assert html.count('src="assets/autumn-break-frame-2026-original.jpeg"')==2
+home_autumn=re.search(r'<section\b[^>]*\bid="autumnHome"[^>]*>(.*?)</section>',html,re.S)
+assert home_autumn and 'src="assets/autumn-break-frame-2026.png"' in home_autumn[1]
+assert html.count('src="assets/autumn-break-frame-2026-original.jpeg"')==1
 assert "url('assets/autumn-break-frame-2026.png')" in html
 assert 'assets/autumn-break-frame-2026.png' in (root/'autumn-break.js').read_text()
 assert not any('autumn-break-frame' in item['source'] for item in manifest)
-print('PASS original autumn artwork in event previews and full-size overlay')
+print('PASS original autumn artwork with a transparent homepage preview and full-size overlay')
 
 # New exploration stages retain alpha and are delivered as small independent sprites.
 for b in [4,5]:
