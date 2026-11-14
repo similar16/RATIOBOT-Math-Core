@@ -3,7 +3,7 @@
 
   let sequence = 0;
 
-  function mount(app, canUse = () => true, { code, onBack } = {}) {
+  function mount(app, canUse = () => true, { code, onBack, onComplete } = {}) {
     const E = window.MathIsleEquationEngine;
     const entry = window.MathIsleMathEntry;
     const ink = window.MathIsleHandwriting;
@@ -60,7 +60,7 @@
       const topic = E.topics.find(item => item.code === code);
       clearDrafts();
       run = {
-        id: ++sequence, topic, number, questions, index: 0, drafts: [], answers: [], keyboardOpen: true,
+        id: ++sequence, topic, number, questions, index: 0, drafts: [], answers: [], keyboardOpen: true, started: null, attemptId: window.crypto.randomUUID(),
       };
       renderQuestion();
       window.scrollTo(0, 0);
@@ -162,6 +162,7 @@
       for (const input of formElement.querySelectorAll('input')) {
         input.dataset.latex = run.drafts[run.index]?.[input.name] ?? '';
       }
+      formElement.addEventListener('math-entry-ready', () => { run.started ??= performance.now(); }, { once: true });
       entry.install(formElement, 'equation', true, {
         open: currentRun.keyboardOpen,
         onToggle: open => { currentRun.keyboardOpen = open; },
@@ -213,10 +214,14 @@
     }
 
     function results() {
+      const elapsed = Math.ceil(performance.now() - (run.started ?? performance.now()));
+      const at = Date.now();
       clearDrafts();
       const grades = run.questions.map(grade);
       const correct = grades.filter(checks => checks.every(Boolean)).length;
       const total = run.questions.length;
+      const activity = onComplete?.({id:run.attemptId,code:run.topic.code,correct,elapsed,at});
+      const duration = window.RatioAutumnBreak?.time(elapsed) ?? (elapsed / 1000).toFixed(2) + ' 秒';
       const nextTopic = E.topics[E.topics.indexOf(run.topic) + 1];
       const lastSet = run.number === E.setCount;
       const nextNumber = lastSet ? run.number : run.number + 1;
@@ -224,7 +229,8 @@
         topicLabel(run.topic) + ' · ' + setLabel(run.topic, run.number) +
         '</p><h1 tabindex="-1">本套结果</h1></div>' + setPicker() + '</div>' +
         '<section class="panel equation-result"><p><strong>答对 ' + correct + ' / ' + total + ' 题</strong>' +
-        '</p><div class="equation-actions">' +
+        ' · 用时 ' + duration + '</p>' +
+        (activity ? '<p role="status">' + escape(activity) + '</p>' : '') + '<div class="equation-actions">' +
         '<button class="btn" type="button" id="equation-again">' +
         (lastSet ? '重练本套' : '下一套 · ' + setLabel(run.topic, nextNumber)) + '</button>' +
         (nextTopic ? '<button type="button" class="btn secondary" id="equation-next-topic">下一类 · ' + nextTopic.code + '</button>' : '') +

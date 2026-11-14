@@ -26,6 +26,7 @@ function install(form,kind='algebra',compact=false,disclosure){
  load().then(()=>{if(!form.isConnected)return;loading.hidden=true;
  for(const input of inputs){const mf=document.createElement('math-field');mf.id=input.id?input.id+'-math':'';mf.setAttribute('aria-label',input.getAttribute('aria-label')||input.labels?.[0]?.textContent||'你的答案');mf.mathVirtualKeyboardPolicy='manual';mf.smartFence=true;mf.defaultMode='math';mf.value=input.dataset.latex||toLatex(input.value);mf.readOnly=input.readOnly||input.disabled;input.after(mf);const f={input,mf};ctx.fields.push(f);ctx.active||=f;
  mf.addEventListener('focusin',()=>{ctx.active=f;sync(ctx)});mf.addEventListener('input',()=>{try{input.value=toLegacy(mf.value,kind);loading.hidden=true}catch(err){input.value='';loading.hidden=false;loading.textContent=err.message}input.dataset.latex=mf.value;input.dispatchEvent(new Event('input',{bubbles:true}))});mf.addEventListener('keydown',ev=>{if(ev.key==='Enter'){ev.preventDefault();if(!mf.readOnly){const next=form.closest('#specialPractice')?.querySelector('#spForward:not([hidden])');if(next)next.click();else form.requestSubmit()}}})}
+ form.dispatchEvent(new Event('math-entry-ready'));
  const section=document.createElement('section');section.className='formula-keypad';section.setAttribute('aria-label','数学输入键盘');ctx.section=section;
  const keys=['7','8','9','分数','乘方','⌫','4','5','6','+','−','清空','1','2','3','(',')','退出','0','.','←','→','↑','↓'];
  if(kind==='equation')keys[keys.indexOf('乘方')]='×';
