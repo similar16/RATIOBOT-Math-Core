@@ -12,10 +12,12 @@
  const flags=(o,limit=7,steps=true)=>Object.fromEntries(entries(o,limit).filter(([k,v])=>(!steps||stepOK(k))&&typeof v==='boolean'));
  const counts=o=>Object.fromEntries(entries(o,7).filter(([k])=>stepOK(k)).map(([k,v])=>[k,integer(v)]));
  const list=(v,n)=>Array.isArray(v)?[...new Set(v.filter(x=>typeof x==='string').map(x=>text(x,80)))].slice(0,n):[];
+ const reading=()=>root.RatioWordProblemReading||(typeof module==='object'&&module.exports?require('./reading.js'):null);
+ const relations=()=>root.RatioWordProblemRelations||(typeof module==='object'&&module.exports?require('./relations.js'):null);
  function cleanDraft(d,update=true){
   if(!d||typeof d!=='object'||Array.isArray(d))return null;
   const hints=counts(d.hints),example=!!d.example||d.status==='example';
-  return {schema:1,runId:text(d.runId,100),problemId:text(d.problemId,50),routeId:text(d.routeId,50),sourceLocation:text(d.sourceLocation,50),step:integer(d.step,6),
+  return {schema:1,interactionVersion:integer(d.interactionVersion,2),runId:text(d.runId,100),problemId:text(d.problemId,50),routeId:text(d.routeId,50),sourceLocation:text(d.sourceLocation,50),step:integer(d.step,6),
    values:values(d.values),passed:flags(d.passed),attempts:counts(d.attempts),firstPass:flags(d.firstPass),hints,
    seen:list(d.seen,60),closure:list(d.closure,30),
    derivationSources:Object.fromEntries(entries(d.derivationSources,60).map(([k,v])=>[k,list(v,20)])),
@@ -24,10 +26,13 @@
    finished:d.finished===true,answersChecked:d.answersChecked===true,startedAt:stamp(d.startedAt),updatedAt:update?new Date().toISOString():stamp(d.updatedAt)};
  }
  function accuracy(d){const graded=Object.keys(d.firstPass).filter(k=>/^[0-5]$/.test(k)),first=graded.filter(k=>d.firstPass[k]===true).length;return {first,total:graded.length,accuracy:graded.length?Math.round(100*first/graded.length):null};}
- function valueLabels(route,answers){
+ function valueLabels(route,answers,problem){
+  const factLabels=new Map((reading()?.build(problem).fields||[]).map(f=>[f.key,f.label]));
   return Object.fromEntries(Object.keys(answers).map(key=>{
    let label='补充表达';
-   if(key.startsWith('d:'))label=((route.derivations||[]).find(d=>d.id===key.slice(2))?.label||'数据推导')+'（来源推导）';
+   if(key.startsWith('f:'))label=(factLabels.get(key)||'题目数量')+'（读题填空）';
+   else if(key.startsWith('r:')){const m=key.match(/^r:(sum|product):(\d+):([012])$/);if(m)label=(m[1]==='sum'?'加和关系':'乘积关系')+'第'+(Number(m[2])+1)+'行 · '+(m[3]==='2'?'结果':'第'+(Number(m[3])+1)+'个量');}
+   else if(key.startsWith('d:'))label=((route.derivations||[]).find(d=>d.id===key.slice(2))?.label||'数据推导')+'（来源推导）';
    else {const m=key.match(/^(t|e|a|c|v):(\d+)(?::(\d+))?$/);if(m){const i=Number(m[2]),j=Number(m[3]);
     if(m[1]==='t')label=(route.table?.rows?.[i]?.label||'对象')+' · '+(route.table?.headers?.[j+1]||'数量');
     if(m[1]==='e')label=route.equations?.[i]?.label||'数量等式';
@@ -84,9 +89,15 @@
   if((route.derivations||[]).some(x=>d.derived[x.id]!==true))throw Error('数据来源推导尚未全部核对，请返回检查。');
   if((route.answers||[]).length&&!d.answersChecked)throw Error('求解结果尚未核对，请先完成求解与检验。');
   if((route.verdictCases||[]).some((c,i)=>d.values['v:'+i]!==c.correct))throw Error('请分别完成每种情形的实际意义判断。');
+  if(d.interactionVersion>=2){
+   const F=reading(),R=relations();if(!F||!R)throw Error('数量互动资源尚未准备好，请重试。');
+   if(!F.check(problem,d.values).ok||F.build(problem).facts.some(f=>!f.fields.length&&!d.seen.includes(f.id)))throw Error('请完成并核对读题数量填空。');
+   const model=R.build(problem,route),answers=Object.fromEntries(['sum','product'].map(kind=>[kind,model[kind].map((_,i)=>[0,1,2].map(j=>d.values['r:'+kind+':'+i+':'+j]||''))]));
+   if(!R.check(model,answers).ok)throw Error('请完成并核对加和、乘积关系。');
+  }
   if(s.records.some(x=>x.runId===d.runId))return {state:s,record:null};
   const discussion=!!route.discussion||['open','boundary'].includes(problem.kind)||!!d.customModel;
-  const record={...d,finished:true,title:problem.title,source:[...new Set([(problem.textbookSources||[]).find(s=>s.id===d.sourceLocation)?.source,problem.source,...(problem.textbookSources||[]).map(s=>s.source)].filter(Boolean))].join('；'),routeLabel:route.label,valueLabels:valueLabels(route,d.values),at:new Date().toISOString(),
+  const record={...d,finished:true,title:problem.title,source:[...new Set([(problem.textbookSources||[]).find(s=>s.id===d.sourceLocation)?.source,problem.source,...(problem.textbookSources||[]).map(s=>s.source)].filter(Boolean))].join('；'),routeLabel:route.label,valueLabels:valueLabels(route,d.values,problem),at:new Date().toISOString(),
    status:discussion?'review':d.example?'example':d.assisted?'assisted':'independent',...accuracy(d)};
   s.records=recordList([record,...s.records]);s.drafts=draftList({...s.drafts,[problem.id]:{...d,finished:true}});return {state:s,record};
  }
