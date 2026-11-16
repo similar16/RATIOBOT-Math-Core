@@ -60,7 +60,7 @@ function fixture(){
  }
  async function loadModule(){
   w.katex={renderToString:s=>String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))};
-  for(const file of ['engine.js','data-l7-l8.js','data-l9-review.js','diagrams.js','app.js'])w.eval(read('word-problems/'+file));
+  for(const file of ['engine.js','data-l7-l8.js','data-l9-review.js','data-textbook-intro.js','data-textbook-applications.js','data-textbook-review.js','textbook-index.js','diagrams.js','app.js'])w.eval(read('word-problems/'+file));
   const append=w.document.head.append.bind(w.document.head);
   w.document.head.append=(...nodes)=>{append(...nodes);for(const node of nodes){const url=node.src||node.href||'';if(url.includes('/word-problems/'))queueMicrotask(()=>node.onload?.());}};
   await w.RatioWordProblemsUI.open();

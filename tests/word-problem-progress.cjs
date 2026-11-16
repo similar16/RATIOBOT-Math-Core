@@ -67,11 +67,11 @@ const shown={...rOld,example:true,status:'example'};assert.equal(P.merge(records
 const pending={...rOld,status:'review'};assert.equal(P.merge(records,{records:[pending]}).records[0].status,'review');
 assert.deepEqual(P.merge(records,records),records);
 
-// Full per-step drafts survive normalization and the latest 55 are retained.
+// Full per-step drafts survive normalization and all textbook and guide drafts fit; the latest 160 are retained.
 const many={drafts:{},records:[]};
-for(let i=0;i<70;i++){const id='P'+i,t=new Date(Date.UTC(2026,10,16,0,i)).toISOString();many.drafts[id]=draft({problemId:id,runId:'wp-'+i,updatedAt:t});many.records.push({...completed.record,runId:'wp-record-'+i,problemId:id,at:t});}
-let bounded=P.normalized(many);assert.equal(Object.keys(bounded.drafts).length,55);assert(bounded.drafts.P69);assert(!bounded.drafts.P0);assert.deepEqual(bounded.drafts.P69.values,draft().values);
-const more={records:Array.from({length:100},(_,i)=>({...completed.record,runId:'wp-many-'+i,at:new Date(Date.UTC(2026,10,16,0,i)).toISOString()}))};
-assert.equal(P.normalized(more).records.length,80);
+for(let i=0;i<190;i++){const id='P'+i,t=new Date(Date.UTC(2026,10,16,0,i)).toISOString();many.drafts[id]=draft({problemId:id,runId:'wp-'+i,updatedAt:t});many.records.push({...completed.record,runId:'wp-record-'+i,problemId:id,at:t});}
+let bounded=P.normalized(many);assert.equal(Object.keys(bounded.drafts).length,160);assert(bounded.drafts.P189);assert(!bounded.drafts.P0);assert.deepEqual(bounded.drafts.P189.values,draft().values);
+const more={records:Array.from({length:260},(_,i)=>({...completed.record,runId:'wp-many-'+i,at:new Date(Date.UTC(2026,10,16,0,i)).toISOString()}))};
+assert.equal(P.normalized(more).records.length,240);
 assert.equal(P.summary(completed.state).completed,1);assert.equal(P.summary(completed.state).independent,1);
 console.log('PASS word-problem progress: isolated account state, full drafts, typed gates, completion prerequisites, deduplication, conservative assistance flags and bounded cloud merges');

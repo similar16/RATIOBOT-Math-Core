@@ -505,7 +505,7 @@ const data=[
     "group": "第9课时",
     "source": "《教学设计与指导》181—183页 · 问题2",
     "kind": "existence",
-    "stem": "观察图案：第n幅为每边n+1颗的方阵，三条边为黑棋，其余为白棋；相邻两条黑边的转角不重复计数。第1至4幅的黑棋数依次为4、7、10、13。这样的图案能恰有50颗黑棋吗？",
+    "stem": "观察图案：第n幅为每边n+1颗的方阵，首行、首列和从左上到右下的主对角线为黑棋，其余为白棋；这三条线共同经过左上角同一颗棋子。第1至4幅的黑棋数依次为4、7、10、13。这样的图案能恰有50颗黑棋吗？",
     "tags": [
       "图案",
       "整数检验"
@@ -513,12 +513,12 @@ const data=[
     "facts": [
       {
         "id": "structure",
-        "text": "图案呈方阵；第n幅每边有n+1颗棋子，三条边为黑棋，两个转角各重复计数一次。",
+        "text": "图案呈方阵；第n幅每边有n+1颗棋子。首行、首列、主对角线这3条线上都是黑棋；左上角同一颗被数了3次，比实际多算2次。",
         "kind": "given"
       },
       {
         "id": "first",
-        "text": "第1幅有4颗黑棋；以后每增一幅，每条边增加1颗棋子。",
+        "text": "第1幅有4颗黑棋；以后每增一幅，首行、首列、主对角线各增加1颗黑棋。",
         "kind": "given"
       },
       {
@@ -550,7 +550,7 @@ const data=[
               "structure",
               "first"
             ],
-            "explain": "图中有3条黑色边，每一条增加1颗；先用边数乘每边增加的颗数，得到每次新增量。"
+            "explain": "图中首行、首列、主对角线这3条线各增加1颗黑棋；先用线的条数乘每条增加的颗数，得到每次新增量。"
           }
         ],
         "table": {
@@ -679,10 +679,10 @@ const data=[
     ],
     "diagram": "chess",
     "diagramData": {
-      "pattern": "three-sides",
+      "pattern": "row-column-diagonal",
       "initial": 4,
       "increment": 3,
-      "sides": 3,
+      "lines": 3,
       "overlaps": 2
     }
   },
@@ -692,7 +692,7 @@ const data=[
     "group": "第9课时",
     "source": "《教学设计与指导》183页 · 问题2追问5",
     "kind": "open",
-    "stem": "第n幅棋子图为每边n+1颗的方阵，三条边为黑棋，两个黑色转角各被相邻边重复数了一次，其余为白棋。请围绕白棋设计一个能用方程解决的问题。原书没有指定白棋目标数。",
+    "stem": "第n幅棋子图为每边n+1颗的方阵，首行、首列、主对角线上的棋子为黑棋，其余为白棋。三条线共同经过左上角同一颗棋子，分条计数时该棋子多算了2次。请围绕白棋设计一个能用方程解决的问题。原书没有指定白棋目标数。",
     "tags": [
       "编题",
       "方程范围"
@@ -705,7 +705,7 @@ const data=[
       },
       {
         "id": "black",
-        "text": "三条边为黑棋，每边n+1颗，重复的两个转角各扣除一次。",
+        "text": "首行、首列、主对角线这3条线上的棋子为黑棋，每条n+1颗；共同的左上角棋子被数了3次，但实际只应计1次。",
         "kind": "given"
       },
       {
@@ -727,7 +727,16 @@ const data=[
         "meaning": "图案序号",
         "unit": "幅",
         "domain": "n是正整数",
-        "derivations": [],
+        "derivations": [
+          {
+            "id": "overlapCount",
+            "label": "左上角多算的次数",
+            "expr": "3-1",
+            "result": "2",
+            "sources": ["black"],
+            "explain": "三条线共同经过同一颗左上角棋子。分条数了3次，实际应计1次，所以扣除3−1=2次。"
+          }
+        ],
         "table": {
           "headers": [
             "图案",
@@ -758,6 +767,7 @@ const data=[
                   "expr": "3*(n+1)-2",
                   "sources": [
                     "black",
+                    "overlapCount",
                     "unknown"
                   ]
                 },
@@ -766,6 +776,7 @@ const data=[
                   "sources": [
                     "square",
                     "black",
+                    "overlapCount",
                     "partition",
                     "unknown"
                   ]
@@ -811,8 +822,8 @@ const data=[
     ],
     "diagram": "chess",
     "diagramData": {
-      "pattern": "three-sides",
-      "sides": 3,
+      "pattern": "row-column-diagonal",
+      "lines": 3,
       "overlaps": 2
     }
   },
@@ -2258,6 +2269,167 @@ const data=[
           "explain": "鸡23只，兔12只。"
         },
         "variation": "如果只知道35个头，为什么不能确定鸡兔各有多少？"
+      },
+      {
+        "id": "chicken-feet",
+        "label": "设鸡的总脚数为x",
+        "variable": "x",
+        "meaning": "所有鸡的脚数之和",
+        "unit": "只脚",
+        "domain": "0≤x≤94，x÷2和(94−x)÷4都应为非负整数",
+        "derivations": [],
+        "table": {
+          "headers": [
+            "动物",
+            "每只脚数",
+            "脚数",
+            "只数"
+          ],
+          "rows": [
+            {
+              "label": "鸡",
+              "cells": [
+                {
+                  "expr": "2",
+                  "sources": [
+                    "legs"
+                  ],
+                  "given": true
+                },
+                {
+                  "expr": "x",
+                  "sources": [
+                    "unknown"
+                  ],
+                  "given": true
+                },
+                {
+                  "expr": "x/2",
+                  "sources": [
+                    "unknown",
+                    "legs"
+                  ]
+                }
+              ]
+            },
+            {
+              "label": "兔",
+              "cells": [
+                {
+                  "expr": "4",
+                  "sources": [
+                    "legs"
+                  ],
+                  "given": true
+                },
+                {
+                  "expr": "94-x",
+                  "sources": [
+                    "feet",
+                    "unknown"
+                  ]
+                },
+                {
+                  "expr": "(94-x)/4",
+                  "sources": [
+                    "feet",
+                    "unknown",
+                    "legs"
+                  ]
+                }
+              ]
+            },
+            {
+              "label": "合计",
+              "cells": [
+                {
+                  "note": "每只脚数不相加"
+                },
+                {
+                  "expr": "94",
+                  "sources": [
+                    "feet"
+                  ],
+                  "given": true
+                },
+                {
+                  "expr": "35",
+                  "sources": [
+                    "heads"
+                  ],
+                  "given": true
+                }
+              ]
+            }
+          ]
+        },
+        "relations": {
+          "add": [
+            "鸡的脚数+兔的脚数=94",
+            "鸡的只数+兔的只数=35"
+          ],
+          "multiply": [
+            "各类动物总脚数=每只脚数×动物只数",
+            "动物只数=总脚数÷每只脚数（乘积关系的反用）"
+          ]
+        },
+        "closure": {
+          "sources": [
+            "heads"
+          ],
+          "text": "已经用94只脚表示两类脚数，再用35个头确定两类动物只数之和。",
+          "hint": "94只脚已用于94−x，接下来应使用还未满足的35个头。"
+        },
+        "equations": [
+          {
+            "label": "总只数",
+            "left": "x/2+(94-x)/4",
+            "right": "35"
+          }
+        ],
+        "answers": [
+          {
+            "label": "鸡的总脚数",
+            "expr": "46",
+            "unit": "只脚"
+          },
+          {
+            "label": "鸡的只数",
+            "expr": "23",
+            "unit": "只"
+          },
+          {
+            "label": "兔的只数",
+            "expr": "12",
+            "unit": "只"
+          }
+        ],
+        "steps": [
+          "2*x+94-x=35*4",
+          "x=35*4-94=46",
+          "46/2=23",
+          "(94-46)/4=12"
+        ],
+        "checks": [
+          {
+            "text": "总只数",
+            "expr": "46/2+(94-46)/4",
+            "result": "35"
+          },
+          {
+            "text": "总脚数",
+            "expr": "2*23+4*12",
+            "result": "94"
+          }
+        ],
+        "conclusion": "鸡的总脚数为46，因此鸡46÷2=23只；兔有(94−46)÷4=12只。x表示脚数，不能直接把46答成鸡的只数。",
+        "verdict": {
+          "correct": "valid",
+          "prompt": "怎样判断这个结果或结论？",
+          "explain": "鸡的总脚数为46，因此鸡46÷2=23只；兔有(94−46)÷4=12只。x表示脚数，不能直接把46答成鸡的只数。"
+        },
+        "variation": "为什么设动物只数时用脚数闭合，设脚数时又可以用动物只数闭合？",
+        "sourceNote": "原书187页方法二原设鸡脚数m；这里沿用界面字母x，含义保持鸡的总脚数。"
       }
     ]
   },

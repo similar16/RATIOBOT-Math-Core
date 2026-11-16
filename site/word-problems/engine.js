@@ -193,6 +193,12 @@
   function escapeTex(text) { return String(text).replace(/[\\{}$%&#_^~]/g, c => ({ '\\': '\\textbackslash{}', '{': '\\{', '}': '\\}', '$': '\\$', '%': '\\%', '&': '\\&', '#': '\\#', '_': '\\_', '^': '\\textasciicircum{}', '~': '\\textasciitilde{}' }[c])); }
   function format(input, options = {}) {
     try {
+      const comparison = String(input).split(/(≈|≠|≤|≥|<|>)/);
+      if (comparison.length > 1) {
+        const symbols = { '≈':'\\approx ', '≠':'\\ne ', '≤':'\\le ', '≥':'\\ge ', '<':'<', '>':'>' };
+        if (comparison.some((part, index) => index % 2 === 0 && !inspect(part).ok)) fail('请检查比较关系中的表达式。');
+        return comparison.map((part, index) => index % 2 ? symbols[part] : latex(parse(part).ast, options.division === 'sign')).join('');
+      }
       const normalized = normalize(input);
       const parts = normalized.split('=');
       if (parts.some(p => !p)) fail('请补全等式。');
@@ -205,6 +211,47 @@
     catch (error) { return { ok: false, kind: error.kind || 'input', message: error.message }; }
   }
 
+  // A verified number is one quantity, not a bag of reusable digits. A known
+  // 1/5 can be written as 0.2, 1/5 or used as the divisor in x/5; it does not
+  // establish an unrelated quantity 5. Recognize numeric notation as a whole
+  // before examining its leaves, without accepting arbitrary computations
+  // involving numbers whose sources have not been supplied.
+  function scalarLiteral(ast) {
+    if (ast.kind === 'group' || ast.kind === 'unary') return scalarLiteral(ast.value);
+    return ast.kind === 'number';
+  }
+  function numericNotation(ast) {
+    if (ast.kind === 'group' || ast.kind === 'unary') return numericNotation(ast.value);
+    if (ast.kind === 'number') return true;
+    if (ast.kind === 'percent') return scalarLiteral(ast.value);
+    return ast.kind === 'binary' && ast.op === '/' && scalarLiteral(ast.left) && scalarLiteral(ast.right);
+  }
+  function knownNumber(ast, available) {
+    return numericNotation(ast) && available.has(rstring(coefficient(evaluate(ast), '')));
+  }
+  function unexplainedNumber(ast, allowed, available) {
+    if (knownNumber(ast, available)) return null;
+    if (ast.kind === 'number') return allowed.has(rstring(ast.value)) ? null : ast.raw;
+    if (ast.kind === 'binary' && ast.op === '/' && numericNotation(ast.right)) {
+      const divisor = coefficient(evaluate(ast.right), '');
+      if (divisor.n && available.has(rstring(rdiv(R1, divisor)))) return unexplainedNumber(ast.left, allowed, available);
+    }
+    for (const child of [ast.value, ast.left, ast.right]) {
+      if (!child?.kind) continue;
+      const missing = unexplainedNumber(child, allowed, available);
+      if (missing != null) return missing;
+    }
+    return null;
+  }
+  function hasNumberSources(input, originalNumbers = [], availableNumbers = []) {
+    try {
+      const allowed = new Set(originalNumbers.map(numeric).filter(value => value != null));
+      const available = new Set(availableNumbers.map(numeric).filter(value => value != null));
+      const parts = normalize(input).split('=');
+      return parts.every(part => unexplainedNumber(read(part).ast, allowed, available) == null);
+    } catch { return false; }
+  }
+
   function checkDerivation(input, item, variable = 'x') {
     try {
       const expected = read(item.expr), expectedMeta = details(expected.ast);
@@ -212,18 +259,22 @@
       if (chain.some(p => !p)) fail('请补全等号两边。');
       if (chain.length > 4) fail('请把计算分成较短的步骤。');
       const parts = chain.map(read), first = parts[0], meta = details(first.ast);
+      const expectedVariables = new Set(expectedMeta.variables);
+      if (parts.some(p => details(p.ast).variables.some(name => !expectedVariables.has(name)))) return { ok: false, kind: 'variable', message: '这一步出现了没有设定的字母。请只使用当前数量所需的未知量，即使多余的字母能抵消，也需要说明它的含义。' };
       if (!parts.every(p => pEquals(p.poly, expected.poly))) return { ok: false, kind: 'math', message: '这一步的数量关系或计算还不相等，请检查用到的量和运算。' };
       const result = item.result == null ? expected : read(item.result);
       if (!pEquals(result.poly, expected.poly)) return { ok: false, kind: 'content', message: '本题的推导设置需要教师复核，当前不判错。' };
       const allowed = new Set(expectedMeta.literals.map(x => x.value));
       if (expectedMeta.percent) allowed.add('100'); // “百分之”本身定义分母100。
+      // A learner may expand an already checked parent calculation instead of using its short result.
+      for (const expression of item.sourceExpressions || []) for (const literal of details(read(expression).ast).literals) allowed.add(literal.value);
       const derivedResults = new Set();
       for (const value of item.allowedNumbers || []) { const number = numeric(value); if (number != null) { allowed.add(number); derivedResults.add(number); } }
       // Only a complete, explicitly available result can replace the calculation;
       // original literal leaves alone do not establish that a derivation was done.
-      const knownResult = meta.operations === 0 && meta.variables.length === 0 && derivedResults.has(rstring(coefficient(first.poly, '')));
-      const shortcut = expectedMeta.operations > 0 && meta.operations === 0 && !knownResult;
-      const unexplained = !knownResult && meta.literals.find(x => !allowed.has(x.value));
+      const knownResult = knownNumber(first.ast, derivedResults);
+      const shortcut = expectedMeta.operations > 0 && meta.operations === 0 && (!knownResult || item.requireCalculation === true);
+      const unexplained = !knownResult && unexplainedNumber(first.ast, allowed, derivedResults) != null;
       if (shortcut || unexplained) return { ok: false, kind: 'source', message: '数值正确，来源尚未说明。请用题目中的原数或已完成的推导写出计算过程，再使用简写结果。' };
       return { ok: true, kind: 'correct', message: '关系与来源都对应。', expression: first.normalized, result: numeric(item.result ?? item.expr), calculationLatex: latex(first.ast, true) };
     } catch (error) { return { ok: false, kind: error.kind || 'input', message: error.message || '请检查输入。' }; }
@@ -246,6 +297,8 @@
       const parts = normalize(input).split('=');
       if (parts.length !== 2 || parts.some(p => !p)) fail('请填写一个完整方程，只保留一个等号。');
       const left = read(parts[0]), right = read(parts[1]), a = read(expected.left), b = read(expected.right);
+      const expectedVariables = new Set([...details(a.ast).variables, ...details(b.ast).variables]);
+      if ([...details(left.ast).variables, ...details(right.ast).variables].some(name => !expectedVariables.has(name))) return { ok: false, kind: 'variable', message: '方程中出现了本次没有设定的字母。请按当前设元表示数量，不能用两边抵消来省略对这个字母的说明。' };
       const inputDiff = pAdd(left.poly, right.poly, true), expectedDiff = pAdd(a.poly, b.poly, true);
       if (!hasVariable(inputDiff)) return { ok: false, kind: 'constraint', message: inputDiff.size ? '这个等式没有留下能确定未知数的关系，请回看表格中的数量。' : '这是恒等式，不能确定未知数。请检查哪个独立条件还没有用到。' };
       if (degree(inputDiff) > 1 || degree(expectedDiff) > 1) return { ok: false, kind: 'unsupported', message: '这个关系化简后不是一元一次方程，请保留表格并作为拓展问题讨论。' };
@@ -312,7 +365,7 @@
     return errors;
   }
 
-  const api = { equivalent, checkDerivation, checkEquation, format, formatCalculation, numeric, validateProblem, normalize, inspect };
+  const api = { equivalent, checkDerivation, checkEquation, hasNumberSources, format, formatCalculation, numeric, validateProblem, normalize, inspect };
   if (typeof module === 'object' && module.exports) module.exports = api;
   else root.RatioWordProblemEngine = api;
 })(typeof window === 'undefined' ? globalThis : window);

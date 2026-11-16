@@ -1,0 +1,1409 @@
+{
+  "sourceTitle": "数学七年级上册（苏科版2026）",
+  "scope": "第4章（105—137页），含章引入、情境列式、应用、阅读、数学探究与复习题",
+  "groupCount": 71,
+  "itemCount": 80,
+  "existingCoveredItems": 30,
+  "addedItems": 50,
+  "items": [
+    {
+      "textbookItemId": "I00",
+      "groupSerial": "01",
+      "groupKey": "chapter_intro",
+      "groupLabel": "章引入：鸡兔同笼",
+      "sourceLabel": "章引入：鸡兔同笼",
+      "section": "第4章章引入",
+      "printedPages": [
+        105
+      ],
+      "pdfPages": [
+        112
+      ],
+      "moduleId": "G10-01",
+      "coverage": "existing",
+      "classification": "core"
+    },
+    {
+      "textbookItemId": "I01",
+      "groupSerial": "02",
+      "groupKey": "p106_example1",
+      "groupLabel": "例1（1）（3）",
+      "sourceLabel": "例1（1）",
+      "section": "4.1 等式与方程",
+      "printedPages": [
+        106
+      ],
+      "pdfPages": [
+        113
+      ],
+      "moduleId": "TB-I01",
+      "coverage": "added",
+      "classification": "core"
+    },
+    {
+      "textbookItemId": "I02",
+      "groupSerial": "02",
+      "groupKey": "p106_example1",
+      "groupLabel": "例1（1）（3）",
+      "sourceLabel": "例1（3）",
+      "section": "4.1 等式与方程",
+      "printedPages": [
+        106
+      ],
+      "pdfPages": [
+        113
+      ],
+      "moduleId": "TB-I02",
+      "coverage": "added",
+      "classification": "core"
+    },
+    {
+      "textbookItemId": "I03",
+      "groupSerial": "03",
+      "groupKey": "p107_activity",
+      "groupLabel": "活动（1）（2）",
+      "sourceLabel": "活动（1）",
+      "section": "4.1 等式与方程",
+      "printedPages": [
+        107
+      ],
+      "pdfPages": [
+        114
+      ],
+      "moduleId": "TB-I03",
+      "coverage": "added",
+      "classification": "core"
+    },
+    {
+      "textbookItemId": "I04",
+      "groupSerial": "03",
+      "groupKey": "p107_activity",
+      "groupLabel": "活动（1）（2）",
+      "sourceLabel": "活动（2）",
+      "section": "4.1 等式与方程",
+      "printedPages": [
+        107
+      ],
+      "pdfPages": [
+        114
+      ],
+      "moduleId": "TB-I04",
+      "coverage": "added",
+      "classification": "core"
+    },
+    {
+      "textbookItemId": "I05",
+      "groupSerial": "04",
+      "groupKey": "p108_practice1",
+      "groupLabel": "练习第1题",
+      "sourceLabel": "练习1（1）",
+      "section": "4.1 等式与方程",
+      "printedPages": [
+        108
+      ],
+      "pdfPages": [
+        115
+      ],
+      "moduleId": "TB-I05",
+      "coverage": "added",
+      "classification": "borderline"
+    },
+    {
+      "textbookItemId": "I06",
+      "groupSerial": "04",
+      "groupKey": "p108_practice1",
+      "groupLabel": "练习第1题",
+      "sourceLabel": "练习1（2）",
+      "section": "4.1 等式与方程",
+      "printedPages": [
+        108
+      ],
+      "pdfPages": [
+        115
+      ],
+      "moduleId": "TB-I06",
+      "coverage": "added",
+      "classification": "core"
+    },
+    {
+      "textbookItemId": "I07",
+      "groupSerial": "04",
+      "groupKey": "p108_practice1",
+      "groupLabel": "练习第1题",
+      "sourceLabel": "练习1（3）",
+      "section": "4.1 等式与方程",
+      "printedPages": [
+        108
+      ],
+      "pdfPages": [
+        115
+      ],
+      "moduleId": "TB-I07",
+      "coverage": "added",
+      "classification": "core"
+    },
+    {
+      "textbookItemId": "I08",
+      "groupSerial": "05",
+      "groupKey": "p109_problem1",
+      "groupLabel": "问题1",
+      "sourceLabel": "问题1",
+      "section": "4.1 等式与方程",
+      "printedPages": [
+        109
+      ],
+      "pdfPages": [
+        116
+      ],
+      "moduleId": "TB-I08",
+      "coverage": "added",
+      "classification": "core"
+    },
+    {
+      "textbookItemId": "I09",
+      "groupSerial": "06",
+      "groupKey": "p109_problem2",
+      "groupLabel": "问题2",
+      "sourceLabel": "问题2",
+      "section": "4.1 等式与方程",
+      "printedPages": [
+        109
+      ],
+      "pdfPages": [
+        116
+      ],
+      "moduleId": "TB-I09",
+      "coverage": "added",
+      "classification": "core"
+    },
+    {
+      "textbookItemId": "I10",
+      "groupSerial": "07",
+      "groupKey": "p110_ancient_number",
+      "groupLabel": "尝试：古埃及求未知数问题",
+      "sourceLabel": "尝试：古埃及求未知数问题",
+      "section": "4.1 等式与方程",
+      "printedPages": [
+        110
+      ],
+      "pdfPages": [
+        117
+      ],
+      "moduleId": "TB-I10",
+      "coverage": "added",
+      "classification": "borderline"
+    },
+    {
+      "textbookItemId": "I12",
+      "groupSerial": "08",
+      "groupKey": "p111_practice1",
+      "groupLabel": "练习第1题（2）（3）",
+      "sourceLabel": "练习1（2）",
+      "section": "4.1 等式与方程",
+      "printedPages": [
+        111
+      ],
+      "pdfPages": [
+        118
+      ],
+      "moduleId": "TB-I12",
+      "coverage": "added",
+      "classification": "core"
+    },
+    {
+      "textbookItemId": "I13",
+      "groupSerial": "08",
+      "groupKey": "p111_practice1",
+      "groupLabel": "练习第1题（2）（3）",
+      "sourceLabel": "练习1（3）",
+      "section": "4.1 等式与方程",
+      "printedPages": [
+        111
+      ],
+      "pdfPages": [
+        118
+      ],
+      "moduleId": "TB-I13",
+      "coverage": "added",
+      "classification": "core"
+    },
+    {
+      "textbookItemId": "I14",
+      "groupSerial": "09",
+      "groupKey": "p111_exercise1",
+      "groupLabel": "习题第1题（1）（2）",
+      "sourceLabel": "习题1（1）",
+      "section": "4.1 等式与方程",
+      "printedPages": [
+        111
+      ],
+      "pdfPages": [
+        118
+      ],
+      "moduleId": "TB-I14",
+      "coverage": "added",
+      "classification": "core"
+    },
+    {
+      "textbookItemId": "I15",
+      "groupSerial": "09",
+      "groupKey": "p111_exercise1",
+      "groupLabel": "习题第1题（1）（2）",
+      "sourceLabel": "习题1（2）",
+      "section": "4.1 等式与方程",
+      "printedPages": [
+        111
+      ],
+      "pdfPages": [
+        118
+      ],
+      "moduleId": "TB-I15",
+      "coverage": "added",
+      "classification": "core"
+    },
+    {
+      "textbookItemId": "I16",
+      "groupSerial": "10",
+      "groupKey": "p112_exercise3",
+      "groupLabel": "习题第3题（1）（3）",
+      "sourceLabel": "习题3（1）",
+      "section": "4.1 等式与方程",
+      "printedPages": [
+        112
+      ],
+      "pdfPages": [
+        119
+      ],
+      "moduleId": "TB-I16",
+      "coverage": "added",
+      "classification": "core"
+    },
+    {
+      "textbookItemId": "I17",
+      "groupSerial": "10",
+      "groupKey": "p112_exercise3",
+      "groupLabel": "习题第3题（1）（3）",
+      "sourceLabel": "习题3（3）",
+      "section": "4.1 等式与方程",
+      "printedPages": [
+        112
+      ],
+      "pdfPages": [
+        119
+      ],
+      "moduleId": "TB-I17",
+      "coverage": "added",
+      "classification": "core"
+    },
+    {
+      "textbookItemId": "I18",
+      "groupSerial": "11",
+      "groupKey": "p119_exercise1",
+      "groupLabel": "习题第1题（1）（2）（3）",
+      "sourceLabel": "习题1（1）",
+      "section": "4.2 一元一次方程及其解法",
+      "printedPages": [
+        119
+      ],
+      "pdfPages": [
+        126
+      ],
+      "moduleId": "TB-I18",
+      "coverage": "added",
+      "classification": "core"
+    },
+    {
+      "textbookItemId": "I19",
+      "groupSerial": "11",
+      "groupKey": "p119_exercise1",
+      "groupLabel": "习题第1题（1）（2）（3）",
+      "sourceLabel": "习题1（2）",
+      "section": "4.2 一元一次方程及其解法",
+      "printedPages": [
+        119
+      ],
+      "pdfPages": [
+        126
+      ],
+      "moduleId": "TB-I19",
+      "coverage": "added",
+      "classification": "core"
+    },
+    {
+      "textbookItemId": "I20",
+      "groupSerial": "11",
+      "groupKey": "p119_exercise1",
+      "groupLabel": "习题第1题（1）（2）（3）",
+      "sourceLabel": "习题1（3）",
+      "section": "4.2 一元一次方程及其解法",
+      "printedPages": [
+        119
+      ],
+      "pdfPages": [
+        126
+      ],
+      "moduleId": "TB-I20",
+      "coverage": "added",
+      "classification": "core"
+    },
+    {
+      "textbookItemId": "I21",
+      "groupSerial": "12",
+      "groupKey": "p120_exercise6",
+      "groupLabel": "习题6",
+      "sourceLabel": "习题6",
+      "section": "4.2 一元一次方程及其解法",
+      "printedPages": [
+        120
+      ],
+      "pdfPages": [
+        127
+      ],
+      "moduleId": "G9-06",
+      "coverage": "existing",
+      "classification": "borderline"
+    },
+    {
+      "textbookItemId": "A01",
+      "groupSerial": "13",
+      "groupKey": "A01",
+      "groupLabel": "问题（紫砂壶茶具）",
+      "sourceLabel": "问题（紫砂壶茶具）",
+      "section": "4.3 用一元一次方程解决问题",
+      "printedPages": [
+        121
+      ],
+      "pdfPages": [
+        128
+      ],
+      "moduleId": "L7-P1",
+      "coverage": "existing",
+      "classification": "core"
+    },
+    {
+      "textbookItemId": "A02",
+      "groupSerial": "14",
+      "groupKey": "A02",
+      "groupLabel": "例1",
+      "sourceLabel": "例1",
+      "section": "4.3 用一元一次方程解决问题",
+      "printedPages": [
+        122
+      ],
+      "pdfPages": [
+        129
+      ],
+      "moduleId": "L7-P3",
+      "coverage": "existing",
+      "classification": "core"
+    },
+    {
+      "textbookItemId": "A03",
+      "groupSerial": "15",
+      "groupKey": "A03",
+      "groupLabel": "练习第1题",
+      "sourceLabel": "练习第1题",
+      "section": "4.3 用一元一次方程解决问题",
+      "printedPages": [
+        122
+      ],
+      "pdfPages": [
+        129
+      ],
+      "moduleId": "TB-A03",
+      "coverage": "added",
+      "classification": "core"
+    },
+    {
+      "textbookItemId": "A04",
+      "groupSerial": "16",
+      "groupKey": "A04",
+      "groupLabel": "练习第2题",
+      "sourceLabel": "练习第2题",
+      "section": "4.3 用一元一次方程解决问题",
+      "printedPages": [
+        122
+      ],
+      "pdfPages": [
+        129
+      ],
+      "moduleId": "L7-T1",
+      "coverage": "existing",
+      "classification": "core"
+    },
+    {
+      "textbookItemId": "A05",
+      "groupSerial": "17",
+      "groupKey": "A05",
+      "groupLabel": "练习第3题",
+      "sourceLabel": "练习第3题",
+      "section": "4.3 用一元一次方程解决问题",
+      "printedPages": [
+        122
+      ],
+      "pdfPages": [
+        129
+      ],
+      "moduleId": "L7-T2",
+      "coverage": "existing",
+      "classification": "core"
+    },
+    {
+      "textbookItemId": "A06",
+      "groupSerial": "18",
+      "groupKey": "A06",
+      "groupLabel": "例2",
+      "sourceLabel": "例2",
+      "section": "4.3 用一元一次方程解决问题",
+      "printedPages": [
+        123
+      ],
+      "pdfPages": [
+        130
+      ],
+      "moduleId": "L8-P1",
+      "coverage": "existing",
+      "classification": "core"
+    },
+    {
+      "textbookItemId": "A07",
+      "groupSerial": "19",
+      "groupKey": "A07",
+      "groupLabel": "例3",
+      "sourceLabel": "例3",
+      "section": "4.3 用一元一次方程解决问题",
+      "printedPages": [
+        123,
+        124
+      ],
+      "pdfPages": [
+        130,
+        131
+      ],
+      "moduleId": "L8-P2-Q1",
+      "coverage": "existing",
+      "classification": "core"
+    },
+    {
+      "textbookItemId": "A08",
+      "groupSerial": "20",
+      "groupKey": "A08",
+      "groupLabel": "练习第1题",
+      "sourceLabel": "练习第1题",
+      "section": "4.3 用一元一次方程解决问题",
+      "printedPages": [
+        124
+      ],
+      "pdfPages": [
+        131
+      ],
+      "moduleId": "L8-T1",
+      "coverage": "existing",
+      "classification": "core"
+    },
+    {
+      "textbookItemId": "A09",
+      "groupSerial": "21",
+      "groupKey": "A09",
+      "groupLabel": "练习第2题",
+      "sourceLabel": "练习第2题",
+      "section": "4.3 用一元一次方程解决问题",
+      "printedPages": [
+        124
+      ],
+      "pdfPages": [
+        131
+      ],
+      "moduleId": "L8-T2",
+      "coverage": "existing",
+      "classification": "core"
+    },
+    {
+      "textbookItemId": "A10",
+      "groupSerial": "22",
+      "groupKey": "A10",
+      "groupLabel": "练习第3题",
+      "sourceLabel": "练习第3题",
+      "section": "4.3 用一元一次方程解决问题",
+      "printedPages": [
+        124
+      ],
+      "pdfPages": [
+        131
+      ],
+      "moduleId": "TB-A10",
+      "coverage": "added",
+      "classification": "core"
+    },
+    {
+      "textbookItemId": "A11",
+      "groupSerial": "23",
+      "groupKey": "A11",
+      "groupLabel": "例4",
+      "sourceLabel": "例4",
+      "section": "4.3 用一元一次方程解决问题",
+      "printedPages": [
+        125
+      ],
+      "pdfPages": [
+        132
+      ],
+      "moduleId": "G9-01",
+      "coverage": "existing",
+      "classification": "core"
+    },
+    {
+      "textbookItemId": "A12",
+      "groupSerial": "24",
+      "groupKey": "A12",
+      "groupLabel": "例5",
+      "sourceLabel": "例5",
+      "section": "4.3 用一元一次方程解决问题",
+      "printedPages": [
+        125
+      ],
+      "pdfPages": [
+        132
+      ],
+      "moduleId": "G9-03",
+      "coverage": "existing",
+      "classification": "core"
+    },
+    {
+      "textbookItemId": "A13",
+      "groupSerial": "25",
+      "groupKey": "A13",
+      "groupLabel": "练习第1题",
+      "sourceLabel": "练习第1题",
+      "section": "4.3 用一元一次方程解决问题",
+      "printedPages": [
+        126
+      ],
+      "pdfPages": [
+        133
+      ],
+      "moduleId": "G9-06",
+      "coverage": "existing",
+      "classification": "core"
+    },
+    {
+      "textbookItemId": "A14",
+      "groupSerial": "26",
+      "groupKey": "A14",
+      "groupLabel": "练习第2题",
+      "sourceLabel": "练习第2题",
+      "section": "4.3 用一元一次方程解决问题",
+      "printedPages": [
+        126
+      ],
+      "pdfPages": [
+        133
+      ],
+      "moduleId": "G9-10",
+      "coverage": "existing",
+      "classification": "core"
+    },
+    {
+      "textbookItemId": "A15",
+      "groupSerial": "27",
+      "groupKey": "A15",
+      "groupLabel": "练习第3题",
+      "sourceLabel": "练习第3题",
+      "section": "4.3 用一元一次方程解决问题",
+      "printedPages": [
+        126
+      ],
+      "pdfPages": [
+        133
+      ],
+      "moduleId": "G9-07",
+      "coverage": "existing",
+      "classification": "core"
+    },
+    {
+      "textbookItemId": "A16",
+      "groupSerial": "28",
+      "groupKey": "A16",
+      "groupLabel": "例6",
+      "sourceLabel": "例6",
+      "section": "4.3 用一元一次方程解决问题",
+      "printedPages": [
+        126
+      ],
+      "pdfPages": [
+        133
+      ],
+      "moduleId": "G10-01",
+      "coverage": "existing",
+      "classification": "core"
+    },
+    {
+      "textbookItemId": "A17",
+      "groupSerial": "29",
+      "groupKey": "A17",
+      "groupLabel": "例7",
+      "sourceLabel": "例7",
+      "section": "4.3 用一元一次方程解决问题",
+      "printedPages": [
+        127
+      ],
+      "pdfPages": [
+        134
+      ],
+      "moduleId": "G10-02",
+      "coverage": "existing",
+      "classification": "core"
+    },
+    {
+      "textbookItemId": "A18",
+      "groupSerial": "30",
+      "groupKey": "A18",
+      "groupLabel": "练习第1题",
+      "sourceLabel": "练习第1题",
+      "section": "4.3 用一元一次方程解决问题",
+      "printedPages": [
+        128
+      ],
+      "pdfPages": [
+        135
+      ],
+      "moduleId": "TB-A18",
+      "coverage": "added",
+      "classification": "core"
+    },
+    {
+      "textbookItemId": "A19",
+      "groupSerial": "31",
+      "groupKey": "A19",
+      "groupLabel": "练习第2题",
+      "sourceLabel": "练习第2题",
+      "section": "4.3 用一元一次方程解决问题",
+      "printedPages": [
+        128
+      ],
+      "pdfPages": [
+        135
+      ],
+      "moduleId": "G10-09",
+      "coverage": "existing",
+      "classification": "core"
+    },
+    {
+      "textbookItemId": "A20",
+      "groupSerial": "32",
+      "groupKey": "A20",
+      "groupLabel": "练习第3题",
+      "sourceLabel": "练习第3题",
+      "section": "4.3 用一元一次方程解决问题",
+      "printedPages": [
+        128
+      ],
+      "pdfPages": [
+        135
+      ],
+      "moduleId": "G10-08",
+      "coverage": "existing",
+      "classification": "core"
+    },
+    {
+      "textbookItemId": "A21",
+      "groupSerial": "33",
+      "groupKey": "A21",
+      "groupLabel": "习题第1题",
+      "sourceLabel": "习题第1题",
+      "section": "4.3 用一元一次方程解决问题",
+      "printedPages": [
+        128
+      ],
+      "pdfPages": [
+        135
+      ],
+      "moduleId": "TB-A21",
+      "coverage": "added",
+      "classification": "core"
+    },
+    {
+      "textbookItemId": "A22",
+      "groupSerial": "34",
+      "groupKey": "A22",
+      "groupLabel": "习题第2题",
+      "sourceLabel": "习题第2题",
+      "section": "4.3 用一元一次方程解决问题",
+      "printedPages": [
+        128
+      ],
+      "pdfPages": [
+        135
+      ],
+      "moduleId": "L7-H1",
+      "coverage": "existing",
+      "classification": "core"
+    },
+    {
+      "textbookItemId": "A23",
+      "groupSerial": "35",
+      "groupKey": "A23",
+      "groupLabel": "习题第3题",
+      "sourceLabel": "习题第3题",
+      "section": "4.3 用一元一次方程解决问题",
+      "printedPages": [
+        128
+      ],
+      "pdfPages": [
+        135
+      ],
+      "moduleId": "L7-H2",
+      "coverage": "existing",
+      "classification": "core"
+    },
+    {
+      "textbookItemId": "A24",
+      "groupSerial": "36",
+      "groupKey": "A24",
+      "groupLabel": "习题第4题",
+      "sourceLabel": "习题第4题",
+      "section": "4.3 用一元一次方程解决问题",
+      "printedPages": [
+        128
+      ],
+      "pdfPages": [
+        135
+      ],
+      "moduleId": "L7-H3",
+      "coverage": "existing",
+      "classification": "core"
+    },
+    {
+      "textbookItemId": "A25",
+      "groupSerial": "37",
+      "groupKey": "A25",
+      "groupLabel": "习题第5题",
+      "sourceLabel": "习题第5题",
+      "section": "4.3 用一元一次方程解决问题",
+      "printedPages": [
+        128
+      ],
+      "pdfPages": [
+        135
+      ],
+      "moduleId": "TB-A25",
+      "coverage": "added",
+      "classification": "core"
+    },
+    {
+      "textbookItemId": "A26",
+      "groupSerial": "38",
+      "groupKey": "A26",
+      "groupLabel": "习题第6题",
+      "sourceLabel": "习题第6题",
+      "section": "4.3 用一元一次方程解决问题",
+      "printedPages": [
+        129
+      ],
+      "pdfPages": [
+        136
+      ],
+      "moduleId": "L8-H1",
+      "coverage": "existing",
+      "classification": "core"
+    },
+    {
+      "textbookItemId": "A27",
+      "groupSerial": "39",
+      "groupKey": "A27",
+      "groupLabel": "习题第7题",
+      "sourceLabel": "习题第7题",
+      "section": "4.3 用一元一次方程解决问题",
+      "printedPages": [
+        129
+      ],
+      "pdfPages": [
+        136
+      ],
+      "moduleId": "L8-H2",
+      "coverage": "existing",
+      "classification": "core"
+    },
+    {
+      "textbookItemId": "A28",
+      "groupSerial": "40",
+      "groupKey": "A28",
+      "groupLabel": "习题第8题",
+      "sourceLabel": "习题第8题",
+      "section": "4.3 用一元一次方程解决问题",
+      "printedPages": [
+        129
+      ],
+      "pdfPages": [
+        136
+      ],
+      "moduleId": "L8-H3",
+      "coverage": "existing",
+      "classification": "core"
+    },
+    {
+      "textbookItemId": "A29",
+      "groupSerial": "41",
+      "groupKey": "A29",
+      "groupLabel": "习题第9题",
+      "sourceLabel": "习题第9题",
+      "section": "4.3 用一元一次方程解决问题",
+      "printedPages": [
+        129
+      ],
+      "pdfPages": [
+        136
+      ],
+      "moduleId": "TB-A29",
+      "coverage": "added",
+      "classification": "core"
+    },
+    {
+      "textbookItemId": "A30",
+      "groupSerial": "42",
+      "groupKey": "A30",
+      "groupLabel": "习题第10题",
+      "sourceLabel": "习题第10题",
+      "section": "4.3 用一元一次方程解决问题",
+      "printedPages": [
+        129
+      ],
+      "pdfPages": [
+        136
+      ],
+      "moduleId": "TB-A30",
+      "coverage": "added",
+      "classification": "core"
+    },
+    {
+      "textbookItemId": "A31",
+      "groupSerial": "43",
+      "groupKey": "A31",
+      "groupLabel": "习题第11题",
+      "sourceLabel": "习题第11题",
+      "section": "4.3 用一元一次方程解决问题",
+      "printedPages": [
+        129
+      ],
+      "pdfPages": [
+        136
+      ],
+      "moduleId": "G9-08",
+      "coverage": "existing",
+      "classification": "core"
+    },
+    {
+      "textbookItemId": "A32",
+      "groupSerial": "44",
+      "groupKey": "A32",
+      "groupLabel": "习题第12题",
+      "sourceLabel": "习题第12题",
+      "section": "4.3 用一元一次方程解决问题",
+      "printedPages": [
+        129
+      ],
+      "pdfPages": [
+        136
+      ],
+      "moduleId": "TB-A32",
+      "coverage": "added",
+      "classification": "core"
+    },
+    {
+      "textbookItemId": "A33",
+      "groupSerial": "45",
+      "groupKey": "A33",
+      "groupLabel": "习题第13题",
+      "sourceLabel": "习题第13题",
+      "section": "4.3 用一元一次方程解决问题",
+      "printedPages": [
+        130
+      ],
+      "pdfPages": [
+        137
+      ],
+      "moduleId": "G9-09",
+      "coverage": "existing",
+      "classification": "core"
+    },
+    {
+      "textbookItemId": "A34",
+      "groupSerial": "46",
+      "groupKey": "A34",
+      "groupLabel": "习题第14题",
+      "sourceLabel": "习题第14题",
+      "section": "4.3 用一元一次方程解决问题",
+      "printedPages": [
+        130
+      ],
+      "pdfPages": [
+        137
+      ],
+      "moduleId": "TB-A34",
+      "coverage": "added",
+      "classification": "core"
+    },
+    {
+      "textbookItemId": "A35",
+      "groupSerial": "47",
+      "groupKey": "A35",
+      "groupLabel": "习题第15题",
+      "sourceLabel": "习题第15题",
+      "section": "4.3 用一元一次方程解决问题",
+      "printedPages": [
+        130
+      ],
+      "pdfPages": [
+        137
+      ],
+      "moduleId": "G10-10",
+      "coverage": "existing",
+      "classification": "core"
+    },
+    {
+      "textbookItemId": "A36",
+      "groupSerial": "48",
+      "groupKey": "A36",
+      "groupLabel": "习题第16题",
+      "sourceLabel": "习题第16题",
+      "section": "4.3 用一元一次方程解决问题",
+      "printedPages": [
+        130
+      ],
+      "pdfPages": [
+        137
+      ],
+      "moduleId": "G10-07",
+      "coverage": "existing",
+      "classification": "core"
+    },
+    {
+      "textbookItemId": "A37",
+      "groupSerial": "49",
+      "groupKey": "A37",
+      "groupLabel": "阅读：丢番图的墓志铭",
+      "sourceLabel": "阅读：丢番图的墓志铭",
+      "section": "4.3 用一元一次方程解决问题",
+      "printedPages": [
+        131
+      ],
+      "pdfPages": [
+        138
+      ],
+      "moduleId": "TB-A37",
+      "coverage": "added",
+      "classification": "core"
+    },
+    {
+      "textbookItemId": "R01",
+      "groupSerial": "50",
+      "groupKey": "R01",
+      "groupLabel": "月历中的方程问题",
+      "sourceLabel": "月历中的方程问题",
+      "section": "数学探究",
+      "printedPages": [
+        132
+      ],
+      "pdfPages": [
+        139
+      ],
+      "moduleId": "TB-R01",
+      "coverage": "added",
+      "classification": "core"
+    },
+    {
+      "textbookItemId": "R02",
+      "groupSerial": "51",
+      "groupKey": "R02",
+      "groupLabel": "第4题",
+      "sourceLabel": "第4题",
+      "section": "小结与思考",
+      "printedPages": [
+        133
+      ],
+      "pdfPages": [
+        140
+      ],
+      "moduleId": "S01",
+      "coverage": "existing",
+      "classification": "core"
+    },
+    {
+      "textbookItemId": "R03",
+      "groupSerial": "52",
+      "groupKey": "R03",
+      "groupLabel": "复习巩固 第7题",
+      "sourceLabel": "复习巩固 第7题",
+      "section": "复习题",
+      "printedPages": [
+        134
+      ],
+      "pdfPages": [
+        141
+      ],
+      "moduleId": "TB-R03",
+      "coverage": "added",
+      "classification": "core"
+    },
+    {
+      "textbookItemId": "R04",
+      "groupSerial": "53",
+      "groupKey": "R04",
+      "groupLabel": "复习巩固 第8题",
+      "sourceLabel": "复习巩固 第8题",
+      "section": "复习题",
+      "printedPages": [
+        134
+      ],
+      "pdfPages": [
+        141
+      ],
+      "moduleId": "TB-R04",
+      "coverage": "added",
+      "classification": "core"
+    },
+    {
+      "textbookItemId": "R05",
+      "groupSerial": "54",
+      "groupKey": "R05",
+      "groupLabel": "复习巩固 第9题",
+      "sourceLabel": "复习巩固 第9题",
+      "section": "复习题",
+      "printedPages": [
+        134
+      ],
+      "pdfPages": [
+        141
+      ],
+      "moduleId": "TB-R05",
+      "coverage": "added",
+      "classification": "core"
+    },
+    {
+      "textbookItemId": "R06",
+      "groupSerial": "55",
+      "groupKey": "R06",
+      "groupLabel": "复习巩固 第10题",
+      "sourceLabel": "复习巩固 第10题",
+      "section": "复习题",
+      "printedPages": [
+        134
+      ],
+      "pdfPages": [
+        141
+      ],
+      "moduleId": "TB-R06",
+      "coverage": "added",
+      "classification": "core"
+    },
+    {
+      "textbookItemId": "R07",
+      "groupSerial": "56",
+      "groupKey": "R07",
+      "groupLabel": "复习巩固 第11题",
+      "sourceLabel": "复习巩固 第11题",
+      "section": "复习题",
+      "printedPages": [
+        135
+      ],
+      "pdfPages": [
+        142
+      ],
+      "moduleId": "TB-R07",
+      "coverage": "added",
+      "classification": "core"
+    },
+    {
+      "textbookItemId": "R08",
+      "groupSerial": "57",
+      "groupKey": "R08",
+      "groupLabel": "复习巩固 第12题",
+      "sourceLabel": "复习巩固 第12题",
+      "section": "复习题",
+      "printedPages": [
+        135
+      ],
+      "pdfPages": [
+        142
+      ],
+      "moduleId": "TB-R08",
+      "coverage": "added",
+      "classification": "core"
+    },
+    {
+      "textbookItemId": "R09",
+      "groupSerial": "58",
+      "groupKey": "R09",
+      "groupLabel": "复习巩固 第13题",
+      "sourceLabel": "复习巩固 第13题",
+      "section": "复习题",
+      "printedPages": [
+        135
+      ],
+      "pdfPages": [
+        142
+      ],
+      "moduleId": "TB-R09",
+      "coverage": "added",
+      "classification": "core"
+    },
+    {
+      "textbookItemId": "R10",
+      "groupSerial": "59",
+      "groupKey": "R10",
+      "groupLabel": "复习巩固 第14题",
+      "sourceLabel": "复习巩固 第14题",
+      "section": "复习题",
+      "printedPages": [
+        135
+      ],
+      "pdfPages": [
+        142
+      ],
+      "moduleId": "TB-R10",
+      "coverage": "added",
+      "classification": "core"
+    },
+    {
+      "textbookItemId": "R11",
+      "groupSerial": "60",
+      "groupKey": "R11",
+      "groupLabel": "复习巩固 第15题",
+      "sourceLabel": "复习巩固 第15题",
+      "section": "复习题",
+      "printedPages": [
+        135
+      ],
+      "pdfPages": [
+        142
+      ],
+      "moduleId": "TB-R11",
+      "coverage": "added",
+      "classification": "core"
+    },
+    {
+      "textbookItemId": "R12",
+      "groupSerial": "61",
+      "groupKey": "R12",
+      "groupLabel": "复习巩固 第16题",
+      "sourceLabel": "复习巩固 第16题",
+      "section": "复习题",
+      "printedPages": [
+        135
+      ],
+      "pdfPages": [
+        142
+      ],
+      "moduleId": "TB-R12",
+      "coverage": "added",
+      "classification": "core"
+    },
+    {
+      "textbookItemId": "R13",
+      "groupSerial": "62",
+      "groupKey": "R13",
+      "groupLabel": "复习巩固 第17题",
+      "sourceLabel": "复习巩固 第17题",
+      "section": "复习题",
+      "printedPages": [
+        135
+      ],
+      "pdfPages": [
+        142
+      ],
+      "moduleId": "TB-R13",
+      "coverage": "added",
+      "classification": "core"
+    },
+    {
+      "textbookItemId": "R14",
+      "groupSerial": "63",
+      "groupKey": "R14",
+      "groupLabel": "复习巩固 第18题",
+      "sourceLabel": "复习巩固 第18题",
+      "section": "复习题",
+      "printedPages": [
+        135
+      ],
+      "pdfPages": [
+        142
+      ],
+      "moduleId": "TB-R14",
+      "coverage": "added",
+      "classification": "core"
+    },
+    {
+      "textbookItemId": "R15",
+      "groupSerial": "64",
+      "groupKey": "R15",
+      "groupLabel": "复习巩固 第19题",
+      "sourceLabel": "复习巩固 第19题",
+      "section": "复习题",
+      "printedPages": [
+        136
+      ],
+      "pdfPages": [
+        143
+      ],
+      "moduleId": "TB-R15",
+      "coverage": "added",
+      "classification": "core"
+    },
+    {
+      "textbookItemId": "R16",
+      "groupSerial": "65",
+      "groupKey": "R16",
+      "groupLabel": "灵活运用 第20题",
+      "sourceLabel": "灵活运用 第20题",
+      "section": "复习题",
+      "printedPages": [
+        136
+      ],
+      "pdfPages": [
+        143
+      ],
+      "moduleId": "TB-R16",
+      "coverage": "added",
+      "classification": "core"
+    },
+    {
+      "textbookItemId": "R17",
+      "groupSerial": "66",
+      "groupKey": "R17",
+      "groupLabel": "灵活运用 第21题",
+      "sourceLabel": "灵活运用 第21题",
+      "section": "复习题",
+      "printedPages": [
+        136
+      ],
+      "pdfPages": [
+        143
+      ],
+      "moduleId": "TB-R17",
+      "coverage": "added",
+      "classification": "core"
+    },
+    {
+      "textbookItemId": "R18",
+      "groupSerial": "67",
+      "groupKey": "R18",
+      "groupLabel": "灵活运用 第22题",
+      "sourceLabel": "灵活运用 第22题",
+      "section": "复习题",
+      "printedPages": [
+        136
+      ],
+      "pdfPages": [
+        143
+      ],
+      "moduleId": "TB-R18",
+      "coverage": "added",
+      "classification": "core"
+    },
+    {
+      "textbookItemId": "R19",
+      "groupSerial": "68",
+      "groupKey": "R19",
+      "groupLabel": "灵活运用 第23题",
+      "sourceLabel": "灵活运用 第23题",
+      "section": "复习题",
+      "printedPages": [
+        136
+      ],
+      "pdfPages": [
+        143
+      ],
+      "moduleId": "TB-R19",
+      "coverage": "added",
+      "classification": "core"
+    },
+    {
+      "textbookItemId": "R20",
+      "groupSerial": "69",
+      "groupKey": "R20",
+      "groupLabel": "灵活运用 第24题",
+      "sourceLabel": "灵活运用 第24题",
+      "section": "复习题",
+      "printedPages": [
+        136
+      ],
+      "pdfPages": [
+        143
+      ],
+      "moduleId": "TB-R20",
+      "coverage": "added",
+      "classification": "core"
+    },
+    {
+      "textbookItemId": "R21",
+      "groupSerial": "70",
+      "groupKey": "R21",
+      "groupLabel": "探索研究 第25题",
+      "sourceLabel": "探索研究 第25题",
+      "section": "复习题",
+      "printedPages": [
+        137
+      ],
+      "pdfPages": [
+        144
+      ],
+      "moduleId": "TB-R21",
+      "coverage": "added",
+      "classification": "core"
+    },
+    {
+      "textbookItemId": "R22",
+      "groupSerial": "71",
+      "groupKey": "R22",
+      "groupLabel": "探索研究 第26题",
+      "sourceLabel": "探索研究 第26题",
+      "section": "复习题",
+      "printedPages": [
+        137
+      ],
+      "pdfPages": [
+        144
+      ],
+      "moduleId": "TB-R22",
+      "coverage": "added",
+      "classification": "core"
+    }
+  ],
+  "boundaryReferences": [
+    {
+      "textbookItemId": "I11",
+      "groupLabel": "4.1 例3（2）双未知数的方程",
+      "printedPages": [
+        110
+      ],
+      "pdfPages": [
+        117
+      ],
+      "moduleId": "TB-I11",
+      "coverage": "reference",
+      "note": "原书同时设x、y，两个未知数；单列参考，不计入上述80个子题。可明确说明改设一个未知数后的一元路径。"
+    }
+  ],
+  "visualNotes": [
+    {
+      "textbookItemId": "A03",
+      "note": "原图计算程序依次为减2、乘4、加1，122页。"
+    },
+    {
+      "textbookItemId": "A12",
+      "note": "黑棋在首行、首列和主对角线；三条线共用左上角同一颗，不能改为三条边。125页图4-7。"
+    },
+    {
+      "textbookItemId": "R11",
+      "note": "日字形窗框由3条横向宽与2条竖向高组成，135页。"
+    },
+    {
+      "textbookItemId": "R17",
+      "note": "原图沿长边拼桌，1/2/3张桌对应6/8/10人，每增加一桌增加2座；136页。"
+    },
+    {
+      "textbookItemId": "R22",
+      "note": "水果单价的原图单位为元/斤，题设1斤=0.5kg，137页。"
+    }
+  ]
+}

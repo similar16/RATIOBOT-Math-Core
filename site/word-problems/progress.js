@@ -15,7 +15,7 @@
  function cleanDraft(d,update=true){
   if(!d||typeof d!=='object'||Array.isArray(d))return null;
   const hints=counts(d.hints),example=!!d.example||d.status==='example';
-  return {schema:1,runId:text(d.runId,100),problemId:text(d.problemId,50),routeId:text(d.routeId,50),step:integer(d.step,6),
+  return {schema:1,runId:text(d.runId,100),problemId:text(d.problemId,50),routeId:text(d.routeId,50),sourceLocation:text(d.sourceLocation,50),step:integer(d.step,6),
    values:values(d.values),passed:flags(d.passed),attempts:counts(d.attempts),firstPass:flags(d.firstPass),hints,
    seen:list(d.seen,60),closure:list(d.closure,30),
    derivationSources:Object.fromEntries(entries(d.derivationSources,60).map(([k,v])=>[k,list(v,20)])),
@@ -28,11 +28,12 @@
   return Object.fromEntries(Object.keys(answers).map(key=>{
    let label='补充表达';
    if(key.startsWith('d:'))label=((route.derivations||[]).find(d=>d.id===key.slice(2))?.label||'数据推导')+'（来源推导）';
-   else {const m=key.match(/^(t|e|a|c):(\d+)(?::(\d+))?$/);if(m){const i=Number(m[2]),j=Number(m[3]);
+   else {const m=key.match(/^(t|e|a|c|v):(\d+)(?::(\d+))?$/);if(m){const i=Number(m[2]),j=Number(m[3]);
     if(m[1]==='t')label=(route.table?.rows?.[i]?.label||'对象')+' · '+(route.table?.headers?.[j+1]||'数量');
     if(m[1]==='e')label=route.equations?.[i]?.label||'数量等式';
     if(m[1]==='a')label=route.answers?.[i]?.label||'所求量';
     if(m[1]==='c')label=route.checks?.[i]?.text||'代回检验';
+    if(m[1]==='v')label=(route.verdictCases?.[i]?.label||'分情形检验')+'（实际意义判断）';
    }}return [key,text(label,300)];
   }));
  }
@@ -65,11 +66,11 @@
  function recordList(records){
   const byRun=new Map();
   for(const raw of (Array.isArray(records)?records:[]).slice(0,500)){const r=cleanRecord(raw);if(!r)continue;byRun.set(r.runId,byRun.has(r.runId)?mergeRecord(byRun.get(r.runId),r):r);}
-  return [...byRun.values()].sort((x,y)=>String(y.at).localeCompare(String(x.at))).slice(0,80);
+  return [...byRun.values()].sort((x,y)=>String(y.at).localeCompare(String(x.at))).slice(0,240);
  }
  function draftList(drafts){
   return Object.fromEntries(entries(drafts,300).map(([id,raw])=>[id,cleanDraft(raw,false)]).filter(([id,d])=>d&&d.problemId===id)
-   .sort((a,b)=>String(b[1].updatedAt).localeCompare(String(a[1].updatedAt))).slice(0,55));
+   .sort((a,b)=>String(b[1].updatedAt).localeCompare(String(a[1].updatedAt))).slice(0,160));
  }
  function normalized(value){const v=object(value);return {version:1,records:recordList(v.records),drafts:draftList(v.drafts)};}
  function saveDraft(value,id,draft){
@@ -82,9 +83,10 @@
   if(!Array.from({length:7},(_,i)=>d.passed[i]===true).every(Boolean))throw Error('请依次完成并核对七个分析步骤，再保存完成记录。');
   if((route.derivations||[]).some(x=>d.derived[x.id]!==true))throw Error('数据来源推导尚未全部核对，请返回检查。');
   if((route.answers||[]).length&&!d.answersChecked)throw Error('求解结果尚未核对，请先完成求解与检验。');
+  if((route.verdictCases||[]).some((c,i)=>d.values['v:'+i]!==c.correct))throw Error('请分别完成每种情形的实际意义判断。');
   if(s.records.some(x=>x.runId===d.runId))return {state:s,record:null};
   const discussion=!!route.discussion||['open','boundary'].includes(problem.kind)||!!d.customModel;
-  const record={...d,finished:true,title:problem.title,source:problem.source,routeLabel:route.label,valueLabels:valueLabels(route,d.values),at:new Date().toISOString(),
+  const record={...d,finished:true,title:problem.title,source:[...new Set([(problem.textbookSources||[]).find(s=>s.id===d.sourceLocation)?.source,problem.source,...(problem.textbookSources||[]).map(s=>s.source)].filter(Boolean))].join('；'),routeLabel:route.label,valueLabels:valueLabels(route,d.values),at:new Date().toISOString(),
    status:discussion?'review':d.example?'example':d.assisted?'assisted':'independent',...accuracy(d)};
   s.records=recordList([record,...s.records]);s.drafts=draftList({...s.drafts,[problem.id]:{...d,finished:true}});return {state:s,record};
  }

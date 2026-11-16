@@ -44,6 +44,16 @@ assert.equal(E.checkDerivation('1+.25', { ...growthCell, allowedNumbers: ['1.25'
 assert.equal(E.checkDerivation('1.2', { ...growthCell, allowedNumbers: ['1.2'] }).kind, 'math');
 assert.equal(E.checkDerivation('1.25=1.2', { ...growthCell, allowedNumbers: ['1.25'] }).kind, 'math');
 assert(E.checkDerivation('0.2', { expr: '4/20', allowedNumbers: ['1/5'] }).ok);
+for (const notation of ['0.2*x', '(1/5)*x', 'x/5', '\\frac{x}{5}']) {
+  assert(E.checkDerivation(notation, { expr: '(4/20)*x', allowedNumbers: ['1/5'] }).ok, notation + ' reuses the complete known rate');
+}
+assert(E.checkDerivation('1/5', { expr: '4/20', allowedNumbers: ['1/5'] }).ok);
+assert.equal(E.checkDerivation('5-4', { expr: '20/20', allowedNumbers: ['1/5'] }).kind, 'source', 'a known denominator is not an independently known quantity');
+assert.equal(E.checkDerivation('(5/25)*x', { expr: '(4/20)*x', allowedNumbers: ['1/5'] }).ok, true, 'an equivalent complete fraction remains the same verified number');
+assert.equal(E.checkDerivation('(5-4)/5*x', { expr: '(4/20)*x', allowedNumbers: ['1/5'] }).kind, 'source', 'an untraced numerator computation is not fraction notation');
+assert(E.hasNumberSources('x/5+0.2*x=4', ['4','20'], ['1/5']));
+assert(!E.hasNumberSources('5*x=20', ['4','20'], ['1/5']), '5 is not itself available from the known fraction 1/5');
+assert(!E.hasNumberSources('x/5=4', ['4','20'], []));
 assert.equal(E.checkDerivation('0.2', { expr: '4/20', allowedNumbers: ['1', '5'] }).kind, 'source');
 assert(E.checkDerivation('-0.25', { expr: '0-25%', allowedNumbers: ['-1/4'] }).ok);
 assert.equal(E.checkDerivation('-0.25', { expr: '0-25%', allowedNumbers: ['1/4'] }).kind, 'source');
@@ -59,6 +69,10 @@ assert(E.checkDerivation('3', { expr: '3' }).ok);
 assert(E.checkDerivation('(45+x)/3', { expr: '(45+x)/3' }).ok);
 assert(!E.checkDerivation('15+x/3', { expr: '(45+x)/3' }).ok);
 assert.equal(E.checkDerivation('1/(x+6)', { expr: '1/(x+6)' }).kind, 'unsupported');
+for (const expression of ['1+25%+z-z', '1+25%+x-x', '1+25%=1.25+y-y']) {
+  assert.equal(E.checkDerivation(expression, growth).kind, 'variable', expression + ': cancelling an undeclared letter does not establish its source');
+}
+assert(E.checkDerivation('x+y', { expr:'x+y' }).ok, 'both explicitly expected letters remain valid');
 
 const chicken = { left: '2*x+4*(35-x)', right: '94' };
 assert(E.checkEquation('2x+4(35-x)=94', chicken).ok);
@@ -71,6 +85,8 @@ assert.equal(E.checkEquation('x+(35-x)=35', chicken).kind, 'constraint');
 assert.equal(E.checkEquation('0=0', chicken).kind, 'constraint');
 assert(!E.checkEquation('2x+4(35-x)=95', chicken).ok);
 assert(!E.checkEquation('2y+4(35-y)=94', chicken).ok);
+assert.equal(E.checkEquation('2x+4(35-x)+y=94+y', chicken).kind, 'variable');
+assert.equal(E.checkEquation('2x+4(35-x)+z-z=94', chicken).kind, 'variable');
 assert(E.checkEquation('x=10.5/(0.6+6*0.15)', { left: 'x', right: '10.5/(0.6+6*0.15)' }).ok);
 assert(!E.checkEquation('45+x=39+x', { left: '45+x', right: '3*(13+x)' }).ok);
 assert(E.checkEquation('13+x=(45+x)/3', { left: '45+x', right: '3*(13+x)' }).ok);
@@ -95,3 +111,10 @@ assert.deepEqual(E.validateProblem(p), []);
 const invalid = structuredClone(p); invalid.routes[0].derivations[0].sources = ['future'];
 assert(E.validateProblem(invalid).some(x => x.includes('future')));
 console.log('PASS word-problem engine: exact algebra, percent and rate provenance, safe parsing, modeling equations, rendered fractions and source references');
+
+// Equal numerical values may describe different quantities; every derivation card still needs its calculation.
+assert.equal(E.checkDerivation('15',{expr:'1800/60-15',result:'15',allowedNumbers:['15'],requireCalculation:true}).kind,'source');
+assert(E.checkDerivation('1800/60-(45-30)',{expr:'1800/60-15',result:'15',allowedNumbers:['15'],sourceExpressions:['45-30'],requireCalculation:true}).ok);
+
+assert.match(E.format('133100/157≈847.7707'), /\\frac.*\\approx/);
+assert(!E.format('5<15').startsWith('\\text{'));
