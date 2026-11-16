@@ -1,4 +1,4 @@
-/* Content gates for the 55 source-grounded equation activities. */
+/* Source-by-source gates for textbook and teaching-guide modeling activities. */
 'use strict';
 const assert = require('node:assert/strict');
 const path = require('node:path');
@@ -6,7 +6,11 @@ const base = path.resolve(process.env.SITE_DIR || 'site', 'word-problems');
 const E = require(path.join(base, 'engine.js'));
 const l7l8 = require(path.join(base, 'data-l7-l8.js'));
 const rest = require(path.join(base, 'data-l9-review.js'));
-const problems = [...l7l8, ...rest];
+const textbookFiles=['data-textbook-intro.js','data-textbook-applications.js','data-textbook-review.js'];
+const textbook=textbookFiles.flatMap(file=>require(path.join(base,file)));
+const manifest=require('./word-problem-textbook-manifest.json');
+const sourceIndex=require(path.join(base,'textbook-index.js'));
+const problems = [...l7l8, ...rest, ...textbook];
 const byId = new Map(problems.map(p => [p.id, p]));
 const expectedIds = [
   'L7-P1','L7-P2','L7-P3','L7-T1','L7-T2','L7-H1','L7-H2','L7-H3',
@@ -15,12 +19,14 @@ const expectedIds = [
   'L8-P2-V1','L8-P2-V2','L8-P2-V3','L8-T1','L8-T2','L8-H1','L8-H2','L8-H3',
   ...Array.from({length:10},(_,i)=>'G9-'+String(i+1).padStart(2,'0')),
   ...Array.from({length:10},(_,i)=>'G10-'+String(i+1).padStart(2,'0')),
-  ...Array.from({length:10},(_,i)=>'S'+String(i+1).padStart(2,'0'))
+  ...Array.from({length:10},(_,i)=>'S'+String(i+1).padStart(2,'0')),
+  ...manifest.items.filter(i=>i.coverage==='added').map(i=>i.moduleId),
+  ...manifest.boundaryReferences.map(i=>i.moduleId)
 ];
 assert.equal(l7l8.length, 25);
 assert.equal(rest.length, 30);
-assert.equal(problems.length, 55);
-assert.equal(byId.size, 55, 'No duplicated source entry IDs');
+assert.equal(problems.length, 106);
+assert.equal(byId.size, problems.length, 'No duplicated source entry IDs');
 assert.deepEqual([...byId.keys()].sort(), expectedIds.sort());
 
 const count = { routes:0, derivations:0, writableCells:0, equations:0, answers:0, checks:0, boundaryCells:0 };
@@ -61,7 +67,7 @@ function substitute(expression, variable, value) {
 
 for (const problem of problems) {
   assert.deepEqual(E.validateProblem(problem), [], problem.id + ' schema/source references');
-  assert.match(problem.source, /《教学设计与指导》\d+(?:—\d+)?页/, problem.id + ' source pages');
+  assert.match(problem.source, /(?:《教学设计与指导》|《数学 七年级上册》苏科版2026，)\d+(?:[—、]\d+)?页/, problem.id + ' source pages');
   assert(problem.stem.length >= 15, problem.id + ' has a self-contained prompt');
   const facts = new Map(problem.facts.map(f => [f.id, f]));
   for (const route of problem.routes) {
@@ -92,7 +98,6 @@ for (const problem of problems) {
       assert(!E.format(cell.expr).startsWith('\\text{'), location + ': renders as mathematical notation');
       const info = E.inspect(cell.expr);
       if (!info.ok) {
-        assert.equal(problem.id, 'G10-04', location + ': only the explicit nonlinear boundary may be unsupported');
         assert.equal(problem.kind, 'boundary');
         assert.equal(info.kind, 'unsupported');
         assert(route.discussion && route.equations.length === 0 && route.answers.length === 0);
@@ -118,8 +123,9 @@ for (const problem of problems) {
       const verdict = E.checkEquation(canonical, equation, variable);
       assert(verdict.ok, context + ': canonical modeling equation ' + canonical + ' / ' + verdict.message);
       // The two chase branches each solve their own x; the two shirts independently solve x and y.
-      let answerIndex = 0;
+      let answerIndex = equation.answerIndex ?? 0;
       if (problem.id === 'L8-P2-Q4' || problem.id === 'L8-P2-V3' || problem.id === 'L8-H1') answerIndex = i;
+      if(equation.modelOnly){assert(route.modelOnly&&route.answers.length===0,context+': model-only task does not invent a numerical population');continue;}
       const answer = route.answers[answerIndex];
       assert(answer, context + ': a numerical solution accompanies the modeled equation');
       assert(E.equivalent(substitute(equation.left, variable, answer.expr), substitute(equation.right, variable, answer.expr)), context + ': solution substitution for ' + canonical);
@@ -196,9 +202,32 @@ assert.equal(E.numeric(routeFor('G9-03').answers[0].expr),'49/3');
 assert.equal(routeFor('S06').verdict.correct,'multiple');
 assert(routeFor('S06').discussion && routeFor('S06').equations.length === 0);
 assert.equal(byId.get('G10-04').kind,'boundary');
-assert.equal(count.boundaryCells,4,'Only the explicitly discussed variable-denominator cells bypass linear grading');
+assert.equal(count.boundaryCells,4,'All variable-denominator cells remain explicit discussion, with traceable data');
 assert.equal(E.checkEquation('x+(35-x)=35',routeFor('G10-01','chicken').equations[0]).kind,'constraint');
 assert.equal(E.checkEquation('45+x=39+x',routeFor('L7-P3').equations[0]).ok,false);
+
+
+// Every source position is represented, including repeated original questions and separate boundary references.
+assert.equal(manifest.items.length,80);
+assert.equal(new Set(manifest.items.map(i=>i.groupSerial)).size,71);
+assert.equal(new Set(manifest.items.map(i=>i.textbookItemId)).size,80);
+assert.equal(manifest.items.filter(i=>i.coverage==='added').length,50);
+assert.equal(sourceIndex.items.length,80);
+for(const item of [...manifest.items,...manifest.boundaryReferences]){
+ const problem=byId.get(item.moduleId);assert(problem,item.textbookItemId+' is missing from the module');
+ if(item.coverage!=='existing')assert.equal(problem.textbookItemId,item.textbookItemId);
+ const position=[...sourceIndex.items,...sourceIndex.references].find(p=>p.id===item.textbookItemId);
+ assert(position,item.textbookItemId+' source location is missing');
+ assert.equal(position.problemId,item.moduleId);
+ assert.deepEqual(position.pages,item.printedPages);
+ assert.equal(position.reference,item.coverage==='reference');
+}
+assert.equal(sourceIndex.groupCount,71);
+assert.equal(sourceIndex.references.length,1);
+assert.equal(byId.get('TB-I11').routes.find(r=>r.id==='original-two').verdict.correct,'boundary');
+assert.equal(byId.get('TB-I14').routes[0].modelOnly,true);
+assert(E.checkEquation('n=84748016*15.21%',byId.get('TB-I14').routes[0].equations[0],'n').ok,
+ 'The population task accepts the original product model without inventing an exact integer population');
 
 console.log('PASS word-problem content:',JSON.stringify({problems:problems.length,...count}));
 console.log('Verified source references, explicit rate/percent derivations, unsimplified table inputs, all normal equations and answers, branching completeness and discussion boundaries.');

@@ -59,15 +59,15 @@ function chess(host){
  range(host,'选择观察的图案序号 n',6,1,1,(n,d,o)=>{
   o.textContent='第 '+n+' 幅';const side=n+1,step=Math.min(42,204/n),left=(640-n*step)/2,top=25,r=Math.min(12,step*.27);
   let body='';for(let row=0;row<side;row++)for(let col=0;col<side;col++){
-   const black=row===0||col===0||col===n,x=left+col*step,y=top+row*step;
-   body+=`<circle cx="${x}" cy="${y}" r="${r}" fill="${black?'#3E3540':'#FFFFFF'}" stroke="#3E3540" stroke-width="1.5"/>`;
-   if(reveal&&row===0&&(col===0||col===n))body+=`<circle cx="${x}" cy="${y}" r="${r+5}" fill="none" stroke="#D29440" stroke-width="3"/>`;
+   const black=row===0||col===0||row===col,x=left+col*step,y=top+row*step;
+   body+=`<circle data-wp-row="${row}" data-wp-col="${col}" data-wp-color="${black?'black':'white'}" cx="${x}" cy="${y}" r="${r}" fill="${black?'#3E3540':'#FFFFFF'}" stroke="#3E3540" stroke-width="1.5"/>`;
+   if(reveal&&row===0&&col===0)body+=`<circle cx="${x}" cy="${y}" r="${r+5}" fill="none" stroke="#D29440" stroke-width="3"/>`;
   }
   const black=3*side-2,total=side*side,white=total-black;
-  body+=text(320,top+n*step+36,'上边、左边、右边是三条黑边','middle');
-  d.innerHTML=note('按题目结构重绘：每边 n＋1 颗，三条边为黑棋，其余为白棋。')+svg(body,'三条边黑棋方阵','黑棋分布在方阵上、左、右三边。上方两个转角分别属于两条边，不能重复计数。',top+n*step+55)+
+  body+=text(320,top+n*step+36,'首行、首列、主对角线是黑棋','middle');
+  d.innerHTML=note('按原图结构重绘：每边 n＋1 颗，首行、首列、主对角线为黑棋，其余为白棋。')+svg(body,'首行首列及主对角线黑棋方阵','黑棋分布在方阵首行、首列、主对角线。左上角同一颗属于这三条线，分条计数时多算了两次。',top+n*step+55)+
    '<button type="button" class="ghost wp-observe-count">'+(reveal?'隐藏计数依据':'显示计数依据')+'</button>'+(reveal?
-    '<p>三条边各数一遍，上方两颗各重复一次，所以要减去2。</p><p>黑棋：'+equation('3*('+n+'+1)-2',black)+'</p><p>全部棋子：'+equation('('+n+'+1)*('+n+'+1)',total)+'</p><p>白棋＝全部－黑棋：'+equation('('+n+'+1)*('+n+'+1)-(3*('+n+'+1)-2)',white)+'</p>':'');
+    '<p>首行、首列、主对角线各数一遍，左上角同一颗被数了3次，应只计1次，所以扣除多算的3−1＝2次。</p><p>黑棋：'+equation('3*('+n+'+1)-2',black)+'</p><p>全部棋子：'+equation('('+n+'+1)*('+n+'+1)',total)+'</p><p>白棋＝全部－黑棋：'+equation('('+n+'+1)*('+n+'+1)-(3*('+n+'+1)-2)',white)+'</p>':'');
   d.querySelector('button').onclick=()=>{reveal=!reveal;host.querySelector('input').dispatchEvent(new Event('input'));};
  },1);
 }

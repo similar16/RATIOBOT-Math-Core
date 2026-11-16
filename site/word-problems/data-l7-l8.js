@@ -530,6 +530,164 @@
           "explain": "代回原条件，检查单位、取值范围和题目所问的量。"
         },
         "variation": "为什么x+(36−x)=36不能用来确定x？"
+      },
+      {
+        "id": "mass-from-cost",
+        "label": "设苹果质量为x，先用总价填表",
+        "variable": "x",
+        "meaning": "苹果的质量",
+        "unit": "千克",
+        "domain": "0≤x≤6",
+        "derivations": [],
+        "table": {
+          "headers": [
+            "水果",
+            "单价/元每千克",
+            "质量/千克",
+            "金额/元"
+          ],
+          "rows": [
+            {
+              "label": "苹果",
+              "cells": [
+                {
+                  "expr": "6.2",
+                  "sources": [
+                    "apple"
+                  ],
+                  "given": true
+                },
+                {
+                  "expr": "x",
+                  "sources": [
+                    "unknown"
+                  ],
+                  "given": true
+                },
+                {
+                  "expr": "6.2*x",
+                  "sources": [
+                    "apple",
+                    "unknown"
+                  ]
+                }
+              ]
+            },
+            {
+              "label": "橘子",
+              "cells": [
+                {
+                  "expr": "5.6",
+                  "sources": [
+                    "orange"
+                  ],
+                  "given": true
+                },
+                {
+                  "expr": "(36-6.2*x)/5.6",
+                  "sources": [
+                    "cost",
+                    "apple",
+                    "orange",
+                    "unknown"
+                  ]
+                },
+                {
+                  "expr": "36-6.2*x",
+                  "sources": [
+                    "cost",
+                    "apple",
+                    "unknown"
+                  ]
+                }
+              ]
+            },
+            {
+              "label": "合计",
+              "cells": [
+                {
+                  "note": "不相加"
+                },
+                {
+                  "expr": "6",
+                  "sources": [
+                    "mass"
+                  ],
+                  "given": true
+                },
+                {
+                  "expr": "36",
+                  "sources": [
+                    "cost"
+                  ],
+                  "given": true
+                }
+              ]
+            }
+          ]
+        },
+        "relations": {
+          "add": [
+            "苹果金额+橘子金额=36",
+            "苹果质量+橘子质量=6"
+          ],
+          "multiply": [
+            "金额=单价×质量",
+            "质量=金额÷单价（乘积关系的反用）"
+          ]
+        },
+        "closure": {
+          "sources": [
+            "mass"
+          ],
+          "text": "已经用总价36元表示橘子金额，再用总质量6千克列方程。",
+          "hint": "总价已用于36−6.2x，若再把两种费用相加等于36，只会得到恒等式。"
+        },
+        "equations": [
+          {
+            "label": "两种水果质量合计",
+            "left": "x+(36-6.2*x)/5.6",
+            "right": "6"
+          }
+        ],
+        "answers": [
+          {
+            "label": "苹果",
+            "expr": "4",
+            "unit": "千克"
+          },
+          {
+            "label": "橘子",
+            "expr": "2",
+            "unit": "千克"
+          }
+        ],
+        "steps": [
+          "5.6*x+36-6.2*x=6*5.6",
+          "(6.2-5.6)*x=36-6*5.6",
+          "x=(36-6*5.6)/(6.2-5.6)=4",
+          "(36-6.2*4)/5.6=2"
+        ],
+        "checks": [
+          {
+            "text": "两种质量之和",
+            "expr": "4+(36-6.2*4)/5.6",
+            "result": "6"
+          },
+          {
+            "text": "两种金额之和",
+            "expr": "6.2*4+5.6*2",
+            "result": "36"
+          }
+        ],
+        "conclusion": "苹果4千克，橘子2千克。设元与第一种方法相同，但先使用的条件不同，因此最后用总质量闭合。",
+        "verdict": {
+          "correct": "valid",
+          "prompt": "这些结果是否完整并符合题意？",
+          "explain": "苹果4千克，橘子2千克。设元与第一种方法相同，但先使用的条件不同，因此最后用总质量闭合。"
+        },
+        "variation": "同样设苹果x千克，为什么既可以先用总质量填表，也可以先用总价填表？比较两种方程使用条件的次序。",
+        "sourceNote": "原书173页展示与评价2的第三个方程，174页用统一表格比较。"
       }
     ]
   },
