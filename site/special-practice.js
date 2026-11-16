@@ -97,6 +97,8 @@ function menu(){
  if(!B.ready()){page.innerHTML=header()+'<div class="sp-empty">请先登录学生账号。</div>';common();return;}
  owner=identity();const best=progress().best||{};
  page.innerHTML=header()+'<div class="sp-grid">'+categories.map(code=>{const group=cards.filter(c=>c.code===code),c=group[0],done=group.filter(x=>best[x.id]===5).length;return '<button type="button" class="sp-category" data-code="'+code+'"><span class="sp-tag" style="--sp-color:#'+c.color+'">'+code+'</span><b>'+esc(c.title)+'</b><small>'+group.length+'套 · 每套5题 · 已全对 '+done+'/'+group.length+' 套</small></button>';}).join('')+'</div>'+history();
+ page.querySelector('.sp-grid').insertAdjacentHTML('afterbegin','<button type="button" class="sp-category" data-word-problems><span class="sp-tag" style="--sp-color:#526b87">I</span><b>方程应用题分析</b><small>追溯数据 · 列表建模 · 55个任务</small></button>');
+ page.querySelector('[data-word-problems]').onclick=()=>B.go('wordProblems');
  common();
  page.querySelectorAll('[data-code]').forEach(b=>b.onclick=()=>choose(b.dataset.code));
  loadEquationCards(page.querySelector('.sp-grid'));

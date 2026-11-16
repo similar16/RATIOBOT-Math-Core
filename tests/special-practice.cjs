@@ -36,7 +36,8 @@ const menuEntry=home.querySelector('#studentGameMenu [data-go="specialPractice"]
 assert.equal(menuEntry.querySelector('span').textContent,'G');
 assert.match(homeEntry.querySelector('p').textContent,/第4章解方程/);
 assert.match(menuEntry.querySelector('small').textContent,/第4章解方程/);
-assert.match(html,/specialPractice','mistakes'\]/);
+const requiredPages=html.match(/CLOUD_LOGIN_REQUIRED_PAGES\s*=\s*new Set\(\[([^\]]+)\]/)?.[1]||'';
+for(const page of ['specialPractice','mistakes'])assert.ok(requiredPages.includes("'"+page+"'"),page+' still requires a student login');
 assert.match(html,/window\.SpecialPracticeUI\?\.reset/);
 console.log('PASS 4500 canonical answers, fraction simplification, pi coefficients, ABC, 18 modules, duplicate-submit and account-switch guards');
 
