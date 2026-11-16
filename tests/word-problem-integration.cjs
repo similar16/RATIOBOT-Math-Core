@@ -60,7 +60,7 @@ function fixture(){
  }
  async function loadModule(){
   w.katex={renderToString:s=>String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))};
-  for(const file of ['engine.js','data-l7-l8.js','data-l9-review.js','data-textbook-intro.js','data-textbook-applications.js','data-textbook-review.js','textbook-index.js','diagrams.js','app.js'])w.eval(read('word-problems/'+file));
+  for(const file of ['engine.js','data-l7-l8.js','data-l9-review.js','data-textbook-intro.js','data-textbook-applications.js','data-textbook-review.js','textbook-index.js','supplement-index.js','reading.js','relations.js','relation-builder.js','diagrams.js','app.js'])w.eval(read('word-problems/'+file));
   const append=w.document.head.append.bind(w.document.head);
   w.document.head.append=(...nodes)=>{append(...nodes);for(const node of nodes){const url=node.src||node.href||'';if(url.includes('/word-problems/'))queueMicrotask(()=>node.onload?.());}};
   await w.RatioWordProblemsUI.open();
@@ -132,6 +132,8 @@ function fixture(){
  const logout=fixture();await Promise.resolve();logout.student();await logout.loadModule();
  const host=logout.w.document.getElementById('wordProblems');
  host.querySelector('[data-wp-problem="L7-P1"]').click();
+ const readingProblem=logout.w.RatioWordProblemsData.find(p=>p.id==='L7-P1');
+ for(const [key,value]of Object.entries(logout.w.RatioWordProblemReading.canonical(readingProblem))){const input=host.querySelector('[data-wp-fact="'+key+'"]');input.value=value;input.dispatchEvent(new logout.w.Event('input',{bubbles:true}));}
  for(const box of host.querySelectorAll('[data-wp-seen]')){box.checked=true;box.dispatchEvent(new logout.w.Event('change',{bubbles:true}));}
  host.querySelector('[data-wp-check]').click();host.querySelector('[data-wp-next]').click();
  const custom=host.querySelector('[data-wp-custom]');assert(custom,'real module has an editable model field');

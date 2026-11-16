@@ -5,7 +5,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { JSDOM } = require('jsdom');
 const base = path.resolve(process.env.SITE_DIR || 'site', 'word-problems');
-const files = ['engine.js','progress.js','data-l7-l8.js','data-l9-review.js','data-textbook-intro.js','data-textbook-applications.js','data-textbook-review.js','textbook-index.js','diagrams.js','app.js'];
+const files = ['engine.js','progress.js','data-l7-l8.js','data-l9-review.js','data-textbook-intro.js','data-textbook-applications.js','data-textbook-review.js','textbook-index.js','supplement-index.js','reading.js','relations.js','relation-builder.js','diagrams.js','app.js'];
 const sources = files.map(file => ({ file, text:fs.readFileSync(path.join(base,file),'utf8') }));
 const clone = v => JSON.parse(JSON.stringify(v));
 const counts = { routes:0, sourceSteps:0, writableCells:0, equations:0, completed:0 };
@@ -40,7 +40,22 @@ function fixture() {
  const feedback=()=>$('.wp-feedback')?.textContent||'';
  function expectPassed(step,where){assert.equal(currentStep(),step,where+' is current step');const next=$('[data-wp-next]');assert(next&&!next.disabled,where+' did not pass: '+feedback());}
  function checkAndNext(step,where){click('[data-wp-check]');expectPassed(step,where);click('[data-wp-next]');assert.equal(currentStep(),step+1,where+' advances');}
- function confirmFacts(){host.querySelectorAll('[data-wp-seen]').forEach(checkBox);checkAndNext(0,'Read source facts');}
+ function confirmFacts(){
+  const problem=w.RatioWordProblemsData.find(p=>p.id===$('[data-wp-current-problem]').dataset.wpCurrentProblem);
+  for(const [key,value]of Object.entries(w.RatioWordProblemReading.canonical(problem)))textInput('[data-wp-fact="'+key+'"]',value);
+  host.querySelectorAll('[data-wp-seen]').forEach(checkBox);checkAndNext(0,'Read source facts');
+ }
+ function fillRelations(problem,route){
+  const model=w.RatioWordProblemRelations.build(problem,route),answer=w.RatioWordProblemRelations.canonical(model);
+  for(const kind of ['sum','product'])for(const [i,row]of answer[kind].slice().reverse().entries()){
+   const swapped=[row[1],row[0],row[2]];
+   for(const [j,id]of swapped.entries()){
+    click([...host.querySelectorAll('[data-wp-token]')].find(b=>b.dataset.wpToken===id));
+    click('[data-wp-rel-slot="'+kind+':'+i+':'+j+'"]');
+   }
+  }
+ }
+
  function selectRoute(routeId){const b=[...host.querySelectorAll('[data-wp-route]')].find(x=>x.dataset.wpRoute===routeId);assert(b,'Route '+routeId);click(b);}
  function fillDerivations(route){
   for(const d of route.derivations||[]){
@@ -62,7 +77,7 @@ function fixture() {
   else route.table.rows.forEach((row,ri)=>row.cells.forEach((cell,ci)=>{
    if(cell.expr&&!cell.given){setInput('t:'+ri+':'+ci,cell.expr);counts.writableCells++;}
   }));
-  checkAndNext(2,problem.id+'/'+route.id+' table');
+  fillRelations(problem,route);checkAndNext(2,problem.id+'/'+route.id+' table');
   if(!manual)for(const id of route.closure.sources){const c=[...host.querySelectorAll('[data-wp-closure]')].find(x=>x.dataset.wpClosure===id);checkBox(c);}
   checkAndNext(3,problem.id+'/'+route.id+' independent condition');
   if(manual)textInput('[data-wp-discussion]','需要检查方程的适用范围、题目是否给出充分条件，以及所求数量的实际取值要求。');
@@ -82,7 +97,7 @@ function fixture() {
   counts.routes++;
   return record;
  }
- return {dom,w,host,$,click,textInput,setInput,checkBox,currentStep,feedback,expectPassed,checkAndNext,confirmFacts,selectRoute,fillDerivations,canonicalRoute,
+ return {dom,w,host,$,click,textInput,setInput,checkBox,currentStep,feedback,expectPassed,checkAndNext,confirmFacts,selectRoute,fillDerivations,fillRelations,canonicalRoute,
   get app(){return app;},read,accounts,redirects,get writes(){return activeWrites;},get syncs(){return syncs;},get owner(){return owner;},
   switchAccount(next,role='student'){owner=next;teacher=role==='teacher';},logout(){loggedIn=false;},
   remount(){app.destroy();host.innerHTML='';app=w.RatioWordProblemApp.mount(host,bridge);return app;},
@@ -131,7 +146,7 @@ reuse.app.start(novel.id,true);reuse.confirmFacts();reuse.fillDerivations(novelR
 novelRoute.table.rows.forEach((row,ri)=>row.cells.forEach((cell,ci)=>{
  if(cell.expr&&!cell.given)reuse.setInput('t:'+ri+':'+ci,cell.expr==='(4/20)*x'?'x/5':cell.expr);
 }));
-reuse.click('[data-wp-check]');reuse.expectPassed(2,'Source-backed simplified efficiency');
+reuse.fillRelations(novel,novelRoute);reuse.click('[data-wp-check]');reuse.expectPassed(2,'Source-backed simplified efficiency');
 novelRoute.table.rows.forEach((row,ri)=>row.cells.forEach((cell,ci)=>{
  if(cell.expr==='(4/20)*x'&&!cell.given)reuse.setInput('t:'+ri+':'+ci,'0.2x');
 }));
@@ -162,7 +177,7 @@ example.close();
 const invalidation=fixture(),tea=invalidation.w.RatioWordProblemsData.find(p=>p.id==='L7-P1');
 invalidation.canonicalRoute(tea,tea.routes[0]);
 invalidation.click('[data-wp-step="0"]');
-const fact=invalidation.host.querySelector('[data-wp-seen]');fact.checked=false;fact.dispatchEvent(new invalidation.w.Event('change',{bubbles:true}));
+const fact=invalidation.host.querySelector('[data-wp-fact]');fact.value='';fact.dispatchEvent(new invalidation.w.Event('input',{bubbles:true}));
 invalidation.click('[data-wp-step="6"]');
 assert.equal(invalidation.currentStep(),0,'An edited source condition must block a stale completed-step button');
 assert(invalidation.$('[data-wp-next]').disabled,'Next step disabled immediately after earlier edit');
@@ -271,10 +286,63 @@ catalogs.click('[data-wp-location="I00"]');
 assert.match(catalogs.$('.wp-citation').textContent,/105页.*章引入/);
 assert.equal(catalogs.read().drafts['G10-01'].sourceLocation,'I00');
 catalogs.click('[data-wp-catalog]');catalogs.click('[data-wp-book="guide"]');
-assert.equal(catalogs.host.querySelectorAll('[data-wp-problem]').length,55,'Guide keeps all original 55 tasks');
-catalogs.click('[data-wp-problem="G10-01"]');
-assert.match(catalogs.$('.wp-citation').textContent,/教学设计与指导/,'Guide entry must not retain a different source selection');
+assert.equal(catalogs.host.querySelectorAll('[data-wp-problem]').length,27,'Supplement excludes the 28 textbook tasks');
+assert(!catalogs.host.textContent.includes('教学设计与指导'),'The learner catalog uses the requested supplement name');
+const textbookIds=new Set(catalogs.w.RatioWordProblemTextbookIndex.items.map(x=>x.problemId));
+for(const button of catalogs.host.querySelectorAll('[data-wp-problem]'))assert(!textbookIds.has(button.dataset.wpProblem),'No duplicate textbook exercise in supplements');
+catalogs.click('[data-wp-problem="L7-P2"]');
+assert.match(catalogs.$('.wp-citation').textContent,/补充练习/,'Supplement entry has the learner-facing source label');
+assert(!catalogs.host.textContent.includes('教学设计与指导'));
+const draftField=catalogs.$('[data-wp-fact]');catalogs.textInput('[data-wp-fact="'+draftField.dataset.wpFact+'"]','12');
+catalogs.click('[data-wp-back]');assert.equal(catalogs.host.querySelectorAll('[data-wp-problem]').length,27,'Back retains the current source catalog');
+catalogs.click('[data-wp-problem="L7-P2"]');assert.equal(catalogs.$('[data-wp-fact="'+draftField.dataset.wpFact+'"]').value,'12','Back saves the current reading draft');
+catalogs.click('[data-wp-back]');catalogs.click('[data-wp-back]');assert.equal(catalogs.redirects.at(-1),'home');
 catalogs.close();
+
+// Reading is now a cloze task, and relations must be assembled before the table gate opens.
+const interactive=fixture(),interactiveProblem=interactive.w.RatioWordProblemsData.find(p=>p.id==='L7-P1'),interactiveRoute=interactiveProblem.routes[0];
+interactive.app.start(interactiveProblem.id,true);
+assert.equal(interactive.$('.wp-stem').textContent,interactiveProblem.stem,'The original problem remains available for reading');
+const blanks=[...interactive.host.querySelectorAll('[data-wp-fact]')];assert(blanks.length>0);assert(blanks.every(x=>x.value===''));
+assert(interactive.$('.wp-fact-list').hidden,'The reading stage does not show an already-extracted answer list beside the blanks');
+interactive.click('[data-wp-check]');assert(interactive.$('[data-wp-next]').disabled);assert(interactive.$('[aria-invalid="true"]'));
+for(const [key,value]of Object.entries(interactive.w.RatioWordProblemReading.canonical(interactiveProblem)))interactive.textInput('[data-wp-fact="'+key+'"]',value);
+interactive.host.querySelectorAll('[data-wp-seen]').forEach(interactive.checkBox);
+const wrongFactKey=blanks[0].dataset.wpFact;
+interactive.textInput('[data-wp-fact="'+wrongFactKey+'"]','99999');
+assert([...interactive.host.querySelectorAll('[data-wp-fact]')].every(x=>x.value!==''),'Wrong-value fixture has no empty numeric fields');
+interactive.click('[data-wp-check]');
+assert(interactive.$('[data-wp-next]').disabled,'A filled but incorrect quantity must block the reading step');
+assert.equal(interactive.$('[data-wp-fact="'+wrongFactKey+'"]').getAttribute('aria-invalid'),'true','The incorrect numerical field is identified');
+interactive.confirmFacts();interactive.fillDerivations(interactiveRoute);interactive.checkAndNext(1,'Quantity cloze confirmed');
+interactiveRoute.table.rows.forEach((row,ri)=>row.cells.forEach((cell,ci)=>{if(cell.expr&&!cell.given)interactive.setInput('t:'+ri+':'+ci,cell.expr);}));
+assert(interactive.host.querySelectorAll('[data-wp-rel-slot]').length>0);assert.equal(interactive.host.querySelectorAll('[data-wp-rel-slot][data-filled="true"]').length,0);
+interactive.click('[data-wp-check]');assert(interactive.$('[data-wp-next]').disabled,'Correct numeric table cannot bypass empty relationship boxes');
+interactive.fillRelations(interactiveProblem,interactiveRoute);interactive.click('[data-wp-check]');interactive.expectPassed(2,'Reordered drag relationships and table');
+interactive.click('[data-wp-next]');
+for(const id of interactiveRoute.closure.sources)interactive.checkBox([...interactive.host.querySelectorAll('[data-wp-closure]')].find(x=>x.dataset.wpClosure===id));
+interactive.checkAndNext(3,'Relation edit prerequisite');
+interactiveRoute.equations.forEach((q,i)=>interactive.setInput('e:'+i,q.left+'='+q.right));
+interactive.click('[data-wp-check]');interactive.expectPassed(4,'Equation completed before changing a relationship');
+assert.equal(interactive.read().drafts[interactiveProblem.id].passed[4],true);
+interactive.click('[data-wp-step="2"]');
+interactive.click('[data-wp-rel-remove]');assert(interactive.$('[data-wp-next]').disabled,'Editing a checked relationship reopens dependent gates');
+assert(interactive.$('[data-wp-step="3"]').disabled,'The previously completed equality-condition step is invalidated');
+assert(interactive.$('[data-wp-step="4"]').disabled,'The previously completed equation step is invalidated');
+interactive.click('[data-wp-step="4"]');assert.equal(interactive.currentStep(),2);
+interactive.close();
+
+// Historical records survive the new interaction version; drafts cannot skip the new activities.
+const migrated=fixture(),migrationProblem=migrated.w.RatioWordProblemsData.find(p=>p.id==='L7-P1');
+const historical=migrated.canonicalRoute(migrationProblem,migrationProblem.routes[0]);
+const legacyInteractionState=clone(migrated.read()),oldDraft=legacyInteractionState.drafts[migrationProblem.id];delete oldDraft.interactionVersion;
+oldDraft.values=Object.fromEntries(Object.entries(oldDraft.values).filter(([key])=>!key.startsWith('f:')&&!key.startsWith('r:')));
+migrated.app.destroy();migrated.accounts.set(migrated.owner,legacyInteractionState);migrated.remount().start(migrationProblem.id);
+assert.equal(migrated.currentStep(),0);assert(migrated.$('[data-wp-next]').disabled);
+assert.equal(migrated.read().records.length,1);assert.equal(migrated.read().records[0].runId,historical.runId);
+assert.notEqual(migrated.read().drafts[migrationProblem.id].runId,historical.runId);
+assert.deepEqual(clone(migrated.read().drafts[migrationProblem.id].values),oldDraft.values,'Migration preserves prior table, equation, answer and check values for reference');
+migrated.close();
 
 // Taking quantities uses the learner's checked expression, adds grouping, and never chooses the operation.
 const taking=fixture();taking.app.start('L7-P1',true);
