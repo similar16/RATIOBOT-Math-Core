@@ -5,7 +5,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { JSDOM } = require('jsdom');
 const base = path.resolve(process.env.SITE_DIR || 'site', 'word-problems');
-const files = ['engine.js','progress.js','data-l7-l8.js','data-l9-review.js','data-textbook-intro.js','data-textbook-applications.js','data-textbook-review.js','textbook-index.js','supplement-index.js','reading.js','relations.js','relation-builder.js','diagrams.js','app.js'];
+const files = ['engine.js','progress.js','data-l7-l8.js','data-l9-review.js','data-textbook-intro.js','data-textbook-applications.js','data-textbook-review.js','textbook-index.js','supplement-index.js','reading.js','relations.js','relation-builder.js','scratchpad.js','diagrams.js','app.js'];
 const sources = files.map(file => ({ file, text:fs.readFileSync(path.join(base,file),'utf8') }));
 const clone = v => JSON.parse(JSON.stringify(v));
 const counts = { routes:0, sourceSteps:0, writableCells:0, equations:0, completed:0 };
@@ -17,6 +17,15 @@ function fixture() {
  const w = dom.window, host = w.document.querySelector('#host');
  w.HTMLElement.prototype.scrollIntoView = function(){};
  w.scrollTo = ()=>{};
+ // Exercise the real scratchpad. jsdom needs drawing primitives; persistence is covered by its focused IndexedDB tests.
+ w.structuredClone=structuredClone;
+ const canvasContext={};
+ for(const name of ['setTransform','resetTransform','clearRect','fillRect','beginPath','closePath','moveTo','lineTo','stroke','arc','fill','save','restore','scale','translate','drawImage','setLineDash'])canvasContext[name]=()=>{};
+ w.HTMLCanvasElement.prototype.getContext=()=>canvasContext;
+ w.HTMLCanvasElement.prototype.setPointerCapture=function(){};
+ w.HTMLCanvasElement.prototype.releasePointerCapture=function(){};
+ w.HTMLCanvasElement.prototype.hasPointerCapture=()=>true;
+ w.ResizeObserver=class {observe(){}disconnect(){}};
  // Typesetting is separately exercised by the renderer tests/browser QA. Keep DOM tests focused on behavior.
  w.katex = { renderToString:s=>String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])) };
  for (const {file,text} of sources) w.eval(text+'\n//# sourceURL='+file);
@@ -40,6 +49,23 @@ function fixture() {
  const feedback=()=>$('.wp-feedback')?.textContent||'';
  function expectPassed(step,where){assert.equal(currentStep(),step,where+' is current step');const next=$('[data-wp-next]');assert(next&&!next.disabled,where+' did not pass: '+feedback());}
  function checkAndNext(step,where){click('[data-wp-check]');expectPassed(step,where);click('[data-wp-next]');assert.equal(currentStep(),step+1,where+' advances');}
+ function completeScratch(where){
+  assert.equal(currentStep(),5,where+' reaches the scratchpad');
+  assert.equal($('.wp-stage h3')?.textContent,'在草稿纸上解方程');
+  assert($('[data-wp-scratch-mount]'),'The personal scratchpad is mounted');
+  assert(!$('[data-wp-next]'),'The scratchpad has one forward action');
+  assert(!$('[data-wp-hint]')&&!$('[data-wp-example]'),'The scratchpad does not offer a worked solution');
+  assert(!$('.wp-solution')&&!$('.wp-verification')&&!$('.wp-answer-grid'),'Opening the scratchpad does not reveal answers or the complete derivation');
+  assert.equal($('[data-wp-check]')?.textContent,'演算完成，核对答案 →');
+  click('[data-wp-check]');
+  assert.equal(currentStep(),6,where+' allows calculation on paper and proceeds directly to verification');
+  assert(!$('[data-wp-next]')&&!$('[data-wp-reflection]'),'Verification saves directly without a reflection gate');
+ }
+ function fillVerification(route){
+  (route.checks||[]).forEach((check,i)=>setInput('c:'+i,check.result));
+  if((route.verdictCases||[]).length)for(const [i,c]of route.verdictCases.entries())checkBox(host.querySelector('[data-wp-case="'+i+'"][value="'+c.correct+'"]'));
+  else checkBox([...host.querySelectorAll('[name="wp-verdict"]')].find(x=>x.value===route.verdict.correct));
+ }
  function confirmFacts(){
   const problem=w.RatioWordProblemsData.find(p=>p.id===$('[data-wp-current-problem]').dataset.wpCurrentProblem);
   for(const [key,value]of Object.entries(w.RatioWordProblemReading.canonical(problem)))textInput('[data-wp-fact="'+key+'"]',value);
@@ -83,21 +109,21 @@ function fixture() {
   if(manual)textInput('[data-wp-discussion]','需要检查方程的适用范围、题目是否给出充分条件，以及所求数量的实际取值要求。');
   else (route.equations||[]).forEach((equation,i)=>{setInput('e:'+i,equation.left+'='+equation.right);counts.equations++;});
   checkAndNext(4,problem.id+'/'+route.id+' equation');
+  completeScratch(problem.id+'/'+route.id);
   (route.answers||[]).forEach((answer,i)=>setInput('a:'+i,answer.expr));
   if((route.answers||[]).length){click('[data-wp-check]');assert($('.wp-verification'),problem.id+' must show verification after solving: '+feedback());}
-  (route.checks||[]).forEach((check,i)=>setInput('c:'+i,check.result));
-  if((route.verdictCases||[]).length)for(const [i,c]of route.verdictCases.entries())checkBox(host.querySelector('[data-wp-case="'+i+'"][value="'+c.correct+'"]'));
-  else checkBox([...host.querySelectorAll('[name="wp-verdict"]')].find(x=>x.value===route.verdict.correct));
-  checkAndNext(5,problem.id+'/'+route.id+' check actual meaning');
-  textInput('[data-wp-reflection]','改变题目中的一个条件后，相关数量格子与独立等量关系需要重新检查。');
+  fillVerification(route);
+  assert.equal($('[data-wp-check]')?.textContent,'检验并保存');
   click('[data-wp-check]');
   assert($('.wp-completion'),problem.id+'/'+route.id+' must finish: '+feedback());
+  assert.equal(currentStep(),6,'A completed analysis remains on verification');
+  assert($('.wp-solution'),'The complete derivation becomes available after verification');
   const record=read().records[0];
-  if(!teacher){assert.equal(record.problemId,problem.id);assert.equal(record.routeId,route.id);assert.equal(record.finished,true);counts.completed++;}
+  if(!teacher){assert.equal(record.problemId,problem.id);assert.equal(record.routeId,route.id);assert.equal(record.finished,true);assert.equal(record.interactionVersion,3);assert.equal(record.passed[5],true);assert.equal(record.firstPass[5],undefined,'Handwritten work is not automatically graded');assert.equal(record.reflection,'','Reflection is optional historical data, not required to finish');counts.completed++;}
   counts.routes++;
   return record;
  }
- return {dom,w,host,$,click,textInput,setInput,checkBox,currentStep,feedback,expectPassed,checkAndNext,confirmFacts,selectRoute,fillDerivations,fillRelations,canonicalRoute,
+ return {dom,w,host,$,click,textInput,setInput,checkBox,currentStep,feedback,expectPassed,checkAndNext,completeScratch,fillVerification,confirmFacts,selectRoute,fillDerivations,fillRelations,canonicalRoute,
   get app(){return app;},read,accounts,redirects,get writes(){return activeWrites;},get syncs(){return syncs;},get owner(){return owner;},
   switchAccount(next,role='student'){owner=next;teacher=role==='teacher';},logout(){loggedIn=false;},
   remount(){app.destroy();host.innerHTML='';app=w.RatioWordProblemApp.mount(host,bridge);return app;},
@@ -163,11 +189,12 @@ chains.close();
 // Worked examples stay explicitly labeled; they never count as independent analyses.
 const example=fixture(),exampleProblem=example.w.RatioWordProblemsData.find(p=>p.id==='L7-P1');
 example.app.start(exampleProblem.id,true);
-for(let step=0;step<6;step++){
+for(let step=0;step<5;step++){
  example.click('[data-wp-example]');
  example.checkAndNext(step,'Worked-example step '+step);
 }
-example.textInput('[data-wp-reflection]','我参考了示范，需要重新检查每个数量的来源，再独立完成一道变式。');
+example.completeScratch('Worked example');
+example.click('[data-wp-example]');
 example.click('[data-wp-check]');
 assert.equal(example.read().records[0].status,'example');
 assert.equal(example.w.RatioWordProblemProgress.summary(example.read()).independent,0);
@@ -183,22 +210,35 @@ assert.equal(invalidation.currentStep(),0,'An edited source condition must block
 assert(invalidation.$('[data-wp-next]').disabled,'Next step disabled immediately after earlier edit');
 invalidation.close();
 
-// A saved reflection remains editable: retain focus and selection, then save a new revision.
+// A saved answer remains editable; recheck it and save a distinct revision without replacing history or the scratchpad.
 const revised=fixture(),revisedProblem=revised.w.RatioWordProblemsData.find(p=>p.id==='L7-P1');
 const originalRecord=clone(revised.canonicalRoute(revisedProblem,revisedProblem.routes[0]));
-const reflectionBox=revised.$('[data-wp-reflection]');reflectionBox.focus();
-reflectionBox.value='每套茶杯增加一个时，杯子数量和杯子耗泥量都要改变。';reflectionBox.setSelectionRange(3,8);
-reflectionBox.dispatchEvent(new revised.w.Event('input',{bubbles:true}));
-assert.equal(revised.w.document.activeElement,reflectionBox,'Editing a completed reflection retains its active editor');
-assert.equal(reflectionBox.selectionStart,3);assert.equal(reflectionBox.selectionEnd,8);
+const answerBox=revised.$('[data-wp-input="a:0"]');answerBox.focus();
+answerBox.value='99999';answerBox.setSelectionRange(1,3);
+answerBox.dispatchEvent(new revised.w.Event('input',{bubbles:true}));
+assert.equal(revised.w.document.activeElement,answerBox,'Editing a completed answer retains its active editor');
+assert.equal(answerBox.selectionStart,1);assert.equal(answerBox.selectionEnd,3);
 assert(!revised.$('.wp-completion'),'Edited work must no longer claim to be saved as complete');
-assert.equal(revised.$('[data-wp-check]')?.textContent,'保存分析','An edited finished reflection can be saved again');
+assert(!revised.$('.wp-solution'),'Editing an answer hides the previously checked complete derivation');
+assert.equal(revised.$('[data-wp-check]')?.textContent,'核对求解','An edited answer must be checked again before saving');
 revised.click('[data-wp-check]');
+assert(!revised.$('.wp-completion'),'An incorrect revised answer cannot save a finished record');
+assert.equal(revised.read().records.length,1,'An unsuccessful revision keeps the original record only');
+revised.setInput('a:0','('+revisedProblem.routes[0].answers[0].expr+')');
+revised.click('[data-wp-check]');assert(revised.$('.wp-verification'));
+revised.fillVerification(revisedProblem.routes[0]);
+assert.equal(revised.$('[data-wp-check]')?.textContent,'检验并保存');
+revised.click('[data-wp-check]');assert(revised.$('.wp-completion'));
 const revisedRecord=revised.read().records.find(r=>r.runId!==originalRecord.runId);
 assert(revisedRecord,'A changed finished analysis receives a distinct revision identifier');
-assert.equal(revisedRecord.reflection,reflectionBox.value);
-assert.equal(revised.read().records.find(r=>r.runId===originalRecord.runId).reflection,originalRecord.reflection,'The earlier submitted record is not silently overwritten');
+assert.equal(revisedRecord.values['a:0'],'('+revisedProblem.routes[0].answers[0].expr+')','The accepted revision retains the pupil\'s actual answer');
+assert.equal(revisedRecord.scratchId,originalRecord.scratchId,'Revising an answer retains the same personal scratchpad');
+assert.deepEqual(clone(revised.read().records.find(r=>r.runId===originalRecord.runId)),originalRecord,'The earlier submitted record is not silently overwritten');
 assert.equal(revised.w.RatioWordProblemProgress.summary(revised.read()).completed,1,'Revising one task does not increase its completed-task count');
+revised.click('[data-wp-restart]');
+assert.equal(revised.currentStep(),0);
+assert.notEqual(revised.read().drafts[revisedProblem.id].scratchId,originalRecord.scratchId,'A new independent analysis starts a new personal scratchpad');
+assert.equal(revised.read().records.length,2,'Starting over keeps both completed records');
 revised.close();
 
 // Written modeling changes invalidate every later gate, just as edits to formulas do.
@@ -226,15 +266,15 @@ assert.match(discussionDraft.discussion,/方程的次数/);discussionChange.clos
 
 // Revising the practical verdict keeps the checked numerical answers but reopens verification.
 const verdictChange=fixture(),verdictProblem=verdictChange.w.RatioWordProblemsData.find(p=>p.id==='L7-P1');
-verdictChange.canonicalRoute(verdictProblem,verdictProblem.routes[0]);verdictChange.click('[data-wp-step="5"]');
+verdictChange.canonicalRoute(verdictProblem,verdictProblem.routes[0]);
 verdictChange.checkBox(verdictChange.$('[name="wp-verdict"][value="impossible"]'));
-assert(verdictChange.$('[data-wp-next]').disabled);assert(verdictChange.$('[data-wp-check]'));
+assert(!verdictChange.$('[data-wp-next]'));assert(verdictChange.$('[data-wp-check]'));
 assert(!verdictChange.$('.wp-solution'),'A previously passed solution must not remain presented as a checked result after editing');
-verdictChange.click('[data-wp-step="6"]');assert.equal(verdictChange.currentStep(),5);
+assert(!verdictChange.$('.wp-completion'));assert.equal(verdictChange.currentStep(),6);
 verdictChange.click('[data-wp-check]');assert.match(verdictChange.feedback(),/题目要求/,'A revised incorrect verdict is checked again');
 verdictChange.click('[data-wp-catalog]');
 const verdictDraft=verdictChange.read().drafts[verdictProblem.id];
-assert.equal(verdictDraft.finished,false);assert.equal(verdictDraft.answersChecked,true);assert(!verdictDraft.passed[5]);assert(!verdictDraft.passed[6]);
+assert.equal(verdictDraft.finished,false);assert.equal(verdictDraft.answersChecked,true);assert.equal(verdictDraft.passed[5],true,'Changing the verdict does not discard completed paper calculation');assert(!verdictDraft.passed[6]);
 verdictChange.close();
 
 // Derived values must lose validity when either their calculation or their prerequisite changes.
@@ -250,12 +290,14 @@ cascade.close();
 
 // Restore checked answers after leaving the page so the pupil can resume verification directly.
 const restore=fixture(),fruit=restore.w.RatioWordProblemsData.find(p=>p.id==='L7-P2'),fruitRoute=fruit.routes[0];
-restore.canonicalRoute(fruit,fruitRoute);restore.click('[data-wp-step="5"]');
+restore.canonicalRoute(fruit,fruitRoute);
 assert(restore.$('.wp-verification'));
 restore.remount().start(fruit.id);
-// Completed records intentionally reopen the final step; explicitly revisit verification.
-restore.click('[data-wp-step="5"]');
+assert.equal(restore.currentStep(),6,'Completed analyses reopen their final verification step');
 assert(restore.$('.wp-verification'),'A restored checked answer keeps verification available');
+restore.click('[data-wp-step="5"]');restore.completeScratch('Reviewing a completed scratchpad');
+assert(restore.$('.wp-completion'),'Returning from a completed scratchpad shows the saved result');
+assert.equal(restore.read().records.length,1,'Reviewing a saved scratchpad cannot create another completion');
 restore.close();
 
 // Changing accounts while an editor is open may neither save that draft nor complete it for the new account.
@@ -268,6 +310,20 @@ assert.equal(identity.redirects.at(-1),'account');
 assert(!identity.accounts.has('class-a::45'),'No previous-account draft may be saved under the new identity');
 assert.deepEqual(clone(identity.accounts.get(oldAccount)),oldState,'Old profile also remains unchanged after identity mismatch');
 identity.close();
+
+// The app supplies the signed-in owner as part of a real scratchpad key, even when two profiles contain the same draft ID.
+const scratchIdentity=fixture(),scratchKeys=[];
+const realScratchMount=scratchIdentity.w.RatioWordProblemScratchpad.mount;
+scratchIdentity.w.RatioWordProblemScratchpad.mount=(host,options)=>{scratchKeys.push(options.key);return realScratchMount(host,options);};
+scratchIdentity.app.start('L7-P1',true);
+for(let step=0;step<5;step++){scratchIdentity.click('[data-wp-example]');scratchIdentity.checkAndNext(step,'Scratch account setup '+step);}
+const scratchOldOwner=scratchIdentity.owner,scratchOldState=clone(scratchIdentity.read()),scratchOldKey=scratchKeys.at(-1);
+scratchIdentity.switchAccount('class-b::46');scratchIdentity.accounts.set(scratchIdentity.owner,clone(scratchOldState));
+scratchIdentity.remount().start('L7-P1');
+assert.equal(scratchIdentity.currentStep(),5);
+assert.notEqual(scratchKeys.at(-1),scratchOldKey,'A matching run ID in another account cannot open the old account\'s personal scratchpad');
+assert.deepEqual(clone(scratchIdentity.accounts.get(scratchOldOwner)),scratchOldState,'Changing scratchpad owners leaves the previous account unchanged');
+scratchIdentity.close();
 
 // Teacher demonstration uses the same flow, with no writes to any student profile.
 const teacher=fixture();teacher.switchAccount('teacher::preview','teacher');teacher.remount();
@@ -337,12 +393,47 @@ const migrated=fixture(),migrationProblem=migrated.w.RatioWordProblemsData.find(
 const historical=migrated.canonicalRoute(migrationProblem,migrationProblem.routes[0]);
 const legacyInteractionState=clone(migrated.read()),oldDraft=legacyInteractionState.drafts[migrationProblem.id];delete oldDraft.interactionVersion;
 oldDraft.values=Object.fromEntries(Object.entries(oldDraft.values).filter(([key])=>!key.startsWith('f:')&&!key.startsWith('r:')));
+oldDraft.hints={6:2};oldDraft.attempts={6:3};oldDraft.assisted=true;
 migrated.app.destroy();migrated.accounts.set(migrated.owner,legacyInteractionState);migrated.remount().start(migrationProblem.id);
 assert.equal(migrated.currentStep(),0);assert(migrated.$('[data-wp-next]').disabled);
 assert.equal(migrated.read().records.length,1);assert.equal(migrated.read().records[0].runId,historical.runId);
 assert.notEqual(migrated.read().drafts[migrationProblem.id].runId,historical.runId);
 assert.deepEqual(clone(migrated.read().drafts[migrationProblem.id].values),oldDraft.values,'Migration preserves prior table, equation, answer and check values for reference');
+assert.deepEqual(clone(migrated.read().drafts[migrationProblem.id].hints),{},'Legacy reflection hints cannot count against the new solving step');
+assert.deepEqual(clone(migrated.read().drafts[migrationProblem.id].attempts),{},'Legacy reflection attempts cannot count against the new solving step');
+assert.equal(migrated.read().drafts[migrationProblem.id].assisted,true,'The old use of assistance remains disclosed');
 migrated.close();
+
+// Version-2 work keeps its established modeling gates and values while adopting the new scratch/verification order.
+const migrationV2=fixture(),migrationV2Problem=migrationV2.w.RatioWordProblemsData.find(p=>p.id==='L7-P1');
+const migrationV2Record=migrationV2.canonicalRoute(migrationV2Problem,migrationV2Problem.routes[0]);
+const migrationV2Base=clone(migrationV2.read());
+for(const scenario of [{step:2,finished:false},{step:5,finished:false},{step:6,finished:false},{step:6,finished:true}]){
+ const legacyState=clone(migrationV2Base),legacyDraft=legacyState.drafts[migrationV2Problem.id];
+ legacyDraft.interactionVersion=2;delete legacyDraft.scratchId;legacyDraft.step=scenario.step;legacyDraft.finished=scenario.finished;
+ legacyDraft.passed=Object.fromEntries(Array.from({length:scenario.finished?7:scenario.step},(_,i)=>[i,true]));
+ legacyDraft.firstPass=clone(legacyDraft.passed);legacyDraft.reflection='以前版本中保存的变式说明，仍作为历史文字保留。';
+ legacyDraft.answersChecked=scenario.step===6;
+ legacyState.records[0].interactionVersion=2;
+ migrationV2.app.destroy();migrationV2.accounts.set(migrationV2.owner,legacyState);migrationV2.remount().start(migrationV2Problem.id);
+ const resumed=migrationV2.read().drafts[migrationV2Problem.id];
+ assert.equal(migrationV2.currentStep(),scenario.finished?6:Math.min(scenario.step,5),'Version-2 work resumes at the corresponding new stage');
+ assert.equal(resumed.interactionVersion,3);assert.equal(resumed.runId,legacyDraft.runId);
+ assert.equal(resumed.scratchId,legacyDraft.runId,'Existing analyses receive a stable local scratchpad identity');
+ assert.deepEqual(clone(resumed.values),legacyDraft.values,'Version-2 values remain available for review and correction');
+ for(let step=0;step<5;step++)assert.equal(resumed.passed[step],legacyDraft.passed[step],'Keep modeling gate '+step);
+ assert.equal(resumed.firstPass[5],undefined,'Old solving evidence is not treated as a handwriting grade');
+ assert.equal(resumed.reflection,legacyDraft.reflection,'Historical reflection is retained without requiring it in the new UI');
+ assert(!migrationV2.$('[data-wp-reflection]'));
+ assert.equal(migrationV2.read().records.length,1);assert.equal(migrationV2.read().records[0].runId,migrationV2Record.runId);
+ if(scenario.finished){assert(migrationV2.$('.wp-completion'));assert.equal(resumed.passed[5],true);assert.equal(resumed.passed[6],true);}
+ else if(scenario.step>=5){assert(!resumed.passed[5]&&!resumed.passed[6]);assert(!migrationV2.$('.wp-solution'));migrationV2.completeScratch('Migrated version-2 calculation');}
+ const current=clone(migrationV2.read().drafts[migrationV2Problem.id]);
+ migrationV2.remount().start(migrationV2Problem.id);
+ assert.equal(migrationV2.currentStep(),current.step,'A version-3 draft resumes without another migration');
+ assert.equal(migrationV2.read().drafts[migrationV2Problem.id].scratchId,current.scratchId);
+}
+migrationV2.close();
 
 // Taking quantities uses the learner's checked expression, adds grouping, and never chooses the operation.
 const taking=fixture();taking.app.start('L7-P1',true);
@@ -352,7 +443,13 @@ taking.click('[data-wp-example]');taking.checkAndNext(3,'Builder closing conditi
 assert.equal(taking.$('[data-wp-input="e:0"]').value,'','The module must not preassemble the equation');
 taking.click('[data-wp-take="0:2"]');taking.click('[data-wp-key="+"]');taking.click('[data-wp-take="1:2"]');taking.click('[data-wp-key="="]');taking.click('[data-wp-take="2:2"]');
 assert.match(taking.$('[data-wp-input="e:0"]').value,/6\*0\.15\*x/,'Take the learner expression instead of replacing it with a reference');
-taking.click('[data-wp-check]');taking.expectPassed(4,'Equation assembled from selected quantities');taking.close();
+const pupilEquation=taking.$('[data-wp-input="e:0"]').value;
+taking.click('[data-wp-check]');taking.expectPassed(4,'Equation assembled from selected quantities');taking.click('[data-wp-next]');
+assert.equal(taking.$('[data-wp-scratch-equation="0"] .wp-math-line')?.textContent,taking.w.RatioWordProblemEngine.format(pupilEquation),'The scratchpad previews the pupil\'s actual checked equation');
+assert(!taking.$('.wp-stage').textContent.includes(taking.w.RatioWordProblemsData.find(p=>p.id==='L7-P1').routes[0].conclusion),'Opening the scratchpad does not reveal the final answer');
+taking.click('[data-wp-prev]');assert.equal(taking.currentStep(),4);
+assert.equal(taking.$('[data-wp-input="e:0"]').value,pupilEquation,'Returning from scratch keeps the student equation intact');
+taking.click('[data-wp-next]');taking.completeScratch('Student-equation scratchpad');taking.close();
 
 // Numerical coincidence does not establish the origin of a different quantity.
 const coincidence=fixture(),chase=coincidence.w.RatioWordProblemsData.find(p=>p.id==='TB-A30'),chaseRoute=chase.routes[0];
@@ -369,11 +466,12 @@ assert.match(coincidence.feedback(),/来源|计算过程/);
 coincidence.setInput('d:farRemaining','1800/60-(45-30)');coincidence.click('[data-wp-check-derived="farRemaining"]');
 assert(coincidence.$('[data-wp-derivation="farRemaining"] .wp-success-tag'),'Expanding a checked parent calculation preserves its origin');
 for(let step=1;step<5;step++){coincidence.click('[data-wp-example]');coincidence.checkAndNext(step,'Both-case setup '+step);}
+coincidence.completeScratch('Both-case calculation');
 coincidence.click('[data-wp-example]');
 coincidence.checkBox(coincidence.$('[data-wp-case="1"][value="valid"]'));
-coincidence.click('[data-wp-check]');assert(coincidence.$('[data-wp-next]').disabled,'Correct first case cannot substitute for the second case');
+coincidence.click('[data-wp-check]');assert(!coincidence.$('.wp-completion'),'Correct first case cannot substitute for the second case');assert.equal(coincidence.read().records.length,0);
 coincidence.checkBox(coincidence.$('[data-wp-case="1"][value="impossible"]'));
-coincidence.click('[data-wp-check]');coincidence.expectPassed(5,'Both required cases verified');coincidence.close();
+coincidence.click('[data-wp-check]');assert(coincidence.$('.wp-completion'),'Both required cases are verified and saved together');assert.equal(coincidence.currentStep(),6);coincidence.close();
 
 // The figure is checked by structure, not just a coincidentally identical total.
 const chess=fixture(),chessProblem=chess.w.RatioWordProblemsData.find(p=>p.id==='G9-03');
@@ -387,6 +485,24 @@ assert.equal(diagram.querySelector('[data-wp-row="1"][data-wp-col="3"]').dataset
 chess.close();
 
 (async()=>{
+ // A personal stroke stays active across the profile-save debounce and the scratchpad's own persistence timer.
+ const ink=fixture(),paintedPoints=[];let releasedPointers=0;
+ const context=ink.w.HTMLCanvasElement.prototype.getContext();
+ context.lineTo=(x,y)=>paintedPoints.push([x,y]);
+ ink.w.HTMLCanvasElement.prototype.releasePointerCapture=()=>{releasedPointers++;};
+ ink.w.HTMLElement.prototype.getBoundingClientRect=()=>({left:0,top:0,right:450,bottom:600,width:450,height:600,x:0,y:0});
+ ink.app.start('L7-P1',true);
+ for(let step=0;step<5;step++){ink.click('[data-wp-example]');ink.checkAndNext(step,'Continuous handwriting setup '+step);}
+ const canvas=ink.$('canvas.wp-scratchpad-canvas');assert(canvas);
+ const pointer=(type,x,y)=>{const event=new ink.w.Event(type,{bubbles:true,cancelable:true});Object.assign(event,{clientX:x,clientY:y,pointerId:1,pointerType:'pen',button:0,buttons:type==='pointerup'?0:1,isPrimary:true,pressure:0.5});canvas.dispatchEvent(event);};
+ pointer('pointerdown',20,30);pointer('pointermove',40,50);
+ await new Promise(resolve=>setTimeout(resolve,720));
+ assert.equal(releasedPointers,0,'Saving while a pupil writes cannot end the active stroke');
+ pointer('pointermove',90,110);pointer('pointerup',90,110);
+ assert(paintedPoints.some(([x,y])=>x===180&&y===220),'Points after the save interval remain part of the visible stroke');
+ assert.equal(releasedPointers,1,'The pen-up event ends the continuous stroke');
+ ink.click('[data-wp-ink="undo"]');assert(ink.$('[data-wp-ink="undo"]').disabled,'The entire long stroke is one undo action');
+ ink.close();
  // Deferred catalog rendering may not navigate away after the student opens a problem.
  const searching=fixture();searching.app.open();searching.textInput('[data-wp-search]','追');searching.click('[data-wp-location="I00"]');
  await new Promise(resolve=>setTimeout(resolve,320));assert.equal(searching.currentStep(),0);assert.match(searching.$('.wp-citation').textContent,/105页/);searching.close();
@@ -403,8 +519,8 @@ chess.close();
  assert.equal(upgrading.host.querySelector('[data-wp-editor="e:0"] math-field').value,'','An upgraded second editor must not fall back to the first equation');
  assert(upgrading.w.RatioWordProblemEngine.equivalent(target.value,'10+y'),'The selected second equation receives its quantity after editor upgrade');
  upgrading.close();
- console.log('PASS textbook navigation, checked-table equation assembly, complete case analysis, exact chess structure and delayed editor focus');
+ console.log('PASS continuous handwriting across autosave, textbook navigation, checked-table equation assembly, complete case analysis, exact chess structure and delayed editor focus');
 })().catch(error=>{console.error(error);process.exitCode=1;});
 
 console.log('PASS word-problem UI:',JSON.stringify(counts));
-console.log('Verified complete authored flows, explicit percent origins, source gating, prerequisite invalidation, verification restore, completion deduplication, identity isolation and teacher preview.');
+console.log('Verified complete authored flows, explicit percent origins, source gating, prerequisite invalidation, ungraded scratchpad transition, pupil-equation preview, direct verification save, answer revisions, v1/v2/v3 draft migration, identity isolation and teacher preview.');
