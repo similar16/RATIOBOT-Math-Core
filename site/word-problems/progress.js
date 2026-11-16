@@ -17,7 +17,7 @@
  function cleanDraft(d,update=true){
   if(!d||typeof d!=='object'||Array.isArray(d))return null;
   const hints=counts(d.hints),example=!!d.example||d.status==='example';
-  return {schema:1,interactionVersion:integer(d.interactionVersion,2),runId:text(d.runId,100),problemId:text(d.problemId,50),routeId:text(d.routeId,50),sourceLocation:text(d.sourceLocation,50),step:integer(d.step,6),
+  return {schema:1,interactionVersion:integer(d.interactionVersion,3),runId:text(d.runId,100),scratchId:text(d.scratchId||d.runId,100),problemId:text(d.problemId,50),routeId:text(d.routeId,50),sourceLocation:text(d.sourceLocation,50),step:integer(d.step,6),
    values:values(d.values),passed:flags(d.passed),attempts:counts(d.attempts),firstPass:flags(d.firstPass),hints,
    seen:list(d.seen,60),closure:list(d.closure,30),
    derivationSources:Object.fromEntries(entries(d.derivationSources,60).map(([k,v])=>[k,list(v,20)])),
@@ -25,7 +25,17 @@
    discussion:text(d.discussion,2000),assisted:!!d.assisted||example||d.status==='assisted'||Object.values(hints).some(n=>n>0),example,
    finished:d.finished===true,answersChecked:d.answersChecked===true,startedAt:stamp(d.startedAt),updatedAt:update?new Date().toISOString():stamp(d.updatedAt)};
  }
- function accuracy(d){const graded=Object.keys(d.firstPass).filter(k=>/^[0-5]$/.test(k)),first=graded.filter(k=>d.firstPass[k]===true).length;return {first,total:graded.length,accuracy:graded.length?Math.round(100*first/graded.length):null};}
+ function migrateDraft(raw){
+  const d=cleanDraft(raw,false);if(!d||d.interactionVersion!==2)return d;
+  const remap=o=>{const result=Object.fromEntries(Object.entries(o).filter(([k])=>/^[0-4]$/.test(k)));if(Object.hasOwn(o,'5'))result[6]=o[5];return result;};
+  const passed=Object.fromEntries(Object.entries(d.passed).filter(([k])=>/^[0-4]$/.test(k)));
+  if(d.finished){passed[5]=true;if(Object.hasOwn(d.passed,'5'))passed[6]=d.passed[5];}
+  // Step 5 is now a personal scratchpad; the old solve/check evidence moves to step 6.
+  // Legacy reflection text is retained as history, but its old step-6 grading evidence is omitted.
+  return {...d,interactionVersion:3,step:d.finished?6:Math.min(d.step,5),passed,
+   firstPass:remap(d.firstPass),attempts:remap(d.attempts),hints:remap(d.hints)};
+ }
+ function accuracy(d){const graded=Object.keys(d.firstPass).filter(k=>(d.interactionVersion>=3?/^(?:[0-4]|6)$/:/^[0-5]$/).test(k)),first=graded.filter(k=>d.firstPass[k]===true).length;return {first,total:graded.length,accuracy:graded.length?Math.round(100*first/graded.length):null};}
  function valueLabels(route,answers,problem){
   const factLabels=new Map((reading()?.build(problem).fields||[]).map(f=>[f.key,f.label]));
   return Object.fromEntries(Object.keys(answers).map(key=>{
@@ -56,14 +66,17 @@
    attempts:maxCounts(a.attempts,b.attempts),hints:maxCounts(a.hints,b.hints)};
  }
  function mergeDraft(a,b){
+  if(a.runId!==b.runId||a.routeId!==b.routeId)return String(b.updatedAt||'')>=String(a.updatedAt||'')?b:a;
+  // An older device may still send v2 data for this run. Align step meanings before merging evidence.
+  if(a.interactionVersion===3||b.interactionVersion===3){if(a.interactionVersion===2)a=migrateDraft(a);if(b.interactionVersion===2)b=migrateDraft(b);}
   const latest=String(b.updatedAt||'')>=String(a.updatedAt||'')?b:a;
-  if(a.runId!==b.runId||a.routeId!==b.routeId)return latest;
   // Keep latest expressions and unlocked steps; assistance evidence is irreversible within one run.
   return {...latest,...mergeFlags(a,b)};
  }
  function mergeRecord(a,b){
+  if(a.problemId!==b.problemId||a.routeId!==b.routeId)return String(b.at||'')>=String(a.at||'')?b:a;
+  if(a.interactionVersion===3||b.interactionVersion===3){if(a.interactionVersion===2)a={...a,...migrateDraft(a)};if(b.interactionVersion===2)b={...b,...migrateDraft(b)};}
   const latest=String(b.at||'')>=String(a.at||'')?b:a;
-  if(a.problemId!==b.problemId||a.routeId!==b.routeId)return latest;
   const combined={...latest,...mergeFlags(a,b)};
   combined.status=a.status==='review'||b.status==='review'?'review':combined.example?'example':combined.assisted?'assisted':'independent';
   return {...combined,...accuracy(combined)};
@@ -108,5 +121,5 @@
  }
  function summary(value){const r=normalized(value).records;return {completed:new Set(r.filter(x=>x.status!=='review').map(x=>x.problemId)).size,
   independent:new Set(r.filter(x=>x.status==='independent').map(x=>x.problemId)).size,review:r.filter(x=>x.status==='review').length,records:r};}
- const api={cleanDraft,normalized,saveDraft,complete,merge,summary};if(typeof module==='object'&&module.exports)module.exports=api;else root.RatioWordProblemProgress=api;
+ const api={cleanDraft,migrateDraft,normalized,saveDraft,complete,merge,summary};if(typeof module==='object'&&module.exports)module.exports=api;else root.RatioWordProblemProgress=api;
 })(typeof window==='undefined'?globalThis:window);

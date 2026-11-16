@@ -12,7 +12,7 @@ const clone=value=>JSON.parse(JSON.stringify(value));
 const opened=[];
 
 function draft(id='G10-05',value='PRIVATE-WRITTEN-WORK',when='2026-11-16T10:00:00.000Z'){
- return {schema:1,runId:'wp-fixture-'+id,problemId:id,routeId:'main',step:2,
+ return {schema:1,interactionVersion:3,runId:'wp-fixture-'+id,scratchId:'wp-fixture-'+id,problemId:id,routeId:'main',step:2,
   values:{'t:0:0':value},passed:{0:true,1:true},firstPass:{0:true,1:true},
   seen:['fact'],derived:{},reflection:'PRIVATE-REFLECTION',customModel:'',discussion:'',
   startedAt:when,updatedAt:when};
@@ -43,6 +43,14 @@ function fixture(){
  const w=dom.window;opened.push(dom);
  w.structuredClone=structuredClone;w.supabase={createClient:()=>client};w.scrollTo=()=>{};
  w.HTMLElement.prototype.scrollIntoView=function(){};
+ // Keep the real scratchpad lifecycle while supplying the Canvas APIs absent from jsdom.
+ const canvasContext={};
+ for(const name of ['setTransform','resetTransform','clearRect','fillRect','beginPath','closePath','moveTo','lineTo','stroke','arc','fill','save','restore','scale','translate','drawImage','setLineDash'])canvasContext[name]=()=>{};
+ w.HTMLCanvasElement.prototype.getContext=()=>canvasContext;
+ w.HTMLCanvasElement.prototype.setPointerCapture=function(){};
+ w.HTMLCanvasElement.prototype.releasePointerCapture=function(){};
+ w.HTMLCanvasElement.prototype.hasPointerCapture=()=>true;
+ w.ResizeObserver=class {observe(){}disconnect(){}};
  w.Element.prototype.animate=()=>({});w.alert=()=>{};w.confirm=()=>true;w.console.warn=()=>{};
  w.requestIdleCallback=cb=>{cb({didTimeout:false,timeRemaining:()=>50});return 1;};w.cancelIdleCallback=()=>{};
  const external=new Set(['review-engine.js','review-ui.js','daily.js','autumn-break.js','question-content.js','question-import.js','question-bank.js','word-problems/progress.js','word-problems-entry.js']);
@@ -60,7 +68,7 @@ function fixture(){
  }
  async function loadModule(){
   w.katex={renderToString:s=>String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))};
-  for(const file of ['engine.js','data-l7-l8.js','data-l9-review.js','data-textbook-intro.js','data-textbook-applications.js','data-textbook-review.js','textbook-index.js','supplement-index.js','reading.js','relations.js','relation-builder.js','diagrams.js','app.js'])w.eval(read('word-problems/'+file));
+  for(const file of ['engine.js','data-l7-l8.js','data-l9-review.js','data-textbook-intro.js','data-textbook-applications.js','data-textbook-review.js','textbook-index.js','supplement-index.js','reading.js','relations.js','relation-builder.js','scratchpad.js','diagrams.js','app.js'])w.eval(read('word-problems/'+file));
   const append=w.document.head.append.bind(w.document.head);
   w.document.head.append=(...nodes)=>{append(...nodes);for(const node of nodes){const url=node.src||node.href||'';if(url.includes('/word-problems/'))queueMicrotask(()=>node.onload?.());}};
   await w.RatioWordProblemsUI.open();
@@ -79,7 +87,8 @@ function fixture(){
  assert.equal(snapshot.economy.modules.wordProblems,undefined,'written work is excluded from the publicly projected modules');
  assert.equal(snapshot.economy.modules.otherPractice.clears,3,'unrelated modules remain available');
  assert.equal(snapshot.growth_state.wordProblems.records[0].values['t:0:0'],'PRIVATE-TEACHER-ANSWER','full records remain in private growth snapshot');
- assert.equal(snapshot.growth_state.wordProblems.drafts['G10-05'].reflection,'PRIVATE-REFLECTION','full drafts remain private');
+ assert.equal(snapshot.growth_state.wordProblems.drafts['G10-05'].reflection,'PRIVATE-REFLECTION','retained historical reflection remains private even though it is no longer an activity');
+ assert.equal(snapshot.growth_state.wordProblems.drafts['G10-05'].scratchId,'wp-fixture-G10-05','Private progress retains the stable local scratchpad reference');
  const publicProjection={modules:snapshot.economy.modules,history:snapshot.game_stats.history};
  assert(!JSON.stringify(publicProjection).includes('PRIVATE-'),'existing public summary projection cannot receive private written work');
  snapshot.growth_state.wordProblems.drafts['G10-05'].values['t:0:0']='changed-export';
@@ -128,6 +137,46 @@ function fixture(){
  assert.equal(pendingUpload.economy.modules.wordProblems,undefined);
  pending.dom.window.close();
  console.log('PASS pending local/cloud merge retains both drafts before private upload');
+
+ // The real homepage bridge saves immediately after final verification, with no reflection submission.
+ const completed=fixture();await Promise.resolve();completed.student('completed-student','WPD','4');await completed.loadModule();
+ const completedHost=completed.w.document.getElementById('wordProblems');
+ completedHost.querySelector('[data-wp-problem="L7-P1"]').click();
+ for(let step=0;step<5;step++){
+  assert.equal(completedHost.querySelector('[aria-current="step"]').dataset.wpStep,String(step));
+  completedHost.querySelector('[data-wp-example]').click();
+  completedHost.querySelector('[data-wp-check]').click();
+  const next=completedHost.querySelector('[data-wp-next]');assert(next&&!next.disabled,'Example analysis passes modeling stage '+step);next.click();
+ }
+ assert(completedHost.querySelector('[data-wp-scratch-mount]'),'The real module loads its scratchpad step');
+ assert(completedHost.querySelector('[data-wp-scratch-equation="0"]'),'The real scratchpad displays the checked equation');
+ assert(!completedHost.querySelector('.wp-solution')&&!completedHost.querySelector('.wp-answer-grid'),'The scratchpad does not disclose the solution');
+ assert(!completedHost.querySelector('[data-wp-next]')&&!completedHost.querySelector('[data-wp-example]'));
+ assert.equal(completedHost.querySelector('[data-wp-check]').textContent,'演算完成，核对答案 →');
+ const personalCanvas=completedHost.querySelector('canvas.wp-scratchpad-canvas');assert(personalCanvas);
+ for(const [type,x,y]of [['pointerdown',20,30],['pointermove',70,90],['pointerup',70,90]]){
+  const event=new completed.w.Event(type,{bubbles:true,cancelable:true});Object.assign(event,{clientX:x,clientY:y,pointerId:1,pointerType:'pen',button:0,buttons:type==='pointerup'?0:1,isPrimary:true,pressure:0.5});personalCanvas.dispatchEvent(event);
+ }
+ assert(!completedHost.querySelector('[data-wp-ink="undo"]').disabled,'Real handwritten work exists before checking that it remains off the cloud snapshot');
+ const scratchDraft=clone(completed.t.currentProfile().economy.modules.wordProblems.drafts['L7-P1']);
+ assert.equal(scratchDraft.interactionVersion,3);assert(scratchDraft.scratchId);
+ completedHost.querySelector('[data-wp-check]').click();
+ assert.equal(completedHost.querySelector('[aria-current="step"]').dataset.wpStep,'6');
+ assert(!completedHost.querySelector('[data-wp-reflection]')&&!completedHost.querySelector('[data-wp-next]'));
+ completedHost.querySelector('[data-wp-example]').click();
+ assert(completedHost.querySelector('.wp-verification'));assert.equal(completedHost.querySelector('[data-wp-check]').textContent,'检验并保存');
+ completedHost.querySelector('[data-wp-check]').click();assert(completedHost.querySelector('.wp-completion'));
+ const completedProgress=completed.t.currentProfile().economy.modules.wordProblems;
+ assert.equal(completedProgress.records.length,1);assert.equal(completedProgress.records[0].step,6);
+ assert.equal(completedProgress.records[0].finished,true);assert.equal(completedProgress.records[0].reflection,'');
+ assert.equal(completedProgress.records[0].scratchId,scratchDraft.scratchId);assert.equal(completedProgress.records[0].firstPass[5],undefined);
+ await completed.t.cloudSyncProfile(completed.t.currentProfile(),true);
+ const completedUpload=completed.writes.filter(v=>v.table==='progress_snapshots').at(-1).row;
+ assert.equal(completedUpload.economy.modules.wordProblems,undefined);
+ assert.equal(completedUpload.growth_state.wordProblems.records[0].runId,completedProgress.records[0].runId,'The verified completed analysis reaches the private cloud snapshot');
+ assert(!JSON.stringify(completedUpload.growth_state.wordProblems).includes('"strokes"'),'Handwritten stroke data stays on the device rather than entering profile snapshots');
+ completed.dom.window.close();
+ console.log('PASS real scratchpad transition, direct final save and private completed-record sync without reflection');
 
  const logout=fixture();await Promise.resolve();logout.student();await logout.loadModule();
  const host=logout.w.document.getElementById('wordProblems');
@@ -178,5 +227,5 @@ function fixture(){
  assert.equal(w.document.querySelector('#studentGameMenu [data-go="wordProblems"] > span').textContent,'I');
  console.log('PASS original H entry retained and application-problem entry labeled I');
  for(const d of opened)d.window.close();
- console.log('PASS word-problem integration: 7 focused lifecycle/privacy scenarios');
+ console.log('PASS word-problem integration: 8 focused lifecycle/privacy scenarios');
 })().catch(error=>{for(const d of opened)d.window.close();console.error(error);process.exitCode=1;});

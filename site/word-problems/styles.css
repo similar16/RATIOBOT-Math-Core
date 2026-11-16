@@ -261,3 +261,44 @@ input.wp-fact-number.is-correct,.wp-fact-number.is-correct input{background:var(
   #wordProblems *,#wordProblems *:before,#wordProblems *:after{scroll-behavior:auto!important;transition:none!important;animation:none!important}
   .wp-problem-card:hover,.wp-book-tabs button:hover,.wp-primary:hover:not(:disabled),.wp-secondary:hover:not(:disabled),.wp-relation-token:hover{transform:none}
 }
+
+/* Local vector working paper, using the original RatioBot controls and palette. */
+.wp-scratchpad{min-width:0;margin-top:18px;padding:16px;border:3px solid var(--wp-ink);border-radius:16px;background:var(--wp-paper);box-shadow:var(--wp-shadow-small)}
+.wp-scratchpad-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;min-width:0}
+.wp-scratchpad-heading>div{min-width:0}.wp-scratchpad-heading h4{margin:0!important}
+.wp-scratchpad-heading p{font-size:13px!important;line-height:1.6;margin:5px 0 10px!important;color:var(--wp-muted)}
+.wp-scratchpad-heading [data-wp-ink=expand]{flex-shrink:0;padding:8px 11px;min-height:44px;font-size:12px!important}
+.wp-scratchpad-equations{margin:9px 0 14px;padding:11px 13px;border:2px solid var(--wp-ink);border-radius:11px;background:var(--wp-yellow-soft);overflow:auto;min-width:0;max-height:240px}
+.wp-scratchpad-equations .wp-scratch-equations{margin:0;padding:0;border:0;background:transparent;box-shadow:none}
+.wp-scratchpad-equations .wp-math-line,.wp-scratchpad-equations [data-wp-scratch-equation]{font-size:23px;line-height:1.6;overflow:auto;white-space:nowrap}
+.wp-scratchpad-equations .katex{font-size:1.12em}.wp-scratchpad-equations p{font-size:13px!important;margin:3px 0!important}
+.wp-scratchpad-toolbar{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;margin:12px 0 16px}
+.wp-scratchpad-toolbar button{min-width:0;min-height:44px;padding:7px 5px;border:2px solid var(--wp-ink);border-radius:9px;background:var(--wp-paper);font-size:13px!important;font-weight:900;box-shadow:2px 2px 0 rgba(62,53,64,.15)}
+.wp-scratchpad-toolbar button[aria-pressed=true]{background:var(--wp-yellow)}
+.wp-scratchpad-toolbar button[data-wp-ink=clear]{background:var(--wp-pink-soft)}
+.wp-scratchpad-toolbar button:hover:not(:disabled){background:var(--wp-teal-soft)}
+.wp-scratchpad-toolbar button:active:not(:disabled){transform:translate(1px,1px);box-shadow:none}
+.wp-scratchpad-paper-wrap{display:flex;align-items:center;justify-content:center;width:100%;min-width:0;padding:12px;background:var(--wp-teal-soft);border-radius:12px;overflow:hidden}
+.wp-scratchpad-canvas{display:block;flex:none;max-width:100%;width:min(100%,450px);height:auto;aspect-ratio:3/4;border:0;outline:2px solid var(--wp-ink);border-radius:6px;background-color:var(--wp-paper);box-shadow:4px 4px 0 rgba(62,53,64,.12);touch-action:none;user-select:none;-webkit-user-select:none;cursor:crosshair}
+.wp-scratchpad-canvas[data-tool=erase]{cursor:cell}
+.wp-scratchpad-canvas.with-grid{background-image:linear-gradient(rgba(62,53,64,.12) 1px,transparent 1px),linear-gradient(90deg,rgba(62,53,64,.12) 1px,transparent 1px);background-size:var(--wp-ink-grid,20px) var(--wp-ink-grid,20px)}
+.wp-scratchpad-status{font-size:12px!important;font-weight:800;line-height:1.6;margin:12px 0 5px!important;overflow-wrap:anywhere}
+.wp-scratchpad-status[data-storage=memory]{padding:9px 11px;background:var(--wp-yellow-soft);border:2px solid var(--wp-ink);border-radius:9px}
+.wp-scratchpad-help{font-size:12px!important;line-height:1.6;color:var(--wp-muted);margin:5px 0 0!important}
+.wp-scratchpad-shade{position:fixed;inset:0;z-index:10039;background:rgba(62,53,64,.52)}
+.wp-scratchpad.wp-scratchpad-expanded{position:fixed;z-index:10040;inset:12px;margin:auto;width:min(1100px,calc(100vw - 24px));height:calc(100vh - 24px);height:calc(100dvh - 24px);max-height:none;display:flex;flex-direction:column;overflow:hidden;padding:18px;border:3px solid var(--wp-ink);box-shadow:8px 8px 0 rgba(62,53,64,.25)}
+.wp-scratchpad-expanded .wp-scratchpad-heading,.wp-scratchpad-expanded .wp-scratchpad-toolbar,.wp-scratchpad-expanded .wp-scratchpad-status,.wp-scratchpad-expanded .wp-scratchpad-help{flex:0 0 auto}
+.wp-scratchpad-expanded .wp-scratchpad-equations{flex:0 0 auto;max-height:22vh;max-height:22dvh;margin:6px 0 10px}
+.wp-scratchpad-expanded .wp-scratchpad-toolbar{margin:6px 0 12px}
+.wp-scratchpad-expanded .wp-scratchpad-paper-wrap{flex:1 1 auto;min-height:100px}
+.wp-scratchpad-expanded .wp-scratchpad-canvas{max-width:none;max-height:none}
+@media(max-width:460px){
+ .wp-scratchpad{padding:11px;margin-top:14px;border-radius:13px}
+ .wp-scratchpad-heading{gap:8px}.wp-scratchpad-heading h4{font-size:16px!important}
+ .wp-scratchpad-heading p{font-size:12px!important}.wp-scratchpad-heading [data-wp-ink=expand]{font-size:11px!important;padding:7px 9px}
+ .wp-scratchpad-toolbar{gap:6px}.wp-scratchpad-toolbar button{font-size:12px!important;padding:6px 3px}
+ .wp-scratchpad-paper-wrap{padding:9px}.wp-scratchpad-equations{padding:9px 10px}
+ .wp-scratchpad.wp-scratchpad-expanded{inset:6px;width:calc(100vw - 12px);height:calc(100vh - 12px);height:calc(100dvh - 12px);padding:11px}
+ .wp-scratchpad-expanded .wp-scratchpad-status{font-size:11px!important;margin-top:8px!important}
+ .wp-scratchpad-expanded .wp-scratchpad-help{font-size:11px!important}
+}

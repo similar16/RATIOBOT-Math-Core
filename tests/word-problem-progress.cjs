@@ -7,6 +7,10 @@ function draft(patch={}){return {runId:'wp-one',problemId:problem.id,routeId:rou
 
 const clean=P.cleanDraft(draft());
 assert.equal(clean.answersChecked,true);
+assert.equal(clean.scratchId,clean.runId,'Existing runs get a stable scratchpad identity');
+assert.equal(P.cleanDraft(draft({runId:'wp-revision',scratchId:'wp-original'})).scratchId,'wp-original');
+assert.equal(P.cleanDraft(draft({scratchId:'a'.repeat(140)})).scratchId.length,100);
+assert.equal(P.cleanDraft(draft({interactionVersion:3})).interactionVersion,3);
 assert.equal(clean.values['t:0:0'],'0.6x');
 assert.deepEqual(clean.derivationSources.rate,['whole','time']);
 assert.equal(clean.passed[5],true);
@@ -74,4 +78,57 @@ let bounded=P.normalized(many);assert.equal(Object.keys(bounded.drafts).length,1
 const more={records:Array.from({length:260},(_,i)=>({...completed.record,runId:'wp-many-'+i,at:new Date(Date.UTC(2026,10,16,0,i)).toISOString()}))};
 assert.equal(P.normalized(more).records.length,240);
 assert.equal(P.summary(completed.state).completed,1);assert.equal(P.summary(completed.state).independent,1);
-console.log('PASS word-problem progress: isolated account state, full drafts, typed gates, completion prerequisites, deduplication, conservative assistance flags and bounded cloud merges');
+
+// v3 inserts the scratchpad before solving; migrating never erases the student's existing answers.
+const legacyV2=draft({interactionVersion:2,step:6,finished:false,sourceLocation:'A01',firstPass:{0:true,1:false,2:true,3:true,4:true,5:false,6:true},attempts:{1:2,5:3,6:9},hints:{5:1,6:7},customModel:'原设元说明',discussion:'原讨论'});
+const untouched=structuredClone(legacyV2),migrated=P.migrateDraft(legacyV2);
+assert.equal(migrated.interactionVersion,3);assert.equal(migrated.step,5);assert.equal(migrated.finished,false);
+assert.deepEqual(migrated.passed,{0:true,1:true,2:true,3:true,4:true});
+assert.deepEqual(migrated.values,legacyV2.values);assert.equal(migrated.answersChecked,true);
+assert.deepEqual(migrated.derived,legacyV2.derived);assert.deepEqual(migrated.derivationSources,legacyV2.derivationSources);
+assert.deepEqual(migrated.seen,legacyV2.seen);assert.deepEqual(migrated.closure,legacyV2.closure);
+assert.equal(migrated.sourceLocation,'A01');assert.equal(migrated.customModel,'原设元说明');assert.equal(migrated.discussion,'原讨论');
+assert.equal(migrated.runId,legacyV2.runId);assert.equal(migrated.scratchId,legacyV2.runId);assert.equal(Date.parse(migrated.updatedAt),Date.parse(legacyV2.updatedAt));
+assert.equal(migrated.firstPass[5],undefined);assert.equal(migrated.firstPass[6],false);assert.equal(migrated.firstPass[1],false);
+assert.deepEqual(migrated.attempts,{1:2,6:3});assert.deepEqual(migrated.hints,{6:1});
+assert.deepEqual(P.migrateDraft(migrated),migrated,'Migration is idempotent');assert.deepEqual(legacyV2,untouched,'Migration does not mutate saved data');
+assert.equal(P.migrateDraft(draft({interactionVersion:2,step:3})).step,3);
+const migratedFinished=P.migrateDraft(draft({interactionVersion:2,finished:true,firstPass:{0:true,5:true,6:false},attempts:{5:2,6:8}}));
+assert.equal(migratedFinished.finished,true);assert.equal(migratedFinished.step,6);assert.equal(migratedFinished.passed[5],true);assert.equal(migratedFinished.passed[6],true);
+assert.deepEqual(migratedFinished.firstPass,{0:true,6:true});assert.deepEqual(migratedFinished.attempts,{6:2});
+for(const version of [undefined,1]){
+ const oldStyle=draft({interactionVersion:version,firstPass:{0:true,5:false,6:true}}),same=P.migrateDraft(oldStyle);
+ assert.equal(same.interactionVersion,version||0);assert.equal(same.step,6);assert.equal(same.runId,oldStyle.runId);assert.deepEqual(same.firstPass,oldStyle.firstPass);
+}
+assert.equal(P.migrateDraft(null),null);
+
+// New completion still requires all seven gates, but scratch use and reflection text are not graded.
+const sourceBase=path.resolve(process.env.SITE_DIR||'site','word-problems');
+const F=require(path.join(sourceBase,'reading.js')),R=require(path.join(sourceBase,'relations.js'));
+const authored=require(path.join(sourceBase,'data-l7-l8.js')).find(p=>p.id==='L7-P1'),authoredRoute=authored.routes[0];
+const currentValues=F.canonical(authored),relationRows=R.canonical(R.build(authored,authoredRoute));
+for(const kind of ['sum','product'])relationRows[kind].forEach((row,i)=>row.forEach((value,j)=>{currentValues['r:'+kind+':'+i+':'+j]=value;}));
+for(const [i,a]of (authoredRoute.answers||[]).entries())currentValues['a:'+i]=a.expr;
+const newDraft=draft({interactionVersion:3,problemId:authored.id,routeId:authoredRoute.id,runId:'wp-new-flow',scratchId:'wp-original-ink',values:currentValues,seen:authored.facts.map(f=>f.id),derived:Object.fromEntries((authoredRoute.derivations||[]).map(d=>[d.id,true])),reflection:'',firstPass:{0:true,1:true,2:true,3:true,4:true,5:false,6:true}});
+const newComplete=P.complete(null,newDraft,authored,authoredRoute);
+assert.equal(newComplete.record.total,6);assert.equal(newComplete.record.first,6);assert.equal(newComplete.record.accuracy,100);
+assert.equal(newComplete.record.reflection,'');assert.equal(newComplete.record.scratchId,'wp-original-ink');
+const solveWrong=P.complete(null,{...newDraft,firstPass:{...newDraft.firstPass,5:true,6:false}},authored,authoredRoute);
+assert.equal(solveWrong.record.accuracy,83);assert.equal(solveWrong.record.total,6);
+assert.throws(()=>P.complete(null,{...newDraft,passed:{...newDraft.passed,5:false}},authored,authoredRoute),/七个分析步骤/);
+const noInk=P.cleanDraft({...newDraft,scratchpad:{strokes:[{points:[[0,0],[1,1]]}]},strokes:[1],image:'data:image/png;base64,private'});
+assert(!Object.hasOwn(noInk,'scratchpad'));assert(!Object.hasOwn(noInk,'strokes'));assert(!Object.hasOwn(noInk,'image'));
+assert.equal(P.saveDraft(null,authored.id,{...newDraft,runId:'wp-revised'}).drafts[authored.id].scratchId,'wp-original-ink');
+
+// Historical records keep their original accuracy denominator and step numbering.
+const historical={...completed.record,interactionVersion:2,firstPass:{0:true,1:true,2:true,3:true,4:true,5:false,6:true}};
+const preserved=P.normalized({records:[historical]}).records[0];
+assert.equal(preserved.interactionVersion,2);assert.equal(preserved.accuracy,83);assert.deepEqual(preserved.firstPass,historical.firstPass);
+const oldCloud=draft({interactionVersion:2,runId:'wp-shared-version',updatedAt:'2026-11-16T01:10:00Z',firstPass:{0:true,5:false,6:false},attempts:{5:4,6:20},hints:{5:1,6:9}});
+const newLocal=draft({interactionVersion:3,runId:'wp-shared-version',updatedAt:'2026-11-16T01:15:00Z',firstPass:{0:true,5:true,6:true},attempts:{6:1},hints:{6:0},scratchId:'wp-shared-ink'});
+const mixed=P.merge({drafts:{[problem.id]:oldCloud}},{drafts:{[problem.id]:newLocal}}).drafts[problem.id];
+assert.equal(mixed.interactionVersion,3);assert.equal(mixed.firstPass[6],false);assert.equal(mixed.attempts[6],4);assert.equal(mixed.hints[6],1);assert.equal(mixed.scratchId,'wp-shared-ink');
+assert.equal(mixed.attempts[5],undefined,'Old solve attempts must not be counted as scratchpad attempts');
+const mixedRecords=P.merge({records:[{...historical,runId:'wp-shared-record',at:'2026-11-16T01:10:00Z'}]},{records:[{...newComplete.record,runId:'wp-shared-record',routeId:historical.routeId,problemId:historical.problemId,at:'2026-11-16T01:15:00Z'}]}).records[0];
+assert.equal(mixedRecords.interactionVersion,3);assert.equal(mixedRecords.firstPass[6],false);assert.equal(mixedRecords.accuracy,83);
+console.log('PASS word-problem progress: isolated account state, full drafts, typed gates, completion prerequisites, deduplication, conservative assistance flags, bounded cloud merges, stable scratch identities and v3 step migration');
