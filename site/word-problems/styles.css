@@ -4,7 +4,7 @@
   --wp-teal:var(--teal,#35B8C8);--wp-teal-soft:var(--teal-soft,#CDEFF1);--wp-coral:var(--coral,#F0645D);--wp-yellow:var(--yellow,#F7D56B);
   --wp-pink-soft:#FFE0DC;--wp-yellow-soft:#FFF0B8;--wp-line:var(--ink,#3E3540);
   --wp-shadow:var(--shadow,7px 7px 0 rgba(62,53,64,.16));--wp-shadow-small:var(--shadow-small,4px 4px 0 rgba(62,53,64,.14));
-  min-width:0;overflow-x:clip;padding-right:7px;color:var(--wp-ink);line-height:1.7;font-size:16px
+  min-width:0;overflow-x:clip;padding-right:7px;padding-left:7px;color:var(--wp-ink);line-height:1.7;font-size:16px
 }
 #wordProblems button,#wordProblems input,#wordProblems textarea{font:inherit;color:inherit}
 #wordProblems button{cursor:pointer;touch-action:manipulation}
@@ -221,8 +221,23 @@ input.wp-fact-number.is-correct,.wp-fact-number.is-correct input{background:var(
 .wp-completion h4{margin:0}.wp-completion p{font-size:14px!important}
 .wp-solution{margin-top:25px;padding-top:17px;border-top:2px dashed rgba(62,53,64,.3);font-size:13px}.wp-solution h4{margin:20px 0 10px}.wp-solution>p{font-size:14px!important}
 .wp-solution .wp-math-line{padding:9px 12px;background:var(--bg,#FFF8ED);border:1px solid rgba(62,53,64,.22);margin:7px 0;border-radius:8px}
-.wp-feedback{min-height:0;font-size:14px;font-weight:700;border-radius:11px;margin-top:19px;overflow-wrap:anywhere}.wp-feedback:not(:empty){padding:13px 15px;border:2px solid var(--wp-ink);box-shadow:3px 3px 0 rgba(62,53,64,.12)}
-.wp-feedback.error{background:var(--wp-pink-soft)}.wp-feedback.source,.wp-feedback.hint{background:var(--wp-yellow-soft)}.wp-feedback.success{background:var(--wp-teal-soft)}
+.wp-feedback{min-height:0;font-size:15px;font-weight:700;border-radius:12px;margin-top:20px;overflow-wrap:anywhere}
+.wp-feedback:not(:empty){display:flex;align-items:flex-start;gap:12px;padding:17px 18px;border:3px solid var(--wp-ink);box-shadow:4px 4px 0 rgba(62,53,64,.18)}
+.wp-feedback-icon{display:grid;place-items:center;flex:0 0 32px;width:32px;height:32px;border:2px solid var(--wp-ink);border-radius:50%;background:var(--wp-paper);font-size:24px;font-weight:1000;line-height:1}
+.wp-feedback-title{display:block;font-size:20px;font-weight:1000;line-height:1.5}
+#wordProblems .wp-feedback p{margin:4px 0 0}
+.wp-feedback.error{background:var(--wp-pink-soft);border-color:#A62925}.wp-feedback.error .wp-feedback-icon{background:#A62925;color:#fff;border-color:#A62925}
+.wp-feedback.source,.wp-feedback.hint,.wp-feedback.recorded{background:var(--wp-yellow-soft)}
+.wp-feedback.success{background:var(--wp-teal-soft);border-color:#176553}.wp-feedback.success .wp-feedback-icon{background:#176553;color:#fff;border-color:#176553}
+.wp-answer-input-line{display:flex;align-items:center;gap:10px;min-width:0}
+.wp-answer-input-line .wp-editor-host{flex:1;min-width:0}
+.wp-answer-prefix{flex:none;white-space:nowrap;font-size:22px;font-weight:900}
+.wp-table-note{padding:12px 14px;border-left:4px solid var(--wp-teal);background:var(--wp-teal-soft);border-radius:0 9px 9px 0}
+.wp-original-figure{margin:12px 0}
+.wp-original-figure img{display:block;width:100%;height:auto;border:2px solid var(--wp-ink);border-radius:9px;background:#fff}
+.wp-original-figure figcaption{font-size:12px;line-height:1.65;margin-top:8px;color:var(--wp-muted)}
+.wp-original-figure a{text-decoration:underline;text-underline-offset:3px}
+.wp-image-fallback{padding:12px;border:2px solid var(--wp-ink);border-radius:9px;background:var(--wp-yellow-soft)}
 .wp-hint-text{font-size:13px!important;color:var(--wp-muted)}
 
 /* Buttons and keypad follow the original primary/ghost controls. */
@@ -273,7 +288,7 @@ input.wp-fact-number.is-correct,.wp-fact-number.is-correct input{background:var(
   .wp-fact-list[open]{max-height:280px;overflow:auto}.wp-heading{gap:13px;flex-wrap:wrap}.wp-heading .ghost{font-size:13px}.wp-breadcrumbs{gap:9px}
 }
 @media(max-width:460px){
-  #wordProblems{padding-right:5px}#wordProblems h2{font-size:28px}
+  #wordProblems{padding-right:5px;padding-left:5px}#wordProblems h2{font-size:28px}
   .wp-catalog-grid{grid-template-columns:1fr}.wp-problem-card{padding:18px}.wp-intro{padding:18px}.wp-example-chains>span{min-width:0;width:100%}
   .wp-book-tabs{gap:10px}.wp-book-tabs button{flex:1;padding:11px 10px;font-size:14px!important}
   .wp-header-actions{gap:10px}.wp-header-actions button{font-size:12px!important;min-height:44px;padding:9px 12px}

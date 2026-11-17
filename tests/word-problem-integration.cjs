@@ -148,7 +148,7 @@ function fixture(){
  assert.deepEqual([...completedHost.querySelectorAll('[data-wp-step]')].map(el=>el.dataset.wpStep),['0','1','2','3','5','6'],'The separate equation page is removed from navigation');
  for(const step of [0,1,2,3]){
   assert.equal(completedHost.querySelector('[aria-current="step"]').dataset.wpStep,String(step));
-  if(step===3){assert(completedHost.querySelector('.wp-closure-choices'));assert(completedHost.querySelector('.wp-equation-entry'),'Equation entry follows the relation choices on the same page');}
+  if(step===3){assert(!completedHost.querySelector('.wp-closure-choices'));assert(completedHost.querySelector('.wp-equation-entry'),'Equation entry follows the checked table on the same page without another condition-selection gate');}
   completedHost.querySelector('[data-wp-example]').click();
   completedHost.querySelector('[data-wp-check]').click();
   const next=completedHost.querySelector('[data-wp-next]');assert(next&&!next.disabled,'Example analysis passes modeling stage '+step);next.click();
