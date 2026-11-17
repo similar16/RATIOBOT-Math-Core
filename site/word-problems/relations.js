@@ -329,10 +329,10 @@
 
  function rows(raw){return raw.map((triple,i)=>{if(!Array.isArray(triple)||triple.length!==3||triple.some(s=>typeof s!=='string'||!s.trim()))throw Error('Invalid authored relation at '+i);return {terms:triple.slice(0,2),result:triple[2]};});}
  function build(problem,route){
-  const key=String(problem?.id||'')+'/'+String(route?.id||''),raw=catalog[key]||catalog[problem?.id];
+  const key=String(problem?.id||'')+'/'+String(route?.id||''),raw=route?.relationTriples||problem?.relationTriples||catalog[key]||catalog[problem?.id];
   if(!raw)throw Error('缺少数量关系配置：'+key);
-  const sum=rows(raw.sum),product=rows(raw.product),labels=[...new Set([...sum,...product].flatMap(r=>[...r.terms,r.result]))];
-  return {id:key,sum,product,tokens:labels.map(label=>({id:label,label})),count:sum.length+product.length,notes:[...raw.notes],empty:{sum:sum.length?'':'本题没有需要拼接的加和等式。',product:product.length?'':'本题没有需要拼接的乘积等式。'}};
+  const sum=rows(raw.sum||[]),product=rows(raw.product||[]),labels=[...new Set([...sum,...product].flatMap(r=>[...r.terms,r.result]))];
+  return {id:key,sum,product,tokens:labels.map(label=>({id:label,label})),count:sum.length+product.length,notes:[...(raw.notes||[])],empty:{sum:sum.length?'':'本题没有需要拼接的加和等式。',product:product.length?'':'本题没有需要拼接的乘积等式。'}};
  }
  function canonical(model){return {sum:model.sum.map(r=>[...r.terms,r.result]),product:model.product.map(r=>[...r.terms,r.result])};}
  function signature(row){return JSON.stringify([row.slice(0,2).sort(),row[2]]);}

@@ -5,7 +5,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { JSDOM } = require('jsdom');
 const base = path.resolve(process.env.SITE_DIR || 'site', 'word-problems');
-const files = ['engine.js','progress.js','data-l7-l8.js','data-l9-review.js','data-textbook-intro.js','data-textbook-applications.js','data-textbook-review.js','textbook-index.js','supplement-index.js','reading.js','relations.js','relation-builder.js','scratchpad.js','diagrams.js','app.js'];
+const files = ['engine.js','progress.js','data-l7-l8.js','data-l9-review.js','data-textbook-intro.js','data-textbook-applications.js','data-textbook-review.js','data-pep-foundations.js','data-pep-applications.js','data-pep-review.js','catalog.js','textbook-index.js','supplement-index.js','reading.js','relations.js','relation-builder.js','scratchpad.js','diagrams.js','app.js'];
 const sources = files.map(file => ({ file, text:fs.readFileSync(path.join(base,file),'utf8') }));
 const clone = v => JSON.parse(JSON.stringify(v));
 const counts = { routes:0, sourceSteps:0, writableCells:0, equations:0, completed:0 };
@@ -134,7 +134,7 @@ function fixture() {
 // Every authored normal, branching, arithmetic, open and boundary route reaches its appropriate saved record.
 const all=fixture();
 const data=all.w.RatioWordProblemsData;
-assert.equal(data.length,106);
+assert.equal(data.length,150);
 for(const problem of data)for(const route of problem.routes)all.canonicalRoute(problem,route);
 assert.equal(counts.routes,data.reduce((sum,p)=>sum+p.routes.length,0));
 assert.equal(counts.completed,counts.routes);
@@ -337,12 +337,12 @@ teacher.close();
 
 // Textbook and guide catalogs retain source context while sharing repeated-question progress.
 const catalogs=fixture();catalogs.app.open();
-assert.equal(catalogs.host.querySelectorAll('[data-wp-problem]').length,81,'80 textbook positions and one explicit reference');
+assert.equal(catalogs.host.querySelectorAll('[data-wp-problem]').length,150,'One card per existing and new task, grouped by topic');
 catalogs.click('[data-wp-location="I00"]');
 assert.match(catalogs.$('.wp-citation').textContent,/105页.*章引入/);
 assert.equal(catalogs.read().drafts['G10-01'].sourceLocation,'I00');
 catalogs.click('[data-wp-catalog]');catalogs.click('[data-wp-book="guide"]');
-assert.equal(catalogs.host.querySelectorAll('[data-wp-problem]').length,27,'Supplement excludes the 28 textbook tasks');
+assert.equal(catalogs.host.querySelectorAll('[data-wp-problem]').length,71,'Supplement merges 27 existing and 44 PEP representative tasks');
 assert(!catalogs.host.textContent.includes('教学设计与指导'),'The learner catalog uses the requested supplement name');
 const textbookIds=new Set(catalogs.w.RatioWordProblemTextbookIndex.items.map(x=>x.problemId));
 for(const button of catalogs.host.querySelectorAll('[data-wp-problem]'))assert(!textbookIds.has(button.dataset.wpProblem),'No duplicate textbook exercise in supplements');
@@ -350,10 +350,30 @@ catalogs.click('[data-wp-problem="L7-P2"]');
 assert.match(catalogs.$('.wp-citation').textContent,/补充练习/,'Supplement entry has the learner-facing source label');
 assert(!catalogs.host.textContent.includes('教学设计与指导'));
 const draftField=catalogs.$('[data-wp-fact]');catalogs.textInput('[data-wp-fact="'+draftField.dataset.wpFact+'"]','12');
-catalogs.click('[data-wp-back]');assert.equal(catalogs.host.querySelectorAll('[data-wp-problem]').length,27,'Back retains the current source catalog');
+catalogs.click('[data-wp-back]');assert.equal(catalogs.host.querySelectorAll('[data-wp-problem]').length,71,'Back retains the current source catalog');
 catalogs.click('[data-wp-problem="L7-P2"]');assert.equal(catalogs.$('[data-wp-fact="'+draftField.dataset.wpFact+'"]').value,'12','Back saves the current reading draft');
 catalogs.click('[data-wp-back]');catalogs.click('[data-wp-back]');assert.equal(catalogs.redirects.at(-1),'home');
 catalogs.close();
+
+// Topic navigation persists on return; original source tables and known parameters remain visible.
+const topics=fixture();topics.app.open();
+assert.equal(topics.host.querySelectorAll('[data-wp-category]').length,13);
+assert(!topics.host.querySelector('[aria-label="选择课时"]'));
+topics.click('[data-wp-book="guide"]');topics.click('[data-wp-filter="fees"]');
+assert.equal(topics.host.querySelectorAll('[data-wp-category]').length,1);
+topics.click('[data-wp-problem="PEP-P054"]');topics.click('[data-wp-back]');
+assert.equal(topics.$('[data-wp-book="guide"]').getAttribute('aria-pressed'),'true');
+assert.equal(topics.$('[data-wp-filter="fees"]').getAttribute('aria-pressed'),'true');
+topics.click('[data-wp-filter="data"]');topics.click('[data-wp-problem="PEP-P049"]');
+assert.equal(topics.host.querySelectorAll('.wp-source-table tbody tr').length,8,'All original basketball rows render');
+assert.match(topics.$('.wp-source-table').textContent,/前进|钢铁/);
+topics.app.start('PEP-P068',true);topics.confirmFacts();
+assert.match(topics.$('.wp-variable-definition').textContent,/已知参数/);
+assert.match(topics.$('.wp-context-title').textContent,/实验与参数建模/);
+topics.app.start('S10',true);
+assert.match(topics.$('.wp-source-locations').textContent,/合并题目与出处/);
+assert.match(topics.host.textContent,/人教版，110页/);
+topics.close();
 
 // Reading is now a cloze task, and relations must be assembled before the table gate opens.
 const interactive=fixture(),interactiveProblem=interactive.w.RatioWordProblemsData.find(p=>p.id==='L7-P1'),interactiveRoute=interactiveProblem.routes[0];
