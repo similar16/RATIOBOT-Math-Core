@@ -309,7 +309,7 @@ const index={
     },
     {
       "problemId": "G9-08",
-      "title": "三个连续奇数的积",
+      "title": "三个连续奇数相加",
       "textbookLocations": [
         {
           "id": "A31",

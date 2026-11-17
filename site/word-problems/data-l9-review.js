@@ -733,7 +733,9 @@ const data=[
             "label": "左上角多算的次数",
             "expr": "3-1",
             "result": "2",
-            "sources": ["black"],
+            "sources": [
+              "black"
+            ],
             "explain": "三条线共同经过同一颗左上角棋子。分条数了3次，实际应计1次，所以扣除3−1=2次。"
           }
         ],
@@ -1022,7 +1024,7 @@ const data=[
       },
       {
         "id": "formula",
-        "text": "梯形面积=(上底+下底)×高÷2。",
+        "text": "梯形面积=(上底+下底)×高×1/2。",
         "kind": "property"
       }
     ],
@@ -1077,7 +1079,7 @@ const data=[
                   "given": true
                 },
                 {
-                  "expr": "(12+x)*8/2",
+                  "expr": "(12+x)*8*(1/2)",
                   "sources": [
                     "top",
                     "unknown",
@@ -1094,7 +1096,7 @@ const data=[
             "两底和=上底+下底"
           ],
           "multiply": [
-            "面积=两底和×高÷2"
+            "两底和×高×1/2=面积"
           ]
         },
         "closure": {
@@ -1107,7 +1109,7 @@ const data=[
         "equations": [
           {
             "label": "面积相等",
-            "left": "(12+x)*8/2",
+            "left": "(12+x)*8*(1/2)",
             "right": "120"
           }
         ],
@@ -1119,13 +1121,16 @@ const data=[
           }
         ],
         "steps": [
-          "12+x=120*2/8",
-          "x=120*2/8-12=18"
+          "(12+x)*8*(1/2)=120",
+          "8*(1/2)=4",
+          "(12+x)*4=120",
+          "12+x=120/4=30",
+          "x=30-12=18"
         ],
         "checks": [
           {
             "text": "代回面积",
-            "expr": "(12+18)*8/2",
+            "expr": "(12+18)*8*(1/2)",
             "result": "120"
           }
         ],
@@ -1140,7 +1145,8 @@ const data=[
     ],
     "notices": [
       "原书没有给厘米等具体单位，这里不擅自补写。"
-    ]
+    ],
+    "contentRevision": 1
   },
   {
     "id": "G9-07",
@@ -1332,19 +1338,22 @@ const data=[
     "diagramData": {
       "initial": 8,
       "shared": 2,
-      "increment": 6
+      "increment": 6,
+      "imageUrl": "https://thumb.zyjl.cn/pic18/2026-09-01/e3cd78a9b7e73437be3a8b1fc8a9f0b2.jpg?x-oss-process=image%2Fcrop%2Cx_247%2Cy_1659%2Cw_872%2Ch_197",
+      "sourceUrl": "https://www.zyjl.cn/ans_list_17weL4Q1.html",
+      "sourceLabel": "苏科版配套《补充习题》64页同题配图"
     }
   },
   {
     "id": "G9-08",
-    "title": "三个连续奇数的积",
+    "title": "三个连续奇数相加",
     "group": "第9课时",
     "source": "《教学设计与指导》183页 · 课后作业1",
     "kind": "linear",
-    "stem": "三个连续奇数的和为15，求这三个奇数的积。",
+    "stem": "三个连续奇数相加得15，求这三个奇数。",
     "tags": [
       "连续数",
-      "所求量检验"
+      "三数相加"
     ],
     "facts": [
       {
@@ -1359,7 +1368,7 @@ const data=[
       },
       {
         "id": "question",
-        "text": "最后要求的是三个奇数的积，不只是中间奇数。",
+        "text": "要求这三个奇数，求出中间奇数后，还需求出前一个与后一个奇数。",
         "kind": "given"
       }
     ],
@@ -1431,7 +1440,7 @@ const data=[
             "前一个+中间+后一个=15"
           ],
           "multiply": [
-            "求出三个数以后，再计算它们的积"
+            "奇数个数×中间奇数=三数之和"
           ]
         },
         "closure": {
@@ -1445,46 +1454,64 @@ const data=[
           {
             "label": "三个奇数的和",
             "left": "(x-2)+x+(x+2)",
-            "right": "15"
+            "right": "15",
+            "answerIndex": 1
           }
         ],
         "answers": [
+          {
+            "label": "前一个奇数",
+            "expr": "3",
+            "unit": ""
+          },
           {
             "label": "中间奇数",
             "expr": "5",
             "unit": ""
           },
           {
-            "label": "三个奇数的积",
-            "expr": "105",
+            "label": "后一个奇数",
+            "expr": "7",
             "unit": ""
           }
         ],
         "steps": [
+          "(x-2)+x+(x+2)=15",
           "3*x=15",
           "x=15/3=5",
-          "(5-2)*5*(5+2)=3*5*7=105"
+          "5-2=3",
+          "5+2=7"
         ],
         "checks": [
           {
-            "text": "检验三数之和",
-            "expr": "(5-2)+5+(5+2)",
+            "text": "检验三个奇数相加",
+            "expr": "3+5+7",
             "result": "15"
           },
           {
-            "text": "计算最终所求积",
-            "expr": "(5-2)*5*(5+2)",
-            "result": "105"
+            "text": "检验相邻两个奇数相差2",
+            "expr": "5-3",
+            "result": "2"
+          },
+          {
+            "text": "检验后两个奇数相差2",
+            "expr": "7-5",
+            "result": "2"
           }
         ],
-        "conclusion": "三个奇数为3、5、7，它们的积为105。",
+        "conclusion": "三个奇数为3、5、7，三数相加得15，相邻两个数相差2。",
         "verdict": {
           "correct": "valid",
           "prompt": "怎样判断这个结果或结论？",
-          "explain": "三个奇数为3、5、7，它们的积为105。"
+          "explain": "三个奇数为3、5、7，三数相加得15，相邻两个数相差2。"
         },
         "variation": "如果设最小奇数为x，其余两个数怎样表示？"
       }
+    ],
+    "contentRevision": 1,
+    "originalStem": "三个连续奇数的和为15，求这三个奇数的积。",
+    "notices": [
+      "保留原题“和为15”的条件，本题改为求三个奇数，练习用三数相加列方程。"
     ]
   },
   {
@@ -1935,7 +1962,13 @@ const data=[
         },
         "variation": "“比上一层增加1倍”和“增加1盏”有何区别？请写出对应关系。"
       }
-    ]
+    ],
+    "diagram": "pagoda",
+    "diagramData": {
+      "layers": 7,
+      "ratio": 2,
+      "total": 381
+    }
   },
   {
     "id": "G10-01",

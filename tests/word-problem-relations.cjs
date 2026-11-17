@@ -86,7 +86,7 @@ const cylinder=model('TB-A32');
 assert(cylinder.product.some(r=>r.terms[0]==='底面半径'&&r.terms[1]==='底面半径'));
 assert(cylinder.product.some(r=>r.terms.includes('底面积')&&r.terms.includes('圆柱高')&&r.result==='容积'));
 const mixture=model('TB-R09');assert.equal(mixture.sum.length,2,'Three-component totals need two binary sums');
-const calendar=model('TB-R01');assert(calendar.sum.some(r=>r.result==='十字左右日期和')&&calendar.sum.some(r=>r.result==='十字上下日期和'));
+const calendar=model('TB-R01');assert.equal(calendar.sum.length,2);assert.equal(calendar.product.length,2);assert(calendar.sum.some(r=>r.result==='左右日期和')&&calendar.sum.some(r=>r.result==='上下日期和'));
 assert.throws(()=>R.build({id:'missing'},{id:'missing'}),/缺少数量关系配置/,'Unmapped content must not silently invent a relation');
 console.log('PASS quantity relationship cards:',JSON.stringify(counts));
 console.log('Verified all routes, reversible left terms, arbitrary row order, fixed result roles, reusable quantities, absent relations and multi-step sums/products.');

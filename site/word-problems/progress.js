@@ -17,7 +17,7 @@
  function cleanDraft(d,update=true){
   if(!d||typeof d!=='object'||Array.isArray(d))return null;
   const hints=counts(d.hints),example=!!d.example||d.status==='example';
-  return {schema:1,interactionVersion:integer(d.interactionVersion,4),runId:text(d.runId,100),scratchId:text(d.scratchId||d.runId,100),problemId:text(d.problemId,50),routeId:text(d.routeId,50),sourceLocation:text(d.sourceLocation,50),step:integer(d.step,6),
+  return {schema:1,interactionVersion:integer(d.interactionVersion,4),contentRevision:integer(d.contentRevision),runId:text(d.runId,100),scratchId:text(d.scratchId||d.runId,100),problemId:text(d.problemId,50),routeId:text(d.routeId,50),sourceLocation:text(d.sourceLocation,50),step:integer(d.step,6),
    values:values(d.values),passed:flags(d.passed),attempts:counts(d.attempts),firstPass:flags(d.firstPass),hints,
    seen:list(d.seen,60),closure:list(d.closure,30),conditionFound:list(d.conditionFound,80),conditionUsed:list(d.conditionUsed,80),
    derivationSources:Object.fromEntries(entries(d.derivationSources,60).map(([k,v])=>[k,list(v,20)])),
@@ -86,6 +86,7 @@
    attempts:maxCounts(a.attempts,b.attempts),hints:maxCounts(a.hints,b.hints)};
  }
  function mergeDraft(a,b){
+  if(a.contentRevision!==b.contentRevision)return a.contentRevision>b.contentRevision?a:b;
   if(a.runId!==b.runId||a.routeId!==b.routeId)return String(b.updatedAt||'')>=String(a.updatedAt||'')?b:a;
   if(a.interactionVersion>=4&&b.interactionVersion<4)b={...b,conditionFound:a.conditionFound,conditionUsed:a.conditionUsed};
   if(b.interactionVersion>=4&&a.interactionVersion<4)a={...a,conditionFound:b.conditionFound,conditionUsed:b.conditionUsed};
@@ -122,6 +123,7 @@
  function complete(value,draft,problem,route){
   const s=normalized(value),d=cleanDraft(draft);
   if(!d||!problem||!route||d.problemId!==problem.id||d.routeId!==route.id||!/^wp-[\w-]+$/.test(d.runId))throw Error('分析记录不完整，请返回当前题目重试。');
+  if(d.contentRevision<integer(problem.contentRevision))throw Error('本题内容已更新，请重新分析后再保存。');
   if(!Array.from({length:7},(_,i)=>d.passed[i]===true).every(Boolean))throw Error('请依次完成数量、列式、答案与检验，再保存完成记录。');
   if((route.derivations||[]).some(x=>d.derived[x.id]!==true))throw Error('数据来源推导尚未全部核对，请返回检查。');
   if((route.answers||[]).length&&!d.answersChecked)throw Error('求解结果尚未核对，请先完成求解与检验。');

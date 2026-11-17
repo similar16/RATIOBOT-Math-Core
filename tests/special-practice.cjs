@@ -44,3 +44,5 @@ console.log('PASS 4500 canonical answers, fraction simplification, pi coefficien
 })().catch(e=>{console.error(e);process.exitCode=1;});
 
 assert.ok(E.linearEqual('b+3a','3a+b'));assert.ok(!E.linearEqual('a+b+b','a+2b'));
+
+assert.doesNotMatch(fs.readFileSync(path.join(root,'special-practice.js'),'utf8'),/data-word-problems|B\.go\(['"]wordProblems['"]\)/,'Application problems have a separate entry, not a special-practice card');

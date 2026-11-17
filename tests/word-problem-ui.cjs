@@ -107,7 +107,7 @@ function fixture() {
    if(cell.expr&&!cell.given){setInput('t:'+ri+':'+ci,cell.expr);counts.writableCells++;}
   }));
   fillRelations(problem,route);checkAndNext(2,problem.id+'/'+route.id+' table');
-  if(!manual)for(const id of route.closure.sources){const c=[...host.querySelectorAll('[data-wp-closure]')].find(x=>x.dataset.wpClosure===id);checkBox(c);}
+  assert(!$('[data-wp-closure]')&&!$('.wp-closure-choices'),'Modeling has no duplicate condition-selection gate');
   if(manual)textInput('[data-wp-discussion]','需要检查方程的适用范围、题目是否给出充分条件，以及所求数量的实际取值要求。');
   else (route.equations||[]).forEach((equation,i)=>{setInput('e:'+i,equation.left+'='+equation.right);counts.equations++;});
   checkAndNext(3,problem.id+'/'+route.id+' condition and equation together');
@@ -193,7 +193,6 @@ assert.match(saleCell.querySelector('.wp-cell-expression').textContent,/96.*x/,'
 assert.match(saleCell.querySelector('.wp-source').textContent,/96/,'Its source is the given profit');
 assert.match(saleCell.querySelector('.wp-source-preview').textContent,/进价.*利润|盈利96元/);
 assert.match(alternative.$('.wp-stage').textContent,/售价还应由进价乘1.5得到标价/,'The selected alternative provides its own independent closure hint');
-for(const id of ['discount'])alternative.checkBox(alternative.$('[data-wp-closure="'+id+'"]'));
 alternative.setInput('e:0','(96+x)-x=96');alternative.click('[data-wp-check]');
 assert(alternative.$('[data-wp-next]').disabled,'An identity assembled from an alternative cannot determine the unknown');
 alternative.setInput('e:0','');alternative.click('[data-wp-take="0:2"]');
@@ -201,7 +200,7 @@ assert.match(alternative.$('[data-wp-input="e:0"]').value,/96.*x/,'Taking a tabl
 alternative.setInput('e:0','96+x=1.5*x*0.8');alternative.checkAndNext(3,'Alternative closure and additive equation');
 alternative.completeScratch('Alternative selling price',jacketRoute);alternative.fillVerification(jacketRoute);alternative.click('[data-wp-check]');
 assert(alternative.$('.wp-completion'));assert.equal(alternative.read().records[0].values['t:0:2'],'96+x');
-assert.deepEqual(clone(alternative.read().records[0].closure),['discount']);alternative.close();
+assert(alternative.read().records[0].conditionUsed.includes('discount'),'The equation uses its independent condition without another checkbox');alternative.close();
 
 // Mixed representations retain valid equations made from the unchanged cells.
 const mixed=fixture(),pots=mixed.w.RatioWordProblemsData.find(p=>p.id==='L7-P1'),potsRoute=pots.routes[0];
@@ -209,7 +208,6 @@ mixed.app.start(pots.id,true);mixed.confirmFacts();mixed.fillDerivations(potsRou
 potsRoute.table.rows.forEach((row,ri)=>row.cells.forEach((cell,ci)=>{
  if(cell.expr&&!cell.given)mixed.setInput('t:'+ri+':'+ci,ri===1&&ci===1?'(10.5-0.6*x)/0.15':cell.expr);
 }));mixed.fillRelations(pots,potsRoute);mixed.checkAndNext(2,'A cup count expressed from clay');
-for(const id of potsRoute.closure.sources)mixed.checkBox(mixed.$('[data-wp-closure="'+id+'"]'));
 mixed.setInput('e:0',potsRoute.equations[0].left+'='+potsRoute.equations[0].right);
 mixed.click('[data-wp-check]');mixed.expectPassed(3,'Unchanged clay cells still support the original independent total');mixed.close();
 
@@ -219,7 +217,6 @@ paired.app.start(scores.id,true);paired.confirmFacts();paired.fillDerivations(sc
 scoreRoute.table.rows.forEach((row,ri)=>row.cells.forEach((cell,ci)=>{
  if(cell.expr&&!cell.given)paired.setInput('t:'+ri+':'+ci,ri===0&&ci===4?'76':cell.expr);
 }));paired.fillRelations(scores,scoreRoute);paired.checkAndNext(2,'One given total and one calculated total');
-for(const id of ['rules','a','b','gScore'])paired.checkBox(paired.$('[data-wp-closure="'+id+'"]'));
 scoreRoute.equations.forEach((q,i)=>paired.setInput('e:'+i,q.left+'='+q.right));
 paired.click('[data-wp-check]');paired.expectPassed(3,'Mixed independent conditions for two players');paired.close();
 
@@ -462,7 +459,6 @@ assert(interactive.host.querySelectorAll('[data-wp-rel-slot]').length>0);assert.
 interactive.click('[data-wp-check]');assert(interactive.$('[data-wp-next]').disabled,'Correct numeric table cannot bypass empty relationship boxes');
 interactive.fillRelations(interactiveProblem,interactiveRoute);interactive.click('[data-wp-check]');interactive.expectPassed(2,'Reordered drag relationships and table');
 interactive.click('[data-wp-next]');
-for(const id of interactiveRoute.closure.sources)interactive.checkBox([...interactive.host.querySelectorAll('[data-wp-closure]')].find(x=>x.dataset.wpClosure===id));
 interactive.click('[data-wp-example]');interactive.checkAndNext(3,'Relation edit prerequisite');
 assert.equal(interactive.currentStep(),5,'The combined modeling page opens calculation directly');
 assert.equal(interactive.read().drafts[interactiveProblem.id].passed[3],true);
@@ -525,7 +521,6 @@ migrationV2.close();
 const taking=fixture();taking.app.start('L7-P1',true);
 for(let step=0;step<2;step++){taking.click('[data-wp-example]');taking.checkAndNext(step,'Table builder setup '+step);}
 taking.click('[data-wp-example]');taking.setInput('t:1:2','6*0.15*x');taking.checkAndNext(2,'Student equivalent quantity');
-for(const id of taking.w.RatioWordProblemsData.find(p=>p.id==='L7-P1').routes[0].closure.sources)taking.checkBox(taking.$('[data-wp-closure="'+id+'"]'));
 assert.equal(taking.$('[data-wp-input="e:0"]').value,'','The module must not preassemble the equation');
 taking.click('[data-wp-take="0:2"]');taking.click('[data-wp-key="+"]');taking.click('[data-wp-take="1:2"]');taking.click('[data-wp-key="="]');taking.click('[data-wp-take="2:2"]');
 assert.match(taking.$('[data-wp-input="e:0"]').value,/6\*0\.15\*x/,'Take the learner expression instead of replacing it with a reference');
@@ -569,6 +564,56 @@ assert.equal(diagram.querySelectorAll('[data-wp-color="black"]').length,10);
 assert.equal(diagram.querySelector('[data-wp-row="1"][data-wp-col="1"]').dataset.wpColor,'black');
 assert.equal(diagram.querySelector('[data-wp-row="1"][data-wp-col="3"]').dataset.wpColor,'white');
 chess.close();
+
+// Refinements: actual equation gate, clear feedback, variable-aware answer prefixes and scoped content revisions.
+const refinements=fixture();refinements.app.start('G9-06',true);
+for(const step of [0,1,2]){refinements.click('[data-wp-example]');refinements.checkAndNext(step,'Trapezoid setup '+step);}
+assert(!refinements.$('[data-wp-closure]'));
+assert.match(refinements.$('.wp-equation-block').textContent,/可以点击表格中的“取用此量”/);
+for(const equation of ['(12+x)*8*(1/2)=120','(12+x)*8*1/2=120','(1/2)*8*(12+x)=120','120=(12+x)*8*(1/2)','(12+x)*8/2=120',String.raw`(12+x)\times8\times\frac{1}{2}=120`]){
+ refinements.setInput('e:0',equation);refinements.click('[data-wp-check]');refinements.expectPassed(3,'Trapezoid accepts '+equation);
+ assert.equal(refinements.$('.wp-feedback-title').textContent,'检查正确');
+ assert.equal(refinements.$('.wp-feedback').getAttribute('role'),'status');
+}
+refinements.setInput('e:0','(12+x)*8*2=120');refinements.click('[data-wp-check]');
+assert(refinements.$('[data-wp-next]').disabled);assert.equal(refinements.$('.wp-feedback-title').textContent,'还不正确');
+assert.equal(refinements.$('.wp-feedback').getAttribute('role'),'alert');assert.equal(refinements.$('.wp-feedback').getAttribute('aria-live'),'assertive');
+refinements.setInput('e:0','(12+x)*8*1/2=120');refinements.checkAndNext(3,'Corrected fraction equation');
+assert.equal(refinements.$('[data-wp-editor="a:0"]').closest('.wp-answer-field').querySelector('.wp-answer-prefix').textContent.replace(/\s/g,''),'x=');
+assert.equal(refinements.$('[data-wp-input="a:0"]').value,'','The prefix is outside the editable answer');
+refinements.close();
+
+for(const [id,prefixes]of [['G9-08',['','x=','']],['L8-H1',['x=','y=','']],['PEP-P037',['','x=','']],['PEP-P051',['x=','y=']],['PEP-P063',['x=']]]){
+ const f=fixture();f.app.start(id,true);
+ for(const step of [0,1,2,3]){f.click('[data-wp-example]');f.checkAndNext(step,'Answer prefix '+id+' '+step);}
+ const fields=[...f.host.querySelectorAll('.wp-answer-confirm .wp-answer-field')];
+ assert.deepEqual(fields.map(el=>(el.querySelector('.wp-answer-prefix')?.textContent||'').replace(/\s/g,'')),prefixes,id+' maps the variable to the actual unknown');
+ if(id==='PEP-P063'){assert(!fields[0].querySelector('small'),'The number before the percentage sign is x=25, not x=25%');}
+ if(id==='PEP-P051')assert.equal(f.$('.wp-feedback-title')?.textContent,undefined,'A newly entered page has no stale success indicator');
+ f.close();
+}
+for(const id of ['G9-06','G9-08','TB-R01']){
+ const f=fixture(),problem=f.w.RatioWordProblemsData.find(p=>p.id===id),r=problem.routes[0];
+ f.app.start(id,true);const old=clone(f.read().drafts[id]);f.app.destroy();
+ Object.assign(old,{contentRevision:0,runId:'wp-legacy-'+id,scratchId:'wp-legacy-ink-'+id,step:6,finished:true,answersChecked:true,passed:Object.fromEntries([0,1,2,3,4,5,6].map(i=>[i,true])),values:{'f:formula:0':'2','a:1':'105','t:2:5':'old-calendar-expression'},updatedAt:new Date().toISOString()});
+ const history={...old,title:id==='G9-08'?'三个连续奇数的积':'旧版本题目',status:'independent',at:old.updatedAt,valueLabels:{'a:1':'旧版三个奇数的积'}};
+ f.accounts.set(f.owner,{version:1,records:[history],drafts:{[id]:old}});
+ f.remount().start(id);
+ const current=f.read().drafts[id];assert.equal(current.contentRevision,1);assert.equal(f.currentStep(),0);assert.equal(current.finished,false);
+ assert.notEqual(current.runId,old.runId);assert.notEqual(current.scratchId,old.scratchId);assert.deepEqual(clone(current.values),{});assert.deepEqual(clone(current.passed),{});
+ assert.equal(f.read().records[0].values['a:1'],'105');assert.equal(f.read().records[0].valueLabels['a:1'],'旧版三个奇数的积');
+ assert.match(f.feedback(),/以前已提交的记录完整保留/);
+ f.app.open();const card=f.$('[data-wp-problem="'+id+'"]');assert(card);assert(!card.textContent.includes('已完成 ✓'),'Old content does not mark the revised task complete');
+ f.close();
+}
+const calendarSimple=fixture();calendarSimple.app.start('TB-R01',true);
+for(const step of [0,1]){calendarSimple.click('[data-wp-example]');calendarSimple.checkAndNext(step,'Calendar setup '+step);}
+assert.equal(calendarSimple.$('.wp-quantity-table').querySelectorAll('thead th').length,2);
+assert.equal(calendarSimple.$('.wp-quantity-table').querySelectorAll('tbody tr').length,5);
+assert.match(calendarSimple.$('.wp-table-note').textContent,/每次只选一个框/);
+calendarSimple.click('[data-wp-example]');calendarSimple.click('[data-wp-check]');
+assert.equal(calendarSimple.$('.wp-feedback-title').textContent,'已记录，待讨论','Open reasoning is recorded, never falsely certified as mathematically correct');
+calendarSimple.close();
 
 (async()=>{
  // A personal stroke stays active across the profile-save debounce and the scratchpad's own persistence timer.

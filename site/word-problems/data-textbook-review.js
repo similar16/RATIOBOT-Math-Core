@@ -42,7 +42,7 @@ const data=[
       },
       {
         "id": "center",
-        "text": "用x表示中心日期，用s表示参与者给出的日期和。",
+        "text": "每次只选一个框，用x表示本次框的中心日期，用s表示本次给出的日期和；不同框、不同轮次的x和s可以不同。",
         "kind": "convention"
       }
     ],
@@ -51,63 +51,54 @@ const data=[
         "id": "table",
         "label": "用中心日期统一三种框形",
         "variable": "x",
-        "meaning": "框中中心日期",
+        "meaning": "本次所选框的中心日期",
         "unit": "日",
         "domain": "x必须是本月的整数日期，并且框中所有格子都实际存在",
         "derivations": [],
         "table": {
           "headers": [
-            "框形",
-            "上格日期",
-            "左格日期",
-            "中心日期",
-            "右格日期",
-            "下格日期",
-            "日期和"
+            "位置",
+            "日期表达式"
           ],
           "rows": [
             {
-              "label": "横向一字",
+              "label": "中心",
               "cells": [
-                {
-                  "note": "未框此格"
-                },
-                {
-                  "expr": "x-1",
-                  "sources": [
-                    "calendar",
-                    "unknown"
-                  ]
-                },
                 {
                   "expr": "x",
                   "sources": [
                     "unknown"
                   ],
                   "given": true
-                },
+                }
+              ]
+            },
+            {
+              "label": "左",
+              "cells": [
                 {
-                  "expr": "x+1",
+                  "expr": "x-1",
                   "sources": [
                     "calendar",
-                    "unknown"
-                  ]
-                },
-                {
-                  "note": "未框此格"
-                },
-                {
-                  "expr": "(x-1)+x+(x+1)",
-                  "sources": [
-                    "calendar",
-                    "three",
                     "unknown"
                   ]
                 }
               ]
             },
             {
-              "label": "竖向一字",
+              "label": "右",
+              "cells": [
+                {
+                  "expr": "x+1",
+                  "sources": [
+                    "calendar",
+                    "unknown"
+                  ]
+                }
+              ]
+            },
+            {
+              "label": "上",
               "cells": [
                 {
                   "expr": "x-7",
@@ -115,80 +106,16 @@ const data=[
                     "calendar",
                     "unknown"
                   ]
-                },
-                {
-                  "note": "未框此格"
-                },
-                {
-                  "expr": "x",
-                  "sources": [
-                    "unknown"
-                  ],
-                  "given": true
-                },
-                {
-                  "note": "未框此格"
-                },
-                {
-                  "expr": "x+7",
-                  "sources": [
-                    "calendar",
-                    "unknown"
-                  ]
-                },
-                {
-                  "expr": "(x-7)+x+(x+7)",
-                  "sources": [
-                    "calendar",
-                    "three",
-                    "unknown"
-                  ]
                 }
               ]
             },
             {
-              "label": "十字框",
+              "label": "下",
               "cells": [
-                {
-                  "expr": "x-7",
-                  "sources": [
-                    "calendar",
-                    "unknown"
-                  ]
-                },
-                {
-                  "expr": "x-1",
-                  "sources": [
-                    "calendar",
-                    "unknown"
-                  ]
-                },
-                {
-                  "expr": "x",
-                  "sources": [
-                    "unknown"
-                  ],
-                  "given": true
-                },
-                {
-                  "expr": "x+1",
-                  "sources": [
-                    "calendar",
-                    "unknown"
-                  ]
-                },
                 {
                   "expr": "x+7",
                   "sources": [
                     "calendar",
-                    "unknown"
-                  ]
-                },
-                {
-                  "expr": "(x-7)+(x-1)+x+(x+1)+(x+7)",
-                  "sources": [
-                    "calendar",
-                    "five",
                     "unknown"
                   ]
                 }
@@ -219,32 +146,33 @@ const data=[
         "steps": [
           "(x-1)+x+(x+1)=3*x",
           "(x-7)+x+(x+7)=3*x",
-          "(x-7)+(x-1)+x+(x+1)+(x+7)=5*x",
-          "x=s/3",
-          "x=s/5"
+          "(x-7)+(x-1)+x+(x+1)+(x+7)=5*x"
         ],
         "checks": [],
-        "conclusion": "一字框的中心日期为s÷3，十字框的中心日期为s÷5。求出中心后，用相邻日期的差还原其余日期；还须检查整数、月份的起止和横竖位置。第3问自行设计框形；第4问可从总和不适合、日期越界或框形跨行等方面举例。",
+        "conclusion": "本轮若选横向一字框，三数和为3x，中心日期为本轮总和s÷3，再向左、右各减1、加1；若选竖向一字框，中心同样为本轮s÷3，再向上、下各减7、加7；若选十字框，五数和为5x，中心为本轮s÷5，再还原上下左右四个日期。每轮均须检查整数、实际月份的日期范围和框形位置。第3问自行设计其他框形；第4问可举日期越界、横框跨行等不能实现的例子。",
         "verdict": {
           "correct": "open",
           "prompt": "代回原条件，结果是否完整并符合实际意义？",
-          "explain": "一字框的中心日期为s÷3，十字框的中心日期为s÷5。求出中心后，用相邻日期的差还原其余日期；还须检查整数、月份的起止和横竖位置。第3问自行设计框形；第4问可从总和不适合、日期越界或框形跨行等方面举例。"
+          "explain": "本轮若选横向一字框，三数和为3x，中心日期为本轮总和s÷3，再向左、右各减1、加1；若选竖向一字框，中心同样为本轮s÷3，再向上、下各减7、加7；若选十字框，五数和为5x，中心为本轮s÷5，再还原上下左右四个日期。每轮均须检查整数、实际月份的日期范围和框形位置。第3问自行设计其他框形；第4问可举日期越界、横框跨行等不能实现的例子。"
         },
         "variation": "选择一张实际月历，把第1、2问各做一次，再用自己设计的框与同学交换条件。",
         "additionalVariables": [
           {
             "variable": "s",
-            "meaning": "活动参与者给出的所框日期总和",
+            "meaning": "本次活动给出的所框日期总和",
             "unit": "日期数值之和",
-            "domain": "由实际活动给定"
+            "domain": "本次的已知数，不同框或不同轮次可以不同",
+            "known": true
           }
         ],
-        "discussion": "完整讨论4问：写出横框、竖框、十字框关系；自选实际月份与总和；画或描述另一种框形；举一个不能实现的例子并说明原因。"
+        "discussion": "完整讨论4问：写出横框、竖框、十字框关系；自选实际月份与总和；画或描述另一种框形；举一个不能实现的例子并说明原因。",
+        "tableNote": "每次只选一个框：横框取左、中、右，竖框取上、中、下，十字框取全部五个位置。不同框、不同轮次的中心日期x和总和s不必相同。"
       }
     ],
     "notices": [
       "总和与月份由参与者自行确定；本模块没有把自选数字当成原题条件。"
-    ]
+    ],
+    "contentRevision": 1
   },
   {
     "id": "TB-R03",
