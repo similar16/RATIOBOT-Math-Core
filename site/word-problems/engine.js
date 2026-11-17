@@ -9,8 +9,8 @@
   const gcd = (a, b) => { a = a < 0n ? -a : a; b = b < 0n ? -b : b; while (b) [a, b] = [b, a % b]; return a; };
   function rat(n, d = 1n) {
     n = BigInt(n); d = BigInt(d);
-    if (!d) fail('分母不能为0。');
-    if (n.toString().length > 160 || d.toString().length > 160) fail('数值过大，请检查输入。');
+    if (!d) fail('分母不能为0.');
+    if (n.toString().length > 160 || d.toString().length > 160) fail('数值过大，请检查输入.');
     const g = gcd(n, d) * (d < 0n ? -1n : 1n);
     return { n: n / g, d: d / g };
   }
@@ -22,16 +22,16 @@
   const req = (a, b) => a.n === b.n && a.d === b.d;
   const rstring = a => a.d === 1n ? String(a.n) : a.n + '/' + a.d;
   function decimal(raw) {
-    if (!/^(?:\d+(?:\.\d*)?|\.\d+)$/.test(raw)) fail('请检查数值。');
-    if (raw.replace('.', '').length > 18) fail('数字过长，请检查输入。');
+    if (!/^(?:\d+(?:\.\d*)?|\.\d+)$/.test(raw)) fail('请检查数值.');
+    if (raw.replace('.', '').length > 18) fail('数字过长，请检查输入.');
     const [whole, fraction = ''] = raw.split('.');
     return rat((whole || '0') + fraction, 10n ** BigInt(fraction.length));
   }
 
   function normalize(value) {
     let s = String(value ?? '').trim();
-    if (!s) fail('请先填写表达式。');
-    if (s.length > MAX_INPUT) fail('表达式过长，请分步填写。');
+    if (!s) fail('请先填写表达式.');
+    if (s.length > MAX_INPUT) fail('表达式过长，请分步填写.');
     s = s.replace(/[０-９]/g, c => String(c.charCodeAt(0) - 65296))
       .replace(/[（【]/g, '(').replace(/[）】]/g, ')').replace(/[−－–]/g, '-')
       .replace(/[×·⋅]/g, '*').replace(/÷/g, '/').replace(/％/g, '%').replace(/＝/g, '=')
@@ -42,59 +42,59 @@
     let at = 0;
     function group() {
       if (s[at] !== '{') {
-        if (!s[at] || s[at] === '}' || s[at] === '\\') fail('请补全公式中的分子、分母或指数。');
+        if (!s[at] || s[at] === '}' || s[at] === '\\') fail('请补全公式中的分子、分母或指数.');
         return s[at++];
       }
       at++; const value = read('}');
-      if (s[at] !== '}') fail('请检查公式括号。');
+      if (s[at] !== '}') fail('请检查公式括号.');
       at++; return value;
     }
     function read(stop) {
       let out = '';
       while (at < s.length && s[at] !== stop) {
         const f = s.slice(at).match(/^\\(?:dfrac|tfrac|frac)/);
-        if (f) { at += f[0].length; const n = group(), d = group(); if (!n || !d) fail('请补全分子和分母。'); out += '((' + n + ')/(' + d + '))'; continue; }
+        if (f) { at += f[0].length; const n = group(), d = group(); if (!n || !d) fail('请补全分子和分母.'); out += '((' + n + ')/(' + d + '))'; continue; }
         if (s[at] === '{') { out += '(' + group() + ')'; continue; }
-        if (s[at] === '\\') fail('这个符号暂不支持自动核对，请使用数字、字母和四则运算。', 'unsupported');
+        if (s[at] === '\\') fail('这个符号暂不支持自动核对，请使用数字、字母和四则运算.', 'unsupported');
         out += s[at++];
       }
       return out;
     }
     const result = read();
-    if (at !== s.length || /[{}]/.test(result)) fail('请检查公式括号。');
-    if (!/^[0-9a-zA-Z.+\-*/^()%=[\]]+$/.test(result)) fail('含有无法识别的符号，请只填写数学表达式。');
+    if (at !== s.length || /[{}]/.test(result)) fail('请检查公式括号.');
+    if (!/^[0-9a-zA-Z.+\-*/^()%=[\]]+$/.test(result)) fail('含有无法识别的符号，请只填写数学表达式.');
     return result.replace(/\[/g, '(').replace(/\]/g, ')');
   }
 
   function parse(input) {
     const normalized = normalize(input);
-    if (normalized.includes('=')) fail('这一格只填写表达式，等式请填在列方程处。');
+    if (normalized.includes('=')) fail('这一格只填写表达式，等式请填在列方程处.');
     const tokens = [];
     let i = 0;
     while (i < normalized.length) {
       const c = normalized[i];
       if (/[0-9.]/.test(c)) {
         const match = normalized.slice(i).match(/^(?:\d+(?:\.\d*)?|\.\d+)/);
-        if (!match) fail('小数点的位置不正确。');
+        if (!match) fail('小数点的位置不正确.');
         tokens.push({ type: 'number', raw: match[0], value: decimal(match[0]) }); i += match[0].length;
       } else if (VARIABLES.test(c)) {
         // Individual mathematical letters are supported. Function-like words are not.
         const word = normalized.slice(i).match(/^[a-zA-Z]+/)[0];
-        if (word.length > 3 || /^(?:sin|cos|tan|log|exp|NaN)$/i.test(word)) fail('暂不核对函数或文字，请填写本题的数量表达式。', 'unsupported');
+        if (word.length > 3 || /^(?:sin|cos|tan|log|exp|NaN)$/i.test(word)) fail('暂不核对函数或文字，请填写本题的数量表达式.', 'unsupported');
         tokens.push({ type: 'variable', value: c }); i++;
       } else { tokens.push({ type: c }); i++; }
-      if (tokens.length > MAX_NODES) fail('表达式过长，请分步填写。');
+      if (tokens.length > MAX_NODES) fail('表达式过长，请分步填写.');
     }
     let pos = 0, nodes = 0;
     const peek = () => tokens[pos]?.type;
-    const node = (kind, props) => { if (++nodes > MAX_NODES) fail('表达式过长，请分步填写。'); return { kind, ...props }; };
+    const node = (kind, props) => { if (++nodes > MAX_NODES) fail('表达式过长，请分步填写.'); return { kind, ...props }; };
     function primary() {
       const t = tokens[pos++];
-      if (!t) fail('表达式还没有填写完整。');
+      if (!t) fail('表达式还没有填写完整.');
       if (t.type === 'number') return node('number', { raw: t.raw, value: t.value });
       if (t.type === 'variable') return node('variable', { name: t.value });
-      if (t.type === '(') { const value = sum(); if (peek() !== ')') fail('请补上右括号。'); pos++; return node('group', { value }); }
-      fail('请检查运算符或括号的位置。');
+      if (t.type === '(') { const value = sum(); if (peek() !== ')') fail('请补上右括号.'); pos++; return node('group', { value }); }
+      fail('请检查运算符或括号的位置.');
     }
     function postfix() { let a = primary(); while (peek() === '%') { pos++; a = node('percent', { value: a }); } return a; }
     function power() { let a = postfix(); if (peek() === '^') { pos++; a = node('power', { left: a, right: unary() }); } return a; }
@@ -104,7 +104,7 @@
       while (true) {
         let op = peek(), implicit = false;
         if (['number', 'variable', '('].includes(op)) {
-          if (op === 'number' && ['number', 'variable'].includes(tokens[pos - 1]?.type)) fail('请检查相邻的数字；字母后乘一个数时请补上乘号。');
+          if (op === 'number' && ['number', 'variable'].includes(tokens[pos - 1]?.type)) fail('请检查相邻的数字；字母后乘一个数时请补上乘号.');
           op = '*'; implicit = true;
         }
         else if (op === '*' || op === '/') pos++;
@@ -115,7 +115,7 @@
     }
     function sum() { let a = product(); while (peek() === '+' || peek() === '-') { const op = tokens[pos++].type; a = node('binary', { op, left: a, right: product() }); } return a; }
     const ast = sum();
-    if (pos !== tokens.length) fail('请检查多余的括号或运算符。');
+    if (pos !== tokens.length) fail('请检查多余的括号或运算符.');
     return { ast, normalized };
   }
 
@@ -131,7 +131,7 @@
     const p = new Map();
     for (const [ka, va] of a) for (const [kb, vb] of b) {
       const key = [...ka, ...kb].sort().join('');
-      if (key.length > MAX_DEGREE) fail('这个表达式的次数超出当前自动核对范围，请交给老师讨论。', 'unsupported');
+      if (key.length > MAX_DEGREE) fail('这个表达式的次数超出当前自动核对范围，请交给老师讨论.', 'unsupported');
       const value = radd(coefficient(p, key), rmul(va, vb)); if (value.n) p.set(key, value); else p.delete(key);
     }
     return p;
@@ -146,9 +146,9 @@
     if (ast.kind === 'percent') return pScale(evaluate(ast.value), rat(1, 100));
     if (ast.kind === 'power') {
       const exponent = evaluate(ast.right);
-      if (!isConstant(exponent)) fail('指数含有未知数，暂不自动核对。', 'unsupported');
+      if (!isConstant(exponent)) fail('指数含有未知数，暂不自动核对.', 'unsupported');
       const e = coefficient(exponent, '');
-      if (e.d !== 1n || e.n < 0n || e.n > BigInt(MAX_DEGREE)) fail('当前只核对0至4的整数次幂。', 'unsupported');
+      if (e.d !== 1n || e.n < 0n || e.n > BigInt(MAX_DEGREE)) fail('当前只核对0至4的整数次幂.', 'unsupported');
       const base = evaluate(ast.left); let p = constant(R1);
       for (let j = 0; j < Number(e.n); j++) p = pMultiply(p, base);
       return p;
@@ -157,9 +157,9 @@
     if (ast.op === '+') return pAdd(a, b);
     if (ast.op === '-') return pAdd(a, b, true);
     if (ast.op === '*') return pMultiply(a, b);
-    if (!isConstant(b)) fail('这个式子的分母含有未知数，超出当前一元一次自动核对范围；请保留表达式交给老师讨论。', 'unsupported');
+    if (!isConstant(b)) fail('这个式子的分母含有未知数，超出当前一元一次自动核对范围；请保留表达式交给老师讨论.', 'unsupported');
     const divisor = coefficient(b, '');
-    if (!divisor.n) fail('分母不能为0。');
+    if (!divisor.n) fail('分母不能为0.');
     return pScale(a, rdiv(R1, divisor));
   }
   const pEquals = (a, b) => a.size === b.size && [...a].every(([key, value]) => req(value, coefficient(b, key)));
@@ -196,12 +196,12 @@
       const comparison = String(input).split(/(≈|≠|≤|≥|<|>)/);
       if (comparison.length > 1) {
         const symbols = { '≈':'\\approx ', '≠':'\\ne ', '≤':'\\le ', '≥':'\\ge ', '<':'<', '>':'>' };
-        if (comparison.some((part, index) => index % 2 === 0 && !inspect(part).ok)) fail('请检查比较关系中的表达式。');
+        if (comparison.some((part, index) => index % 2 === 0 && !inspect(part).ok)) fail('请检查比较关系中的表达式.');
         return comparison.map((part, index) => index % 2 ? symbols[part] : latex(parse(part).ast, options.division === 'sign')).join('');
       }
       const normalized = normalize(input);
       const parts = normalized.split('=');
-      if (parts.some(p => !p)) fail('请补全等式。');
+      if (parts.some(p => !p)) fail('请补全等式.');
       return parts.map(p => latex(parse(p).ast, options.division === 'sign')).join('=');
     } catch { return '\\text{' + escapeTex(String(input ?? '').slice(0, MAX_INPUT)) + '}'; }
   }
@@ -256,16 +256,16 @@
     try {
       const expected = read(item.expr), expectedMeta = details(expected.ast);
       const chain = normalize(input).split('=');
-      if (chain.some(p => !p)) fail('请补全等号两边。');
-      if (chain.length > 4) fail('请把计算分成较短的步骤。');
+      if (chain.some(p => !p)) fail('请补全等号两边.');
+      if (chain.length > 4) fail('请把计算分成较短的步骤.');
       const parts = chain.map(read), first = parts[0], meta = details(first.ast);
       const expectedVariables = new Set(expectedMeta.variables);
-      if (parts.some(p => details(p.ast).variables.some(name => !expectedVariables.has(name)))) return { ok: false, kind: 'variable', message: '这一步出现了没有设定的字母。请只使用当前数量所需的未知量，即使多余的字母能抵消，也需要说明它的含义。' };
-      if (!parts.every(p => pEquals(p.poly, expected.poly))) return { ok: false, kind: 'math', message: '这一步的数量关系或计算还不相等，请检查用到的量和运算。' };
+      if (parts.some(p => details(p.ast).variables.some(name => !expectedVariables.has(name)))) return { ok: false, kind: 'variable', message: '这一步出现了没有设定的字母.请只使用当前数量所需的未知量，即使多余的字母能抵消，也需要说明它的含义.' };
+      if (!parts.every(p => pEquals(p.poly, expected.poly))) return { ok: false, kind: 'math', message: '这一步的数量关系或计算还不相等，请检查用到的量和运算.' };
       const result = item.result == null ? expected : read(item.result);
-      if (!pEquals(result.poly, expected.poly)) return { ok: false, kind: 'content', message: '本题的推导设置需要教师复核，当前不判错。' };
+      if (!pEquals(result.poly, expected.poly)) return { ok: false, kind: 'content', message: '本题的推导设置需要教师复核，当前不判错.' };
       const allowed = new Set(expectedMeta.literals.map(x => x.value));
-      if (expectedMeta.percent) allowed.add('100'); // “百分之”本身定义分母100。
+      if (expectedMeta.percent) allowed.add('100'); // “百分之”本身定义分母100.
       // A learner may expand an already checked parent calculation instead of using its short result.
       for (const expression of item.sourceExpressions || []) for (const literal of details(read(expression).ast).literals) allowed.add(literal.value);
       const derivedResults = new Set();
@@ -275,9 +275,9 @@
       const knownResult = knownNumber(first.ast, derivedResults);
       const shortcut = expectedMeta.operations > 0 && meta.operations === 0 && (!knownResult || item.requireCalculation === true);
       const unexplained = !knownResult && unexplainedNumber(first.ast, allowed, derivedResults) != null;
-      if (shortcut || unexplained) return { ok: false, kind: 'source', message: '数值正确，来源尚未说明。请用题目中的原数或已完成的推导写出计算过程，再使用简写结果。' };
-      return { ok: true, kind: 'correct', message: '关系与来源都对应。', expression: first.normalized, result: numeric(item.result ?? item.expr), calculationLatex: latex(first.ast, true) };
-    } catch (error) { return { ok: false, kind: error.kind || 'input', message: error.message || '请检查输入。' }; }
+      if (shortcut || unexplained) return { ok: false, kind: 'source', message: '数值正确，来源尚未说明.请用题目中的原数或已完成的推导写出计算过程，再使用简写结果.' };
+      return { ok: true, kind: 'correct', message: '关系与来源都对应.', expression: first.normalized, result: numeric(item.result ?? item.expr), calculationLatex: latex(first.ast, true) };
+    } catch (error) { return { ok: false, kind: error.kind || 'input', message: error.message || '请检查输入.' }; }
   }
 
   // Table cells name a quantity rather than prescribe one spelling of its
@@ -377,20 +377,20 @@
       try {
         const expected = read(candidate.expr), expectedMeta = details(expected.ast);
         const chain = normalize(input).split('=');
-        if (chain.some(part => !part)) fail('请补全等号两边。');
-        if (chain.length > 4) fail('请把计算分成较短的步骤。');
+        if (chain.some(part => !part)) fail('请补全等号两边.');
+        if (chain.length > 4) fail('请把计算分成较短的步骤.');
         const parts = chain.map(read), first = parts[0];
         const declared = new Set(expectedMeta.variables);
         if (parts.some(part => details(part.ast).variables.some(name => !declared.has(name)))) {
-          failures.push({ok:false,kind:'variable',message:'这一格出现了没有设定的字母。请使用当前数量的未知量，不能用抵消来省略字母的含义。'});continue;
+          failures.push({ok:false,kind:'variable',message:'这一格出现了没有设定的字母.请使用当前数量的未知量，不能用抵消来省略字母的含义.'});continue;
         }
         if (!parts.every(part => pEquals(part.poly, expected.poly))) {
-          failures.push({ok:false,kind:'math',message:'这个式子还没有表示这一格的数量。可以换一种写法，但要符合该量的含义和已知关系。'});continue;
+          failures.push({ok:false,kind:'math',message:'这个式子还没有表示这一格的数量.可以换一种写法，但要符合该量的含义和已知关系.'});continue;
         }
         const dependencies = candidate.requiredDerivations;
         if (Array.isArray(dependencies) && dependencies.some(d => d?.completed !== true)) {
           const pending = dependencies.filter(d => d?.completed !== true);
-          failures.push({ok:false,kind:'source',message:'请先完成“'+(pending[0]?.label||pending[0]?.id||'这一格的数据来源')+'”的推导，再使用结果或等价简写。',pendingSources:pending.map(d=>d?.id).filter(Boolean)});continue;
+          failures.push({ok:false,kind:'source',message:'请先完成“'+(pending[0]?.label||pending[0]?.id||'这一格的数据来源')+'”的推导，再使用结果或等价简写.',pendingSources:pending.map(d=>d?.id).filter(Boolean)});continue;
         }
         const strict = checkDerivation(input, { ...candidate, result:candidate.expr }, variable);
         if (!strict.ok) {
@@ -408,7 +408,7 @@
           const coefficients = tableCoefficients(expected.ast);
           for (const value of coefficients) established.add(value);
           if (unexplainedTableNumber(first.ast, original, established) != null) {
-            failures.push({ok:false,kind:'source',message:'数量值虽然相等，但这个写法引入了没有依据的新数。请使用题目数据、已完成的推导，或由本格原式展开、合并得到的数。'});continue;
+            failures.push({ok:false,kind:'source',message:'数量值虽然相等，但这个写法引入了没有依据的新数.请使用题目数据、已完成的推导，或由本格原式展开、合并得到的数.'});continue;
           }
         }
         // Later terms in a written equality chain may simplify the established
@@ -420,15 +420,15 @@
           const established = tableCoefficients(expected.ast);
           for (const value of (candidate.allowedNumbers || []).map(numeric).filter(value => value != null)) established.add(value);
           if (parts.slice(1).some(part => unexplainedTableNumber(part.ast, original, established) != null)) {
-            failures.push({ok:false,kind:'source',message:'等式链中出现了没有来源的新数。请保留由原式展开、合并或计算得到的量。'});continue;
+            failures.push({ok:false,kind:'source',message:'等式链中出现了没有来源的新数.请保留由原式展开、合并或计算得到的量.'});continue;
           }
         }
         const final = parts[parts.length - 1], trace = [expected.normalized, ...parts.map(part => part.normalized)].filter((value,i,array)=>i===0||value!==array[i-1]);
         const sourceTrace = trace.length > 1 ? trace : [];
-        return {ok:true,kind:'correct',message:sourceTrace.length?'这是这一数量的另一种正确写法，来源关系已对应。':'数量关系与来源都对应。',expression:final.normalized,result:numeric(candidate.expr),calculationLatex:latex(final.ast,true),sourceExpression:candidate.expr,sources:[...(candidate.sources||[])],explain:candidate.explain||'',matchedAlternativeIndex:index,sourceTrace};
-      } catch (error) { failures.push({ok:false,kind:error.kind||'input',message:error.message||'请检查输入。'}); }
+        return {ok:true,kind:'correct',message:sourceTrace.length?'这是这一数量的另一种正确写法，来源关系已对应.':'数量关系与来源都对应.',expression:final.normalized,result:numeric(candidate.expr),calculationLatex:latex(final.ast,true),sourceExpression:candidate.expr,sources:[...(candidate.sources||[])],explain:candidate.explain||'',matchedAlternativeIndex:index,sourceTrace};
+      } catch (error) { failures.push({ok:false,kind:error.kind||'input',message:error.message||'请检查输入.'}); }
     }
-    return failures.find(result=>result.kind==='source') || failures.find(result=>result.kind==='variable') || failures[0] || {ok:false,kind:'content',message:'这一格的可用表达式需要教师复核。'};
+    return failures.find(result=>result.kind==='source') || failures.find(result=>result.kind==='variable') || failures[0] || {ok:false,kind:'content',message:'这一格的可用表达式需要教师复核.'};
   }
 
   function sameEquation(a, b) {
@@ -446,20 +446,20 @@
   function checkEquation(input, expected, variable = 'x') {
     try {
       const parts = normalize(input).split('=');
-      if (parts.length !== 2 || parts.some(p => !p)) fail('请填写一个完整方程，只保留一个等号。');
+      if (parts.length !== 2 || parts.some(p => !p)) fail('请填写一个完整方程，只保留一个等号.');
       const left = read(parts[0]), right = read(parts[1]), a = read(expected.left), b = read(expected.right);
       const expectedVariables = new Set([...details(a.ast).variables, ...details(b.ast).variables]);
-      if ([...details(left.ast).variables, ...details(right.ast).variables].some(name => !expectedVariables.has(name))) return { ok: false, kind: 'variable', message: '方程中出现了本次没有设定的字母。请按当前设元表示数量，不能用两边抵消来省略对这个字母的说明。' };
+      if ([...details(left.ast).variables, ...details(right.ast).variables].some(name => !expectedVariables.has(name))) return { ok: false, kind: 'variable', message: '方程中出现了本次没有设定的字母.请按当前设元表示数量，不能用两边抵消来省略对这个字母的说明.' };
       const inputDiff = pAdd(left.poly, right.poly, true), expectedDiff = pAdd(a.poly, b.poly, true);
-      if (!hasVariable(inputDiff)) return { ok: false, kind: 'constraint', message: inputDiff.size ? '这个等式没有留下能确定未知数的关系，请回看表格中的数量。' : '这是恒等式，不能确定未知数。请检查哪个独立条件还没有用到。' };
-      if (degree(inputDiff) > 1 || degree(expectedDiff) > 1) return { ok: false, kind: 'unsupported', message: '这个关系化简后不是一元一次方程，请保留表格并作为拓展问题讨论。' };
-      if (!hasVariable(expectedDiff)) return { ok: false, kind: 'content', message: '本题的列式设置需要教师复核，当前不判错。' };
+      if (!hasVariable(inputDiff)) return { ok: false, kind: 'constraint', message: inputDiff.size ? '这个等式没有留下能确定未知数的关系，请回看表格中的数量.' : '这是恒等式，不能确定未知数.请检查哪个独立条件还没有用到.' };
+      if (degree(inputDiff) > 1 || degree(expectedDiff) > 1) return { ok: false, kind: 'unsupported', message: '这个关系化简后不是一元一次方程，请保留表格并作为拓展问题讨论.' };
+      if (!hasVariable(expectedDiff)) return { ok: false, kind: 'content', message: '本题的列式设置需要教师复核，当前不判错.' };
       const vars = new Set([...inputDiff.keys()].flatMap(k => [...k]));
-      if (vars.size > 1) return { ok: false, kind: 'variable', message: '请按本次选定的设元表示其他量，方程中只保留一个未知数。' };
-      if (!sameEquation(inputDiff, expectedDiff)) return { ok: false, kind: 'math', message: '方程还没有表达选中的等量关系，请核对两边各代表哪个量。' };
-      if (isolated(left.poly, right.poly) && !isolated(a.poly, b.poly) && expected.allowSolved !== true) return { ok: false, kind: 'model', message: '结果可能正确。这一步请先写出表格中的数量等式，下一步再求未知数的值。' };
-      return { ok: true, kind: 'correct', message: '方程表达了选中的等量关系。' };
-    } catch (error) { return { ok: false, kind: error.kind || 'input', message: error.message || '请检查方程。' }; }
+      if (vars.size > 1) return { ok: false, kind: 'variable', message: '请按本次选定的设元表示其他量，方程中只保留一个未知数.' };
+      if (!sameEquation(inputDiff, expectedDiff)) return { ok: false, kind: 'math', message: '方程还没有表达选中的等量关系，请核对两边各代表哪个量.' };
+      if (isolated(left.poly, right.poly) && !isolated(a.poly, b.poly) && expected.allowSolved !== true) return { ok: false, kind: 'model', message: '结果可能正确.这一步请先写出表格中的数量等式，下一步再求未知数的值.' };
+      return { ok: true, kind: 'correct', message: '方程表达了选中的等量关系.' };
+    } catch (error) { return { ok: false, kind: error.kind || 'input', message: error.message || '请检查方程.' }; }
   }
 
   function validateProblem(problem) {

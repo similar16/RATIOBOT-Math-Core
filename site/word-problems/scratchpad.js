@@ -85,14 +85,14 @@
   const cleanups=[],on=(node,name,fn,opts)=>{node.addEventListener(name,fn,opts);cleanups.push(()=>node.removeEventListener(name,fn,opts));};
   const requestFrame=fn=>win.requestAnimationFrame?win.requestAnimationFrame(fn):win.setTimeout(fn,16),cancelFrame=id=>{if(id!==null)(win.cancelAnimationFrame?win.cancelAnimationFrame(id):win.clearTimeout(id));};
   host.classList.add('wp-scratchpad');
-  host.innerHTML='<div class="wp-scratchpad-heading"><div><h4>草稿纸</h4><p>用鼠标、手指或笔写下解方程的过程。</p></div><button type="button" class="wp-secondary" data-wp-ink="expand" aria-expanded="false">放大草稿纸</button></div>'+(options.headingHTML?'<div class="wp-scratchpad-equations" aria-label="已列方程">'+options.headingHTML+'</div>':'')+'<div class="wp-scratchpad-toolbar" role="group" aria-label="草稿工具"><button type="button" data-wp-ink="pen" aria-pressed="true">笔</button><button type="button" data-wp-ink="erase" aria-pressed="false">橡皮</button><button type="button" data-wp-ink="undo" aria-label="撤销上一笔或清空">撤销</button><button type="button" data-wp-ink="redo">重做</button><button type="button" data-wp-ink="clear">清空</button><button type="button" data-wp-ink="grid" aria-pressed="false">方格</button></div><div class="wp-scratchpad-paper-wrap"><canvas class="wp-scratchpad-canvas" width="900" height="1200" tabindex="0" aria-label="手写草稿画板，可用鼠标、手指或笔演算"></canvas></div><p class="wp-scratchpad-status" data-wp-ink-status role="status" aria-live="polite"></p><p class="wp-scratchpad-help">手写内容不自动判分。完成演算后，在下一步填写结果并检验。</p>';
+  host.innerHTML='<div class="wp-scratchpad-heading"><div><h4>草稿纸</h4><p>用鼠标、手指或笔写下解方程的过程.</p></div><button type="button" class="wp-secondary" data-wp-ink="expand" aria-expanded="false">放大草稿纸</button></div>'+(options.headingHTML?'<div class="wp-scratchpad-equations" aria-label="已列方程">'+options.headingHTML+'</div>':'')+'<div class="wp-scratchpad-toolbar" role="group" aria-label="草稿工具"><button type="button" data-wp-ink="pen" aria-pressed="true">笔</button><button type="button" data-wp-ink="erase" aria-pressed="false">橡皮</button><button type="button" data-wp-ink="undo" aria-label="撤销上一笔或清空">撤销</button><button type="button" data-wp-ink="redo">重做</button><button type="button" data-wp-ink="clear">清空</button><button type="button" data-wp-ink="grid" aria-pressed="false">方格</button></div><div class="wp-scratchpad-paper-wrap"><canvas class="wp-scratchpad-canvas" width="900" height="1200" tabindex="0" aria-label="手写草稿画板，可用鼠标、手指或笔演算"></canvas></div><p class="wp-scratchpad-status" data-wp-ink-status role="status" aria-live="polite"></p><p class="wp-scratchpad-help">手写内容不自动判分.完成演算后，在下一步填写结果并检验.</p>';
   const canvas=host.querySelector('canvas'),wrap=host.querySelector('.wp-scratchpad-paper-wrap'),status=host.querySelector('[data-wp-ink-status]');let ctx;try{ctx=canvas.getContext('2d');}catch{ctx=null;}
   let inkColor=win.getComputedStyle(host).getPropertyValue('--wp-ink').trim()||'#3E3540';
   let view={width:0,height:0,dpr:1,scale:1,x:0,y:0};
   function notify(reason){if(dead)return;statusText();controls();if(typeof options.onChange==='function')options.onChange({reason,dirty:e.revision>e.savedRevision,saved:e.storage==='indexeddb'&&e.savedRevision>=e.revision,storage:e.storage,strokes:state.strokes.length});}
   function statusText(){
-   let text=e.loading?'正在读取本机草稿；现在写下的笔迹也会保留。':e.storage==='memory'?(e.error?e.error+'。':'')+'草稿仅暂存在当前页面内存，刷新或关闭页面可能丢失；原有本机草稿不会被覆盖。':e.savedRevision<e.revision?'草稿正在保存到本机…':'草稿已保存在本机，仅用于本题当前设元。';
-   if(!ctx)text='当前浏览器无法打开手写画板。';
+   let text=e.loading?'正在读取本机草稿；现在写下的笔迹也会保留.':e.storage==='memory'?(e.error?e.error+'.':'')+'草稿仅暂存在当前页面内存，刷新或关闭页面可能丢失；原有本机草稿不会被覆盖.':e.savedRevision<e.revision?'草稿正在保存到本机…':'草稿已保存在本机，仅用于本题当前设元.';
+   if(!ctx)text='当前浏览器无法打开手写画板.';
    if(limitMessage)text=limitMessage+' '+text;
    status.textContent=text;status.dataset.storage=e.storage;
   }
@@ -129,7 +129,7 @@
   function point(ev){const r=canvas.getBoundingClientRect();return [Math.max(0,Math.min(WIDTH,(ev.clientX-r.left-view.x)/view.scale)),Math.max(0,Math.min(HEIGHT,(ev.clientY-r.top-view.y)/view.scale))];}
   function hasRoom(action=false){
    trimCache();const actions=state.strokes.length+state.redo.length;
-   if((action&&actions>=MAX_ACTIONS)||e.points>=MAX_POINTS||sessionPoints()>=MAX_SESSION_POINTS){limitMessage='草稿已达到当前容量上限，已有笔迹完整保留；暂不能增加新笔迹，可继续撤销、重做或清空。';statusText();return false;}return true;
+   if((action&&actions>=MAX_ACTIONS)||e.points>=MAX_POINTS||sessionPoints()>=MAX_SESSION_POINTS){limitMessage='草稿已达到当前容量上限，已有笔迹完整保留；暂不能增加新笔迹，可继续撤销、重做或清空.';statusText();return false;}return true;
   }
   function begin(ev){
    if(dead||!ctx||pointer!==null||(ev.button!==undefined&&ev.button>0)||!hasRoom(true))return;
@@ -167,7 +167,7 @@
    if(action==='expand'){expand();return;}
    if(action==='undo'&&state.strokes.length){state.redo.push(state.strokes.pop());mark('undo');redraw();}
    else if(action==='redo'&&state.redo.length){state.strokes.push(state.redo.pop());mark('redo');redraw();}
-   else if(action==='clear'&&state.strokes.length){if(state.strokes.length+state.redo.length>=MAX_ACTIONS){limitMessage='操作记录已达上限，清空未执行，已有笔迹仍保留。';statusText();return;}state.strokes.push({mode:'clear',points:[]});state.redo=[];mark('clear');redraw();}
+   else if(action==='clear'&&state.strokes.length){if(state.strokes.length+state.redo.length>=MAX_ACTIONS){limitMessage='操作记录已达上限，清空未执行，已有笔迹仍保留.';statusText();return;}state.strokes.push({mode:'clear',points:[]});state.redo=[];mark('clear');redraw();}
    else if(action==='grid'){state.grid=!state.grid;mark('grid',false);}
   }
   function keydown(ev){

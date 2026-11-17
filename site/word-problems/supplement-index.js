@@ -445,7 +445,7 @@ const index={
       ]
     }
   ],
-  "retentionNote": "原有补充练习27题与人教版44道代表题合为71题，按题型导航。人教版80组中36组高度相似题已合并；完整来源与差异保留在核对记录。既有题号及进度不变，不互认不同变式的完成状态。",
+  "retentionNote": "原有补充练习27题与人教版44道代表题合为71题，按题型导航.人教版80组中36组高度相似题已合并；完整来源与差异保留在核对记录.既有题号及进度不变，不互认不同变式的完成状态.",
   "additionalIds": [
     "PEP-P002",
     "PEP-P003",
@@ -585,7 +585,7 @@ const index={
           "S10"
         ],
         "mergeType": "same-problem",
-        "note": "两营地距离、两队速度和追及目标相同；保留110、111、124页三个位置，不重复开题。"
+        "note": "两营地距离、两队速度和追及目标相同；保留110、111、124页三个位置，不重复开题."
       },
       {
         "collectionId": "P004",
@@ -596,7 +596,7 @@ const index={
           "L7-P2"
         ],
         "mergeType": "similar-model",
-        "note": "两种单价、总数量与总金额，列式结构一致。"
+        "note": "两种单价、总数量与总金额，列式结构一致."
       },
       {
         "collectionId": "P006",
@@ -608,7 +608,7 @@ const index={
           "G9-01"
         ],
         "mergeType": "split-similar",
-        "note": "第(1)问三项和与差量由奖牌题代表，第(2)问内角和与倍数由三角形角度比题代表；第(3)问为二次模型，只保留边界记录。"
+        "note": "第(1)问三项和与差量由奖牌题代表，第(2)问内角和与倍数由三角形角度比题代表；第(3)问为二次模型，只保留边界记录."
       },
       {
         "collectionId": "P007",
@@ -619,7 +619,7 @@ const index={
           "TB-R06"
         ],
         "mergeType": "similar-model",
-        "note": "总量与倍数加固定差量的关系相同。"
+        "note": "总量与倍数加固定差量的关系相同."
       },
       {
         "collectionId": "P008",
@@ -630,7 +630,7 @@ const index={
           "TB-R07"
         ],
         "mergeType": "similar-model",
-        "note": "两类物品的总数量与总金额双重约束相同。"
+        "note": "两类物品的总数量与总金额双重约束相同."
       },
       {
         "collectionId": "P009",
@@ -641,7 +641,7 @@ const index={
           "TB-A25"
         ],
         "mergeType": "similar-model",
-        "note": "已知增长率及增长后的量，反求原量。"
+        "note": "已知增长率及增长后的量，反求原量."
       },
       {
         "collectionId": "P010",
@@ -652,7 +652,7 @@ const index={
           "TB-R03"
         ],
         "mergeType": "similar-model",
-        "note": "原有量加每期增加量乘期数等于最终量。"
+        "note": "原有量加每期增加量乘期数等于最终量."
       },
       {
         "collectionId": "P011",
@@ -663,7 +663,7 @@ const index={
           "TB-I19"
         ],
         "mergeType": "similar-model",
-        "note": "单位量乘数量，再用固定差量连接已知总额；捐款场景和数值保留在来源记录。"
+        "note": "单位量乘数量，再用固定差量连接已知总额；捐款场景和数值保留在来源记录."
       },
       {
         "collectionId": "P013",
@@ -674,7 +674,7 @@ const index={
           "G9-10"
         ],
         "mergeType": "similar-model",
-        "note": "连续按固定倍数变化并用各期总和列式。"
+        "note": "连续按固定倍数变化并用各期总和列式."
       },
       {
         "collectionId": "P016",
@@ -685,7 +685,7 @@ const index={
           "TB-R09"
         ],
         "mergeType": "similar-model",
-        "note": "按三部分比例分配已知总量。"
+        "note": "按三部分比例分配已知总量."
       },
       {
         "collectionId": "P017",
@@ -696,7 +696,7 @@ const index={
           "S02"
         ],
         "mergeType": "similar-model",
-        "note": "同一人数与同一总量的盈不足模型。"
+        "note": "同一人数与同一总量的盈不足模型."
       },
       {
         "collectionId": "P019",
@@ -707,7 +707,7 @@ const index={
           "L7-H1"
         ],
         "mergeType": "similar-model",
-        "note": "已知年龄差与年龄倍数，只有数值变化。"
+        "note": "已知年龄差与年龄倍数，只有数值变化."
       },
       {
         "collectionId": "P024",
@@ -718,7 +718,7 @@ const index={
           "L7-P2"
         ],
         "mergeType": "similar-model",
-        "note": "两类单位耗量、总件数与总耗量，和两价购物同构。"
+        "note": "两类单位耗量、总件数与总耗量，和两价购物同构."
       },
       {
         "collectionId": "P026",
@@ -729,7 +729,7 @@ const index={
           "TB-I10"
         ],
         "mergeType": "similar-model",
-        "note": "一个数与它的若干分数相加等于已知量。"
+        "note": "一个数与它的若干分数相加等于已知量."
       },
       {
         "collectionId": "P027",
@@ -740,7 +740,7 @@ const index={
           "L8-H2"
         ],
         "mergeType": "similar-model",
-        "note": "同一路程按不同速度行走，利用到达时间差列式。"
+        "note": "同一路程按不同速度行走，利用到达时间差列式."
       },
       {
         "collectionId": "P028",
@@ -751,7 +751,7 @@ const index={
           "TB-I16"
         ],
         "mergeType": "similar-model",
-        "note": "长宽倍数与长方形周长相同结构。"
+        "note": "长宽倍数与长方形周长相同结构."
       },
       {
         "collectionId": "P029",
@@ -762,7 +762,7 @@ const index={
           "S02"
         ],
         "mergeType": "similar-model",
-        "note": "两种平均分配的余量与不足量决定同一总量。"
+        "note": "两种平均分配的余量与不足量决定同一总量."
       },
       {
         "collectionId": "P030",
@@ -773,7 +773,7 @@ const index={
           "L7-P2"
         ],
         "mergeType": "similar-model",
-        "note": "两种价格的布料，总长度与总价双约束。"
+        "note": "两种价格的布料，总长度与总价双约束."
       },
       {
         "collectionId": "P033",
@@ -784,7 +784,7 @@ const index={
           "TB-I15"
         ],
         "mergeType": "similar-model",
-        "note": "一个量等于另一个量的两倍加固定差量。"
+        "note": "一个量等于另一个量的两倍加固定差量."
       },
       {
         "collectionId": "P034",
@@ -795,7 +795,7 @@ const index={
           "L8-P2-Q2"
         ],
         "mergeType": "similar-model",
-        "note": "先出发时长与速度差决定追及或同时到达的行程。"
+        "note": "先出发时长与速度差决定追及或同时到达的行程."
       },
       {
         "collectionId": "P036",
@@ -806,7 +806,7 @@ const index={
           "PEP-P022"
         ],
         "mergeType": "similar-model",
-        "note": "顺风逆风与顺水逆水均为本体速度加减介质速度。"
+        "note": "顺风逆风与顺水逆水均为本体速度加减介质速度."
       },
       {
         "collectionId": "P044",
@@ -817,7 +817,7 @@ const index={
           "L7-T2"
         ],
         "mergeType": "similar-model",
-        "note": "27、19、20、2四个条件与两个小组增员题一致，保留已有题与已有进度。"
+        "note": "27、19、20、2四个条件与两个小组增员题一致，保留已有题与已有进度."
       },
       {
         "collectionId": "P045",
@@ -828,7 +828,7 @@ const index={
           "PEP-P055"
         ],
         "mergeType": "similar-model",
-        "note": "两类零件按比例配套，分配有限原料。"
+        "note": "两类零件按比例配套，分配有限原料."
       },
       {
         "collectionId": "P046",
@@ -839,7 +839,7 @@ const index={
           "L8-H1"
         ],
         "mergeType": "similar-model",
-        "note": "两件同价售出、各盈利与亏损25%，只变售价。"
+        "note": "两件同价售出、各盈利与亏损25%，只变售价."
       },
       {
         "collectionId": "P056",
@@ -850,7 +850,7 @@ const index={
           "PEP-P041"
         ],
         "mergeType": "similar-model",
-        "note": "按两类日产量和配套关系分配生产资源；天数与人数作为不同情境归档。"
+        "note": "按两类日产量和配套关系分配生产资源；天数与人数作为不同情境归档."
       },
       {
         "collectionId": "P057",
@@ -861,7 +861,7 @@ const index={
           "G10-08"
         ],
         "mergeType": "similar-model",
-        "note": "先合作后独做，按阶段累计工作量。"
+        "note": "先合作后独做，按阶段累计工作量."
       },
       {
         "collectionId": "P058",
@@ -872,7 +872,7 @@ const index={
           "PEP-P042"
         ],
         "mergeType": "similar-model",
-        "note": "先由若干人工作再增员，用人均效率累计工作量；完成目标3/4这一数值变式仍保留原题记录。"
+        "note": "先由若干人工作再增员，用人均效率累计工作量；完成目标3/4这一数值变式仍保留原题记录."
       },
       {
         "collectionId": "P059",
@@ -883,7 +883,7 @@ const index={
           "PEP-P038"
         ],
         "mergeType": "similar-model",
-        "note": "先用单位容积和剩余量表示工作量，再比较单位时间效率。"
+        "note": "先用单位容积和剩余量表示工作量，再比较单位时间效率."
       },
       {
         "collectionId": "P061",
@@ -894,7 +894,7 @@ const index={
           "L7-P1"
         ],
         "mergeType": "similar-model",
-        "note": "每套包含两类产品，依据每件耗料与总耗料求套数。"
+        "note": "每套包含两类产品，依据每件耗料与总耗料求套数."
       },
       {
         "collectionId": "P065",
@@ -905,7 +905,7 @@ const index={
           "TB-A37"
         ],
         "mergeType": "similar-model",
-        "note": "相同丢番图墓志铭方程；人教版附问为当爸爸时年龄，已有题为结婚年龄，差异与原问均保留。"
+        "note": "相同丢番图墓志铭方程；人教版附问为当爸爸时年龄，已有题为结婚年龄，差异与原问均保留."
       },
       {
         "collectionId": "P067",
@@ -916,7 +916,7 @@ const index={
           "TB-A34"
         ],
         "mergeType": "similar-model",
-        "note": "分段水价调查由已有分段计费题代表；开放调查要求保留在来源。"
+        "note": "分段水价调查由已有分段计费题代表；开放调查要求保留在来源."
       },
       {
         "collectionId": "P069",
@@ -930,7 +930,7 @@ const index={
           "PEP-P038"
         ],
         "mergeType": "split-similar",
-        "note": "四小问分别归入差与倍数、百分数部分与整体、进售价变化、平均效率比较；保留全部原句，不冒称代表题与原题数值相同。"
+        "note": "四小问分别归入差与倍数、百分数部分与整体、进售价变化、平均效率比较；保留全部原句，不冒称代表题与原题数值相同."
       },
       {
         "collectionId": "P070",
@@ -941,7 +941,7 @@ const index={
           "G9-06"
         ],
         "mergeType": "similar-model",
-        "note": "梯形面积公式中已知三量求第四量。"
+        "note": "梯形面积公式中已知三量求第四量."
       },
       {
         "collectionId": "P071",
@@ -952,7 +952,7 @@ const index={
           "TB-I18"
         ],
         "mergeType": "similar-model",
-        "note": "两类物品购买总价，已知一类单价，求另一类单价。"
+        "note": "两类物品购买总价，已知一类单价，求另一类单价."
       },
       {
         "collectionId": "P073",
@@ -963,7 +963,7 @@ const index={
           "L8-P2-Q1"
         ],
         "mergeType": "similar-model",
-        "note": "慢者先出发，快者同向追及，统一计时起点。"
+        "note": "慢者先出发，快者同向追及，统一计时起点."
       },
       {
         "collectionId": "P079",
@@ -974,7 +974,7 @@ const index={
           "PEP-P052"
         ],
         "mergeType": "similar-model",
-        "note": "固定费用加按次数累计的费用，比较临界点两侧；整数次数约束在原问记录中保留。"
+        "note": "固定费用加按次数累计的费用，比较临界点两侧；整数次数约束在原问记录中保留."
       }
     ]
   }
