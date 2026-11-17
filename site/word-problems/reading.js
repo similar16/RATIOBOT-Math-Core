@@ -99,10 +99,10 @@
   function check(problem,values={}){
     for(const field of build(problem).fields){
       const value=values[field.key];
-      if(!String(value??'').trim())return {ok:false,message:'还有数值未填写，请根据题干或这条条件补全空格。',key:field.key};
-      if(!checkValue(field,value))return {ok:false,message:field.percent?(field.percentFormat==='word'?'请核对“百分之”后面的数。':'请核对百分号前面的数，空格中不用再写百分号。'):'这个数与原条件不符，请核对数量及单位。',key:field.key};
+      if(!String(value??'').trim())return {ok:false,message:'还有数值未填写，请根据题干或这条条件补全空格.',key:field.key};
+      if(!checkValue(field,value))return {ok:false,message:field.percent?(field.percentFormat==='word'?'请核对“百分之”后面的数.':'请核对百分号前面的数，空格中不用再写百分号.'):'这个数与原条件不符，请核对数量及单位.',key:field.key};
     }
-    return {ok:true,message:'所有数值已与原条件核对。',key:null};
+    return {ok:true,message:'所有数值已与原条件核对.',key:null};
   }
   function canonical(problem){return Object.fromEntries(build(problem).fields.map(f=>[f.key,f.answer]));}
   const api={build,checkValue,check,canonical};

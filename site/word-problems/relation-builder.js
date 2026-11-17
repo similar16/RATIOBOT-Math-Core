@@ -26,7 +26,7 @@
   function select(id,from=''){
    if(readonly||!tokens.has(id))return;
    selected=selected?.id===id&&selected.from===from?null:{id,from};refreshSelection();
-   tell(selected?'已选“'+tokens.get(id)+'”，再点要放入的框。':'已取消选择。');
+   tell(selected?'已选“'+tokens.get(id)+'”，再点要放入的框.':'已取消选择.');
   }
   function place(target,payload){
    if(!alive||readonly||!tokens.has(payload?.id))return false;
@@ -36,18 +36,18 @@
    const old=answers[p.kind][p.row][p.col];
    if(payload.from){const from=parseAddress(payload.from);answers[from.kind][from.row][from.col]=old;}
    answers[p.kind][p.row][p.col]=payload.id;selected=null;drag=null;onChange(snapshot());paint();
-   tell('已放入“'+tokens.get(payload.id)+'”。');
+   tell('已放入“'+tokens.get(payload.id)+'”.');
    host.querySelector('[data-wp-rel-slot="'+target+'"]')?.focus({preventScroll:true});
    return true;
   }
-  function clear(target){const p=parseAddress(target);if(readonly||!p)return;answers[p.kind][p.row][p.col]='';selected=null;onChange(snapshot());paint();tell('已清空这个框。');host.querySelector('[data-wp-rel-slot="'+target+'"]')?.focus({preventScroll:true});}
+  function clear(target){const p=parseAddress(target);if(readonly||!p)return;answers[p.kind][p.row][p.col]='';selected=null;onChange(snapshot());paint();tell('已清空这个框.');host.querySelector('[data-wp-rel-slot="'+target+'"]')?.focus({preventScroll:true});}
   function dragPayload(event){
    if(drag)return drag;
    try{const raw=event.dataTransfer?.getData('application/x-ratiobot-quantity');if(raw&&raw.length<2000){const p=JSON.parse(raw);if(tokens.has(p.id))return p;}}catch{}
    return null;
   }
   function bindDraggable(button,payload){
-   button.addEventListener('dragstart',event=>{drag=payload;selected=null;refreshSelection();button.classList.add('is-dragging');if(event.dataTransfer){event.dataTransfer.effectAllowed=payload.from?'move':'copy';event.dataTransfer.setData('application/x-ratiobot-quantity',JSON.stringify(payload));event.dataTransfer.setData('text/plain',payload.id);}tell('把“'+tokens.get(payload.id)+'”拖进一个框。');});
+   button.addEventListener('dragstart',event=>{drag=payload;selected=null;refreshSelection();button.classList.add('is-dragging');if(event.dataTransfer){event.dataTransfer.effectAllowed=payload.from?'move':'copy';event.dataTransfer.setData('application/x-ratiobot-quantity',JSON.stringify(payload));event.dataTransfer.setData('text/plain',payload.id);}tell('把“'+tokens.get(payload.id)+'”拖进一个框.');});
    button.addEventListener('dragend',()=>{drag=null;button.classList.remove('is-dragging');host.querySelectorAll('.is-over').forEach(x=>x.classList.remove('is-over'));suppressClickUntil=Date.now()+250;});
    // Pointer dragging keeps the same interaction available on touch screens and pens.
    button.addEventListener('pointerdown',event=>{
@@ -66,7 +66,7 @@
      lastMove={clientX:e.clientX,clientY:e.clientY};updateHover(e);
     };
     const clean=()=>{moving=false;if(animation)root.cancelAnimationFrame?.(animation);document.removeEventListener('pointermove',move);document.removeEventListener('pointerup',end);document.removeEventListener('pointercancel',cancel);over?.classList.remove('is-over');ghost?.remove();button.classList.remove('is-dragging');cleanupPointer=null;};
-    const end=e=>{if(e.pointerId!==pointerId)return;const wasMoving=moving,target=moving?targetAt(e):null;clean();drag=null;if(wasMoving){e.preventDefault();suppressClickUntil=Date.now()+350;if(target)place(target.dataset.wpRelSlot,payload);else tell('没有放入框内，可以重新拖拽或点选。');}};
+    const end=e=>{if(e.pointerId!==pointerId)return;const wasMoving=moving,target=moving?targetAt(e):null;clean();drag=null;if(wasMoving){e.preventDefault();suppressClickUntil=Date.now()+350;if(target)place(target.dataset.wpRelSlot,payload);else tell('没有放入框内，可以重新拖拽或点选.');}};
     const cancel=()=>{clean();drag=null;};cleanupPointer=cancel;
     document.addEventListener('pointermove',move,{passive:false});document.addEventListener('pointerup',end);document.addEventListener('pointercancel',cancel);
    });
@@ -77,13 +77,13 @@
   }
   function paint(){
    if(!alive)return;cleanupPointer?.();
-   host.innerHTML='<div class="wp-relation-builder">'+(!readonly&&bank.length?'<p class="wp-relation-help">把上方的量拖进框里，也可以先点一个量，再点空框。同一个量可以重复使用。</p><div class="wp-relation-bank" role="group" aria-label="可拖拽的数量">'+bank.map(t=>'<button type="button" class="wp-relation-token" data-wp-token="'+esc(t.id)+'" draggable="true" aria-pressed="false">'+esc(t.label)+'</button>').join('')+'</div>':'')+'<div class="wp-relation-pair">'+kinds.map(kind=>'<section class="wp-relation-group" data-kind="'+kind+'"><h4>'+names[kind]+'</h4>'+((model[kind]||[]).length?(model[kind]||[]).map((_,i)=>'<div class="wp-relation-row"><div class="wp-relation-equation" role="group" aria-label="'+names[kind]+'第'+(i+1)+'行">'+slot(kind,i,0)+'<span class="wp-relation-operator">'+(kind==='sum'?'+':'×')+'</span>'+slot(kind,i,1)+'<span class="wp-relation-operator">=</span>'+slot(kind,i,2)+'</div></div>').join(''):'<p class="wp-relation-help">'+esc(model.empty?.[kind]||'本题没有需要单独整理的'+names[kind]+'。')+'</p>')+'</section>').join('')+'</div>'+(!readonly?'<p class="wp-relation-status" data-wp-relation-status role="status" aria-live="polite">同类关系可以交换行；两个加数或两个乘数可以交换位置。</p>':'')+'</div>';
+   host.innerHTML='<div class="wp-relation-builder">'+(!readonly&&bank.length?'<p class="wp-relation-help">把上方的量拖进框里，也可以先点一个量，再点空框.同一个量可以重复使用.</p><div class="wp-relation-bank" role="group" aria-label="可拖拽的数量">'+bank.map(t=>'<button type="button" class="wp-relation-token" data-wp-token="'+esc(t.id)+'" draggable="true" aria-pressed="false">'+esc(t.label)+'</button>').join('')+'</div>':'')+'<div class="wp-relation-pair">'+kinds.map(kind=>'<section class="wp-relation-group" data-kind="'+kind+'"><h4>'+names[kind]+'</h4>'+((model[kind]||[]).length?(model[kind]||[]).map((_,i)=>'<div class="wp-relation-row"><div class="wp-relation-equation" role="group" aria-label="'+names[kind]+'第'+(i+1)+'行">'+slot(kind,i,0)+'<span class="wp-relation-operator">'+(kind==='sum'?'+':'×')+'</span>'+slot(kind,i,1)+'<span class="wp-relation-operator">=</span>'+slot(kind,i,2)+'</div></div>').join(''):'<p class="wp-relation-help">'+esc(model.empty?.[kind]||'本题没有需要单独整理的'+names[kind]+'.')+'</p>')+'</section>').join('')+'</div>'+(!readonly?'<p class="wp-relation-status" data-wp-relation-status role="status" aria-live="polite">同类关系可以交换行；两个加数或两个乘数可以交换位置.</p>':'')+'</div>';
    if(readonly)return;
    host.querySelectorAll('[data-wp-token]').forEach(button=>{const payload={id:button.dataset.wpToken,from:''};button.onclick=()=>{if(Date.now()>=suppressClickUntil)select(payload.id);};bindDraggable(button,payload);});
    host.querySelectorAll('[data-wp-rel-slot]').forEach(button=>{
     const target=button.dataset.wpRelSlot,id=valueAt(target);
-    button.onclick=()=>{if(Date.now()<suppressClickUntil)return;if(selected)place(target,selected);else if(id)select(id,target);else tell('先选择上方的一个量，再点这个框。');};
-    button.onkeydown=event=>{if(event.key==='Delete'||event.key==='Backspace'){event.preventDefault();clear(target);}if(event.key==='Escape'){selected=null;refreshSelection();tell('已取消选择。');}};
+    button.onclick=()=>{if(Date.now()<suppressClickUntil)return;if(selected)place(target,selected);else if(id)select(id,target);else tell('先选择上方的一个量，再点这个框.');};
+    button.onkeydown=event=>{if(event.key==='Delete'||event.key==='Backspace'){event.preventDefault();clear(target);}if(event.key==='Escape'){selected=null;refreshSelection();tell('已取消选择.');}};
     button.ondragover=event=>{if(dragPayload(event)){event.preventDefault();button.classList.add('is-over');if(event.dataTransfer)event.dataTransfer.dropEffect=drag?.from?'move':'copy';}};
     button.ondragleave=()=>button.classList.remove('is-over');
     button.ondrop=event=>{event.preventDefault();const payload=dragPayload(event);button.classList.remove('is-over');suppressClickUntil=Date.now()+250;place(target,payload);};

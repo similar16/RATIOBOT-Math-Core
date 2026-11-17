@@ -122,17 +122,17 @@
  }
  function complete(value,draft,problem,route){
   const s=normalized(value),d=cleanDraft(draft);
-  if(!d||!problem||!route||d.problemId!==problem.id||d.routeId!==route.id||!/^wp-[\w-]+$/.test(d.runId))throw Error('分析记录不完整，请返回当前题目重试。');
-  if(d.contentRevision<integer(problem.contentRevision))throw Error('本题内容已更新，请重新分析后再保存。');
-  if(!Array.from({length:7},(_,i)=>d.passed[i]===true).every(Boolean))throw Error('请依次完成数量、列式、答案与检验，再保存完成记录。');
-  if((route.derivations||[]).some(x=>d.derived[x.id]!==true))throw Error('数据来源推导尚未全部核对，请返回检查。');
-  if((route.answers||[]).length&&!d.answersChecked)throw Error('求解结果尚未核对，请先完成求解与检验。');
-  if((route.verdictCases||[]).some((c,i)=>d.values['v:'+i]!==c.correct))throw Error('请分别完成每种情形的实际意义判断。');
+  if(!d||!problem||!route||d.problemId!==problem.id||d.routeId!==route.id||!/^wp-[\w-]+$/.test(d.runId))throw Error('分析记录不完整，请返回当前题目重试.');
+  if(d.contentRevision<integer(problem.contentRevision))throw Error('本题内容已更新，请重新分析后再保存.');
+  if(!Array.from({length:7},(_,i)=>d.passed[i]===true).every(Boolean))throw Error('请依次完成数量、列式、答案与检验，再保存完成记录.');
+  if((route.derivations||[]).some(x=>d.derived[x.id]!==true))throw Error('数据来源推导尚未全部核对，请返回检查.');
+  if((route.answers||[]).length&&!d.answersChecked)throw Error('求解结果尚未核对，请先完成求解与检验.');
+  if((route.verdictCases||[]).some((c,i)=>d.values['v:'+i]!==c.correct))throw Error('请分别完成每种情形的实际意义判断.');
   if(d.interactionVersion>=2){
-   const F=reading(),R=relations();if(!F||!R)throw Error('数量互动资源尚未准备好，请重试。');
-   if(!F.check(problem,d.values).ok||F.build(problem).facts.some(f=>!f.fields.length&&!d.seen.includes(f.id)))throw Error('请完成并核对读题数量填空。');
+   const F=reading(),R=relations();if(!F||!R)throw Error('数量互动资源尚未准备好，请重试.');
+   if(!F.check(problem,d.values).ok||F.build(problem).facts.some(f=>!f.fields.length&&!d.seen.includes(f.id)))throw Error('请完成并核对读题数量填空.');
    const model=R.build(problem,route),answers=Object.fromEntries(['sum','product'].map(kind=>[kind,model[kind].map((_,i)=>[0,1,2].map(j=>d.values['r:'+kind+':'+i+':'+j]||''))]));
-   if(!R.check(model,answers).ok)throw Error('请完成并核对加和、乘积关系。');
+   if(!R.check(model,answers).ok)throw Error('请完成并核对加和、乘积关系.');
   }
   if(s.records.some(x=>x.runId===d.runId))return {state:s,record:null};
   const discussion=!!route.discussion||['open','boundary'].includes(problem.kind)||!!d.customModel;
