@@ -1722,7 +1722,7 @@
       },
       {
         "id": "discount-definition",
-        "text": "十折表示原价的全部；几折就是原价的几十分之几",
+        "text": "十折表示全价；打几折就是按标价的十分之几付款",
         "kind": "property"
       }
     ],
@@ -1737,14 +1737,14 @@
         "derivations": [
           {
             "id": "discount-rate",
-            "label": "八折对应的售价比例",
+            "label": "八折：售价是标价的几倍",
             "expr": "8/10",
             "result": "0.8",
             "sources": [
               "discount",
               "discount-definition"
             ],
-            "explain": "八折是标价的8/10，先计算这个比例，再乘标价。"
+            "explain": "换算范例：八折→8÷10=0.8。意思是标价每10元，实际付8元；售价=标价×0.8。请在输入框中写出8÷10这样的换算算式。"
           }
         ],
         "table": {
@@ -1805,14 +1805,14 @@
           "sources": [
             "profit"
           ],
-          "text": "售价减进价等于利润96元。",
+          "text": "进价加利润等于售价，即进价加96元等于八折后的售价。",
           "hint": "哪些条件已经用来填表？哪一条条件还需要通过方程或比较来满足？"
         },
         "equations": [
           {
             "label": "利润关系",
-            "left": "(1.5*x)*0.8-x",
-            "right": "96"
+            "left": "x+96",
+            "right": "(1.5*x)*0.8"
           }
         ],
         "answers": [
@@ -1823,8 +1823,8 @@
           }
         ],
         "steps": [
-          "(1.5x)×0.8−x=96",
-          "(1.5×0.8−1)x=96",
+          "x+96=(1.5x)×0.8",
+          "x+96=1.2x",
           "0.2x=96",
           "x=480"
         ],
@@ -1874,7 +1874,7 @@
       },
       {
         "id": "discount-definition",
-        "text": "十折表示原价的全部；几折就是原价的几十分之几",
+        "text": "十折表示全价；打几折就是按标价的十分之几付款",
         "kind": "property"
       }
     ],
@@ -1889,14 +1889,14 @@
         "derivations": [
           {
             "id": "discount-rate",
-            "label": "七折对应的售价比例",
+            "label": "七折：售价是标价的几倍",
             "expr": "7/10",
             "result": "0.7",
             "sources": [
               "discount",
               "discount-definition"
             ],
-            "explain": "七折是标价的7/10。"
+            "explain": "换算范例：七折→7÷10=0.7。意思是标价每10元，实际付7元；售价=标价×0.7。请写出换算算式。"
           }
         ],
         "table": {
@@ -2026,7 +2026,7 @@
       },
       {
         "id": "discount-definition",
-        "text": "十折表示原价的全部；几折就是原价的几十分之几",
+        "text": "十折表示全价；打几折就是按标价的十分之几付款",
         "kind": "property"
       }
     ],
@@ -2041,14 +2041,14 @@
         "derivations": [
           {
             "id": "discount-rate",
-            "label": "八折对应的售价比例",
+            "label": "八折：售价是标价的几倍",
             "expr": "8/10",
             "result": "0.8",
             "sources": [
               "discount",
               "discount-definition"
             ],
-            "explain": "八折是标价的8/10；折扣作用于整个x+160。"
+            "explain": "换算范例：八折→8÷10=0.8。意思是标价每10元，实际付8元；本题应把整个标价x+160乘0.8。请先写出折扣的换算算式。"
           }
         ],
         "table": {
@@ -2184,7 +2184,7 @@
       },
       {
         "id": "discount-definition",
-        "text": "十折表示原价的全部；几折就是原价的几十分之几",
+        "text": "十折表示全价；打几折就是按标价的十分之几付款",
         "kind": "property"
       },
       {
@@ -2215,14 +2215,14 @@
           },
           {
             "id": "discount-rate",
-            "label": "六折对应的售价比例",
+            "label": "六折：售价是标价的几倍",
             "expr": "6/10",
             "result": "0.6",
             "sources": [
               "discount",
               "discount-definition"
             ],
-            "explain": "六折是标价的6/10，基准量为标价。"
+            "explain": "换算范例：六折→6÷10=0.6。意思是标价每10元，实际付6元；售价=标价×0.6。折扣以标价为准，不以进价为准。"
           }
         ],
         "table": {
@@ -3801,7 +3801,7 @@
       },
       {
         "id": "discount-definition",
-        "text": "十折表示原价的全部；几折就是原价的几十分之几",
+        "text": "十折表示全价；打几折就是按标价的十分之几付款",
         "kind": "property"
       },
       {
@@ -3821,14 +3821,14 @@
         "derivations": [
           {
             "id": "discount-rate",
-            "label": "九折对应的售价比例",
+            "label": "九折：售价是标价的几倍",
             "expr": "9/10",
             "result": "0.9",
             "sources": [
               "discount",
               "discount-definition"
             ],
-            "explain": "九折是标价的9/10。"
+            "explain": "换算范例：九折→9÷10=0.9。意思是标价每10元，实际付9元；售价=标价×0.9。请写出换算算式。"
           }
         ],
         "table": {

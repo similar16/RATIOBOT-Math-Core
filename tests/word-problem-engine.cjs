@@ -118,3 +118,65 @@ assert(E.checkDerivation('1800/60-(45-30)',{expr:'1800/60-15',result:'15',allowe
 
 assert.match(E.format('133100/157≈847.7707'), /\\frac.*\\approx/);
 assert(!E.format('5<15').startsWith('\\text{'));
+
+// Quantity tables accept different exact representations after their sources
+// have been checked, without weakening the earlier calculation-only gate.
+const readyCell = (expr, extra={}) => ({expr,sources:['given','unknown'],requiredDerivations:[],...extra});
+for(const [expr, writings] of [
+ ['27+x',['x+27','27+1*x']],
+ ['19+(20-x)',['39-x','-(x-39)','78/2-x','19+20-x']],
+ ['2*(x+6)',['2*x+12','12+x+x','2x+6+6']],
+ ['2*(x+6+4)',['2*x+12+8','20+2*x']],
+ ['(45+x)/3',['15+x/3','x/3+15']],
+ ['x+x+x',['3*x','x+2*x']],
+ ['2*x+3*(x-1)',['5*x-3','5x+(-3)']],
+ ['(1.5*x)*0.8',['1.2*x','6*x/5']],
+ ['x*x',['x^2']],
+ ['(n+1)^2-n*(n-1)',['3*n+1']]
+]) for(const writing of writings) {
+ const result=E.checkTableCell(writing,readyCell(expr));
+ assert(result.ok,expr+' accepts '+writing+': '+result.message);
+ assert.equal(result.sourceExpression,expr);
+ assert.deepEqual(result.sources,['given','unknown']);
+ if(E.normalize(writing)!==E.normalize(expr))assert(result.sourceTrace.length>=2,'An alternative spelling keeps its actual source trace');
+}
+assert.equal(E.checkDerivation('39-x',{expr:'19+(20-x)'}).kind,'source','The separate derivation checker stays strict');
+assert.equal(E.checkTableCell('39-x',{expr:'19+(20-x)'}).kind,'source','Absent source context is conservative');
+assert.equal(E.checkTableCell('100-61-x',readyCell('19+(20-x)')).kind,'source','Unrelated cancelling quantities have no source');
+assert.equal(E.checkTableCell('19+(20-x)=100-61-x',readyCell('19+(20-x)')).kind,'source','Do not hide those quantities later in a chain');
+assert.equal(E.checkTableCell('7*6*x/(7*5)',readyCell('(1.5*x)*0.8')).kind,'source','An unrelated factor cannot cancel to establish a coefficient');
+assert.equal(E.checkTableCell('39-x+y-y',readyCell('19+(20-x)')).kind,'variable');
+assert.equal(E.checkTableCell('39+x',readyCell('19+(20-x)')).kind,'math');
+const combined=E.checkTableCell('19+(20-x)=39-x',readyCell('19+(20-x)'));
+assert(combined.ok);assert.equal(combined.expression,'39-x');assert.deepEqual(combined.sourceTrace,['19+(20-x)','39-x']);
+
+// A constant result still needs its own source calculation or completed derivation.
+assert.equal(E.checkTableCell('0.8',readyCell('8/10')).kind,'source');
+assert(E.checkTableCell('8/10=0.8',readyCell('8/10')).ok);
+assert(E.checkTableCell('0.8',readyCell('8/10',{allowedNumbers:['0.8']})).ok);
+assert.equal(E.checkTableCell('1.25*x',{expr:'(1+25%)*x'}).kind,'source');
+const ratePending={expr:'(1/12)*x',sources:['rate','unknown'],allowedNumbers:[],requiredDerivations:[{id:'rate',label:'每小时完成量',completed:false}]};
+const rateReady={...ratePending,allowedNumbers:['1/12'],requiredDerivations:[{id:'rate',completed:true}]};
+assert.equal(E.checkTableCell('x/12',ratePending).kind,'source');
+for(const writing of ['x/12','(1/12)*x','(2/24)*x'])assert(E.checkTableCell(writing,rateReady).ok,writing);
+assert.equal(E.checkTableCell('0.08333*x',rateReady).kind,'math','Rates remain exact');
+const growthPending={expr:'(1+25%)*x',sources:['growth','unknown'],requiredDerivations:[{id:'growth',completed:false}]};
+assert.equal(E.checkTableCell('1.25*x',growthPending).kind,'source');
+assert(E.checkTableCell('1.25*x',{...growthPending,allowedNumbers:['1.25'],requiredDerivations:[{id:'growth',completed:true}]}).ok);
+assert(E.checkTableCell('0.2*x',readyCell('(4/20)*x',{allowedNumbers:['1/5']})).ok);
+assert(E.checkTableCell('(1/5)*x',readyCell('0.2*x')).ok);
+
+// Two expressions can represent the same real quantity via different facts
+// without being identities. Such alternatives must be explicitly authored.
+const sale={expr:'(1.5*x)*0.8',sources:['markup','discount','unknown'],requiredDerivations:[{id:'discount',completed:false}],alternatives:[{expr:'x+96',sources:['profit','unknown'],explain:'售价等于进价加利润。',requiredDerivations:[]}]};
+const otherSource=E.checkTableCell('96+x',sale);
+assert(otherSource.ok);assert.equal(otherSource.matchedAlternativeIndex,1);
+assert.deepEqual(otherSource.sources,['profit','unknown']);assert.equal(otherSource.sourceExpression,'x+96');
+assert.equal(otherSource.explain,'售价等于进价加利润。');
+assert.equal(E.checkTableCell('x+96',readyCell('(1.5*x)*0.8')).kind,'math','Do not infer identity from the final equation root');
+assert.equal(E.checkTableCell('576',readyCell('(1.5*x)*0.8')).kind,'math','Do not accept a solved quantity in place of its expression');
+assert.equal(E.checkTableCell('2*x-384',sale).kind,'math','Matching the final answer at x=480 is insufficient');
+const withAlternative=structuredClone(p);withAlternative.routes[0].table.rows[0].cells[0].alternatives=[{expr:'1/12',sources:['missing']}];
+assert(E.validateProblem(withAlternative).some(error=>error.includes('missing')),'Alternative source references are validated');
+for(const unsafe of ['alert(1)','<img>','x^999999','1/(x+6)'])assert(!E.checkTableCell(unsafe,readyCell('x')).ok);
+console.log('PASS flexible quantity-table expressions: exact algebra, explicit source alternatives, dependency gates and retained source traces');

@@ -37,6 +37,14 @@ for(const p of data)for(const route of p.routes){
 }
 assert.equal(counts.problems,106);assert.equal(counts.routes,114);
 
+// The clearer multiplier label preserves saved answers from before the wording update.
+const jacket=model('L8-P1'),oldJacket=R.canonical(jacket);
+assert(jacket.tokens.some(t=>t.label==='加价倍数'));
+assert(!jacket.tokens.some(t=>t.label==='加价后倍数'));
+for(const kind of ['sum','product'])oldJacket[kind]=oldJacket[kind].map(row=>row.map(value=>value==='加价倍数'?'加价后倍数':value));
+assert.equal(R.check(jacket,oldJacket).ok,true,'Previously saved quantity cards remain valid');
+assert.equal(R.normalizeToken('加价后倍数'),'加价倍数');
+
 // Equal labels may be reused in two slots: a square really uses the same side twice.
 const square=model('G9-04');
 assert.deepEqual(square.product[0],{terms:['每边颗数','每边颗数'],result:'总棋子数'});

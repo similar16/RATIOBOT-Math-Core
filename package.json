@@ -5,8 +5,8 @@
   "main": "index.js",
   "scripts": {
     "build": "node build.cjs",
-    "test": "node tests/regression.cjs && node tests/rings.cjs && node tests/review.cjs && node tests/daily.cjs && node tests/question-bank.cjs && node tests/appearance.cjs && node tests/student-profile.cjs && node tests/ocr.cjs && node tests/classroom.cjs && node tests/algebra.cjs && node tests/algebra-ui.cjs && node tests/special-practice.cjs && node tests/equations.cjs && node tests/mistakes.cjs && node tests/paper-mistakes.cjs && npm run test:word-problems",
-    "test:word-problems": "node tests/word-problem-engine.cjs && node tests/word-problem-content.cjs && node tests/word-problem-pep.cjs && node tests/word-problem-reading.cjs && node tests/word-problem-relations.cjs && node tests/word-problem-relation-builder.cjs && node tests/word-problem-scratchpad.cjs && node tests/word-problem-progress.cjs && node tests/word-problem-ui.cjs && node tests/word-problem-integration.cjs"
+    "test": "node tests/regression.cjs && node tests/rings.cjs && node tests/review.cjs && node tests/daily.cjs && node tests/question-bank.cjs && node tests/appearance.cjs && node tests/student-profile.cjs && node tests/credential-forms.cjs && node tests/ocr.cjs && node tests/classroom.cjs && node tests/algebra.cjs && node tests/algebra-ui.cjs && node tests/special-practice.cjs && node tests/equations.cjs && node tests/mistakes.cjs && node tests/paper-mistakes.cjs && npm run test:word-problems",
+    "test:word-problems": "node tests/word-problem-engine.cjs && node tests/word-problem-content.cjs && node tests/word-problem-pep.cjs && node tests/word-problem-catalog-order.cjs && node tests/word-problem-table-alternatives.cjs && node tests/word-problem-reading.cjs && node tests/word-problem-relations.cjs && node tests/word-problem-relation-builder.cjs && node tests/word-problem-scratchpad.cjs && node tests/word-problem-progress.cjs && node tests/word-problem-ui.cjs && node tests/word-problem-integration.cjs"
   },
   "repository": {
     "type": "git",
