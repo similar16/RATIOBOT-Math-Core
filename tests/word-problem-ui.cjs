@@ -5,7 +5,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { JSDOM } = require('jsdom');
 const base = path.resolve(process.env.SITE_DIR || 'site', 'word-problems');
-const files = ['engine.js','progress.js','data-l7-l8.js','data-l9-review.js','data-textbook-intro.js','data-textbook-applications.js','data-textbook-review.js','data-pep-foundations.js','data-pep-applications.js','data-pep-review.js','catalog.js','textbook-index.js','supplement-index.js','reading.js','relations.js','relation-builder.js','scratchpad.js','diagrams.js','app.js'];
+const files = ['engine.js','progress.js','data-l7-l8.js','data-l9-review.js','data-textbook-intro.js','data-textbook-applications.js','data-textbook-review.js','data-pep-foundations.js','data-pep-applications.js','data-pep-review.js','catalog.js','table-alternatives.js','textbook-index.js','supplement-index.js','reading.js','relations.js','relation-builder.js','scratchpad.js','diagrams.js','app.js'];
 const sources = files.map(file => ({ file, text:fs.readFileSync(path.join(base,file),'utf8') }));
 const clone = v => JSON.parse(JSON.stringify(v));
 const counts = { routes:0, sourceSteps:0, writableCells:0, equations:0, completed:0 };
@@ -48,18 +48,21 @@ function fixture() {
  const currentStep=()=>Number($('[aria-current="step"]')?.dataset.wpStep);
  const feedback=()=>$('.wp-feedback')?.textContent||'';
  function expectPassed(step,where){assert.equal(currentStep(),step,where+' is current step');const next=$('[data-wp-next]');assert(next&&!next.disabled,where+' did not pass: '+feedback());}
- function checkAndNext(step,where){click('[data-wp-check]');expectPassed(step,where);click('[data-wp-next]');assert.equal(currentStep(),step+1,where+' advances');}
- function completeScratch(where){
-  assert.equal(currentStep(),5,where+' reaches the scratchpad');
-  assert.equal($('.wp-stage h3')?.textContent,'在草稿纸上解方程');
+ function checkAndNext(step,where){click('[data-wp-check]');expectPassed(step,where);click('[data-wp-next]');assert.equal(currentStep(),step===3?5:step+1,where+' advances');}
+ function completeScratch(where,route){
+  assert.equal(currentStep(),5,where+' reaches the scratchpad and answer confirmation');
+  assert.equal($('.wp-stage h3')?.textContent,'在草稿纸上解方程并确认答案');
   assert($('[data-wp-scratch-mount]'),'The personal scratchpad is mounted');
-  assert(!$('[data-wp-next]'),'The scratchpad has one forward action');
-  assert(!$('[data-wp-hint]')&&!$('[data-wp-example]'),'The scratchpad does not offer a worked solution');
-  assert(!$('.wp-solution')&&!$('.wp-verification')&&!$('.wp-answer-grid'),'Opening the scratchpad does not reveal answers or the complete derivation');
-  assert.equal($('[data-wp-check]')?.textContent,'演算完成，核对答案 →');
-  click('[data-wp-check]');
-  assert.equal(currentStep(),6,where+' allows calculation on paper and proceeds directly to verification');
-  assert(!$('[data-wp-next]')&&!$('[data-wp-reflection]'),'Verification saves directly without a reflection gate');
+  assert(!$('[data-wp-hint]')&&!$('[data-wp-example]'),'Handwriting does not reveal a worked answer');
+  assert(!$('.wp-solution')&&!$('.wp-verification'),'Verification stays on the next page');
+  const problem=w.RatioWordProblemsData.find(p=>p.id===$('[data-wp-current-problem]').dataset.wpCurrentProblem);
+  route=route||problem.routes.find(r=>r.id===read().drafts[problem.id]?.routeId)||problem.routes[0];
+  for(const [i,a]of (route.answers||[]).entries())if($('[data-wp-input="a:'+i+'"]').value!==a.expr)setInput('a:'+i,a.expr);
+  click('[data-wp-check]');expectPassed(5,where+' confirms the numerical answers without grading ink');
+  assert(!$('.wp-verification'),'Confirming answers does not mix verification onto this page');
+  click('[data-wp-next]');assert.equal(currentStep(),6);
+  assert(!$('[data-wp-next]')&&!$('[data-wp-reflection]'));
+  assert(!$('[data-wp-input="a:0"]'),'The final page has no answer-confirmation input');
  }
  function fillVerification(route){
   (route.checks||[]).forEach((check,i)=>setInput('c:'+i,check.result));
@@ -105,13 +108,10 @@ function fixture() {
   }));
   fillRelations(problem,route);checkAndNext(2,problem.id+'/'+route.id+' table');
   if(!manual)for(const id of route.closure.sources){const c=[...host.querySelectorAll('[data-wp-closure]')].find(x=>x.dataset.wpClosure===id);checkBox(c);}
-  checkAndNext(3,problem.id+'/'+route.id+' independent condition');
   if(manual)textInput('[data-wp-discussion]','需要检查方程的适用范围、题目是否给出充分条件，以及所求数量的实际取值要求。');
   else (route.equations||[]).forEach((equation,i)=>{setInput('e:'+i,equation.left+'='+equation.right);counts.equations++;});
-  checkAndNext(4,problem.id+'/'+route.id+' equation');
-  completeScratch(problem.id+'/'+route.id);
-  (route.answers||[]).forEach((answer,i)=>setInput('a:'+i,answer.expr));
-  if((route.answers||[]).length){click('[data-wp-check]');assert($('.wp-verification'),problem.id+' must show verification after solving: '+feedback());}
+  checkAndNext(3,problem.id+'/'+route.id+' condition and equation together');
+  completeScratch(problem.id+'/'+route.id,route);
   fillVerification(route);
   assert.equal($('[data-wp-check]')?.textContent,'检验并保存');
   click('[data-wp-check]');
@@ -119,7 +119,7 @@ function fixture() {
   assert.equal(currentStep(),6,'A completed analysis remains on verification');
   assert($('.wp-solution'),'The complete derivation becomes available after verification');
   const record=read().records[0];
-  if(!teacher){assert.equal(record.problemId,problem.id);assert.equal(record.routeId,route.id);assert.equal(record.finished,true);assert.equal(record.interactionVersion,3);assert.equal(record.passed[5],true);assert.equal(record.firstPass[5],undefined,'Handwritten work is not automatically graded');assert.equal(record.reflection,'','Reflection is optional historical data, not required to finish');counts.completed++;}
+  if(!teacher){assert.equal(record.problemId,problem.id);assert.equal(record.routeId,route.id);assert.equal(record.finished,true);assert.equal(record.interactionVersion,4);assert.equal(record.passed[5],true);assert.equal(record.firstPass[5],true,'Numerical answers are checked; ink remains ungraded');assert.equal(record.firstPass[4],undefined,'The merged modeling page is not counted twice');assert.equal(record.reflection,'','Reflection is optional historical data, not required to finish');assert.equal(record.conditionUsed.length,problem.facts.length,'Finishing visibly accounts for every original condition');counts.completed++;}
   counts.routes++;
   return record;
  }
@@ -179,6 +179,50 @@ novelRoute.table.rows.forEach((row,ri)=>row.cells.forEach((cell,ci)=>{
 reuse.click('[data-wp-check]');reuse.expectPassed(2,'A completed fraction derivation also permits the equivalent decimal');
 reuse.close();
 
+// A different original condition may describe the same quantity; preserve that choice through modeling.
+const alternative=fixture(),jacket=alternative.w.RatioWordProblemsData.find(p=>p.id==='L8-P1'),jacketRoute=jacket.routes[0];
+alternative.app.start(jacket.id,true);alternative.confirmFacts();alternative.fillDerivations(jacketRoute);alternative.checkAndNext(1,'Discount provenance');
+jacketRoute.table.rows.forEach((row,ri)=>row.cells.forEach((cell,ci)=>{
+ if(cell.expr&&!cell.given)alternative.setInput('t:'+ri+':'+ci,ri===0&&ci===2?'96+x':cell.expr);
+}));
+alternative.fillRelations(jacket,jacketRoute);alternative.click('[data-wp-check]');alternative.expectPassed(2,'Selling price from cost plus profit');
+assert.match(alternative.$('[data-wp-input="t:0:2"]').closest('td').querySelector('.wp-source-preview').textContent,/盈利96元/,'Checked table inputs immediately show their chosen source');
+alternative.click('[data-wp-next]');
+const saleCell=alternative.$('[data-wp-take="0:2"]').closest('td');
+assert.match(saleCell.querySelector('.wp-cell-expression').textContent,/96.*x/,'The table keeps the student\'s accepted expression');
+assert.match(saleCell.querySelector('.wp-source').textContent,/96/,'Its source is the given profit');
+assert.match(saleCell.querySelector('.wp-source-preview').textContent,/进价.*利润|盈利96元/);
+assert.match(alternative.$('.wp-stage').textContent,/售价还应由进价乘1.5得到标价/,'The selected alternative provides its own independent closure hint');
+for(const id of ['discount'])alternative.checkBox(alternative.$('[data-wp-closure="'+id+'"]'));
+alternative.setInput('e:0','(96+x)-x=96');alternative.click('[data-wp-check]');
+assert(alternative.$('[data-wp-next]').disabled,'An identity assembled from an alternative cannot determine the unknown');
+alternative.setInput('e:0','');alternative.click('[data-wp-take="0:2"]');
+assert.match(alternative.$('[data-wp-input="e:0"]').value,/96.*x/,'Taking a table quantity uses the student expression, not the original key');
+alternative.setInput('e:0','96+x=1.5*x*0.8');alternative.checkAndNext(3,'Alternative closure and additive equation');
+alternative.completeScratch('Alternative selling price',jacketRoute);alternative.fillVerification(jacketRoute);alternative.click('[data-wp-check]');
+assert(alternative.$('.wp-completion'));assert.equal(alternative.read().records[0].values['t:0:2'],'96+x');
+assert.deepEqual(clone(alternative.read().records[0].closure),['discount']);alternative.close();
+
+// Mixed representations retain valid equations made from the unchanged cells.
+const mixed=fixture(),pots=mixed.w.RatioWordProblemsData.find(p=>p.id==='L7-P1'),potsRoute=pots.routes[0];
+mixed.app.start(pots.id,true);mixed.confirmFacts();mixed.fillDerivations(potsRoute);mixed.checkAndNext(1,'Mixed table setup');
+potsRoute.table.rows.forEach((row,ri)=>row.cells.forEach((cell,ci)=>{
+ if(cell.expr&&!cell.given)mixed.setInput('t:'+ri+':'+ci,ri===1&&ci===1?'(10.5-0.6*x)/0.15':cell.expr);
+}));mixed.fillRelations(pots,potsRoute);mixed.checkAndNext(2,'A cup count expressed from clay');
+for(const id of potsRoute.closure.sources)mixed.checkBox(mixed.$('[data-wp-closure="'+id+'"]'));
+mixed.setInput('e:0',potsRoute.equations[0].left+'='+potsRoute.equations[0].right);
+mixed.click('[data-wp-check]');mixed.expectPassed(3,'Unchanged clay cells still support the original independent total');mixed.close();
+
+// With two separately modeled players, selecting one alternative preserves the other player's condition.
+const paired=fixture(),scores=paired.w.RatioWordProblemsData.find(p=>p.id==='PEP-P078'),scoreRoute=scores.routes[0];
+paired.app.start(scores.id,true);paired.confirmFacts();paired.fillDerivations(scoreRoute);paired.checkAndNext(1,'Independent score variables');
+scoreRoute.table.rows.forEach((row,ri)=>row.cells.forEach((cell,ci)=>{
+ if(cell.expr&&!cell.given)paired.setInput('t:'+ri+':'+ci,ri===0&&ci===4?'76':cell.expr);
+}));paired.fillRelations(scores,scoreRoute);paired.checkAndNext(2,'One given total and one calculated total');
+for(const id of ['rules','a','b','gScore'])paired.checkBox(paired.$('[data-wp-closure="'+id+'"]'));
+scoreRoute.equations.forEach((q,i)=>paired.setInput('e:'+i,q.left+'='+q.right));
+paired.click('[data-wp-check]');paired.expectPassed(3,'Mixed independent conditions for two players');paired.close();
+
 // Derived constants retain their calculation chain visibly inside the table itself.
 const chains=fixture(),chainShirt=chains.w.RatioWordProblemsData.find(p=>p.id==='L8-H1');
 chains.app.start(chainShirt.id,true);chains.confirmFacts();chains.fillDerivations(chainShirt.routes[0]);chains.checkAndNext(1,'Visible percent source chains');
@@ -189,7 +233,7 @@ chains.close();
 // Worked examples stay explicitly labeled; they never count as independent analyses.
 const example=fixture(),exampleProblem=example.w.RatioWordProblemsData.find(p=>p.id==='L7-P1');
 example.app.start(exampleProblem.id,true);
-for(let step=0;step<5;step++){
+for(const step of [0,1,2,3]){
  example.click('[data-wp-example]');
  example.checkAndNext(step,'Worked-example step '+step);
 }
@@ -213,6 +257,7 @@ invalidation.close();
 // A saved answer remains editable; recheck it and save a distinct revision without replacing history or the scratchpad.
 const revised=fixture(),revisedProblem=revised.w.RatioWordProblemsData.find(p=>p.id==='L7-P1');
 const originalRecord=clone(revised.canonicalRoute(revisedProblem,revisedProblem.routes[0]));
+revised.click('[data-wp-step="5"]');
 const answerBox=revised.$('[data-wp-input="a:0"]');answerBox.focus();
 answerBox.value='99999';answerBox.setSelectionRange(1,3);
 answerBox.dispatchEvent(new revised.w.Event('input',{bubbles:true}));
@@ -220,12 +265,12 @@ assert.equal(revised.w.document.activeElement,answerBox,'Editing a completed ans
 assert.equal(answerBox.selectionStart,1);assert.equal(answerBox.selectionEnd,3);
 assert(!revised.$('.wp-completion'),'Edited work must no longer claim to be saved as complete');
 assert(!revised.$('.wp-solution'),'Editing an answer hides the previously checked complete derivation');
-assert.equal(revised.$('[data-wp-check]')?.textContent,'核对求解','An edited answer must be checked again before saving');
+assert.equal(revised.$('[data-wp-check]')?.textContent,'核对答案','An edited answer must be checked again before saving');
 revised.click('[data-wp-check]');
 assert(!revised.$('.wp-completion'),'An incorrect revised answer cannot save a finished record');
 assert.equal(revised.read().records.length,1,'An unsuccessful revision keeps the original record only');
 revised.setInput('a:0','('+revisedProblem.routes[0].answers[0].expr+')');
-revised.click('[data-wp-check]');assert(revised.$('.wp-verification'));
+revised.click('[data-wp-check]');revised.expectPassed(5,'Revised answer confirmation');revised.click('[data-wp-next]');assert(revised.$('.wp-verification'));
 revised.fillVerification(revisedProblem.routes[0]);
 assert.equal(revised.$('[data-wp-check]')?.textContent,'检验并保存');
 revised.click('[data-wp-check]');assert(revised.$('.wp-completion'));
@@ -258,7 +303,7 @@ const discussionChange=fixture(),discussionProblem=discussionChange.w.RatioWordP
 discussionChange.canonicalRoute(discussionProblem,discussionProblem.routes[0]);discussionChange.click('[data-wp-step="2"]');
 discussionChange.textInput('[data-wp-discussion]','两个未知的长度相乘，必须重新判断方程的次数。');
 assert(discussionChange.$('[data-wp-next]').disabled);
-discussionChange.click('[data-wp-step="4"]');assert.equal(discussionChange.currentStep(),2,'A revised table discussion cannot bypass its dependent explanation');
+discussionChange.click('[data-wp-step="3"]');assert.equal(discussionChange.currentStep(),2,'A revised table discussion cannot bypass its dependent explanation');
 discussionChange.click('[data-wp-catalog]');
 const discussionDraft=discussionChange.read().drafts[discussionProblem.id];
 assert.equal(discussionDraft.finished,false);for(let step=2;step<7;step++)assert(!discussionDraft.passed[step]);
@@ -271,7 +316,7 @@ verdictChange.checkBox(verdictChange.$('[name="wp-verdict"][value="impossible"]'
 assert(!verdictChange.$('[data-wp-next]'));assert(verdictChange.$('[data-wp-check]'));
 assert(!verdictChange.$('.wp-solution'),'A previously passed solution must not remain presented as a checked result after editing');
 assert(!verdictChange.$('.wp-completion'));assert.equal(verdictChange.currentStep(),6);
-verdictChange.click('[data-wp-check]');assert.match(verdictChange.feedback(),/题目要求/,'A revised incorrect verdict is checked again');
+verdictChange.click('[data-wp-check]');assert.match(verdictChange.feedback(),/整数、单位、取值范围/,'A revised incorrect verdict is checked again');
 verdictChange.click('[data-wp-catalog]');
 const verdictDraft=verdictChange.read().drafts[verdictProblem.id];
 assert.equal(verdictDraft.finished,false);assert.equal(verdictDraft.answersChecked,true);assert.equal(verdictDraft.passed[5],true,'Changing the verdict does not discard completed paper calculation');assert(!verdictDraft.passed[6]);
@@ -316,7 +361,7 @@ const scratchIdentity=fixture(),scratchKeys=[];
 const realScratchMount=scratchIdentity.w.RatioWordProblemScratchpad.mount;
 scratchIdentity.w.RatioWordProblemScratchpad.mount=(host,options)=>{scratchKeys.push(options.key);return realScratchMount(host,options);};
 scratchIdentity.app.start('L7-P1',true);
-for(let step=0;step<5;step++){scratchIdentity.click('[data-wp-example]');scratchIdentity.checkAndNext(step,'Scratch account setup '+step);}
+for(const step of [0,1,2,3]){scratchIdentity.click('[data-wp-example]');scratchIdentity.checkAndNext(step,'Scratch account setup '+step);}
 const scratchOldOwner=scratchIdentity.owner,scratchOldState=clone(scratchIdentity.read()),scratchOldKey=scratchKeys.at(-1);
 scratchIdentity.switchAccount('class-b::46');scratchIdentity.accounts.set(scratchIdentity.owner,clone(scratchOldState));
 scratchIdentity.remount().start('L7-P1');
@@ -337,7 +382,7 @@ teacher.close();
 
 // Textbook and guide catalogs retain source context while sharing repeated-question progress.
 const catalogs=fixture();catalogs.app.open();
-assert.equal(catalogs.host.querySelectorAll('[data-wp-problem]').length,150,'One card per existing and new task, grouped by topic');
+assert.equal(catalogs.host.querySelectorAll('[data-wp-problem]').length,81,'Textbook starts with all source positions in printed order');
 catalogs.click('[data-wp-location="I00"]');
 assert.match(catalogs.$('.wp-citation').textContent,/105页.*章引入/);
 assert.equal(catalogs.read().drafts['G10-01'].sourceLocation,'I00');
@@ -357,7 +402,12 @@ catalogs.close();
 
 // Topic navigation persists on return; original source tables and known parameters remain visible.
 const topics=fixture();topics.app.open();
-assert.equal(topics.host.querySelectorAll('[data-wp-category]').length,13);
+assert.equal(topics.host.querySelectorAll('[data-wp-category]').length,7);
+assert.equal(topics.$('[data-wp-book="textbook"]').getAttribute('aria-pressed'),'true');
+assert(topics.$('[aria-label="选择教材内容"]'));
+assert.match(topics.host.textContent,/能用加法不用减法，能用乘法不用除法/);
+assert.equal(topics.host.querySelectorAll('.wp-example-chains>span').length,3);
+assert.match(topics.$('.wp-example-chains').textContent,/八折/);
 assert(!topics.host.querySelector('[aria-label="选择课时"]'));
 topics.click('[data-wp-book="guide"]');topics.click('[data-wp-filter="fees"]');
 assert.equal(topics.host.querySelectorAll('[data-wp-category]').length,1);
@@ -375,12 +425,28 @@ assert.match(topics.$('.wp-source-locations').textContent,/合并题目与出处
 assert.match(topics.host.textContent,/人教版，110页/);
 topics.close();
 
+// Conditions are pinned only after discovery, can be marked/unmarked, and survive returning to the problem.
+const pinned=fixture();pinned.app.start('L8-P1',true);
+const pinnedProblem=pinned.w.RatioWordProblemsData.find(p=>p.id==='L8-P1');
+const firstFact=pinned.w.RatioWordProblemReading.build(pinnedProblem).facts.find(f=>f.fields.length);
+assert.equal(pinned.host.querySelectorAll('[data-wp-condition]').length,0);
+for(const f of firstFact.fields)pinned.textInput('[data-wp-fact="'+f.key+'"]',f.answer);
+const conditionSelector='[data-wp-condition="'+firstFact.id+'"]';
+assert(pinned.$(conditionSelector),'A correctly found fact appears on the left immediately');
+pinned.click(conditionSelector);assert(pinned.$(conditionSelector).classList.contains('is-used'));
+pinned.click(conditionSelector);assert(!pinned.$(conditionSelector).classList.contains('is-used'));
+pinned.click(conditionSelector);pinned.click('[data-wp-back]');pinned.app.start('L8-P1');
+assert(pinned.$(conditionSelector).classList.contains('is-used'),'Manual condition marks survive saved drafts');
+assert.equal(pinned.host.querySelectorAll('.wp-steps [data-wp-step]').length,6,'Combined modeling uses six pages');
+assert(!pinned.$('[data-wp-step="4"]'),'There is no redundant standalone equation page');
+pinned.close();
+
 // Reading is now a cloze task, and relations must be assembled before the table gate opens.
 const interactive=fixture(),interactiveProblem=interactive.w.RatioWordProblemsData.find(p=>p.id==='L7-P1'),interactiveRoute=interactiveProblem.routes[0];
 interactive.app.start(interactiveProblem.id,true);
 assert.equal(interactive.$('.wp-stem').textContent,interactiveProblem.stem,'The original problem remains available for reading');
 const blanks=[...interactive.host.querySelectorAll('[data-wp-fact]')];assert(blanks.length>0);assert(blanks.every(x=>x.value===''));
-assert(interactive.$('.wp-fact-list').hidden,'The reading stage does not show an already-extracted answer list beside the blanks');
+assert.equal(interactive.host.querySelectorAll('[data-wp-condition]').length,0,'The pinned list starts empty until facts have been found');
 interactive.click('[data-wp-check]');assert(interactive.$('[data-wp-next]').disabled);assert(interactive.$('[aria-invalid="true"]'));
 for(const [key,value]of Object.entries(interactive.w.RatioWordProblemReading.canonical(interactiveProblem)))interactive.textInput('[data-wp-fact="'+key+'"]',value);
 interactive.host.querySelectorAll('[data-wp-seen]').forEach(interactive.checkBox);
@@ -397,15 +463,14 @@ interactive.click('[data-wp-check]');assert(interactive.$('[data-wp-next]').disa
 interactive.fillRelations(interactiveProblem,interactiveRoute);interactive.click('[data-wp-check]');interactive.expectPassed(2,'Reordered drag relationships and table');
 interactive.click('[data-wp-next]');
 for(const id of interactiveRoute.closure.sources)interactive.checkBox([...interactive.host.querySelectorAll('[data-wp-closure]')].find(x=>x.dataset.wpClosure===id));
-interactive.checkAndNext(3,'Relation edit prerequisite');
-interactiveRoute.equations.forEach((q,i)=>interactive.setInput('e:'+i,q.left+'='+q.right));
-interactive.click('[data-wp-check]');interactive.expectPassed(4,'Equation completed before changing a relationship');
+interactive.click('[data-wp-example]');interactive.checkAndNext(3,'Relation edit prerequisite');
+assert.equal(interactive.currentStep(),5,'The combined modeling page opens calculation directly');
+assert.equal(interactive.read().drafts[interactiveProblem.id].passed[3],true);
 assert.equal(interactive.read().drafts[interactiveProblem.id].passed[4],true);
 interactive.click('[data-wp-step="2"]');
 interactive.click('[data-wp-rel-remove]');assert(interactive.$('[data-wp-next]').disabled,'Editing a checked relationship reopens dependent gates');
-assert(interactive.$('[data-wp-step="3"]').disabled,'The previously completed equality-condition step is invalidated');
-assert(interactive.$('[data-wp-step="4"]').disabled,'The previously completed equation step is invalidated');
-interactive.click('[data-wp-step="4"]');assert.equal(interactive.currentStep(),2);
+assert(interactive.$('[data-wp-step="3"]').disabled,'The combined condition-and-equation page is invalidated');
+interactive.click('[data-wp-step="3"]');assert.equal(interactive.currentStep(),2);
 interactive.close();
 
 // Historical records survive the new interaction version; drafts cannot skip the new activities.
@@ -437,17 +502,18 @@ for(const scenario of [{step:2,finished:false},{step:5,finished:false},{step:6,f
  legacyState.records[0].interactionVersion=2;
  migrationV2.app.destroy();migrationV2.accounts.set(migrationV2.owner,legacyState);migrationV2.remount().start(migrationV2Problem.id);
  const resumed=migrationV2.read().drafts[migrationV2Problem.id];
- assert.equal(migrationV2.currentStep(),scenario.finished?6:Math.min(scenario.step,5),'Version-2 work resumes at the corresponding new stage');
- assert.equal(resumed.interactionVersion,3);assert.equal(resumed.runId,legacyDraft.runId);
+ assert.equal(migrationV2.currentStep(),scenario.finished?6:scenario.step===4?3:Math.min(scenario.step,5),'Version-2 work resumes at the corresponding new stage');
+ assert.equal(resumed.interactionVersion,4);assert.equal(resumed.runId,legacyDraft.runId);
  assert.equal(resumed.scratchId,legacyDraft.runId,'Existing analyses receive a stable local scratchpad identity');
  assert.deepEqual(clone(resumed.values),legacyDraft.values,'Version-2 values remain available for review and correction');
- for(let step=0;step<5;step++)assert.equal(resumed.passed[step],legacyDraft.passed[step],'Keep modeling gate '+step);
- assert.equal(resumed.firstPass[5],undefined,'Old solving evidence is not treated as a handwriting grade');
+ for(let step=0;step<3;step++)assert.equal(resumed.passed[step],legacyDraft.passed[step],'Keep quantity gate '+step);
+ assert.equal(resumed.passed[3]===true,legacyDraft.passed[3]===true&&legacyDraft.passed[4]===true,'The merged page requires both former modeling gates');
+ if(!resumed.answersChecked)assert.equal(resumed.firstPass[5],undefined,'Unchecked answers do not inherit a handwriting pass');
  assert.equal(resumed.reflection,legacyDraft.reflection,'Historical reflection is retained without requiring it in the new UI');
  assert(!migrationV2.$('[data-wp-reflection]'));
  assert.equal(migrationV2.read().records.length,1);assert.equal(migrationV2.read().records[0].runId,migrationV2Record.runId);
  if(scenario.finished){assert(migrationV2.$('.wp-completion'));assert.equal(resumed.passed[5],true);assert.equal(resumed.passed[6],true);}
- else if(scenario.step>=5){assert(!resumed.passed[5]&&!resumed.passed[6]);assert(!migrationV2.$('.wp-solution'));migrationV2.completeScratch('Migrated version-2 calculation');}
+ else if(scenario.step>=5){if(!resumed.answersChecked)assert(!resumed.passed[5]);assert(!resumed.passed[6]);assert(!migrationV2.$('.wp-solution'));migrationV2.completeScratch('Migrated version-2 calculation');}
  const current=clone(migrationV2.read().drafts[migrationV2Problem.id]);
  migrationV2.remount().start(migrationV2Problem.id);
  assert.equal(migrationV2.currentStep(),current.step,'A version-3 draft resumes without another migration');
@@ -459,15 +525,15 @@ migrationV2.close();
 const taking=fixture();taking.app.start('L7-P1',true);
 for(let step=0;step<2;step++){taking.click('[data-wp-example]');taking.checkAndNext(step,'Table builder setup '+step);}
 taking.click('[data-wp-example]');taking.setInput('t:1:2','6*0.15*x');taking.checkAndNext(2,'Student equivalent quantity');
-taking.click('[data-wp-example]');taking.checkAndNext(3,'Builder closing condition');
+for(const id of taking.w.RatioWordProblemsData.find(p=>p.id==='L7-P1').routes[0].closure.sources)taking.checkBox(taking.$('[data-wp-closure="'+id+'"]'));
 assert.equal(taking.$('[data-wp-input="e:0"]').value,'','The module must not preassemble the equation');
 taking.click('[data-wp-take="0:2"]');taking.click('[data-wp-key="+"]');taking.click('[data-wp-take="1:2"]');taking.click('[data-wp-key="="]');taking.click('[data-wp-take="2:2"]');
 assert.match(taking.$('[data-wp-input="e:0"]').value,/6\*0\.15\*x/,'Take the learner expression instead of replacing it with a reference');
 const pupilEquation=taking.$('[data-wp-input="e:0"]').value;
-taking.click('[data-wp-check]');taking.expectPassed(4,'Equation assembled from selected quantities');taking.click('[data-wp-next]');
+taking.click('[data-wp-check]');taking.expectPassed(3,'Equation assembled from selected quantities');taking.click('[data-wp-next]');
 assert.equal(taking.$('[data-wp-scratch-equation="0"] .wp-math-line')?.textContent,taking.w.RatioWordProblemEngine.format(pupilEquation),'The scratchpad previews the pupil\'s actual checked equation');
 assert(!taking.$('.wp-stage').textContent.includes(taking.w.RatioWordProblemsData.find(p=>p.id==='L7-P1').routes[0].conclusion),'Opening the scratchpad does not reveal the final answer');
-taking.click('[data-wp-prev]');assert.equal(taking.currentStep(),4);
+taking.click('[data-wp-prev]');assert.equal(taking.currentStep(),3);
 assert.equal(taking.$('[data-wp-input="e:0"]').value,pupilEquation,'Returning from scratch keeps the student equation intact');
 taking.click('[data-wp-next]');taking.completeScratch('Student-equation scratchpad');taking.close();
 
@@ -485,7 +551,7 @@ assert(!coincidence.$('[data-wp-derivation="farRemaining"] .wp-success-tag'),'A 
 assert.match(coincidence.feedback(),/来源|计算过程/);
 coincidence.setInput('d:farRemaining','1800/60-(45-30)');coincidence.click('[data-wp-check-derived="farRemaining"]');
 assert(coincidence.$('[data-wp-derivation="farRemaining"] .wp-success-tag'),'Expanding a checked parent calculation preserves its origin');
-for(let step=1;step<5;step++){coincidence.click('[data-wp-example]');coincidence.checkAndNext(step,'Both-case setup '+step);}
+for(const step of [1,2,3]){coincidence.click('[data-wp-example]');coincidence.checkAndNext(step,'Both-case setup '+step);}
 coincidence.completeScratch('Both-case calculation');
 coincidence.click('[data-wp-example]');
 coincidence.checkBox(coincidence.$('[data-wp-case="1"][value="valid"]'));
@@ -512,7 +578,7 @@ chess.close();
  ink.w.HTMLCanvasElement.prototype.releasePointerCapture=()=>{releasedPointers++;};
  ink.w.HTMLElement.prototype.getBoundingClientRect=()=>({left:0,top:0,right:450,bottom:600,width:450,height:600,x:0,y:0});
  ink.app.start('L7-P1',true);
- for(let step=0;step<5;step++){ink.click('[data-wp-example]');ink.checkAndNext(step,'Continuous handwriting setup '+step);}
+ for(const step of [0,1,2,3]){ink.click('[data-wp-example]');ink.checkAndNext(step,'Continuous handwriting setup '+step);}
  const canvas=ink.$('canvas.wp-scratchpad-canvas');assert(canvas);
  const pointer=(type,x,y)=>{const event=new ink.w.Event(type,{bubbles:true,cancelable:true});Object.assign(event,{clientX:x,clientY:y,pointerId:1,pointerType:'pen',button:0,buttons:type==='pointerup'?0:1,isPrimary:true,pressure:0.5});canvas.dispatchEvent(event);};
  pointer('pointerdown',20,30);pointer('pointermove',40,50);
@@ -528,7 +594,7 @@ chess.close();
  await new Promise(resolve=>setTimeout(resolve,320));assert.equal(searching.currentStep(),0);assert.match(searching.$('.wp-citation').textContent,/105页/);searching.close();
  // MathLive loads lazily. Replacing a focused fallback field must preserve the chosen equation target.
  const upgrading=fixture();upgrading.app.start('L8-H1',true);
- for(let step=0;step<4;step++){upgrading.click('[data-wp-example]');upgrading.checkAndNext(step,'Delayed editor setup '+step);}
+ for(let step=0;step<3;step++){upgrading.click('[data-wp-example]');upgrading.checkAndNext(step,'Delayed editor setup '+step);}
  upgrading.setInput('e:1','10+').focus();
  class FakeMathfield extends upgrading.w.HTMLElement{constructor(){super();this.value='';}insert(value){this.value+=value;}}
  upgrading.w.customElements.define('math-field',FakeMathfield);upgrading.w.MathfieldElement=FakeMathfield;

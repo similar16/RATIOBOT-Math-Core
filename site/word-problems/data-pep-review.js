@@ -107,7 +107,7 @@
  '某购物平台有两种图书促销方式：方式一“满100元减50元”；方式二“单件打六折”。（1）设某本书原价为t元，列表说明t在不同范围内时两种方式分别需支付多少。（2）根据原价怎样选择省钱的购买方式？通过计算验证。',
  [fact('reduction','方式一：满100元减50元。'),fact('discount','方式二：单件打六折。'),fact('ten','十折相当于原价的10/10，六折的比例由6÷10得到。','property'),fact('positive','讨论原价为正数的同一本书。','convention'),fact('comparison','比较同一本书的两种支付金额，费用相等处可能成为方案选择的分界。','property')],
  {variable:'t',meaning:'所讨论图书的原价',unit:'元',domain:'t>0；先分未满100元与达到100元两种情形，再检查费用相等的候选值。',
-  derivations:[derive('discountRatio','六折对应的比例','6/10','0.6',['discount','ten'],'六折是原价的六成，先用6除以10。')],
+  derivations:[derive('discountRatio','六折：实际支付原价的几倍','6/10','0.6',['discount','ten'],'换算范例：六折→6÷10=0.6。意思是原价每10元，实际付6元；支付金额=原价×0.6。请写出换算算式。')],
   table:{headers:['原价范围与方式','原价/元','支付金额/元'],rows:[
    row('未满100元·方式一',cell('t',['unknown'],true),cell('t',['unknown','reduction'])),
    row('未满100元·方式二',cell('t',['unknown'],true),cell('(6/10)*t',['discount','ten','unknown'])),

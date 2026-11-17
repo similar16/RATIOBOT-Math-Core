@@ -35,16 +35,16 @@
  ],[['对应时刻全组人数','对应时刻女生比例','对应时刻女生人数']]);
  define('L8-P1',[
   ['进价','利润','售价']
- ],[['进价','加价后倍数','标价'],['标价','折扣比例','售价']]);
+ ],[['进价','加价倍数','标价'],['标价','折扣比例','售价']]);
  define('L8-P1-V1',[
   ['售价','亏损额','进价']
- ],[['进价','加价后倍数','标价'],['标价','折扣比例','售价']]);
+ ],[['进价','加价倍数','标价'],['标价','折扣比例','售价']]);
  define('L8-P1-V2',[
   ['进价','加价额','标价'],['进价','利润','售价']
  ],[['标价','折扣比例','售价']]);
  define('L8-P1-V3',[
   ['进价','运输成本','总成本'],['总成本','利润','售价']
- ],[['进价','运输费率','运输成本'],['进价','加价后倍数','标价'],['标价','折扣比例','售价']]);
+ ],[['进价','运输费率','运输成本'],['进价','加价倍数','标价'],['标价','折扣比例','售价']]);
  define('L8-P2-Q1',[
   ['小亮行进时间','小明先行时间','小明行进时间']
  ],rate);
@@ -327,6 +327,7 @@
   ['购买金额','找回金额','付款金额']
  ],[['单价','质量','购买金额']],['本组关系针对题中给定方程的买梨解释；另编故事仍需逐一解释数量和单位。']);
 
+ const normalizeToken=value=>value==='加价后倍数'?'加价倍数':value;
  function rows(raw){return raw.map((triple,i)=>{if(!Array.isArray(triple)||triple.length!==3||triple.some(s=>typeof s!=='string'||!s.trim()))throw Error('Invalid authored relation at '+i);return {terms:triple.slice(0,2),result:triple[2]};});}
  function build(problem,route){
   const key=String(problem?.id||'')+'/'+String(route?.id||''),raw=route?.relationTriples||problem?.relationTriples||catalog[key]||catalog[problem?.id];
@@ -339,7 +340,7 @@
  function check(model,answers){
   const available=new Set(model.tokens.map(t=>t.id));
   for(const type of ['sum','product']){
-   const wanted=model[type],actual=answers?.[type];
+   const wanted=model[type],raw=answers?.[type],actual=Array.isArray(raw)?raw.map(row=>Array.isArray(row)?row.map(normalizeToken):row):raw;
    if(!Array.isArray(actual)||actual.length!==wanted.length)return {ok:false,kind:'incomplete',type,message:'请把每条'+(type==='sum'?'加和':'乘积')+'关系的三个框都填完整。'};
    if(actual.some(row=>!Array.isArray(row)||row.length!==3||row.some(v=>typeof v!=='string'||!available.has(v))))return {ok:false,kind:'incomplete',type,message:'还有数量框没有填好，请从上方选择对应的数量。'};
    const counts=new Map();
@@ -348,5 +349,5 @@
   }
   return {ok:true,kind:'correct',message:'关系正确；同类关系的先后顺序以及加数、乘数的顺序都可以交换。'};
  }
- return {build,canonical,check};
+ return {build,canonical,check,normalizeToken};
 });

@@ -1,4 +1,4 @@
-/* Topic-first catalog. Source locations and existing problem IDs stay independent of navigation. */
+/* Textbooks follow source order; supplementary practice follows topics. Task IDs stay independent of navigation. */
 (function(root,factory){'use strict';const api=factory();if(typeof module==='object'&&module.exports)module.exports=api;else root.RatioWordProblemCatalog=api;})(typeof window==='undefined'?globalThis:window,function(){'use strict';
  const definitions=[
   ['quantity','和差倍分','找出整体、部分、差量和倍数。','TB-I02 TB-I13 TB-I14 TB-I17 TB-R03 TB-R05 TB-R06 TB-R09 TB-R10 TB-R12 PEP-P003 PEP-P015 PEP-P021 PEP-P032 PEP-P072'],
@@ -16,6 +16,15 @@
   ['modeling','开放探究与方法边界','用实验、编题或反例说明模型的条件。','G9-02 G9-04 G9-05 G10-04 S01 S07 TB-I03 TB-I04 TB-I08 TB-R01 TB-R22 PEP-P068']
  ];
  const categories=definitions.map(([id,label,description,ids])=>({id,label,description,problemIds:ids.split(' ')}));
+ const textbookSections=[
+  ['chapter-intro','第4章章引入'],
+  ['section-4-1','4.1 等式与方程'],
+  ['section-4-2','4.2 一元一次方程及其解法'],
+  ['section-4-3','4.3 用一元一次方程解决问题'],
+  ['investigation','数学探究'],
+  ['summary','小结与思考'],
+  ['review','复习题']
+ ].map(([id,label])=>({id,label}));
  const assignment=new Map();
  for(const category of categories)for(const id of category.problemIds){if(assignment.has(id))throw Error('重复的题型配置：'+id);assignment.set(id,category);}
  const categoryFor=problem=>assignment.get(typeof problem==='string'?problem:problem?.id)||null;
@@ -34,5 +43,31 @@
   const words=String(query).trim().toLocaleLowerCase().split(/\s+/).filter(Boolean);
   return rows.filter(row=>(book==='all'||row.book===book)&&(!category||row.category===category)&&words.every(word=>row.searchText.toLocaleLowerCase().includes(word)));
  }
- return {categories,categoryFor,build,select};
+ function forBook(data,index={items:[],references:[]},supplement={uniqueIds:[]},book='textbook'){
+  if(!['textbook','guide'].includes(book))throw Error('未知的题目来源：'+book);
+  const unique=build(data,index,supplement);
+  if(book==='guide'){
+   const rows=select(unique,{book}).map(row=>({...row,topicId:row.category,topicLabel:row.group,sectionId:row.category}));
+   const groups=categories.filter(c=>rows.some(row=>row.category===c.id));
+   return {book,groups,rows,itemCount:rows.length,taskCount:new Set(rows.map(row=>row.problem.id)).size,filterLabel:'选择题型',allLabel:'全部题型',countLabel:'道补充练习'};
+  }
+  const byId=new Map(unique.map(row=>[row.problem.id,row]));
+  const sourceRows=[...(index.items||[]),...(index.references||[])].map((source,order)=>({source,order}));
+  const firstPage=source=>Math.min(...(source.pages||[]).filter(Number.isFinite),Infinity);
+  sourceRows.sort((a,b)=>firstPage(a.source)-firstPage(b.source)||a.order-b.order);
+  const sectionFor=source=>textbookSections.find(section=>section.label===source.section)||textbookSections.find(section=>/^4\.[123]/.test(section.label)&&String(source.label||'').startsWith(section.label.slice(0,3)));
+  const rows=sourceRows.flatMap(({source})=>{
+   const original=byId.get(source.problemId);if(!original)return [];
+   const section=sectionFor(source);if(!section)throw Error('缺少教材顺序分组：'+source.id);
+   const problem=original.problem;
+   return [{...original,category:section.id,sectionId:section.id,group:section.label,topicId:original.category,topicLabel:original.group,source:source.source,label:source.label,locationId:source.id,reference:!!source.reference,pages:[...(source.pages||[])],searchText:[problem.title,problem.stem,...(problem.tags||[]),source.source,source.label,section.label,original.group,...original.mergedSources.flatMap(s=>[s.title,s.source,...(s.repeatSources||[])])].join(' ')}];
+  });
+  const groups=textbookSections.flatMap(section=>{
+   const entries=rows.filter(row=>row.category===section.id);if(!entries.length)return [];
+   const pages=entries.flatMap(row=>row.pages),start=Math.min(...pages),end=Math.max(...pages);
+   return [{...section,description:'按教材顺序查看第'+start+(start===end?'':'—'+end)+'页的应用及建模题。'}];
+  });
+  return {book,groups,rows,itemCount:rows.length,taskCount:new Set(rows.map(row=>row.problem.id)).size,filterLabel:'选择教材内容',allLabel:'全部教材内容',countLabel:'处教材位置'};
+ }
+ return {categories,textbookSections,categoryFor,build,select,forBook};
 });

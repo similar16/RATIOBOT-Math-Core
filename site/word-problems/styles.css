@@ -33,6 +33,12 @@
 .wp-example-chains{display:flex;gap:13px;flex-wrap:wrap}
 .wp-example-chains>span{padding:12px 16px;background:var(--wp-paper);border:2px solid var(--wp-ink);border-radius:12px;min-width:200px;box-shadow:3px 3px 0 rgba(62,53,64,.1)}
 .wp-example-chains small{display:block;font-size:12px;margin-top:5px;color:var(--wp-muted)}
+.wp-principle{margin:24px 0;padding:24px 28px;background:var(--wp-yellow-soft);border:3px solid var(--wp-ink);border-radius:22px;box-shadow:var(--wp-shadow)}
+.wp-principle h3{margin:8px 0 12px!important}.wp-principle>p{color:var(--wp-muted);line-height:1.7}
+.wp-principle-examples{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:18px}
+.wp-principle-examples>div{background:var(--wp-paper);border:2px solid var(--wp-ink);border-radius:12px;padding:16px;min-width:0}
+.wp-principle-examples b{display:inline-block;background:var(--wp-teal-soft);border:1.5px solid var(--wp-ink);border-radius:6px;padding:3px 7px;font-size:12px}
+.wp-principle-examples p{font-weight:850;margin:12px 0}.wp-principle-examples small{display:block;font-size:13px;line-height:1.8;color:var(--wp-muted)}
 .wp-counter{align-self:center;text-align:center;display:grid;gap:3px;padding:18px 10px;border:3px solid var(--wp-ink);border-radius:18px;background:var(--wp-yellow);box-shadow:4px 4px 0 var(--wp-coral)}
 .wp-counter strong{font-size:46px;font-weight:1000;line-height:1.1}.wp-counter span{font-size:14px;font-weight:900}.wp-counter small{font-size:11px;color:var(--wp-muted);margin-top:8px}
 .wp-book-tabs{display:flex;gap:12px;margin-top:28px;flex-wrap:wrap}
@@ -88,6 +94,16 @@
 .wp-current-variable>span,.wp-current-variable small{color:var(--wp-muted);font-size:12px;font-weight:700}.wp-current-variable p{font-size:15px}
 .wp-context details{margin-top:17px}.wp-context summary{font-size:13px;cursor:pointer;font-weight:800}
 .wp-fact-list .wp-fact{padding:10px 0;border-bottom:1px solid rgba(62,53,64,.22)}
+.wp-conditions{margin-top:20px;border-top:2px solid var(--wp-ink);padding-top:15px;min-width:0}
+.wp-condition-heading{display:flex;align-items:center;justify-content:space-between;gap:10px}.wp-condition-heading h4{margin:0;font-size:15px}.wp-condition-heading strong{font-size:13px;white-space:nowrap}
+.wp-condition-help,.wp-condition-empty{font-size:12px;line-height:1.6;color:var(--wp-muted)}
+.wp-conditions-list{display:grid;gap:9px}
+.wp-condition{display:flex;align-items:flex-start;gap:9px;width:100%;padding:10px;border:2px solid var(--wp-ink);border-radius:10px;background:var(--wp-paper);text-align:left;color:var(--wp-ink);font-size:13px!important;line-height:1.65;box-shadow:2px 2px 0 rgba(62,53,64,.13);overflow-wrap:anywhere}
+.wp-condition>span:last-child{min-width:0}.wp-condition small{display:block;font-size:10px;color:var(--wp-muted)}.wp-condition-status{flex:none;font-weight:900}
+.wp-condition.is-used{background:#e6e3df;color:#77716e;border-color:#a6a19b;box-shadow:none}.wp-condition.is-used small{color:#827c76}
+.wp-condition-complete{padding:10px;border:2px solid var(--wp-ink);border-radius:9px;background:var(--wp-teal-soft);font-size:12px;font-weight:800}
+.wp-equation-block,.wp-answer-confirm{border-top:2px dashed rgba(62,53,64,.4);margin-top:24px;padding-top:18px}.wp-equation-block h4,.wp-answer-confirm h4{font-size:20px;margin:0 0 14px}
+.wp-confirmed-answers{padding:12px 15px;border:2px solid var(--wp-ink);border-radius:10px;background:var(--wp-yellow-soft);margin-bottom:18px}.wp-confirmed-answers summary{font-size:13px;font-weight:800;cursor:pointer}
 .wp-fact>span{font-size:11px;color:var(--wp-muted);font-weight:700}.wp-fact p{font-size:13px;margin:3px 0!important}
 .wp-source-locations p{font-size:11px!important;color:var(--wp-muted)}
 .wp-stage{min-width:0;background:var(--wp-paper);border-radius:22px;padding:25px;border:3px solid var(--wp-ink);box-shadow:var(--wp-shadow)}
@@ -246,6 +262,7 @@ input.wp-fact-number.is-correct,.wp-fact-number.is-correct input{background:var(
   .wp-relation-group{padding:13px}.wp-relation-row,.wp-relation-equation{gap:7px}
 }
 @media(max-width:760px){
+.wp-principle{padding:20px}.wp-principle-examples{grid-template-columns:1fr}.wp-conditions-list{max-height:260px;overflow:auto;padding-right:3px}
   #wordProblems h2{font-size:30px}#wordProblems h3{font-size:23px}
   .wp-workspace{grid-template-columns:1fr}.wp-context{position:static;max-height:none;overflow:visible}
   .wp-context .wp-fact-list:not([open]){margin-top:12px}

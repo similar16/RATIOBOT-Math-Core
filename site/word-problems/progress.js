@@ -17,25 +17,45 @@
  function cleanDraft(d,update=true){
   if(!d||typeof d!=='object'||Array.isArray(d))return null;
   const hints=counts(d.hints),example=!!d.example||d.status==='example';
-  return {schema:1,interactionVersion:integer(d.interactionVersion,3),runId:text(d.runId,100),scratchId:text(d.scratchId||d.runId,100),problemId:text(d.problemId,50),routeId:text(d.routeId,50),sourceLocation:text(d.sourceLocation,50),step:integer(d.step,6),
+  return {schema:1,interactionVersion:integer(d.interactionVersion,4),runId:text(d.runId,100),scratchId:text(d.scratchId||d.runId,100),problemId:text(d.problemId,50),routeId:text(d.routeId,50),sourceLocation:text(d.sourceLocation,50),step:integer(d.step,6),
    values:values(d.values),passed:flags(d.passed),attempts:counts(d.attempts),firstPass:flags(d.firstPass),hints,
-   seen:list(d.seen,60),closure:list(d.closure,30),
+   seen:list(d.seen,60),closure:list(d.closure,30),conditionFound:list(d.conditionFound,80),conditionUsed:list(d.conditionUsed,80),
    derivationSources:Object.fromEntries(entries(d.derivationSources,60).map(([k,v])=>[k,list(v,20)])),
    derived:flags(d.derived,60,false),verdict:text(d.verdict,30),reflection:text(d.reflection,1600),customModel:text(d.customModel,1600),
    discussion:text(d.discussion,2000),assisted:!!d.assisted||example||d.status==='assisted'||Object.values(hints).some(n=>n>0),example,
    finished:d.finished===true,answersChecked:d.answersChecked===true,startedAt:stamp(d.startedAt),updatedAt:update?new Date().toISOString():stamp(d.updatedAt)};
  }
- function migrateDraft(raw){
-  const d=cleanDraft(raw,false);if(!d||d.interactionVersion!==2)return d;
+ function migrateDraft(raw,target=4){
+  let d=cleanDraft(raw,false);if(!d)return d;
+  if(d.interactionVersion===2){
   const remap=o=>{const result=Object.fromEntries(Object.entries(o).filter(([k])=>/^[0-4]$/.test(k)));if(Object.hasOwn(o,'5'))result[6]=o[5];return result;};
   const passed=Object.fromEntries(Object.entries(d.passed).filter(([k])=>/^[0-4]$/.test(k)));
   if(d.finished){passed[5]=true;if(Object.hasOwn(d.passed,'5'))passed[6]=d.passed[5];}
   // Step 5 is now a personal scratchpad; the old solve/check evidence moves to step 6.
   // Legacy reflection text is retained as history, but its old step-6 grading evidence is omitted.
-  return {...d,interactionVersion:3,step:d.finished?6:Math.min(d.step,5),passed,
+  d={...d,interactionVersion:3,step:d.finished?6:Math.min(d.step,5),passed,
    firstPass:remap(d.firstPass),attempts:remap(d.attempts),hints:remap(d.hints)};
+  }
+  if(target<4||d.interactionVersion!==3)return d;
+  // Preserve logical evidence IDs while showing six pages: 3+4 share one modeling page;
+  // step 5 now confirms numerical answers, and step 6 only verifies original conditions.
+  const modelReady=d.passed[3]===true&&d.passed[4]===true,answerReady=d.answersChecked||d.finished;
+  const passed={...d.passed};if(!modelReady){delete passed[3];delete passed[4];}
+  if(!answerReady)delete passed[5];else if(modelReady)passed[5]=true;
+  if(!modelReady||!answerReady)delete passed[6];
+  const mergeModel=o=>{const result={...o};delete result[4];if(Object.hasOwn(o,'3')||Object.hasOwn(o,'4'))result[3]=(o[3]||0)+(o[4]||0);return result;};
+  const firstPass={...d.firstPass};delete firstPass[4];delete firstPass[5];
+  if(Object.hasOwn(d.firstPass,'3')||Object.hasOwn(d.firstPass,'4')){
+   if(d.firstPass[3]===false||d.firstPass[4]===false)firstPass[3]=false;
+   else if(d.firstPass[3]===true&&d.firstPass[4]===true)firstPass[3]=true;else delete firstPass[3];
+  }
+  if(answerReady)firstPass[5]=d.firstPass[6]!==false&&!d.attempts[6]&&!d.hints[6]&&!d.example;
+  const attempts=mergeModel(d.attempts),hints=mergeModel(d.hints);
+  if(d.attempts[6])attempts[5]=d.attempts[6];else delete attempts[5];
+  if(d.hints[6])hints[5]=d.hints[6];else delete hints[5];
+  return {...d,interactionVersion:4,answersChecked:answerReady,step:d.finished?6:d.step===4?3:d.step===6&&!answerReady?5:d.step,passed,firstPass,attempts,hints};
  }
- function accuracy(d){const graded=Object.keys(d.firstPass).filter(k=>(d.interactionVersion>=3?/^(?:[0-4]|6)$/:/^[0-5]$/).test(k)),first=graded.filter(k=>d.firstPass[k]===true).length;return {first,total:graded.length,accuracy:graded.length?Math.round(100*first/graded.length):null};}
+ function accuracy(d){const graded=Object.keys(d.firstPass).filter(k=>(d.interactionVersion>=4?/^(?:[0-3]|5|6)$/:d.interactionVersion>=3?/^(?:[0-4]|6)$/:/^[0-5]$/).test(k)),first=graded.filter(k=>d.firstPass[k]===true).length;return {first,total:graded.length,accuracy:graded.length?Math.round(100*first/graded.length):null};}
  function valueLabels(route,answers,problem){
   const factLabels=new Map((reading()?.build(problem).fields||[]).map(f=>[f.key,f.label]));
   return Object.fromEntries(Object.keys(answers).map(key=>{
@@ -67,15 +87,19 @@
  }
  function mergeDraft(a,b){
   if(a.runId!==b.runId||a.routeId!==b.routeId)return String(b.updatedAt||'')>=String(a.updatedAt||'')?b:a;
+  if(a.interactionVersion>=4&&b.interactionVersion<4)b={...b,conditionFound:a.conditionFound,conditionUsed:a.conditionUsed};
+  if(b.interactionVersion>=4&&a.interactionVersion<4)a={...a,conditionFound:b.conditionFound,conditionUsed:b.conditionUsed};
   // An older device may still send v2 data for this run. Align step meanings before merging evidence.
-  if(a.interactionVersion===3||b.interactionVersion===3){if(a.interactionVersion===2)a=migrateDraft(a);if(b.interactionVersion===2)b=migrateDraft(b);}
+  const target=Math.max(a.interactionVersion,b.interactionVersion);if(target>=3){if(a.interactionVersion>=2&&a.interactionVersion<target)a=migrateDraft(a,target);if(b.interactionVersion>=2&&b.interactionVersion<target)b=migrateDraft(b,target);}
   const latest=String(b.updatedAt||'')>=String(a.updatedAt||'')?b:a;
   // Keep latest expressions and unlocked steps; assistance evidence is irreversible within one run.
   return {...latest,...mergeFlags(a,b)};
  }
  function mergeRecord(a,b){
   if(a.problemId!==b.problemId||a.routeId!==b.routeId)return String(b.at||'')>=String(a.at||'')?b:a;
-  if(a.interactionVersion===3||b.interactionVersion===3){if(a.interactionVersion===2)a={...a,...migrateDraft(a)};if(b.interactionVersion===2)b={...b,...migrateDraft(b)};}
+  if(a.interactionVersion>=4&&b.interactionVersion<4)b={...b,conditionFound:a.conditionFound,conditionUsed:a.conditionUsed};
+  if(b.interactionVersion>=4&&a.interactionVersion<4)a={...a,conditionFound:b.conditionFound,conditionUsed:b.conditionUsed};
+  const target=Math.max(a.interactionVersion,b.interactionVersion);if(target>=3){if(a.interactionVersion>=2&&a.interactionVersion<target)a={...a,...migrateDraft(a,target)};if(b.interactionVersion>=2&&b.interactionVersion<target)b={...b,...migrateDraft(b,target)};}
   const latest=String(b.at||'')>=String(a.at||'')?b:a;
   const combined={...latest,...mergeFlags(a,b)};
   combined.status=a.status==='review'||b.status==='review'?'review':combined.example?'example':combined.assisted?'assisted':'independent';
@@ -98,7 +122,7 @@
  function complete(value,draft,problem,route){
   const s=normalized(value),d=cleanDraft(draft);
   if(!d||!problem||!route||d.problemId!==problem.id||d.routeId!==route.id||!/^wp-[\w-]+$/.test(d.runId))throw Error('分析记录不完整，请返回当前题目重试。');
-  if(!Array.from({length:7},(_,i)=>d.passed[i]===true).every(Boolean))throw Error('请依次完成并核对七个分析步骤，再保存完成记录。');
+  if(!Array.from({length:7},(_,i)=>d.passed[i]===true).every(Boolean))throw Error('请依次完成数量、列式、答案与检验，再保存完成记录。');
   if((route.derivations||[]).some(x=>d.derived[x.id]!==true))throw Error('数据来源推导尚未全部核对，请返回检查。');
   if((route.answers||[]).length&&!d.answersChecked)throw Error('求解结果尚未核对，请先完成求解与检验。');
   if((route.verdictCases||[]).some((c,i)=>d.values['v:'+i]!==c.correct))throw Error('请分别完成每种情形的实际意义判断。');

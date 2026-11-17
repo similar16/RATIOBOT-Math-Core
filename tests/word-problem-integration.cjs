@@ -12,9 +12,9 @@ const clone=value=>JSON.parse(JSON.stringify(value));
 const opened=[];
 
 function draft(id='G10-05',value='PRIVATE-WRITTEN-WORK',when='2026-11-16T10:00:00.000Z'){
- return {schema:1,interactionVersion:3,runId:'wp-fixture-'+id,scratchId:'wp-fixture-'+id,problemId:id,routeId:'main',step:2,
+ return {schema:1,interactionVersion:4,runId:'wp-fixture-'+id,scratchId:'wp-fixture-'+id,problemId:id,routeId:'main',step:2,
   values:{'t:0:0':value},passed:{0:true,1:true},firstPass:{0:true,1:true},
-  seen:['fact'],derived:{},reflection:'PRIVATE-REFLECTION',customModel:'',discussion:'',
+  seen:['fact'],conditionFound:['PRIVATE-CONDITION-FOUND'],conditionUsed:['PRIVATE-CONDITION-USED'],derived:{},reflection:'PRIVATE-REFLECTION',customModel:'',discussion:'',
   startedAt:when,updatedAt:when};
 }
 function progress(id,value,when){const d=draft(id,value,when);return {version:1,records:[],drafts:{[d.problemId]:d}};}
@@ -68,7 +68,7 @@ function fixture(){
  }
  async function loadModule(){
   w.katex={renderToString:s=>String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))};
-  for(const file of ['engine.js','data-l7-l8.js','data-l9-review.js','data-textbook-intro.js','data-textbook-applications.js','data-textbook-review.js','data-pep-foundations.js','data-pep-applications.js','data-pep-review.js','catalog.js','textbook-index.js','supplement-index.js','reading.js','relations.js','relation-builder.js','scratchpad.js','diagrams.js','app.js'])w.eval(read('word-problems/'+file));
+  for(const file of ['engine.js','data-l7-l8.js','data-l9-review.js','data-textbook-intro.js','data-textbook-applications.js','data-textbook-review.js','data-pep-foundations.js','data-pep-applications.js','data-pep-review.js','catalog.js','textbook-index.js','supplement-index.js','table-alternatives.js','reading.js','relations.js','relation-builder.js','scratchpad.js','diagrams.js','app.js'])w.eval(read('word-problems/'+file));
   const append=w.document.head.append.bind(w.document.head);
   w.document.head.append=(...nodes)=>{append(...nodes);for(const node of nodes){const url=node.src||node.href||'';if(url.includes('/word-problems/'))queueMicrotask(()=>node.onload?.());}};
   await w.RatioWordProblemsUI.open();
@@ -89,6 +89,8 @@ function fixture(){
  assert.equal(snapshot.growth_state.wordProblems.records[0].values['t:0:0'],'PRIVATE-TEACHER-ANSWER','full records remain in private growth snapshot');
  assert.equal(snapshot.growth_state.wordProblems.drafts['G10-05'].reflection,'PRIVATE-REFLECTION','retained historical reflection remains private even though it is no longer an activity');
  assert.equal(snapshot.growth_state.wordProblems.drafts['G10-05'].scratchId,'wp-fixture-G10-05','Private progress retains the stable local scratchpad reference');
+ assert.deepEqual(clone(snapshot.growth_state.wordProblems.drafts['G10-05'].conditionFound),['PRIVATE-CONDITION-FOUND']);
+ assert.deepEqual(clone(snapshot.growth_state.wordProblems.drafts['G10-05'].conditionUsed),['PRIVATE-CONDITION-USED']);
  const publicProjection={modules:snapshot.economy.modules,history:snapshot.game_stats.history};
  assert(!JSON.stringify(publicProjection).includes('PRIVATE-'),'existing public summary projection cannot receive private written work');
  snapshot.growth_state.wordProblems.drafts['G10-05'].values['t:0:0']='changed-export';
@@ -138,30 +140,46 @@ function fixture(){
  pending.dom.window.close();
  console.log('PASS pending local/cloud merge retains both drafts before private upload');
 
- // The real homepage bridge saves immediately after final verification, with no reflection submission.
+ // The real six-page flow confirms answers beside the scratchpad before the final verification page.
  const completed=fixture();await Promise.resolve();completed.student('completed-student','WPD','4');await completed.loadModule();
  const completedHost=completed.w.document.getElementById('wordProblems');
  completedHost.querySelector('[data-wp-problem="L7-P1"]').click();
- for(let step=0;step<5;step++){
+ const completedProblem=completed.w.RatioWordProblemsData.find(p=>p.id==='L7-P1'),completedRoute=completedProblem.routes[0],completedFactIds=clone(completedProblem.facts.map(f=>f.id));
+ assert.deepEqual([...completedHost.querySelectorAll('[data-wp-step]')].map(el=>el.dataset.wpStep),['0','1','2','3','5','6'],'The separate equation page is removed from navigation');
+ for(const step of [0,1,2,3]){
   assert.equal(completedHost.querySelector('[aria-current="step"]').dataset.wpStep,String(step));
+  if(step===3){assert(completedHost.querySelector('.wp-closure-choices'));assert(completedHost.querySelector('.wp-equation-entry'),'Equation entry follows the relation choices on the same page');}
   completedHost.querySelector('[data-wp-example]').click();
   completedHost.querySelector('[data-wp-check]').click();
   const next=completedHost.querySelector('[data-wp-next]');assert(next&&!next.disabled,'Example analysis passes modeling stage '+step);next.click();
  }
+ assert.equal(completedHost.querySelector('[aria-current="step"]').dataset.wpStep,'5');
  assert(completedHost.querySelector('[data-wp-scratch-mount]'),'The real module loads its scratchpad step');
  assert(completedHost.querySelector('[data-wp-scratch-equation="0"]'),'The real scratchpad displays the checked equation');
- assert(!completedHost.querySelector('.wp-solution')&&!completedHost.querySelector('.wp-answer-grid'),'The scratchpad does not disclose the solution');
- assert(!completedHost.querySelector('[data-wp-next]')&&!completedHost.querySelector('[data-wp-example]'));
- assert.equal(completedHost.querySelector('[data-wp-check]').textContent,'演算完成，核对答案 →');
+ assert(!completedHost.querySelector('.wp-solution')&&!completedHost.querySelector('.wp-verification'),'The scratchpad does not disclose the solution or verification values');
+ assert(completedHost.querySelector('.wp-answer-grid'),'Numerical answer entry belongs below the scratchpad');
+ assert.equal(completedHost.querySelector('[data-wp-input="a:0"]').value,'','Prior modeling examples never fill the numerical answer');
+ assert(completedHost.querySelector('[data-wp-next]').disabled);assert(!completedHost.querySelector('[data-wp-example]'));
+ assert.equal(completedHost.querySelector('[data-wp-check]').textContent,'核对答案');
  const personalCanvas=completedHost.querySelector('canvas.wp-scratchpad-canvas');assert(personalCanvas);
  for(const [type,x,y]of [['pointerdown',20,30],['pointermove',70,90],['pointerup',70,90]]){
   const event=new completed.w.Event(type,{bubbles:true,cancelable:true});Object.assign(event,{clientX:x,clientY:y,pointerId:1,pointerType:'pen',button:0,buttons:type==='pointerup'?0:1,isPrimary:true,pressure:0.5});personalCanvas.dispatchEvent(event);
  }
  assert(!completedHost.querySelector('[data-wp-ink="undo"]').disabled,'Real handwritten work exists before checking that it remains off the cloud snapshot');
  const scratchDraft=clone(completed.t.currentProfile().economy.modules.wordProblems.drafts['L7-P1']);
- assert.equal(scratchDraft.interactionVersion,3);assert(scratchDraft.scratchId);
+ assert.equal(scratchDraft.interactionVersion,4);assert(scratchDraft.scratchId);
+ assert.equal(scratchDraft.passed[3],true);assert.equal(scratchDraft.passed[4],true,'Combined modeling records both required gates');
+ assert.deepEqual(scratchDraft.conditionFound,completedFactIds);
+ for(const [i,a]of completedRoute.answers.entries()){
+  const answer=completedHost.querySelector('[data-wp-input="a:'+i+'"]');answer.value=completed.w.RatioWordProblemEngine.format(a.expr);answer.dispatchEvent(new completed.w.Event('input',{bubbles:true}));
+ }
  completedHost.querySelector('[data-wp-check]').click();
+ assert.equal(completedHost.querySelector('[aria-current="step"]').dataset.wpStep,'5','Answer checking stays beside the scratch work');
+ const confirmedDraft=completed.t.currentProfile().economy.modules.wordProblems.drafts['L7-P1'];
+ assert.equal(confirmedDraft.answersChecked,true);assert.equal(confirmedDraft.passed[5],true);
+ assert(!completedHost.querySelector('[data-wp-next]').disabled);completedHost.querySelector('[data-wp-next]').click();
  assert.equal(completedHost.querySelector('[aria-current="step"]').dataset.wpStep,'6');
+ assert(!completedHost.querySelector('.wp-answer-grid')&&!completedHost.querySelector('[data-wp-scratch-mount]'),'The final page only verifies the already confirmed answer');
  assert(!completedHost.querySelector('[data-wp-reflection]')&&!completedHost.querySelector('[data-wp-next]'));
  completedHost.querySelector('[data-wp-example]').click();
  assert(completedHost.querySelector('.wp-verification'));assert.equal(completedHost.querySelector('[data-wp-check]').textContent,'检验并保存');
@@ -169,14 +187,19 @@ function fixture(){
  const completedProgress=completed.t.currentProfile().economy.modules.wordProblems;
  assert.equal(completedProgress.records.length,1);assert.equal(completedProgress.records[0].step,6);
  assert.equal(completedProgress.records[0].finished,true);assert.equal(completedProgress.records[0].reflection,'');
- assert.equal(completedProgress.records[0].scratchId,scratchDraft.scratchId);assert.equal(completedProgress.records[0].firstPass[5],undefined);
+ assert.equal(completedProgress.records[0].scratchId,scratchDraft.scratchId);assert.equal(completedProgress.records[0].firstPass[5],false,'Earlier examples are retained as assistance evidence during answer confirmation');
+ assert.equal(completedProgress.records[0].firstPass[4],undefined);assert.equal(completedProgress.records[0].total,6);
+ assert.deepEqual(clone(completedProgress.records[0].conditionFound),completedFactIds);
+ assert.deepEqual(clone(completedProgress.records[0].conditionUsed),completedFactIds);
+ assert(completedHost.querySelector('.wp-condition-complete'));assert.equal(completedHost.querySelectorAll('[data-wp-condition][aria-pressed="true"]').length,completedProblem.facts.length);
  await completed.t.cloudSyncProfile(completed.t.currentProfile(),true);
  const completedUpload=completed.writes.filter(v=>v.table==='progress_snapshots').at(-1).row;
  assert.equal(completedUpload.economy.modules.wordProblems,undefined);
  assert.equal(completedUpload.growth_state.wordProblems.records[0].runId,completedProgress.records[0].runId,'The verified completed analysis reaches the private cloud snapshot');
+ assert.deepEqual(completedUpload.growth_state.wordProblems.records[0].conditionUsed,completedFactIds,'The completed condition checklist reaches only the private snapshot');
  assert(!JSON.stringify(completedUpload.growth_state.wordProblems).includes('"strokes"'),'Handwritten stroke data stays on the device rather than entering profile snapshots');
  completed.dom.window.close();
- console.log('PASS real scratchpad transition, direct final save and private completed-record sync without reflection');
+ console.log('PASS combined modeling, scratchpad answer confirmation, final verification, completed conditions and private record sync');
 
  const logout=fixture();await Promise.resolve();logout.student();await logout.loadModule();
  const host=logout.w.document.getElementById('wordProblems');

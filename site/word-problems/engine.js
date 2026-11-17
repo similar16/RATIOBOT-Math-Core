@@ -280,6 +280,157 @@
     } catch (error) { return { ok: false, kind: error.kind || 'input', message: error.message || '请检查输入。' }; }
   }
 
+  // Table cells name a quantity rather than prescribe one spelling of its
+  // expression. Keep the derivation gate above strict, but allow exact algebra
+  // after the caller has checked the cell's source dependencies. Coefficients
+  // are collected only from this expression's actual expansion, never from a
+  // solved value of x or arbitrary arithmetic with every number in the task.
+  function tableCoefficients(ast) {
+    const values = new Set(['0', '1', '-1']), cache = new Map(), limit = MAX_NODES * 4;
+    const add = value => { values.add(rstring(value)); values.add(rstring(rneg(value))); };
+    function expanded(node) {
+      if (cache.has(node)) return cache.get(node);
+      let terms;
+      if (node.kind === 'number') terms = [['', node.value]];
+      else if (node.kind === 'variable') terms = [[node.name, R1]];
+      else if (node.kind === 'group') terms = expanded(node.value);
+      else if (node.kind === 'unary' || node.kind === 'percent') {
+        const factor = node.kind === 'percent' ? rat(1, 100) : node.op === '-' ? rat(-1) : R1;
+        terms = expanded(node.value).map(([key, value]) => [key, rmul(value, factor)]);
+      } else if (node.kind === 'power') {
+        const exponent = Number(coefficient(evaluate(node.right), '').n);
+        terms = [['', R1]];
+        for (let i = 0; i < exponent; i++) terms = multiply(terms, expanded(node.left), node);
+      } else if (node.op === '+' || node.op === '-') {
+        terms = [...expanded(node.left), ...expanded(node.right).map(([key, value]) => [key, node.op === '-' ? rneg(value) : value])];
+      } else if (node.op === '*') terms = multiply(expanded(node.left), expanded(node.right), node);
+      else {
+        const divisor = coefficient(evaluate(node.right), '');
+        terms = expanded(node.left).map(([key, value]) => [key, rdiv(value, divisor)]);
+      }
+      if (terms.length > limit) terms = [...evaluate(node)];
+      cache.set(node, terms);return terms;
+    }
+    function multiply(a, b, node) {
+      if (a.length * b.length > limit) return [...evaluate(node)];
+      return a.flatMap(([ka, va]) => b.map(([kb, vb]) => [[...ka, ...kb].sort().join(''), rmul(va, vb)]));
+    }
+    walk(ast, node => {
+      for (const value of evaluate(node).values()) add(value);
+      for (const [, value] of expanded(node)) add(value);
+    });
+    return values;
+  }
+
+  // A known rational coefficient may be written around its variable: 6x/5
+  // and (6/5)x are the same fraction notation. Do not turn several unrelated
+  // numeric factors (such as 7*6x/(7*5)) into a hidden source calculation.
+  function tableScaleNotation(ast, available) {
+    let numerator = R1, denominator = R1, top = 0, bottom = 0, valid = true;
+    const quantities = [];
+    function collect(node, below = false) {
+      if (node.kind === 'group') return collect(node.value, below);
+      if (node.kind === 'unary') { if (node.op === '-') numerator = rneg(numerator);return collect(node.value, below); }
+      if (numericNotation(node)) {
+        const value = coefficient(evaluate(node), '');
+        if (below) { bottom++;denominator = rmul(denominator,value); }
+        else { top++;numerator = rmul(numerator,value); }
+        return;
+      }
+      if (node.kind === 'binary' && node.op === '*') { collect(node.left,below);collect(node.right,below);return; }
+      if (node.kind === 'binary' && node.op === '/' && numericNotation(node.right)) { collect(node.left,below);collect(node.right,!below);return; }
+      if (below || isConstant(evaluate(node))) valid = false;
+      else quantities.push(node);
+    }
+    collect(ast);
+    return valid && top <= 1 && bottom <= 1 && top + bottom > 0 && quantities.length && denominator.n && available.has(rstring(rdiv(numerator,denominator))) ? quantities : null;
+  }
+  function unexplainedTableNumber(ast, allowed, available) {
+    if (knownNumber(ast,available)) return null;
+    const scaled = tableScaleNotation(ast,available);
+    if (scaled) {
+      for (const quantity of scaled) { const missing = unexplainedTableNumber(quantity,allowed,available);if (missing != null) return missing; }
+      return null;
+    }
+    if (ast.kind === 'number') return allowed.has(rstring(ast.value)) ? null : ast.raw;
+    // An exponent counts repeated factors; it is not a new measured quantity.
+    if (ast.kind === 'power') return unexplainedTableNumber(ast.left,allowed,available);
+    for (const child of [ast.value,ast.left,ast.right]) {
+      if (!child?.kind) continue;
+      const missing = unexplainedTableNumber(child,allowed,available);if (missing != null) return missing;
+    }
+    return null;
+  }
+
+  /**
+   * requiredDerivations: [{id, label?, completed:boolean}]. An explicit []
+   * means the caller checked the sources and found no derived dependencies.
+   * Omitting it retains the conservative derivation-only behavior.
+   * alternatives: [{expr, sources, explain?, requiredDerivations?}]. These are
+   * authored quantity representations, not equations evaluated at their roots.
+   */
+  function checkTableCell(input, item, variable = 'x') {
+    const alternatives = Array.isArray(item?.alternatives) ? item.alternatives : [];
+    const candidates = [item, ...alternatives.map(alternative => ({ ...item, ...alternative }))];
+    const failures = [];
+    for (const [index, candidate] of candidates.entries()) {
+      try {
+        const expected = read(candidate.expr), expectedMeta = details(expected.ast);
+        const chain = normalize(input).split('=');
+        if (chain.some(part => !part)) fail('请补全等号两边。');
+        if (chain.length > 4) fail('请把计算分成较短的步骤。');
+        const parts = chain.map(read), first = parts[0];
+        const declared = new Set(expectedMeta.variables);
+        if (parts.some(part => details(part.ast).variables.some(name => !declared.has(name)))) {
+          failures.push({ok:false,kind:'variable',message:'这一格出现了没有设定的字母。请使用当前数量的未知量，不能用抵消来省略字母的含义。'});continue;
+        }
+        if (!parts.every(part => pEquals(part.poly, expected.poly))) {
+          failures.push({ok:false,kind:'math',message:'这个式子还没有表示这一格的数量。可以换一种写法，但要符合该量的含义和已知关系。'});continue;
+        }
+        const dependencies = candidate.requiredDerivations;
+        if (Array.isArray(dependencies) && dependencies.some(d => d?.completed !== true)) {
+          const pending = dependencies.filter(d => d?.completed !== true);
+          failures.push({ok:false,kind:'source',message:'请先完成“'+(pending[0]?.label||pending[0]?.id||'这一格的数据来源')+'”的推导，再使用结果或等价简写。',pendingSources:pending.map(d=>d?.id).filter(Boolean)});continue;
+        }
+        const strict = checkDerivation(input, { ...candidate, result:candidate.expr }, variable);
+        if (!strict.ok) {
+          // A bare computed constant still needs its own calculation or an
+          // already verified value. Only nonconstant algebra gets this route.
+          if (strict.kind !== 'source' || isConstant(expected.poly) || !Array.isArray(dependencies)) {
+            failures.push(strict);continue;
+          }
+          const original = new Set(expectedMeta.literals.map(literal => literal.value));
+          if (expectedMeta.percent) original.add('100');
+          for (const expression of candidate.sourceExpressions || []) {
+            for (const literal of details(read(expression).ast).literals) original.add(literal.value);
+          }
+          const established = new Set((candidate.allowedNumbers || []).map(numeric).filter(value => value != null));
+          const coefficients = tableCoefficients(expected.ast);
+          for (const value of coefficients) established.add(value);
+          if (unexplainedTableNumber(first.ast, original, established) != null) {
+            failures.push({ok:false,kind:'source',message:'数量值虽然相等，但这个写法引入了没有依据的新数。请使用题目数据、已完成的推导，或由本格原式展开、合并得到的数。'});continue;
+          }
+        }
+        // Later terms in a written equality chain may simplify the established
+        // expression, but may not introduce unrelated quantities that cancel.
+        if (parts.length > 1) {
+          const original = new Set(expectedMeta.literals.map(literal => literal.value));
+          if (expectedMeta.percent) original.add('100');
+          for (const expression of candidate.sourceExpressions || []) for (const literal of details(read(expression).ast).literals) original.add(literal.value);
+          const established = tableCoefficients(expected.ast);
+          for (const value of (candidate.allowedNumbers || []).map(numeric).filter(value => value != null)) established.add(value);
+          if (parts.slice(1).some(part => unexplainedTableNumber(part.ast, original, established) != null)) {
+            failures.push({ok:false,kind:'source',message:'等式链中出现了没有来源的新数。请保留由原式展开、合并或计算得到的量。'});continue;
+          }
+        }
+        const final = parts[parts.length - 1], trace = [expected.normalized, ...parts.map(part => part.normalized)].filter((value,i,array)=>i===0||value!==array[i-1]);
+        const sourceTrace = trace.length > 1 ? trace : [];
+        return {ok:true,kind:'correct',message:sourceTrace.length?'这是这一数量的另一种正确写法，来源关系已对应。':'数量关系与来源都对应。',expression:final.normalized,result:numeric(candidate.expr),calculationLatex:latex(final.ast,true),sourceExpression:candidate.expr,sources:[...(candidate.sources||[])],explain:candidate.explain||'',matchedAlternativeIndex:index,sourceTrace};
+      } catch (error) { failures.push({ok:false,kind:error.kind||'input',message:error.message||'请检查输入。'}); }
+    }
+    return failures.find(result=>result.kind==='source') || failures.find(result=>result.kind==='variable') || failures[0] || {ok:false,kind:'content',message:'这一格的可用表达式需要教师复核。'};
+  }
+
   function sameEquation(a, b) {
     if (!a.size || !b.size || a.size !== b.size) return false;
     const [key, av] = a.entries().next().value, bv = coefficient(b, key);
@@ -354,6 +505,10 @@
           if (cell?.note != null) continue;
           sources(cell, desc);
           expression(cell?.expr, desc, ['open', 'boundary'].includes(problem.kind));
+          for (const [ai, alternative] of (cell?.alternatives || []).entries()) {
+            sources(alternative, desc+'的其他表示'+(ai+1));
+            expression(alternative?.expr, desc+'的其他表示'+(ai+1), ['open', 'boundary'].includes(problem.kind));
+          }
         }
       }
       if (route?.closure) sources(route.closure, '列式依据');
@@ -365,7 +520,7 @@
     return errors;
   }
 
-  const api = { equivalent, checkDerivation, checkEquation, hasNumberSources, format, formatCalculation, numeric, validateProblem, normalize, inspect };
+  const api = { equivalent, checkDerivation, checkTableCell, checkEquation, hasNumberSources, format, formatCalculation, numeric, validateProblem, normalize, inspect };
   if (typeof module === 'object' && module.exports) module.exports = api;
   else root.RatioWordProblemEngine = api;
 })(typeof window === 'undefined' ? globalThis : window);
