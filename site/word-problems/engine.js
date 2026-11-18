@@ -32,7 +32,8 @@
     let s = String(value ?? '').trim();
     if (!s) fail('请先填写表达式.');
     if (s.length > MAX_INPUT) fail('表达式过长，请分步填写.');
-    s = s.replace(/[０-９]/g, c => String(c.charCodeAt(0) - 65296))
+    s = s.replace(/[¼½¾⅐-⅞]/g, c => '(' + c.normalize('NFKC') + ')').normalize('NFKC')
+      .replace(/[⁄／]/g, '/')
       .replace(/[（【]/g, '(').replace(/[）】]/g, ')').replace(/[−－–]/g, '-')
       .replace(/[×·⋅]/g, '*').replace(/÷/g, '/').replace(/％/g, '%').replace(/＝/g, '=')
       .replace(/\\(?:left|right|displaystyle|textstyle)/g, '')
@@ -166,6 +167,9 @@
   const pEquals = (a, b) => a.size === b.size && [...a].every(([key, value]) => req(value, coefficient(b, key)));
   const read = text => { const p = parse(text); return { ...p, poly: evaluate(p.ast) }; };
   function numeric(input) { try { const p = read(input).poly; return isConstant(p) ? rstring(coefficient(p, '')) : null; } catch { return null; } }
+  // Numeric blanks accept exact notation, without evaluating arbitrary sums,
+  // products, variables that cancel, or rounded recurring decimals.
+  function numericValue(input) { try { const p = read(input); return numericNotation(p.ast) ? rstring(coefficient(p.poly, '')) : null; } catch { return null; } }
   function equivalent(input, expected, variable = 'x') { try { return pEquals(read(input).poly, read(expected).poly); } catch { return false; } }
 
   function walk(ast, visit) { visit(ast); if (ast.value && typeof ast.value === 'object' && ast.value.kind) walk(ast.value, visit); if (ast.left) walk(ast.left, visit); if (ast.right) walk(ast.right, visit); }
@@ -238,7 +242,7 @@
     return grouped ? '(' + text + ')' : text;
   }
   function inspect(input) {
-    try { const p = read(input), meta = details(p.ast); return { ok: true, normalized: p.normalized, numeric: isConstant(p.poly) ? rstring(coefficient(p.poly, '')) : null, variables: meta.variables, numbers: meta.literals.map(x => x.raw), numericLiterals: meta.literals.map(x => x.value), operations: meta.operations, percent: meta.percent, degree: degree(p.poly), latex: latex(p.ast), calculationLatex: latex(p.ast, true) }; }
+    try { const p = read(input), meta = details(p.ast), notations=new Set();walk(p.ast,n=>{if(numericNotation(n))notations.add(rstring(coefficient(evaluate(n),'')));if(n.kind==='binary'&&n.op==='/'&&numericNotation(n.right))for(const value of evaluate(n).values())if(value.d!==1n){notations.add(rstring(value));notations.add(rstring(rneg(value)));}});return { ok: true, normalized: p.normalized, numeric: isConstant(p.poly) ? rstring(coefficient(p.poly, '')) : null, variables: meta.variables, numbers: meta.literals.map(x => x.raw), numericLiterals: meta.literals.map(x => x.value), numericNotations:[...notations], operations: meta.operations, percent: meta.percent, degree: degree(p.poly), latex: latex(p.ast), calculationLatex: latex(p.ast, true) }; }
     catch (error) { return { ok: false, kind: error.kind || 'input', message: error.message }; }
   }
 
@@ -262,6 +266,10 @@
   }
   function unexplainedNumber(ast, allowed, available) {
     if (knownNumber(ast, available)) return null;
+    // A verified fractional coefficient can surround a quantity: x*2/6 and
+    // (1/3)*x have the same source. Keep unrelated cancelling arithmetic out.
+    const scaled=available.size&&tableScaleNotation(ast,available);
+    if(scaled){for(const quantity of scaled){const missing=unexplainedNumber(quantity,allowed,available);if(missing!=null)return missing;}return null;}
     if (ast.kind === 'number') return allowed.has(rstring(ast.value)) ? null : ast.raw;
     if (ast.kind === 'binary' && ast.op === '/' && numericNotation(ast.right)) {
       const divisor = coefficient(evaluate(ast.right), '');
@@ -301,6 +309,9 @@
       for (const expression of item.sourceExpressions || []) for (const literal of details(read(expression).ast).literals) allowed.add(literal.value);
       const derivedResults = new Set();
       for (const value of item.allowedNumbers || []) { const number = numeric(value); if (number != null) { allowed.add(number); derivedResults.add(number); } }
+      // Equivalent spellings of a proper fractional number are notation, not
+      // invented source data (1/2, 2/4, 0.5 and a stacked fraction).
+      if (numericNotation(expected.ast) && numericNotation(first.ast) && meta.operations>0) { const value=numeric(item.expr); if (value?.includes('/')) derivedResults.add(value); }
       // Only a complete, explicitly available result can replace the calculation;
       // original literal leaves alone do not establish that a derivation was done.
       const knownResult = knownNumber(first.ast, derivedResults);
@@ -605,6 +616,15 @@
         }
       }
       if (route?.closure) sources(route.closure, '列式依据');
+      const differenceCells=new Set();
+      for (const group of route?.table?.signedDifferences || []) {
+        if (!group.label || !group.forwardLabel || !group.reverseLabel || !Array.isArray(group.cells) || group.cells.length<2) error(where+'/相减方向组缺少说明或配对单元格');
+        for (const [ri,ci] of group.cells || []) {
+          const cell=route.table.rows[ri]?.cells[ci],key=ri+':'+ci;
+          if (!Number.isInteger(ri)||!Number.isInteger(ci)||!cell?.expr||cell.given||cell.note!=null||differenceCells.has(key)) error(where+'/相减方向组的表格位置无效或重复');
+          differenceCells.add(key);
+        }
+      }
       for (const item of route?.sumExpressions || []) {
         sources(item, item.label); expression(item.expr, item.label);
         for (const index of item.rowIndexes || []) {
@@ -623,7 +643,7 @@
     return errors;
   }
 
-  const api = { equivalent, checkDerivation, checkTableCell, checkQuantitySum, checkSimplifiedTerm, checkEquation, hasNumberSources, format, formatCalculation, referenceExpression, numeric, validateProblem, normalize, inspect };
+  const api = { equivalent, checkDerivation, checkTableCell, checkQuantitySum, checkSimplifiedTerm, checkEquation, hasNumberSources, format, formatCalculation, referenceExpression, numeric, numericValue, validateProblem, normalize, inspect };
   if (typeof module === 'object' && module.exports) module.exports = api;
   else root.RatioWordProblemEngine = api;
 })(typeof window === 'undefined' ? globalThis : window);

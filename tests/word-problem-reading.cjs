@@ -4,6 +4,12 @@ const assert=require('node:assert/strict');
 const path=require('node:path');
 const base=path.resolve(process.env.SITE_DIR||'site','word-problems');
 const R=require(path.join(base,'reading.js'));
+// The production loader requests scripts concurrently; reading may execute
+// before the engine, then use it once all resources have finished loading.
+const browser={window:{}},vm=require('node:vm'),fs=require('node:fs');
+vm.runInNewContext(fs.readFileSync(path.join(base,'reading.js'),'utf8'),browser);
+vm.runInNewContext(fs.readFileSync(path.join(base,'engine.js'),'utf8'),browser);
+assert(browser.window.RatioWordProblemReading.checkValue({answer:'1/2'},String.raw`\dfrac{2}{4}`));
 const data=['data-l7-l8.js','data-l9-review.js','data-textbook-intro.js','data-textbook-applications.js','data-textbook-review.js'].flatMap(name=>require(path.join(base,name)));
 const single=text=>({id:'reading-fixture',facts:[{id:'condition',kind:'given',text}]});
 const answers=text=>R.build(single(text)).fields.map(f=>f.answer);
@@ -17,8 +23,8 @@ assert.deepEqual(answers('第1幅有4颗黑棋，每增一幅增加3颗。'),['1
 assert.deepEqual(answers('百分之几表示几除以100；几十分之几；十分之几；星期六。'),['100']);
 assert.deepEqual(answers('５千米，１／２份，０．５小时。'),['5','1/2','0.5']);
 
-for(const input of ['0.5','.5','0.50','1/2','2 / 4','\\frac{1}{2}','\\dfrac{ 2 }{ 4 }','-\\frac{-1}{2}'])assert(R.checkValue({answer:'1/2'},input),input);
-for(const input of ['', ' ', 'NaN','Infinity','x','x/x','1+1','2-1.5','1e3','1/0','1/2/3','\\frac{x}{2}','Math.random()','0.5abc','0 . 5','0 5','(0.5)','√0.25'])assert(!R.checkValue({answer:'1/2'},input),input);
+for(const input of ['0.5','.5','0.50','1/2','2 / 4','\\frac{1}{2}','\\dfrac{ 2 }{ 4 }','-\\frac{-1}{2}','(0.5)','½','1⁄2','1÷2',String.raw`\frac12`,String.raw`\left(\tfrac{2}{4}\right)`])assert(R.checkValue({answer:'1/2'},input),input);
+for(const input of ['', ' ', 'NaN','Infinity','x','x/x','1+1','2-1.5','1e3','1/0','1/2/3','\\frac{x}{2}','Math.random()','0.5abc','0 . 5','0 5','√0.25'])assert(!R.checkValue({answer:'1/2'},input),input);
 assert(R.checkValue({answer:'-1/2'},'−0.5'));
 assert(R.checkValue({answer:'-1/2'},'\\frac{1}{-2}'));
 assert(R.checkValue({answer:'-1/2'},'-\\frac{1}{2}'));

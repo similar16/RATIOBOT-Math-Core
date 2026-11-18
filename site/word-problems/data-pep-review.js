@@ -218,15 +218,15 @@
  {
   const p=data.find(p=>p.id==='PEP-P077'),main=p.routes[0];p.contentRevision=1;
   p.routes.push({...main,id:'years',label:'方案二：按年份差列式',
-   domain:'两人年龄均为正；年份差按“现在减另一时刻”表示，正负由求解结果判断.',
-   table:{headers:['人物','现在年龄/岁','另一时刻年龄/岁','两时刻的年份差/年'],rows:[
+   domain:'两人年龄均为正；年份差可按任一方向相减，两人的方向须一致，正负由求解结果判断.',
+   table:{headers:['人物','现在年龄/岁','另一时刻年龄/岁','两时刻的年份差/年'],signedDifferences:[{label:'两时刻的年份差',cells:[[0,2],[1,2]],forwardLabel:'现在年龄−另一时刻年龄',reverseLabel:'另一时刻年龄−现在年龄'}],rows:[
     row('女儿',cell('x',['unknown'],true),cell('(91-x)/3',['sum','unknown','daughterThen']),cell('x-(91-x)/3',['sum','unknown','daughterThen','gap'])),
     row('父亲',cell('91-x',['sum','unknown']),cell('2*x',['fatherThen','unknown']),cell('(91-x)-2*x',['sum','unknown','fatherThen','gap']))]},
    relationTriples:relation([['女儿另一时刻年龄','相同的年份差','女儿现在年龄'],['父亲另一时刻年龄','相同的年份差','父亲现在年龄'],['女儿现在年龄','父亲现在年龄','现在年龄和']],[['女儿现在年龄','题给倍数','父亲另一时刻年龄'],['父亲现在年龄','题给分率','女儿另一时刻年龄']]),
-   closure:{sources:['gap'],text:'父女经历的是相同的两个时刻，分别求出的年份差相等.',hint:'分别用现在年龄减去另一时刻年龄，再令父女的差相等.'},
+   closure:{sources:['gap'],text:'父女经历的是相同的两个时刻，按同一方向相减，分别求出的年份差相等.',hint:'两人都用“现在减另一时刻”或都用“另一时刻减现在”，再令年份差相等.'},
    equations:[equation('父女经历的年份差相等','x-(91-x)/3','(91-x)-2*x')],
    steps:['x-(91-x)/3=(91-x)-2*x','3*x-(91-x)=3*(91-x)-6*x','13*x=364','x=28'],
-   tableNote:'两行都按“现在年龄−另一时刻年龄”表示年份差，方向须一致.解后再判断另一时刻是在过去还是未来.'});
+   tableNote:'两行的年份差可以同时交换被减数与减数，方向须一致.解后再判断另一时刻是在过去还是未来.'});
  }
 
  add('P078','竞赛规则与不可能的得分','数据表与计分规则','148','复习题5·拓广探索第13题',

@@ -109,14 +109,17 @@ function fixture() {
   assert.equal(host.querySelectorAll('[data-wp-rel-slot],[data-wp-token]').length,0);
   assert($('.wp-original-problem').open,'The original problem stays expanded at every stage');
   const manual=!!route.discussion||['open','boundary'].includes(problem.kind);
-  if(manual&&!route.reverseModel)textInput('[data-wp-discussion]','这个表达式由题目给出的数量与关系得到，需要说明所用条件及单位。');
+  const variantsAvailable=problem.routes.some(r=>r.id!==route.id&&!r.discussion)||(route.table.signedDifferences||[]).length||route.table.rows.some((row,i)=>row.cells.some((c,j)=>!c.given&&!c.note&&((c.alternatives||[]).length||w.RatioWordProblemTableAlternatives.options(problem,route,i,j).length)));
+  if(!manual&&variantsAvailable){assert.equal($('.wp-more-models')?.tagName,'SECTION',problem.id+'/'+route.id+' has a visible options entry while filling the table');assert($('.wp-more-models').compareDocumentPosition($('.wp-quantity-table'))&w.Node.DOCUMENT_POSITION_FOLLOWING,'Options appear above the table');}
+  if(manual&&!route.reverseModel)textInput('[data-wp-discussion]',route.table.rows.flatMap(row=>row.cells).find(c=>c.expr&&!c.given)?.expr||route.variable);
   else route.table.rows.forEach((row,ri)=>row.cells.forEach((cell,ci)=>{
    if(cell.expr&&!cell.given){setInput('t:'+ri+':'+ci,cell.expr);counts.writableCells++;}
   }));
+  if(!manual&&variantsAvailable)assert($('.wp-more-models'),'Typing cannot remove the alternate-method entry');
   fillRelations(problem,route);checkAndNext(2,problem.id+'/'+route.id+' table');
   assert.equal(host.querySelectorAll('[data-wp-rel-slot]').length,0,'The equation page uses read-only references');
   assert(!$('[data-wp-closure]')&&!$('.wp-closure-choices'),'Modeling has no duplicate condition-selection gate');
-  if(manual)textInput('[data-wp-discussion]','需要检查方程的适用范围、题目是否给出充分条件，以及所求数量的实际取值要求。');
+  if(manual)textInput('[data-wp-discussion]',route.equations[0]?route.equations[0].left+'='+route.equations[0].right:route.variable);
   else (route.equations||[]).forEach((equation,i)=>{setInput('e:'+i,equation.left+'='+equation.right);counts.equations++;});
   if(problem.kind==='open'){
    assert(!$('[data-wp-next]'),'Open analysis has no solve or verify page');
@@ -374,7 +377,7 @@ resetIdentity.close();
 // Written modeling changes invalidate every later gate, just as edits to formulas do.
 const customChange=fixture(),customProblem=customChange.w.RatioWordProblemsData.find(p=>p.id==='L7-P1');
 const customOriginal=customChange.canonicalRoute(customProblem,customProblem.routes[0]);
-customChange.click('[data-wp-step="1"]');customChange.textInput('[data-wp-custom]','改设茶杯数量为 y，再由每套杯数表示茶壶数量。');
+customChange.click('[data-wp-step="1"]');customChange.textInput('[data-wp-custom]','y=6*x');
 assert(customChange.$('[data-wp-next]').disabled,'An edited alternative model must be rechecked');
 customChange.click('[data-wp-step="6"]');assert.equal(customChange.currentStep(),1,'No skipping later gates after a written modeling change');
 assert(customChange.$('[data-wp-check]'),'A formerly completed earlier stage regains its check action');
@@ -382,17 +385,17 @@ customChange.click('[data-wp-catalog]');
 const customDraft=customChange.read().drafts[customProblem.id];
 assert.equal(customDraft.finished,false);assert.notEqual(customDraft.runId,customOriginal.runId);
 for(let step=1;step<7;step++)assert(!customDraft.passed[step],'Written model edit invalidates step '+step);
-assert.match(customDraft.customModel,/茶杯数量/);customChange.close();
+assert.equal(customDraft.customModel,'y=6*x');customChange.close();
 
 const discussionChange=fixture(),discussionProblem=discussionChange.w.RatioWordProblemsData.find(p=>p.id==='G10-04');
 discussionChange.canonicalRoute(discussionProblem,discussionProblem.routes[0]);discussionChange.click('[data-wp-step="2"]');
-discussionChange.textInput('[data-wp-discussion]','两个未知的长度相乘，必须重新判断方程的次数。');
+discussionChange.textInput('[data-wp-discussion]','x*(x+5)=24');
 assert(discussionChange.$('[data-wp-next]').disabled);
 discussionChange.click('[data-wp-step="3"]');assert.equal(discussionChange.currentStep(),2,'A revised table discussion cannot bypass its dependent explanation');
 discussionChange.click('[data-wp-catalog]');
 const discussionDraft=discussionChange.read().drafts[discussionProblem.id];
 assert.equal(discussionDraft.finished,false);for(let step=2;step<7;step++)assert(!discussionDraft.passed[step]);
-assert.match(discussionDraft.discussion,/方程的次数/);discussionChange.close();
+assert.equal(discussionDraft.discussion,'x*(x+5)=24');discussionChange.close();
 
 // Revising the practical verdict keeps the checked numerical answers but reopens verification.
 const verdictChange=fixture(),verdictProblem=verdictChange.w.RatioWordProblemsData.find(p=>p.id==='L7-P1');
@@ -585,7 +588,7 @@ assert.match(story.$('.wp-stage h3').textContent,/编写应用题/);assert(story
 const openOnly=fixture(),openProblem=openOnly.w.RatioWordProblemsData.find(p=>p.id==='S01');
 const openRecord=openOnly.canonicalRoute(openProblem,openProblem.routes[0]);
 assert.equal(openRecord.step,3);openOnly.remount().start('S01');assert.equal(openOnly.currentStep(),3);assert(openOnly.$('.wp-completion'));assert(!openOnly.$('[data-wp-next]'));
-openOnly.textInput('[data-wp-discussion]','修改后的故事仍对应单价、数量与总价的关系');assert(!openOnly.$('.wp-completion'));openOnly.click('[data-wp-check]');assert(openOnly.$('.wp-completion'));assert.equal(openOnly.read().records.length,2,'Editing preserves the submitted historical analysis');
+openOnly.textInput('[data-wp-discussion]','3*x+2*(12-x)=32');assert(!openOnly.$('.wp-completion'));openOnly.click('[data-wp-check]');assert(openOnly.$('.wp-completion'));assert.equal(openOnly.read().records.length,2,'Editing preserves the submitted historical analysis');
 openOnly.click('.wp-stage-top [data-wp-restart]');openOnly.click('[data-wp-confirm-reset]');assert.equal(openOnly.currentStep(),0);assert.equal(openOnly.read().records.length,2);openOnly.close();
 
 // Explanations are optional; showing one records help without filling the answer.
@@ -594,6 +597,26 @@ hiddenHelp.app.start(work.id,true);hiddenHelp.confirmFacts();
 const help=hiddenHelp.$('[data-wp-derivation-hint]');assert(help&&!help.open);assert.equal(hiddenHelp.$('[data-wp-input="d:a-rate"]').value,'');
 help.open=true;help.dispatchEvent(new hiddenHelp.w.Event('toggle'));hiddenHelp.click('[data-wp-check]');assert(hiddenHelp.read().drafts[work.id].assisted);assert.equal(hiddenHelp.$('[data-wp-input="d:a-rate"]').value,'');
 hiddenHelp.close();
+
+// A paired year difference may reverse BOTH subtractions, including fraction
+// notation, but cannot mix the two directions or reverse unrelated age cells.
+{
+ const f=fixture(),p=f.w.RatioWordProblemsData.find(p=>p.id==='PEP-P077'),r=p.routes.find(r=>r.id==='years');
+ f.app.start(p.id,true);f.confirmFacts();f.selectRoute('years');f.checkAndNext(1,'Year-gap setup');
+ assert(f.$('.wp-more-models'),'The alternative entrance is already visible before table confirmation');
+ r.table.rows.forEach((row,i)=>row.cells.forEach((c,j)=>{if(c.expr&&!c.given)f.setInput('t:'+i+':'+j,c.expr);}));
+ f.setInput('t:0:2',String.raw`\frac{91-x}{3}-x`);f.click('[data-wp-check]');
+ assert(f.$('[data-wp-next]').disabled);assert.match(f.feedback(),/相减方向要一致/);
+ f.setInput('t:1:2','2*x-(91+x)');f.click('[data-wp-check]');assert(f.$('[data-wp-next]').disabled,'Wrong expressions are not a reversed-direction option');
+ f.setInput('t:1:2','2*x-(91-x)');f.checkAndNext(2,'Both year gaps reversed');
+ f.setInput('e:0','(91-x)*2/6-x=2*x-(91-x)');f.checkAndNext(3,'Reversed year-gap equation with equivalent fraction');
+ assert(f.$('[data-wp-new-model="years"]'),'A confirmed direction can be retained before trying the other direction');
+ const saved=f.read().drafts[p.id].modelMethods.find(m=>m.confirmed);
+ assert(f.w.RatioWordProblemEngine.equivalent(saved.table.rows[0].cells[2].expr,'(91-x)/3-x'));
+ assert(f.w.RatioWordProblemEngine.equivalent(saved.table.rows[1].cells[2].expr,'2*x-(91-x)'));
+ assert.equal(saved.equations[0].expression,'(91-x)*2/6-x=2*x-(91-x)');
+ f.close();
+}
 
 // Compare each requested pair of methods with its own variable meaning and table.
 for(const id of ['PEP-P005','PEP-P077']){
@@ -868,7 +891,7 @@ const variants=fixture(),jacketProblem=variants.w.RatioWordProblemsData.find(p=>
 variants.canonicalRoute(jacketProblem,jacketRoute);
 const firstMethod=clone(variants.read().records[0].modelMethods[0]),firstGroup=variants.read().drafts[jacketProblem.id].modelGroupId;
 assert(firstMethod.confirmed);assert(variants.$('[data-wp-new-model="'+jacketRoute.id+'"]'));
-variants.click('.wp-more-models summary');variants.click('[data-wp-new-model="'+jacketRoute.id+'"]');
+assert.equal(variants.$('.wp-more-models').tagName,'SECTION');variants.click('[data-wp-new-model="'+jacketRoute.id+'"]');
 assert.equal(variants.currentStep(),2);assert.equal(variants.read().drafts[jacketProblem.id].modelMethods.length,1);
 assert.equal(variants.read().drafts[jacketProblem.id].modelGroupId,firstGroup);
 variants.remount().start(jacketProblem.id);assert.equal(variants.currentStep(),2);
@@ -893,7 +916,7 @@ const unknowns=fixture(),fruit=unknowns.w.RatioWordProblemsData.find(p=>p.id==='
 unknowns.app.start(fruit.id,true);
 for(const step of [0,1,2]){unknowns.click('[data-wp-example]');unknowns.checkAndNext(step,'First unknown setup '+step);}
 unknowns.click('[data-wp-example]');unknowns.click('[data-wp-check]');unknowns.expectPassed(3,'First unknown model');
-unknowns.click('.wp-more-models summary');unknowns.click('[data-wp-new-model="cost"]');assert.equal(unknowns.currentStep(),1);
+assert.equal(unknowns.$('.wp-more-models').tagName,'SECTION');unknowns.click('[data-wp-new-model="cost"]');assert.equal(unknowns.currentStep(),1);
 assert.equal(unknowns.read().drafts[fruit.id].modelMethods.length,1);assert.equal(unknowns.read().drafts[fruit.id].modelMethods[0].meaning,massRoute.meaning);
 unknowns.fillDerivations(costRoute);unknowns.checkAndNext(1,'New unknown derivations');
 costRoute.table.rows.forEach((row,i)=>row.cells.forEach((cell,j)=>{if(cell.expr&&!cell.given)unknowns.setInput('t:'+i+':'+j,cell.expr);}));unknowns.checkAndNext(2,'New unknown table');

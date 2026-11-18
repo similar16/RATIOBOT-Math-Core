@@ -370,9 +370,12 @@ input.wp-fact-number.is-correct,.wp-fact-number.is-correct input{background:var(
 .wp-equation-parts{padding:8px 14px;background:rgba(82,107,135,.05);border-radius:10px;margin:16px 0}
 
 /* Preserve independent modeling attempts and compare only confirmed work. */
-.wp-more-models{margin:20px 0;padding:14px 0;border-block:1px solid rgba(62,53,64,.18)}
-.wp-more-models summary{font-weight:700;cursor:pointer;font-size:14px}.wp-more-models p{font-size:13px!important}
-.wp-more-models>div{display:flex;gap:10px;flex-wrap:wrap}.wp-more-models button{white-space:normal;text-align:left}
+.wp-more-models{margin:16px 0 22px;padding:16px;background:var(--wp-teal-soft);border-radius:12px}
+.wp-more-models h4{font-size:15px!important;margin:0 0 8px!important}.wp-more-models p{font-size:13px!important}
+.wp-model-options{display:flex;gap:10px;flex-wrap:wrap}.wp-more-models button{min-height:44px;white-space:normal;text-align:left}
+.wp-more-models .wp-model-switch-note{color:var(--wp-muted);margin-bottom:0}
+.wp-alternative-guide{margin-top:12px}.wp-alternative-guide summary{font-weight:650;cursor:pointer;font-size:13px}
+.wp-alternative-guide ul{padding-left:20px;margin:10px 0 0;font-size:13px;line-height:1.75}
 .wp-model-comparison{margin:26px 0}.wp-model-comparison>p{font-size:13px!important}
 .wp-model-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:18px;align-items:start}
 .wp-method-card{min-width:0;padding:16px;background:rgba(82,107,135,.035);border-radius:12px}
