@@ -49,7 +49,7 @@ assert.match(find('G9-08').originalStem,/求它们的积/);assert.match(find('G9
 // Exercise the actual prompt renderer, including repeated locations and local full-size links.
 const dom=new JSDOM('<section id="host"></section>',{url:'https://test.invalid/word-problems/app.js?v=fixture',runScripts:'outside-only'}),w=dom.window,host=w.document.querySelector('#host');
 w.katex={renderToString:s=>String(s)};w.HTMLElement.prototype.scrollIntoView=function(){};
-for(const f of ['engine','progress','data-l7-l8','data-l9-review','data-textbook-intro','data-textbook-applications','data-textbook-review','data-pep-foundations','data-pep-applications','data-pep-review','catalog','table-alternatives','textbook-index','supplement-index','reading','relations','relation-builder','scratchpad','diagrams','app'])w.eval(fs.readFileSync(path.join(base,f+'.js'),'utf8'));
+for(const f of ['engine','math-input','progress','data-l7-l8','data-l9-review','data-textbook-intro','data-textbook-applications','data-textbook-review','data-pep-foundations','data-pep-applications','data-pep-review','catalog','table-alternatives','textbook-index','supplement-index','reading','relations','relation-builder','scratchpad','diagrams','app'])w.eval(fs.readFileSync(path.join(base,f+'.js'),'utf8'));
 const P=w.RatioWordProblemProgress;let state=P.normalized(null);
 const app=w.RatioWordProblemApp.mount(host,{key:()=> 'fixture::46',ready:()=>true,isTeacher:()=>true,progress:()=>state,saveDraft:(id,d)=>{state=P.saveDraft(state,id,d);},go:()=>{}});
 for(const [id,loc]of [['G9-03','A12'],['G9-06','I21'],['G9-09','A33'],['TB-I07','I07'],['TB-I03','I03'],['G9-07',null]]){

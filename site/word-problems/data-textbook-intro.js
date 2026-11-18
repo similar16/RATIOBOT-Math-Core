@@ -657,8 +657,9 @@
     "facts": [
       {
         "id": "half",
-        "text": "“a的一半”表示把a平均分成2份，取其中1份",
-        "kind": "property"
+        "text": "“a的一半”就是a的二分之一.",
+        "kind": "property",
+        "numericBlanks": false
       },
       {
         "id": "more",
@@ -793,7 +794,7 @@
     "originalStems": {
       "I05": "根据下列情境中的等量关系列出一个等式：比a的一半多2的数是5."
     },
-    "contentRevision": 1
+    "contentRevision": 2
   },
   {
     "id": "TB-I06",

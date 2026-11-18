@@ -79,7 +79,7 @@
   function build(problem){
     const all=[];
     const facts=(problem?.facts||[]).map(fact=>{
-      const text=String(fact.text||''),found=spans(text),parts=[],fields=[];let position=0;
+      const text=String(fact.text||''),found=fact.numericBlanks===false?[]:spans(text),parts=[],fields=[];let position=0;
       const masked=found.reduceRight((s,p)=>s.slice(0,p.start)+'空格'+s.slice(p.end),text);
       for(const [index,span] of found.entries()){
         if(span.start>position)parts.push({type:'text',text:text.slice(position,span.start)});

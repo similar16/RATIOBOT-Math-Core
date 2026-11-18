@@ -129,10 +129,8 @@
   if((route.answers||[]).length&&!d.answersChecked)throw Error('求解结果尚未核对，请先完成求解与检验.');
   if((route.verdictCases||[]).some((c,i)=>d.values['v:'+i]!==c.correct))throw Error('请分别完成每种情形的实际意义判断.');
   if(d.interactionVersion>=2){
-   const F=reading(),R=relations();if(!F||!R)throw Error('数量互动资源尚未准备好，请重试.');
+   const F=reading();if(!F)throw Error('数量互动资源尚未准备好，请重试.');
    if(!F.check(problem,d.values).ok||F.build(problem).facts.some(f=>!f.fields.length&&!d.seen.includes(f.id)))throw Error('请完成并核对读题数量填空.');
-   const model=R.practice(problem,route),answers=R.practiceAnswers(model,d.values,d.passed[2]===true);
-   if(!R.check(model,answers).ok)throw Error('请完成并核对本题的关键数量关系.');
   }
   if(s.records.some(x=>x.runId===d.runId))return {state:s,record:null};
   const discussion=!!route.discussion||['open','boundary'].includes(problem.kind)||!!d.customModel;
