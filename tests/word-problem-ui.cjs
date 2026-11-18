@@ -95,7 +95,7 @@ function fixture() {
    assert.equal(currentStep(),0);confirmFacts();assert.equal(currentStep(),1);assert(!$('.wp-stage textarea'));checkAndNext(1,'Calendar variable definition');
    route.table.rows.forEach((row,i)=>row.cells.forEach((cell,j)=>{if(cell.expr&&!cell.given)setInput('t:'+i+':'+j,cell.expr);}));
    checkAndNext(2,'Calendar directions');assert(!$('.wp-stage textarea'));
-   route.sumExpressions.forEach((item,i)=>setInput('e:'+i,item.expr));checkAndNext(3,'Calendar sums');
+   route.sumExpressions.forEach((item,i)=>setInput('e:'+i,route.table.rows[item.rowIndexes[0]].cells.filter(cell=>cell.expr).map(cell=>'('+cell.expr+')').join('+')));checkAndNext(3,'Calendar complete sums');route.sumExpressions.forEach((item,i)=>setInput('c:'+i,item.expr));
    assert(!$('.wp-stage textarea'));click('[data-wp-check]');assert($('.wp-completion'));if(!teacher)counts.completed++;counts.routes++;return read().records[0];
   }
   assert.equal(currentStep(),0);
@@ -804,9 +804,21 @@ assert.equal(calendarSimple.host.querySelectorAll('.wp-equation-entry').length,2
 assert.deepEqual([...calendarSimple.host.querySelectorAll('.wp-answer-prefix')].map(e=>e.textContent.replace(/\s/g,'')),['S=','S=']);
 assert(!calendarSimple.$('.wp-stage').textContent.includes('建模思路'));
 calendarSimple.setInput('e:0','3*x');calendarSimple.setInput('e:1','4*x');calendarSimple.click('[data-wp-check]');assert(calendarSimple.$('[data-wp-next]').disabled);
-calendarSimple.setInput('e:0','(x-7)+x+(x+7)');calendarSimple.setInput('e:1','(x-1)+x+(x+1)+(x-7)+(x+7)');calendarSimple.checkAndNext(3,'Two distinct S expressions');
+calendarSimple.setInput('e:1','5*x');calendarSimple.click('[data-wp-check]');assert(calendarSimple.$('[data-wp-next]').disabled,'Correct totals still need the full quantity sum at this stage');
+assert.equal(calendarSimple.host.querySelectorAll('[data-wp-take]').length,11);
+calendarSimple.setInput('e:0','').focus();calendarSimple.click('[data-wp-take="1:3"]');calendarSimple.click('[data-wp-key="+"]');calendarSimple.click('[data-wp-take="1:1"]');calendarSimple.click('[data-wp-key="+"]');calendarSimple.click('[data-wp-take="1:4"]');
+const firstCalendarSum=calendarSimple.$('[data-wp-input="e:0"]').value;
+calendarSimple.setInput('e:1','').focus();
+for(const [index,column] of [0,1,2,3,4].entries()){if(index)calendarSimple.click('[data-wp-key="+"]');calendarSimple.click('[data-wp-take="2:'+column+'"]');}
+assert.equal(calendarSimple.$('[data-wp-input="e:0"]').value,firstCalendarSum,'Taking a cross-frame date preserves the selected three-number formula');
+calendarSimple.checkAndNext(3,'Complete S sums assembled from the quantity table');
+assert.equal(calendarSimple.host.querySelectorAll('[data-wp-input^="c:"]').length,2);
+assert(!calendarSimple.$('.wp-calendar-conclusion'),'The conclusion follows confirmed simplification');
+calendarSimple.setInput('c:0','x+x+x');calendarSimple.setInput('c:1','5*x');calendarSimple.click('[data-wp-check]');assert(!calendarSimple.$('.wp-completion'),'The final step requires combined like terms');
+calendarSimple.setInput('c:0','3*x');
 assert(!calendarSimple.$('[data-wp-scratch-mount]'));assert.equal(calendarSimple.$('[data-wp-check]').textContent,'确认并保存');
 calendarSimple.click('[data-wp-check]');assert(calendarSimple.$('.wp-completion'));assert.equal(calendarSimple.read().records[0].status,'independent');
+assert.match(calendarSimple.$('.wp-calendar-conclusion').textContent,/中间数.*框内数的个数/);assert.equal(calendarSimple.read().records[0].values['e:0'],firstCalendarSum);assert.equal(calendarSimple.read().records[0].values['c:0'],'3*x');
 const calendarRecord=clone(calendarSimple.read().records[0]);calendarSimple.remount();calendarSimple.app.start('TB-R01');assert(calendarSimple.$('.wp-completion'));assert.deepEqual(clone(calendarSimple.read().records[0]),calendarRecord);
 calendarSimple.click('[data-wp-step="2"]');calendarSimple.setInput('t:0:0','x+1');assert(calendarSimple.$('[data-wp-next]').disabled);calendarSimple.remount();calendarSimple.app.start('TB-R01');assert(!calendarSimple.read().drafts['TB-R01'].passed[3]);
 calendarSimple.close();

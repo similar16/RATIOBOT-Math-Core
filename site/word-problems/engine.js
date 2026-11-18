@@ -432,6 +432,60 @@
     return failures.find(result=>result.kind==='source') || failures.find(result=>result.kind==='variable') || failures[0] || {ok:false,kind:'content',message:'这一格的可用表达式需要教师复核.'};
   }
 
+  // A complete quantity sum keeps one contribution per table entry. Match
+  // consecutive additive pieces against an unordered set of quantities, so
+  // x-7+x+x+7 and (x+7)+x+(x-7) both retain the three dates.
+  function checkQuantitySum(input, item, variable = 'x') {
+    try {
+      const normalized = normalize(input);
+      if (normalized.includes('=')) return {ok:false,kind:'structure',message:'这里只填写S右边的完整求和算式，化简放在下一步.'};
+      const parsed = read(normalized), pieces = [];
+      function flatten(ast, sign = 1) {
+        if (ast.kind === 'group') return flatten(ast.value, sign);
+        if (ast.kind === 'unary') return flatten(ast.value, ast.op === '-' ? -sign : sign);
+        if (ast.kind === 'binary' && (ast.op === '+' || ast.op === '-')) { flatten(ast.left, sign); flatten(ast.right, ast.op === '-' ? -sign : sign); return; }
+        pieces.push(pScale(evaluate(ast), rat(sign)));
+      }
+      flatten(parsed.ast);
+      if (pieces.length > 32) return {ok:false,kind:'structure',message:'请按表中每个日期的表达式逐项相加.'};
+      let matchedValue = false, failure;
+      for (const terms of item.termSets || []) {
+        if (!Array.isArray(terms) || !terms.length || terms.length > 8) continue;
+        const checked = checkTableCell(normalized, {...item,expr:terms.map(term=>'('+term+')').join('+'),requiredDerivations:[]}, variable);
+        if (!checked.ok) { failure ||= checked; continue; }
+        matchedValue = true;
+        const quantities = terms.map(term=>read(term).poly), fullMask = (1 << quantities.length)-1, memo = new Map();
+        function match(position, mask) {
+          if (mask === fullMask) return position === pieces.length;
+          const key = position+':'+mask;
+          if (memo.has(key)) return memo.get(key);
+          let sum = constant(R0);
+          for (let end=position;end<pieces.length;end++) {
+            sum=pAdd(sum,pieces[end]);
+            for(let i=0;i<quantities.length;i++) if (!(mask & (1 << i)) && pEquals(sum,quantities[i]) && match(end+1,mask | (1 << i))) { memo.set(key,true); return true; }
+          }
+          memo.set(key,false);return false;
+        }
+        if (match(0,0)) return {ok:true,kind:'correct',expression:normalized,message:'完整算式对应了框内的每个日期.'};
+      }
+      return matchedValue?{ok:false,kind:'structure',message:'请把框内每个日期的表达式逐项相加，保留完整算式；合并同类项放在下一步.'}:failure||{ok:false,kind:'content',message:'请重新核对当前框对应的数量表.'};
+    } catch(error) { return {ok:false,kind:error.kind||'input',message:error.message||'请检查完整算式.'}; }
+  }
+
+  function checkSimplifiedTerm(input, item, variable = 'x') {
+    const checked = checkTableCell(input, item, variable);
+    if (!checked.ok) return checked;
+    try {
+      const normalized=normalize(input);if(normalized.includes('='))fail('只填写合并同类项后的结果.');
+      const ungroup=ast=>ast.kind==='group'?ungroup(ast.value):ast;
+      const number=ast=>{ast=ungroup(ast);return ast.kind==='number'||ast.kind==='unary'&&number(ast.value);};
+      const letter=ast=>{ast=ungroup(ast);return ast.kind==='variable'&&ast.name===variable;};
+      const ast=ungroup(read(normalized).ast);
+      if (letter(ast)||ast.kind==='binary'&&ast.op==='*'&&(number(ast.left)&&letter(ast.right)||letter(ast.left)&&number(ast.right))) return checked;
+      return {ok:false,kind:'structure',message:'请合并同类项，把结果写成一个系数乘x的形式.'};
+    } catch(error) {return {ok:false,kind:error.kind||'input',message:error.message};}
+  }
+
   function sameEquation(a, b) {
     if (!a.size || !b.size || a.size !== b.size) return false;
     const [key, av] = a.entries().next().value, bv = coefficient(b, key);
@@ -521,7 +575,15 @@
         }
       }
       if (route?.closure) sources(route.closure, '列式依据');
-      for (const item of route?.sumExpressions || []) { sources(item, item.label); expression(item.expr, item.label); }
+      for (const item of route?.sumExpressions || []) {
+        sources(item, item.label); expression(item.expr, item.label);
+        for (const index of item.rowIndexes || []) {
+          const row=route.table?.rows?.[index];
+          if (!Number.isInteger(index)||!row) {error(where+'/'+item.label+'的数量表行不存在');continue;}
+          const sum=row.cells.filter(cell=>cell.expr).map(cell=>'('+cell.expr+')').join('+');
+          if (!equivalent(sum,item.expr)) error(where+'/'+item.label+'的数量表与日期和不相等');
+        }
+      }
       for (const [i, equation] of (route?.equations || []).entries()) { expression(equation.left, '方程' + i + '左边', problem.kind === 'boundary'); expression(equation.right, '方程' + i + '右边', problem.kind === 'boundary'); }
       for (const [i, answer] of (route?.answers || []).entries()) expression(answer.expr, '答案' + i);
       for (const [i, check] of (route?.checks || []).entries()) if (check.expr != null && check.result != null && !equivalent(check.expr, check.result, route.variable)) error(where + '/检验' + i + '两边不相等');
@@ -531,7 +593,7 @@
     return errors;
   }
 
-  const api = { equivalent, checkDerivation, checkTableCell, checkEquation, hasNumberSources, format, formatCalculation, numeric, validateProblem, normalize, inspect };
+  const api = { equivalent, checkDerivation, checkTableCell, checkQuantitySum, checkSimplifiedTerm, checkEquation, hasNumberSources, format, formatCalculation, numeric, validateProblem, normalize, inspect };
   if (typeof module === 'object' && module.exports) module.exports = api;
   else root.RatioWordProblemEngine = api;
 })(typeof window === 'undefined' ? globalThis : window);
