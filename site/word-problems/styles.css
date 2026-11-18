@@ -388,3 +388,17 @@ input.wp-fact-number.is-correct,.wp-fact-number.is-correct input{background:var(
 .wp-basic-number{width:64px!important;min-width:56px;text-align:center;font-size:20px!important;padding:10px!important}
 
 .wp-basic-summary{padding:16px 18px;background:rgba(82,107,135,.04);border-radius:12px;margin:20px 0}.wp-basic-summary p{font-size:17px!important;line-height:1.9}
+.wp-derivation-methods{display:flex;flex-wrap:wrap;gap:8px 14px;border:0;padding:0;margin:16px 0}
+.wp-derivation-methods legend{font-size:13px;font-weight:800;margin-bottom:8px}
+.wp-derivation-methods label{display:flex;align-items:center;gap:7px;min-height:44px;padding:6px 11px;border:1px solid rgba(62,53,64,.2);border-radius:9px;background:var(--wp-paper);font-size:13px;cursor:pointer}
+.wp-derivation-methods label:has(input:checked){background:var(--wp-teal-soft);border-color:var(--wp-ink)}
+.wp-method-basis{margin:12px 0;max-width:100%;overflow-x:auto;padding:7px 0}
+.wp-inline-exponent{font-size:.8em;margin-left:1px}
+.wp-total-row>*{border-top:2px solid var(--wp-ink);background:rgba(82,107,135,.05);font-weight:800}
+.wp-total-row>th{background:rgba(82,107,135,.09)!important}
+.wp-calendar-table .wp-quantity-table{min-width:760px}
+.wp-calendar-table .wp-quantity-table td{min-width:105px}
+.wp-power-check{display:inline-flex;align-items:center;gap:7px;flex-wrap:wrap;min-height:76px;padding:10px 0}
+.wp-power-check sup{align-self:center;transform:translateY(-15px);margin-left:-6px;margin-right:5px;line-height:1}
+.wp-power-check input{width:52px!important;min-height:42px;text-align:center;padding:5px!important;font-size:18px!important}
+.wp-exponent-check{grid-template-columns:1fr}

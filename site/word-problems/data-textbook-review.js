@@ -34,25 +34,82 @@ const data = [
     "routes": [
       {
         "id": "table",
-        "label": "比较中心数与所框日期之和",
+        "label": "用中心数表示各方向日期与日期之和",
         "variable": "x",
         "meaning": "本次所选框的中心日期",
         "unit": "日",
-        "domain": "用x表示中心数，只填写框内日期个数",
+        "domain": "每行单独选一个框，中心数记为x，S表示该框内日期之和.",
         "derivations": [],
         "table": {
           "headers": [
             "框形",
-            "框内日期个数"
+            "左边数",
+            "中心数",
+            "右边数",
+            "上方数",
+            "下方数"
           ],
           "rows": [
             {
-              "label": "三数框（横框或竖框）",
+              "label": "三数框（横框）",
               "cells": [
                 {
-                  "expr": "3",
+                  "expr": "x-1",
                   "sources": [
-                    "three"
+                    "calendar",
+                    "unknown"
+                  ]
+                },
+                {
+                  "expr": "x",
+                  "sources": [
+                    "unknown"
+                  ],
+                  "given": true
+                },
+                {
+                  "expr": "x+1",
+                  "sources": [
+                    "calendar",
+                    "unknown"
+                  ]
+                },
+                {
+                  "note": "—"
+                },
+                {
+                  "note": "—"
+                }
+              ]
+            },
+            {
+              "label": "三数框（竖框）",
+              "cells": [
+                {
+                  "note": "—"
+                },
+                {
+                  "expr": "x",
+                  "sources": [
+                    "unknown"
+                  ],
+                  "given": true
+                },
+                {
+                  "note": "—"
+                },
+                {
+                  "expr": "x-7",
+                  "sources": [
+                    "calendar",
+                    "unknown"
+                  ]
+                },
+                {
+                  "expr": "x+7",
+                  "sources": [
+                    "calendar",
+                    "unknown"
                   ]
                 }
               ]
@@ -61,9 +118,38 @@ const data = [
               "label": "十字框",
               "cells": [
                 {
-                  "expr": "5",
+                  "expr": "x-1",
                   "sources": [
-                    "five"
+                    "calendar",
+                    "unknown"
+                  ]
+                },
+                {
+                  "expr": "x",
+                  "sources": [
+                    "unknown"
+                  ],
+                  "given": true
+                },
+                {
+                  "expr": "x+1",
+                  "sources": [
+                    "calendar",
+                    "unknown"
+                  ]
+                },
+                {
+                  "expr": "x-7",
+                  "sources": [
+                    "calendar",
+                    "unknown"
+                  ]
+                },
+                {
+                  "expr": "x+7",
+                  "sources": [
+                    "calendar",
+                    "unknown"
                   ]
                 }
               ]
@@ -88,8 +174,9 @@ const data = [
         "equations": [],
         "answers": [],
         "steps": [
-          "x*3=s",
-          "x*5=s"
+          "S=(x-1)+x+(x+1)=3*x",
+          "S=(x-7)+x+(x+7)=3*x",
+          "S=(x-7)+(x-1)+x+(x+1)+(x+7)=5*x"
         ],
         "checks": [],
         "conclusion": "三数框的日期和是中心数的3倍，十字框的日期和是中心数的5倍.",
@@ -100,18 +187,37 @@ const data = [
         },
         "additionalVariables": [
           {
-            "variable": "s",
-            "meaning": "本次活动给出的所框日期总和",
+            "variable": "S",
+            "meaning": "本次所选框内日期之和",
             "unit": "日期数值之和",
-            "domain": "对应框内日期之和",
-            "known": true
+            "known": false
           }
         ],
-        "tableNote": "三数框乘3，十字框乘5.",
-        "relationshipOnly": true
+        "tableNote": "中心数已用x表示，请填写框内左、右、上、下各位置的日期.横框和竖框都属于三数框.",
+        "relationshipOnly": true,
+        "sumExpressions": [
+          {
+            "label": "三数框",
+            "expr": "3*x",
+            "sources": [
+              "three",
+              "calendar",
+              "unknown"
+            ]
+          },
+          {
+            "label": "十字框",
+            "expr": "5*x",
+            "sources": [
+              "five",
+              "calendar",
+              "unknown"
+            ]
+          }
+        ]
       }
     ],
-    "contentRevision": 3,
+    "contentRevision": 4,
     "originalStem": "准备一个月历，两人一组完成下面的活动：\n（1）用如图所示的透明“一”字形框，在月历上横着或竖着框出3个数，并把这3个数的和告诉同学，请同学求出这3个数.\n（2）用如图所示的透明“十”字形框，在月历上框出5个数，并把这5个数的和告诉同学，请同学求出这5个数.\n（3）请你设计一个其他形状的透明框，和同学做类似前面的游戏.\n（4）用方程解决实际问题时有时会出现无解的情况.在“月历问题”中，你能举出一些例子吗？",
     "originalStems": {
       "R01": "准备一个月历，两人一组完成下面的活动：\n（1）用如图所示的透明“一”字形框，在月历上横着或竖着框出3个数，并把这3个数的和告诉同学，请同学求出这3个数.\n（2）用如图所示的透明“十”字形框，在月历上框出5个数，并把这5个数的和告诉同学，请同学求出这5个数.\n（3）请你设计一个其他形状的透明框，和同学做类似前面的游戏.\n（4）用方程解决实际问题时有时会出现无解的情况.在“月历问题”中，你能举出一些例子吗？"
@@ -121,7 +227,7 @@ const data = [
       "alt": "横向、竖向一字框与十字框"
     },
     "kindLabel": "基本数量关系",
-    "analysisNote": "关注三数框、十字框的中心数与日期之和的关系."
+    "analysisNote": "本次只比较三数框、十字框中各方向的日期与日期之和."
   },
   {
     "id": "TB-R03",

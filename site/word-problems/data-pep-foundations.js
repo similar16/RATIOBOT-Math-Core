@@ -883,7 +883,7 @@
       },
       {
         "id": "law",
-        "text": "相邻后一项与前一项的比由相邻项相除得到",
+        "text": "相邻项的比可由后一项除以前一项得到；相邻项的指数相差1，隔一项的指数相差2.",
         "kind": "property"
       }
     ],
@@ -906,7 +906,56 @@
               "law"
             ],
             "unit": "",
-            "explain": "用已给相邻项9与−3相除，得到相邻项的倍数−3."
+            "explain": "可比较已给的任意一对相邻项，也可利用通项式.选择一种方法，写出算式即可.",
+            "methods": [
+              {
+                "id": "pair-12",
+                "label": "第2项÷第1项",
+                "expr": "9/(-3)",
+                "sources": [
+                  "sequence",
+                  "law"
+                ]
+              },
+              {
+                "id": "pair-23",
+                "label": "第3项÷第2项",
+                "expr": "(-27)/9",
+                "sources": [
+                  "sequence",
+                  "law"
+                ]
+              },
+              {
+                "id": "pair-34",
+                "label": "第4项÷第3项",
+                "expr": "81/(-27)",
+                "sources": [
+                  "sequence",
+                  "law"
+                ]
+              },
+              {
+                "id": "pair-45",
+                "label": "第5项÷第4项",
+                "expr": "(-243)/81",
+                "sources": [
+                  "sequence",
+                  "law"
+                ]
+              },
+              {
+                "id": "general",
+                "label": "由通项式比较相邻两项",
+                "expr": "(-3)^1",
+                "sources": [
+                  "sequence",
+                  "law"
+                ],
+                "explain": "后一项与前一项的指数相差1，约去相同的因子后写出剩余的乘方.",
+                "basis": "\\frac{(-3)^{n+1}}{(-3)^n}=(-3)^1"
+              }
+            ]
           },
           {
             "id": "twiceRatio",
@@ -917,7 +966,64 @@
               "ratio"
             ],
             "unit": "",
-            "explain": "从第一项到第三项连续乘两次−3，9由这两个倍数相乘得到."
+            "explain": "可连乘两次相邻项的倍数，也可比较任意一对相隔两项的位置，或由通项式比较指数.",
+            "methods": [
+              {
+                "id": "multiply",
+                "label": "连续乘两次相邻项倍数",
+                "expr": "(-3)*(-3)",
+                "sources": [
+                  "ratio"
+                ]
+              },
+              {
+                "id": "square",
+                "label": "相邻项倍数的平方",
+                "expr": "(-3)^2",
+                "sources": [
+                  "ratio",
+                  "law"
+                ]
+              },
+              {
+                "id": "pair-13",
+                "label": "第3项÷第1项",
+                "expr": "(-27)/(-3)",
+                "sources": [
+                  "sequence",
+                  "law"
+                ]
+              },
+              {
+                "id": "pair-24",
+                "label": "第4项÷第2项",
+                "expr": "81/9",
+                "sources": [
+                  "sequence",
+                  "law"
+                ]
+              },
+              {
+                "id": "pair-35",
+                "label": "第5项÷第3项",
+                "expr": "(-243)/(-27)",
+                "sources": [
+                  "sequence",
+                  "law"
+                ]
+              },
+              {
+                "id": "general",
+                "label": "由通项式比较隔一项的两项",
+                "expr": "(-3)^2",
+                "sources": [
+                  "sequence",
+                  "law"
+                ],
+                "explain": "两个位置的指数相差2，约去相同的因子后写出剩余的乘方.",
+                "basis": "\\frac{(-3)^{n+2}}{(-3)^n}=(-3)^2"
+              }
+            ]
           }
         ],
         "table": {
@@ -946,7 +1052,7 @@
               "label": "第二项",
               "cells": [
                 {
-                  "expr": "9/(-3)",
+                  "expr": "-3",
                   "sources": [
                     "ratio"
                   ],
@@ -965,7 +1071,7 @@
               "label": "第三项",
               "cells": [
                 {
-                  "expr": "(-3)*(-3)",
+                  "expr": "9",
                   "sources": [
                     "twiceRatio"
                   ],
@@ -1085,9 +1191,582 @@
             "result": "-1701"
           },
           {
-            "text": "第一项确属原数列",
-            "expr": "(-3)*(-3)*(-3)*(-3)*(-3)",
-            "result": "-243"
+            "text": "第一项确属原数列：填出它对应的指数",
+            "expr": "(-3)^5",
+            "result": "-243",
+            "input": "exponent",
+            "base": "-3",
+            "exponent": "5"
+          }
+        ],
+        "conclusion": "三个相邻数依次为−243、729、−2187，对应原数列的第5、6、7项.",
+        "verdict": {
+          "correct": "valid",
+          "prompt": "求得的结果是否符合所有原条件和实际范围？",
+          "explain": "把结果代回原条件，并核对单位、范围以及题目真正所求."
+        }
+      },
+      {
+        "id": "middle",
+        "label": "设这三个相邻数中的第二项为x",
+        "variable": "x",
+        "meaning": "这三个相邻数中的第二项",
+        "unit": "",
+        "domain": "x须是给定数列中的某一项，且所选三项按数列顺序相邻",
+        "derivations": [
+          {
+            "id": "ratio",
+            "label": "相邻后一项是前一项的多少倍",
+            "expr": "9/(-3)",
+            "result": "-3",
+            "sources": [
+              "sequence",
+              "law"
+            ],
+            "unit": "",
+            "explain": "可比较已给的任意一对相邻项，也可利用通项式.选择一种方法，写出算式即可.",
+            "methods": [
+              {
+                "id": "pair-12",
+                "label": "第2项÷第1项",
+                "expr": "9/(-3)",
+                "sources": [
+                  "sequence",
+                  "law"
+                ]
+              },
+              {
+                "id": "pair-23",
+                "label": "第3项÷第2项",
+                "expr": "(-27)/9",
+                "sources": [
+                  "sequence",
+                  "law"
+                ]
+              },
+              {
+                "id": "pair-34",
+                "label": "第4项÷第3项",
+                "expr": "81/(-27)",
+                "sources": [
+                  "sequence",
+                  "law"
+                ]
+              },
+              {
+                "id": "pair-45",
+                "label": "第5项÷第4项",
+                "expr": "(-243)/81",
+                "sources": [
+                  "sequence",
+                  "law"
+                ]
+              },
+              {
+                "id": "general",
+                "label": "由通项式比较相邻两项",
+                "expr": "(-3)^1",
+                "sources": [
+                  "sequence",
+                  "law"
+                ],
+                "explain": "后一项与前一项的指数相差1，约去相同的因子后写出剩余的乘方.",
+                "basis": "\\frac{(-3)^{n+1}}{(-3)^n}=(-3)^1"
+              }
+            ]
+          }
+        ],
+        "table": {
+          "headers": [
+            "位置",
+            "与所设第二项的倍数关系",
+            "该项"
+          ],
+          "rows": [
+            {
+              "label": "第一项",
+              "cells": [
+                {
+                  "expr": "1/(-3)",
+                  "sources": [
+                    "ratio",
+                    "law"
+                  ],
+                  "given": true
+                },
+                {
+                  "expr": "x/(-3)",
+                  "sources": [
+                    "unknown",
+                    "ratio"
+                  ]
+                }
+              ]
+            },
+            {
+              "label": "第二项",
+              "cells": [
+                {
+                  "note": "选作基准"
+                },
+                {
+                  "expr": "x",
+                  "sources": [
+                    "unknown"
+                  ],
+                  "given": true
+                }
+              ]
+            },
+            {
+              "label": "第三项",
+              "cells": [
+                {
+                  "expr": "-3",
+                  "sources": [
+                    "ratio"
+                  ],
+                  "given": true
+                },
+                {
+                  "expr": "(-3)*x",
+                  "sources": [
+                    "ratio",
+                    "unknown"
+                  ]
+                }
+              ]
+            },
+            {
+              "label": "三项合计",
+              "cells": [
+                {
+                  "note": "不把倍数作为独立数相加"
+                },
+                {
+                  "expr": "-1701",
+                  "sources": [
+                    "sum"
+                  ],
+                  "given": true
+                }
+              ]
+            }
+          ]
+        },
+        "relations": {
+          "add": [
+            "第一项+第二项=前两项之和",
+            "前两项之和+第三项=相邻三项之和"
+          ],
+          "multiply": [
+            "前一项×相邻项倍数=后一项"
+          ]
+        },
+        "relationTriples": {
+          "sum": [
+            [
+              "第一项",
+              "第二项",
+              "前两项之和"
+            ],
+            [
+              "前两项之和",
+              "第三项",
+              "相邻三项之和"
+            ]
+          ],
+          "product": [
+            [
+              "前一项",
+              "相邻项倍数",
+              "后一项"
+            ]
+          ],
+          "notes": []
+        },
+        "closure": {
+          "sources": [
+            "sum"
+          ],
+          "text": "按数列顺序写出的这三个相邻数相加为−1701.",
+          "hint": "根据表内表达式，找出尚须满足的那条独立条件."
+        },
+        "equations": [
+          {
+            "label": "相邻三项之和",
+            "left": "x/(-3)+x+(-3)*x",
+            "right": "-1701",
+            "answerIndex": 1
+          }
+        ],
+        "answers": [
+          {
+            "label": "第一项",
+            "expr": "-243",
+            "unit": ""
+          },
+          {
+            "label": "第二项",
+            "expr": "729",
+            "unit": ""
+          },
+          {
+            "label": "第三项",
+            "expr": "-2187",
+            "unit": ""
+          }
+        ],
+        "steps": [
+          "x/(-3)+x+(-3)*x=-1701",
+          "(-1/3+1-3)*x=-1701",
+          "x=729",
+          "729/(-3)=-243",
+          "(-3)*729=-2187"
+        ],
+        "checks": [
+          {
+            "text": "第二项等于第一项乘−3",
+            "expr": "(-3)*(-243)",
+            "result": "729"
+          },
+          {
+            "text": "第三项等于第二项乘−3",
+            "expr": "(-3)*729",
+            "result": "-2187"
+          },
+          {
+            "text": "三项之和",
+            "expr": "-243+729-2187",
+            "result": "-1701"
+          },
+          {
+            "text": "第一项确属原数列：填出它对应的指数",
+            "expr": "(-3)^5",
+            "result": "-243",
+            "input": "exponent",
+            "base": "-3",
+            "exponent": "5"
+          }
+        ],
+        "conclusion": "三个相邻数依次为−243、729、−2187，对应原数列的第5、6、7项.",
+        "verdict": {
+          "correct": "valid",
+          "prompt": "求得的结果是否符合所有原条件和实际范围？",
+          "explain": "把结果代回原条件，并核对单位、范围以及题目真正所求."
+        }
+      },
+      {
+        "id": "last",
+        "label": "设这三个相邻数中的第三项为x",
+        "variable": "x",
+        "meaning": "这三个相邻数中的第三项",
+        "unit": "",
+        "domain": "x须是给定数列中的某一项，且所选三项按数列顺序相邻",
+        "derivations": [
+          {
+            "id": "ratio",
+            "label": "相邻后一项是前一项的多少倍",
+            "expr": "9/(-3)",
+            "result": "-3",
+            "sources": [
+              "sequence",
+              "law"
+            ],
+            "unit": "",
+            "explain": "可比较已给的任意一对相邻项，也可利用通项式.选择一种方法，写出算式即可.",
+            "methods": [
+              {
+                "id": "pair-12",
+                "label": "第2项÷第1项",
+                "expr": "9/(-3)",
+                "sources": [
+                  "sequence",
+                  "law"
+                ]
+              },
+              {
+                "id": "pair-23",
+                "label": "第3项÷第2项",
+                "expr": "(-27)/9",
+                "sources": [
+                  "sequence",
+                  "law"
+                ]
+              },
+              {
+                "id": "pair-34",
+                "label": "第4项÷第3项",
+                "expr": "81/(-27)",
+                "sources": [
+                  "sequence",
+                  "law"
+                ]
+              },
+              {
+                "id": "pair-45",
+                "label": "第5项÷第4项",
+                "expr": "(-243)/81",
+                "sources": [
+                  "sequence",
+                  "law"
+                ]
+              },
+              {
+                "id": "general",
+                "label": "由通项式比较相邻两项",
+                "expr": "(-3)^1",
+                "sources": [
+                  "sequence",
+                  "law"
+                ],
+                "explain": "后一项与前一项的指数相差1，约去相同的因子后写出剩余的乘方.",
+                "basis": "\\frac{(-3)^{n+1}}{(-3)^n}=(-3)^1"
+              }
+            ]
+          },
+          {
+            "id": "twiceRatio",
+            "label": "第三项相对于所选第一项的倍数",
+            "expr": "(-3)*(-3)",
+            "result": "9",
+            "sources": [
+              "ratio"
+            ],
+            "unit": "",
+            "explain": "可连乘两次相邻项的倍数，也可比较任意一对相隔两项的位置，或由通项式比较指数.",
+            "methods": [
+              {
+                "id": "multiply",
+                "label": "连续乘两次相邻项倍数",
+                "expr": "(-3)*(-3)",
+                "sources": [
+                  "ratio"
+                ]
+              },
+              {
+                "id": "square",
+                "label": "相邻项倍数的平方",
+                "expr": "(-3)^2",
+                "sources": [
+                  "ratio",
+                  "law"
+                ]
+              },
+              {
+                "id": "pair-13",
+                "label": "第3项÷第1项",
+                "expr": "(-27)/(-3)",
+                "sources": [
+                  "sequence",
+                  "law"
+                ]
+              },
+              {
+                "id": "pair-24",
+                "label": "第4项÷第2项",
+                "expr": "81/9",
+                "sources": [
+                  "sequence",
+                  "law"
+                ]
+              },
+              {
+                "id": "pair-35",
+                "label": "第5项÷第3项",
+                "expr": "(-243)/(-27)",
+                "sources": [
+                  "sequence",
+                  "law"
+                ]
+              },
+              {
+                "id": "general",
+                "label": "由通项式比较隔一项的两项",
+                "expr": "(-3)^2",
+                "sources": [
+                  "sequence",
+                  "law"
+                ],
+                "explain": "两个位置的指数相差2，约去相同的因子后写出剩余的乘方.",
+                "basis": "\\frac{(-3)^{n+2}}{(-3)^n}=(-3)^2"
+              }
+            ]
+          }
+        ],
+        "table": {
+          "headers": [
+            "位置",
+            "与所设第三项的倍数关系",
+            "该项"
+          ],
+          "rows": [
+            {
+              "label": "第一项",
+              "cells": [
+                {
+                  "expr": "1/9",
+                  "sources": [
+                    "twiceRatio",
+                    "law"
+                  ],
+                  "given": true
+                },
+                {
+                  "expr": "x/((-3)*(-3))",
+                  "sources": [
+                    "unknown",
+                    "ratio",
+                    "twiceRatio"
+                  ]
+                }
+              ]
+            },
+            {
+              "label": "第二项",
+              "cells": [
+                {
+                  "expr": "1/(-3)",
+                  "sources": [
+                    "ratio",
+                    "law"
+                  ],
+                  "given": true
+                },
+                {
+                  "expr": "x/(-3)",
+                  "sources": [
+                    "unknown",
+                    "ratio"
+                  ]
+                }
+              ]
+            },
+            {
+              "label": "第三项",
+              "cells": [
+                {
+                  "note": "选作基准"
+                },
+                {
+                  "expr": "x",
+                  "sources": [
+                    "unknown"
+                  ],
+                  "given": true
+                }
+              ]
+            },
+            {
+              "label": "三项合计",
+              "cells": [
+                {
+                  "note": "不把倍数作为独立数相加"
+                },
+                {
+                  "expr": "-1701",
+                  "sources": [
+                    "sum"
+                  ],
+                  "given": true
+                }
+              ]
+            }
+          ]
+        },
+        "relations": {
+          "add": [
+            "第一项+第二项=前两项之和",
+            "前两项之和+第三项=相邻三项之和"
+          ],
+          "multiply": [
+            "前一项×相邻项倍数=后一项"
+          ]
+        },
+        "relationTriples": {
+          "sum": [
+            [
+              "第一项",
+              "第二项",
+              "前两项之和"
+            ],
+            [
+              "前两项之和",
+              "第三项",
+              "相邻三项之和"
+            ]
+          ],
+          "product": [
+            [
+              "前一项",
+              "相邻项倍数",
+              "后一项"
+            ]
+          ],
+          "notes": []
+        },
+        "closure": {
+          "sources": [
+            "sum"
+          ],
+          "text": "按数列顺序写出的这三个相邻数相加为−1701.",
+          "hint": "根据表内表达式，找出尚须满足的那条独立条件."
+        },
+        "equations": [
+          {
+            "label": "相邻三项之和",
+            "left": "x/((-3)*(-3))+x/(-3)+x",
+            "right": "-1701",
+            "answerIndex": 2
+          }
+        ],
+        "answers": [
+          {
+            "label": "第一项",
+            "expr": "-243",
+            "unit": ""
+          },
+          {
+            "label": "第二项",
+            "expr": "729",
+            "unit": ""
+          },
+          {
+            "label": "第三项",
+            "expr": "-2187",
+            "unit": ""
+          }
+        ],
+        "steps": [
+          "x/9+x/(-3)+x=-1701",
+          "(1/9-1/3+1)*x=-1701",
+          "x=-2187",
+          "(-2187)/(-3)=729",
+          "(-2187)/9=-243"
+        ],
+        "checks": [
+          {
+            "text": "第二项等于第一项乘−3",
+            "expr": "(-3)*(-243)",
+            "result": "729"
+          },
+          {
+            "text": "第三项等于第二项乘−3",
+            "expr": "(-3)*729",
+            "result": "-2187"
+          },
+          {
+            "text": "三项之和",
+            "expr": "-243+729-2187",
+            "result": "-1701"
+          },
+          {
+            "text": "第一项确属原数列：填出它对应的指数",
+            "expr": "(-3)^5",
+            "result": "-243",
+            "input": "exponent",
+            "base": "-3",
+            "exponent": "5"
           }
         ],
         "conclusion": "三个相邻数依次为−243、729、−2187，对应原数列的第5、6、7项.",
@@ -1105,7 +1784,8 @@
         121
       ],
       "method": "原页核验，保留原题文字和小问，句号统一英文."
-    }
+    },
+    "contentRevision": 1
   },
   {
     "id": "PEP-P015",
