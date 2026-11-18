@@ -238,7 +238,7 @@
    if(run.step===1){for(const d of route.derivations||[]){if(d.methods?.length)run.values['dm:'+d.id]=d.methods[0].id;run.values['d:'+d.id]=E.format(d.expr);run.derivationSources[d.id]=d.sources||[];run.derived[d.id]=true;}}
    if(run.step===2){route.table.rows.forEach((r,ri)=>r.cells.forEach((c,ci)=>{if(c.expr&&!c.given)run.values['t:'+ri+':'+ci]=E.format(c.expr);}));if(manual())run.discussion=route.discussion||'请说明各数量的关系，并检查条件是否充分.';}
    if(run.step===3){(route.equations||[]).forEach((q,i)=>run.values['e:'+i]=E.format(q.left)+'='+E.format(q.right));if(manual())run.discussion=route.conclusion||route.discussion||'';}
-   if(run.step===6){(route.checks||[]).forEach((c,i)=>run.values['c:'+i]=E.format(c.result));run.verdict=route.verdict?.correct||'valid';(route.verdictCases||[]).forEach((c,i)=>{run.values['v:'+i]=c.correct;});}
+   if(run.step===6){(route.checks||[]).forEach((c,i)=>run.values['c:'+i]=E.format(c.input==='exponent'?c.exponent:c.result));run.verdict=route.verdict?.correct||'valid';(route.verdictCases||[]).forEach((c,i)=>{run.values['v:'+i]=c.correct;});}
    feedback='本步已显示示范.本次会记录为看过示范，你仍可回到目录重新独立分析.';feedbackKind='hint';render();
   }
   function destroy(){save();clearInputBindings();scratchUI?.destroy();scratchUI=null;alive=false;renderToken++;clearTimeout(saveTimer);clearTimeout(searchTimer);mathFields=[];activeField=null;}
