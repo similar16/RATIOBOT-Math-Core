@@ -11,9 +11,9 @@
   ['travel','行程问题','统一速度、时间、路程以及计时起点.','L8-P2-Q1 L8-P2-Q2 L8-P2-Q3 L8-P2-Q4 L8-P2-Q5 L8-P2-V1 L8-P2-V2 L8-P2-V3 L8-T2 L8-H2 L8-H3 G10-05 G10-09 S03 S10 TB-I01 TB-I12 TB-A18 TB-A29 TB-A30 TB-R08 TB-R16 PEP-P022 PEP-P025 PEP-P035 PEP-P039 PEP-P040 PEP-P062 PEP-P075'],
   ['fees','方案比较与分段计费','先判断范围，再比较各方案的费用.','S04 S05 S06 S08 S09 TB-I20 TB-A34 PEP-P052 PEP-P053 PEP-P054 PEP-P066'],
   ['geometry','几何数量','依据周长、面积、角度或体积关系建表.','G9-01 G9-06 TB-I16 TB-A32 TB-R11 TB-R18 PEP-P023'],
-  ['patterns','数字与图形规律','说明位值、递增、倍增和图形计数的依据.','G9-03 G9-07 G9-08 G9-09 G9-10 TB-I05 TB-I07 TB-I10 TB-A03 TB-R17 PEP-P012 PEP-P014 PEP-P031 PEP-P037'],
+  ['patterns','数字与图形规律','说明位值、递增、倍增和图形计数的依据.','G9-03 G9-07 G9-08 G9-09 G9-10 TB-I05 TB-I07 TB-I10 TB-A03 TB-R01 TB-R17 PEP-P012 PEP-P014 PEP-P031 PEP-P037'],
   ['data','统计与计分','从原始表格找规律，并检验整数条件.','TB-I09 PEP-P049 PEP-P050 PEP-P051 PEP-P060 PEP-P078'],
-  ['modeling','开放探究与方法边界','用实验、编题或反例说明模型的条件.','G9-02 G9-04 G9-05 G10-04 S01 S07 TB-I03 TB-I04 TB-I08 TB-R01 TB-R22 PEP-P068']
+  ['modeling','开放探究与方法边界','用实验、编题或反例说明模型的条件.','G9-02 G9-04 G9-05 G10-04 S01 S07 TB-I03 TB-I04 TB-I08 TB-R22 PEP-P068']
  ];
  const categories=definitions.map(([id,label,description,ids])=>({id,label,description,problemIds:ids.split(' ')}));
  const textbookSections=[

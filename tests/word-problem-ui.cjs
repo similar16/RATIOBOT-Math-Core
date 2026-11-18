@@ -48,7 +48,7 @@ function fixture() {
  const currentStep=()=>Number($('[aria-current="step"]')?.dataset.wpStep);
  const feedback=()=>$('.wp-feedback')?.textContent||'';
  function expectPassed(step,where){assert.equal(currentStep(),step,where+' is current step');const next=$('[data-wp-next]');assert(next&&!next.disabled,where+' did not pass: '+feedback());}
- function checkAndNext(step,where){assert($('.wp-stage-top [data-wp-restart]'),'Reset remains available at '+where);click('[data-wp-check]');expectPassed(step,where);click('[data-wp-next]');assert.equal(currentStep(),step===3?5:step===0&&read().drafts[$('[data-wp-current-problem]').dataset.wpCurrentProblem]?.problemId==='S01'?2:step+1,where+' advances');}
+ function checkAndNext(step,where){assert($('.wp-stage-top [data-wp-restart]'),'Reset remains available at '+where);click('[data-wp-check]');expectPassed(step,where);click('[data-wp-next]');assert.equal(currentStep(),step===2&&read().drafts[$('[data-wp-current-problem]').dataset.wpCurrentProblem]?.problemId==='TB-R01'?6:step===3?5:step===0&&read().drafts[$('[data-wp-current-problem]').dataset.wpCurrentProblem]?.problemId==='S01'?2:step+1,where+' advances');}
  function completeScratch(where,route){
   assert.equal(currentStep(),5,where+' reaches the scratchpad and answer confirmation');
   assert.equal($('.wp-stage h3')?.textContent,'在草稿纸上解方程并确认答案');
@@ -91,6 +91,7 @@ function fixture() {
  }
  function canonicalRoute(problem,route){
   app.start(problem.id,true);
+  if(route.relationshipOnly){assert.equal(currentStep(),2);assert(!$('.wp-stage textarea'));assert.equal(host.querySelectorAll('[data-wp-input]').length,2);setInput('t:0:0','3');setInput('t:1:0','5');checkAndNext(2,'Basic calendar relations');assert(!$('.wp-stage textarea'));click('[data-wp-check]');assert($('.wp-completion'));if(!teacher)counts.completed++;counts.routes++;return read().records[0];}
   assert.equal(currentStep(),0);
   assert($('[data-wp-next]').disabled,'No advancing before source step passes');
   confirmFacts();if(!route.reverseModel){selectRoute(route.id);fillDerivations(route);checkAndNext(1,problem.id+'/'+route.id+' derivations');}
@@ -693,8 +694,8 @@ for(const id of ['G9-06','G9-08','TB-R01','TB-I03','TB-I04','TB-I05']){
  const history={...old,title:id==='G9-08'?'三个连续奇数的积':'旧版本题目',status:'independent',at:old.updatedAt,valueLabels:{'a:1':'旧版三个奇数的积'}};
  f.accounts.set(f.owner,{version:1,records:[history],drafts:{[id]:old}});
  f.remount().start(id);
- const current=f.read().drafts[id];assert.equal(current.contentRevision,f.w.RatioWordProblemsData.find(p=>p.id===id).contentRevision);assert.equal(f.currentStep(),0);assert.equal(current.finished,false);
- assert.notEqual(current.runId,old.runId);assert.notEqual(current.scratchId,old.scratchId);assert.deepEqual(clone(current.values),{});assert.deepEqual(clone(current.passed),{});
+ const current=f.read().drafts[id];assert.equal(current.contentRevision,f.w.RatioWordProblemsData.find(p=>p.id===id).contentRevision);assert.equal(f.currentStep(),r.relationshipOnly?2:0);assert.equal(current.finished,false);
+ assert.notEqual(current.runId,old.runId);assert.notEqual(current.scratchId,old.scratchId);assert.deepEqual(clone(current.values),{});assert.deepEqual(clone(current.passed),r.relationshipOnly?{0:true,1:true}:{});
  assert.equal(f.read().records[0].values['a:1'],'105');assert.equal(f.read().records[0].valueLabels['a:1'],'旧版三个奇数的积');
  assert.match(f.feedback(),/以前已提交的记录完整保留/);
  f.app.open();const card=f.$('[data-wp-problem="'+id+'"]');assert(card);assert(!card.textContent.includes('已完成 ✓'),'Old content does not mark the revised task complete');
@@ -726,13 +727,55 @@ for(const id of ['TB-I03','TB-I04']){
 }
 
 const calendarSimple=fixture();calendarSimple.app.start('TB-R01',true);
-for(const step of [0,1]){calendarSimple.click('[data-wp-example]');calendarSimple.checkAndNext(step,'Calendar setup '+step);}
-assert.equal(calendarSimple.$('.wp-quantity-table').querySelectorAll('thead th').length,2);
-assert.equal(calendarSimple.$('.wp-quantity-table').querySelectorAll('tbody tr').length,5);
-assert.match(calendarSimple.$('.wp-table-note').textContent,/每次只选一个框/);
-calendarSimple.click('[data-wp-example]');calendarSimple.click('[data-wp-check]');
-assert.equal(calendarSimple.$('.wp-feedback-title').textContent,'已记录，待讨论','Open reasoning is recorded, never falsely certified as mathematically correct');
+assert.equal(calendarSimple.currentStep(),2);assert.equal(calendarSimple.host.querySelectorAll('[data-wp-input]').length,2);
+assert(!calendarSimple.$('[data-wp-discussion]')&&!calendarSimple.$('.wp-relation-reference'));
+assert(!calendarSimple.$('.wp-stage').textContent.includes('开放问题'));
+calendarSimple.setInput('t:0:0','4');calendarSimple.setInput('t:1:0','5');calendarSimple.click('[data-wp-check]');assert(calendarSimple.$('[data-wp-next]').disabled);
+calendarSimple.setInput('t:0:0','3');calendarSimple.checkAndNext(2,'Basic center-number multipliers');
+assert.equal(calendarSimple.$('[data-wp-check]').textContent,'确认并保存');assert(!calendarSimple.$('textarea'));
+calendarSimple.click('[data-wp-check]');assert(calendarSimple.$('.wp-completion'));assert.equal(calendarSimple.read().records[0].status,'independent');
 calendarSimple.close();
+
+{
+// Independent table/equation snapshots survive another method, reload, reset and account changes.
+const variants=fixture(),jacketProblem=variants.w.RatioWordProblemsData.find(p=>p.id==='L8-P1'),jacketRoute=jacketProblem.routes[0];
+variants.canonicalRoute(jacketProblem,jacketRoute);
+const firstMethod=clone(variants.read().records[0].modelMethods[0]),firstGroup=variants.read().drafts[jacketProblem.id].modelGroupId;
+assert(firstMethod.confirmed);assert(variants.$('[data-wp-new-model="'+jacketRoute.id+'"]'));
+variants.click('.wp-more-models summary');variants.click('[data-wp-new-model="'+jacketRoute.id+'"]');
+assert.equal(variants.currentStep(),2);assert.equal(variants.read().drafts[jacketProblem.id].modelMethods.length,1);
+assert.equal(variants.read().drafts[jacketProblem.id].modelGroupId,firstGroup);
+variants.remount().start(jacketProblem.id);assert.equal(variants.currentStep(),2);
+assert.deepEqual(clone(variants.read().drafts[jacketProblem.id].modelMethods[0]),firstMethod,'Reload preserves the first method exactly');
+jacketRoute.table.rows.forEach((row,i)=>row.cells.forEach((cell,j)=>{if(cell.expr&&!cell.given)variants.setInput('t:'+i+':'+j,cell.expr);}));
+variants.setInput('t:0:2','x+97');variants.click('[data-wp-check]');assert(variants.$('[data-wp-next]').disabled,'Every new table is still mathematically checked');
+variants.setInput('t:0:2','x+96');variants.checkAndNext(2,'Second table uses profit instead of discount');
+jacketRoute.equations.forEach((q,i)=>variants.setInput('e:'+i,q.right+'='+q.left));variants.checkAndNext(3,'Second modeling equation');
+variants.completeScratch('Second method answer',jacketRoute);variants.fillVerification(jacketRoute);variants.click('[data-wp-check]');
+assert.equal(variants.host.querySelectorAll('.wp-model-comparison .wp-method-card').length,2);
+const twoMethods=clone(variants.read().records[0].modelMethods);assert.equal(twoMethods.length,2);assert.deepEqual(twoMethods[0],firstMethod);
+assert.equal(twoMethods[1].table.rows[0].cells[2].expr,'x+96');assert.notEqual(twoMethods[0].equations[0].expression,twoMethods[1].equations[0].expression);
+assert.equal(variants.read().records.length,2,'The earlier completed record remains available');
+variants.remount().start(jacketProblem.id);assert.equal(variants.host.querySelectorAll('.wp-model-comparison .wp-method-card').length,2,'Saved comparisons reopen with both methods');
+variants.click('.wp-stage-top [data-wp-restart]');variants.click('[data-wp-confirm-reset]');
+assert.deepEqual(clone(variants.read().drafts[jacketProblem.id].modelMethods),[]);assert.notEqual(variants.read().drafts[jacketProblem.id].modelGroupId,firstGroup);
+assert.deepEqual(clone(variants.read().records[0].modelMethods),twoMethods,'Reset does not edit historical comparisons');
+variants.switchAccount('other-class::2');variants.remount().open();assert.deepEqual(clone(variants.read().drafts),{});assert.deepEqual(clone(variants.read().records),[]);variants.close();
+
+// Choosing a different unknown keeps the first model and requires the new route's derivations/table.
+const unknowns=fixture(),fruit=unknowns.w.RatioWordProblemsData.find(p=>p.id==='L7-P2'),massRoute=fruit.routes.find(r=>r.id==='mass'),costRoute=fruit.routes.find(r=>r.id==='cost');
+unknowns.app.start(fruit.id,true);
+for(const step of [0,1,2]){unknowns.click('[data-wp-example]');unknowns.checkAndNext(step,'First unknown setup '+step);}
+unknowns.click('[data-wp-example]');unknowns.click('[data-wp-check]');unknowns.expectPassed(3,'First unknown model');
+unknowns.click('.wp-more-models summary');unknowns.click('[data-wp-new-model="cost"]');assert.equal(unknowns.currentStep(),1);
+assert.equal(unknowns.read().drafts[fruit.id].modelMethods.length,1);assert.equal(unknowns.read().drafts[fruit.id].modelMethods[0].meaning,massRoute.meaning);
+unknowns.fillDerivations(costRoute);unknowns.checkAndNext(1,'New unknown derivations');
+costRoute.table.rows.forEach((row,i)=>row.cells.forEach((cell,j)=>{if(cell.expr&&!cell.given)unknowns.setInput('t:'+i+':'+j,cell.expr);}));unknowns.checkAndNext(2,'New unknown table');
+costRoute.equations.forEach((q,i)=>unknowns.setInput('e:'+i,q.left+'='+q.right));unknowns.checkAndNext(3,'New unknown equation');
+unknowns.completeScratch('New unknown answer',costRoute);unknowns.fillVerification(costRoute);unknowns.click('[data-wp-check]');
+assert.equal(unknowns.host.querySelectorAll('.wp-model-comparison .wp-method-card').length,2);assert.equal(unknowns.read().records[0].modelMethods[1].meaning,costRoute.meaning);unknowns.close();
+console.log('PASS optional modeling methods: independent equations/tables, alternative unknowns, source checks, reload, account isolation and reset-safe history');
+}
 
 (async()=>{
  // A personal stroke stays active across the profile-save debounce and the scratchpad's own persistence timer.

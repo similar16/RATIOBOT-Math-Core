@@ -207,3 +207,27 @@ assert.deepEqual(sameVersion.conditionFound,['whole','time']);assert.deepEqual(s
 const uncheckedRecord={...unchecked,finished:true,at:unchecked.updatedAt,status:'independent'};
 assert.deepEqual(P.merge({records:[currentRecord]},{records:[uncheckedRecord]}).records[0].conditionUsed,[]);
 console.log('PASS word-problem progress: isolated accounts, typed gates, v2/v3/v4 migration, six-page grading, answer confirmation, condition tracking, conservative cross-version help and private drafts');
+
+// Confirmed methods are bounded private snapshots; cross-device variants merge within one reset group.
+{
+ const method=(id,at,expression)=>({id,routeId:route.id,routeLabel:'一种填法',variable:'x',meaning:'套数',unit:'套',confirmed:true,createdAt:at,updatedAt:at,table:{headers:['对象','数量'],rows:[{label:'杯',cells:[{expr:expression}]}]},equations:[{label:'总量',expression:'0.6x+0.15*6x=10.5'}]});
+ const a=method('method-a','2026-11-18T01:00:00Z','6*x'),b=method('method-b','2026-11-18T01:01:00Z','(10.5-0.6*x)/0.15');
+ const left=draft({runId:'wp-model-a',modelGroupId:'wp-shared-models',modelId:a.id,modelMethods:[a],updatedAt:a.updatedAt});
+ const right=draft({runId:'wp-model-b',modelGroupId:'wp-shared-models',modelId:b.id,modelMethods:[b],updatedAt:b.updatedAt});
+ for(const [first,second]of [[left,right],[right,left]]){
+  const result=P.merge({drafts:{[problem.id]:first}},{drafts:{[problem.id]:second}}).drafts[problem.id];
+  assert.deepEqual(result.modelMethods.map(m=>m.id),['method-a','method-b']);assert.equal(result.runId,'wp-model-b');
+ }
+ const editing={...right,modelMethods:[{...b,confirmed:false,updatedAt:'2026-11-18T01:02:00Z'}],updatedAt:'2026-11-18T01:02:00Z'};
+ const merged=P.merge({drafts:{[problem.id]:right}},{drafts:{[problem.id]:editing}}).drafts[problem.id];assert.equal(merged.modelMethods[0].confirmed,false,'An old checked snapshot cannot resurrect an edited method');
+ const reset={...right,runId:'wp-after-reset',modelGroupId:'wp-fresh-models',modelMethods:[],updatedAt:'2026-11-18T01:03:00Z'};
+ assert.deepEqual(P.merge({drafts:{[problem.id]:left}},{drafts:{[problem.id]:reset}}).drafts[problem.id].modelMethods,[],'Reset groups cannot merge old methods back into the new analysis');
+ const history=P.complete(null,draft({modelGroupId:'wp-shared-models',modelId:a.id,modelMethods:[a,b]}),problem,route).record;
+ assert.equal(P.normalized({records:[history]}).records[0].modelMethods.length,2,'Completed comparisons survive normalization and cloud serialization');
+ assert.doesNotThrow(()=>P.cleanDraft(draft({modelMethods:[null,{id:'bad',routeId:route.id,table:{rows:[null,{cells:[null]}]},equations:[null]}]})));
+ const many=Array.from({length:20},(_,i)=>method('method-'+i,'2026-11-18T01:00:00Z','x'));
+ assert.equal(P.cleanDraft(draft({modelMethods:many})).modelMethods.length,8);
+ const unfinished=many.map(m=>({...m,confirmed:false}));
+ const withEdits=P.cleanDraft(draft({modelMethods:[a,...unfinished,b]}));assert(withEdits.modelMethods.some(m=>m.id===a.id&&m.confirmed),'Editing other methods cannot evict the first confirmed table');assert(withEdits.modelMethods.some(m=>m.id===b.id&&m.confirmed));assert.equal(withEdits.modelMethods.filter(m=>!m.confirmed).length,8);
+}
+console.log('PASS saved modeling comparisons: stable snapshots, chronological method order, editing tombstones, reset groups and cross-device merging');
