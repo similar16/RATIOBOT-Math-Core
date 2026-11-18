@@ -48,11 +48,13 @@ function fixture() {
  const currentStep=()=>Number($('[aria-current="step"]')?.dataset.wpStep);
  const feedback=()=>$('.wp-feedback')?.textContent||'';
  function expectPassed(step,where){assert.equal(currentStep(),step,where+' is current step');const next=$('[data-wp-next]');assert(next&&!next.disabled,where+' did not pass: '+feedback());}
- function checkAndNext(step,where){click('[data-wp-check]');expectPassed(step,where);click('[data-wp-next]');assert.equal(currentStep(),step===3?5:step+1,where+' advances');}
+ function checkAndNext(step,where){assert($('.wp-stage-top [data-wp-restart]'),'Reset remains available at '+where);click('[data-wp-check]');expectPassed(step,where);click('[data-wp-next]');assert.equal(currentStep(),step===3?5:step+1,where+' advances');}
  function completeScratch(where,route){
   assert.equal(currentStep(),5,where+' reaches the scratchpad and answer confirmation');
   assert.equal($('.wp-stage h3')?.textContent,'在草稿纸上解方程并确认答案');
   assert($('[data-wp-scratch-mount]'),'The personal scratchpad is mounted');
+  assert($('.wp-stage-top [data-wp-restart]'),'Reset is available while solving');
+  assert(!$('.wp-answer-confirm').textContent.includes('不必算出结果'),'Answer confirmation still asks for the result');
   assert(!$('[data-wp-hint]')&&!$('[data-wp-example]'),'Handwriting does not reveal a worked answer');
   assert(!$('.wp-solution')&&!$('.wp-verification'),'Verification stays on the next page');
   const problem=w.RatioWordProblemsData.find(p=>p.id===$('[data-wp-current-problem]').dataset.wpCurrentProblem);
@@ -114,6 +116,7 @@ function fixture() {
   completeScratch(problem.id+'/'+route.id,route);
   fillVerification(route);
   assert.equal($('[data-wp-check]')?.textContent,'检验并保存');
+  assert(!$('.wp-verification').textContent.includes('不必算出结果'),'Verification still asks for calculated results');
   click('[data-wp-check]');
   assert($('.wp-completion'),problem.id+'/'+route.id+' must finish: '+feedback());
   assert.equal(currentStep(),6,'A completed analysis remains on verification');
@@ -154,6 +157,7 @@ all.close();
 const provenance=fixture(),shirt=provenance.w.RatioWordProblemsData.find(p=>p.id==='L8-H1'),shirtRoute=shirt.routes[0];
 provenance.app.start(shirt.id,true);provenance.confirmFacts();
 const growth=shirtRoute.derivations.find(d=>d.expr==='1+25%');assert(growth);
+assert.match(provenance.$('[data-wp-input="d:'+growth.id+'"]').getAttribute('aria-label'),/计算过程（写出来源算式即可，不必算出结果）/);
 provenance.setInput('d:'+growth.id,'1.25');
 for(const id of growth.sources)provenance.checkBox([...provenance.host.querySelectorAll('[data-wp-derived-source]')].find(x=>x.dataset.wpDerivedSource===growth.id&&x.value===id));
 provenance.click([...provenance.host.querySelectorAll('[data-wp-check-derived]')].find(x=>x.dataset.wpCheckDerived===growth.id));
@@ -162,6 +166,17 @@ assert(!provenance.host.querySelector('[data-wp-derivation="'+growth.id+'"] .wp-
 provenance.setInput('d:'+growth.id,'1+25%');
 provenance.click([...provenance.host.querySelectorAll('[data-wp-check-derived]')].find(x=>x.dataset.wpCheckDerived===growth.id));
 assert(provenance.host.querySelector('[data-wp-derivation="'+growth.id+'"] .wp-success-tag'),'1+25% with source must pass');
+provenance.setInput('d:'+growth.id,'1+25%=1.25');
+provenance.click('[data-wp-check-derived="'+growth.id+'"]');
+assert(provenance.$('[data-wp-derivation="'+growth.id+'"] .wp-success-tag'),'An optional correct result is accepted');
+const editedCalculation=provenance.setInput('d:'+growth.id,'1+25%=1.5');
+assert.equal(provenance.$('[data-wp-input="d:'+growth.id+'"]'),editedCalculation,'Editing preserves the active input element');
+assert(!provenance.$('[data-wp-derivation="'+growth.id+'"] .wp-success-tag'),'Editing immediately removes the stale success badge');
+assert(!provenance.$('[data-wp-derivation="'+growth.id+'"] .wp-derived-chain'),'Editing immediately removes the previously verified result');
+provenance.click('[data-wp-check-derived="'+growth.id+'"]');
+assert(!provenance.$('[data-wp-derivation="'+growth.id+'"] .wp-success-tag'),'An incorrect optional result is still checked');
+provenance.setInput('d:'+growth.id,'1+25%');
+provenance.click('[data-wp-check-derived="'+growth.id+'"]');
 provenance.click('[data-wp-check]');
 assert(provenance.$('[data-wp-next]').disabled,'Remaining derivation is still required');
 provenance.close();
@@ -277,11 +292,64 @@ assert.equal(revisedRecord.values['a:0'],'('+revisedProblem.routes[0].answers[0]
 assert.equal(revisedRecord.scratchId,originalRecord.scratchId,'Revising an answer retains the same personal scratchpad');
 assert.deepEqual(clone(revised.read().records.find(r=>r.runId===originalRecord.runId)),originalRecord,'The earlier submitted record is not silently overwritten');
 assert.equal(revised.w.RatioWordProblemProgress.summary(revised.read()).completed,1,'Revising one task does not increase its completed-task count');
-revised.click('[data-wp-restart]');
+const historyBeforeReset=clone(revised.read().records);
+assert(revised.$('.wp-stage-top [data-wp-restart]'),'The persistent reset remains visible after completion');
+revised.click('.wp-completion [data-wp-restart]');
+assert.equal(revised.currentStep(),6,'Requesting reset does not immediately clear submitted work');
+assert.equal(revised.$('[data-wp-reset-confirm]').hidden,false);
+revised.click('[data-wp-confirm-reset]');
 assert.equal(revised.currentStep(),0);
+assert.deepEqual(clone(revised.read().records),historyBeforeReset,'Reset keeps exact historical input, labels and evidence');
+assert.deepEqual(clone(revised.read().drafts[revisedProblem.id].values),{});
+assert.equal(revised.read().drafts[revisedProblem.id].finished,false);
 assert.notEqual(revised.read().drafts[revisedProblem.id].scratchId,originalRecord.scratchId,'A new independent analysis starts a new personal scratchpad');
 assert.equal(revised.read().records.length,2,'Starting over keeps both completed records');
 revised.close();
+
+// Reset is explicit, cancellable, route-preserving and persistent during an unfinished analysis.
+const resetting=fixture();
+resetting.app.start('L7-P1',true);resetting.click('[data-wp-example]');
+resetting.app.start('L7-P2',true);
+const unrelatedDraft=clone(resetting.read().drafts['L7-P1']);
+resetting.confirmFacts();resetting.selectRoute('cost');
+resetting.click('[data-wp-example]');
+const beforeReset=clone(resetting.read().drafts['L7-P2']);
+assert.equal(beforeReset.routeId,'cost');assert.equal(beforeReset.example,true);
+const resetButton=resetting.click('.wp-stage-top [data-wp-restart]');
+assert.equal(resetting.$('[data-wp-reset-confirm]').hidden,false);
+assert.equal(resetting.w.document.activeElement,resetting.$('[data-wp-cancel-reset]'),'Confirmation initially focuses the safe cancel action');
+resetting.click('[data-wp-cancel-reset]');
+assert.equal(resetting.$('[data-wp-reset-confirm]').hidden,true);
+assert.equal(resetting.w.document.activeElement,resetButton,'Cancel restores focus to the triggering control');
+assert.equal(resetting.currentStep(),1);assert.deepEqual(clone(resetting.read().drafts['L7-P2']),beforeReset,'Cancel keeps exact draft and help evidence');
+resetting.click('.wp-stage-top [data-wp-restart]');
+resetting.$('[data-wp-reset-confirm]').dispatchEvent(new resetting.w.KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
+assert.equal(resetting.$('[data-wp-reset-confirm]').hidden,true,'Escape also cancels reset');
+resetting.click('.wp-stage-top [data-wp-restart]');resetting.click('[data-wp-confirm-reset]');
+const afterReset=clone(resetting.read().drafts['L7-P2']);
+assert.equal(resetting.currentStep(),0);assert.equal(afterReset.routeId,'cost','Reset retains the current meaning of the unknown');
+assert.notEqual(afterReset.runId,beforeReset.runId);assert.notEqual(afterReset.scratchId,beforeReset.scratchId);
+for(const key of ['values','passed','attempts','firstPass','hints','derived','derivationSources'])assert.deepEqual(afterReset[key],{},'Reset clears '+key);
+for(const key of ['seen','closure','conditionFound','conditionUsed'])assert.deepEqual(afterReset[key],[],'Reset clears '+key);
+for(const key of ['finished','answersChecked','assisted','example'])assert.equal(afterReset[key],false,'Reset clears '+key);
+assert(resetting.$('[data-wp-next]').disabled);
+assert([...resetting.host.querySelectorAll('[data-wp-step]')].filter(b=>b.dataset.wpStep!=='0').every(b=>b.disabled),'Reset closes every later step');
+assert.deepEqual(clone(resetting.read().drafts['L7-P1']),unrelatedDraft,'Reset cannot alter another problem');
+resetting.remount().start('L7-P2');
+assert.equal(resetting.currentStep(),0);assert.equal(resetting.read().drafts['L7-P2'].runId,afterReset.runId);
+assert.deepEqual(clone(resetting.read().drafts['L7-P2'].values),{},'Reopening cannot resurrect the discarded input');
+resetting.confirmFacts();assert.equal(resetting.$('[data-wp-route="cost"]').getAttribute('aria-pressed'),'true');
+resetting.close();
+
+// A reset confirmation opened by one account cannot write after the active identity changes.
+const resetIdentity=fixture();resetIdentity.app.start('L7-P2',true);resetIdentity.confirmFacts();
+resetIdentity.click('.wp-stage-top [data-wp-restart]');
+const resetOwner=resetIdentity.owner,resetOwnerState=clone(resetIdentity.read());
+resetIdentity.switchAccount('class-a::45');resetIdentity.click('[data-wp-confirm-reset]');
+assert.equal(resetIdentity.redirects.at(-1),'account');
+assert(!resetIdentity.accounts.has('class-a::45'));
+assert.deepEqual(clone(resetIdentity.accounts.get(resetOwner)),resetOwnerState);
+resetIdentity.close();
 
 // Written modeling changes invalidate every later gate, just as edits to formulas do.
 const customChange=fixture(),customProblem=customChange.w.RatioWordProblemsData.find(p=>p.id==='L7-P1');
@@ -383,6 +451,9 @@ assert.equal(catalogs.host.querySelectorAll('[data-wp-problem]').length,81,'Text
 catalogs.click('[data-wp-location="I00"]');
 assert.match(catalogs.$('.wp-citation').textContent,/105页.*章引入/);
 assert.equal(catalogs.read().drafts['G10-01'].sourceLocation,'I00');
+catalogs.click('.wp-stage-top [data-wp-restart]');catalogs.click('[data-wp-confirm-reset]');
+assert.equal(catalogs.read().drafts['G10-01'].sourceLocation,'I00','Reset retains this repeated question\'s printed source position');
+assert.match(catalogs.$('.wp-citation').textContent,/105页.*章引入/);
 catalogs.click('[data-wp-catalog]');catalogs.click('[data-wp-book="guide"]');
 assert.equal(catalogs.host.querySelectorAll('[data-wp-problem]').length,71,'Supplement merges 27 existing and 44 PEP representative tasks');
 assert(!catalogs.host.textContent.includes('教学设计与指导'),'The learner catalog uses the requested supplement name');
@@ -592,7 +663,7 @@ for(const [id,prefixes]of [['G9-08',['','x=','']],['L8-H1',['x=','y=','']],['PEP
  if(id==='PEP-P051')assert.equal(f.$('.wp-feedback-title')?.textContent,undefined,'A newly entered page has no stale success indicator');
  f.close();
 }
-for(const id of ['G9-06','G9-08','TB-R01']){
+for(const id of ['G9-06','G9-08','TB-R01','TB-I03','TB-I04']){
  const f=fixture(),problem=f.w.RatioWordProblemsData.find(p=>p.id===id),r=problem.routes[0];
  f.app.start(id,true);const old=clone(f.read().drafts[id]);f.app.destroy();
  Object.assign(old,{contentRevision:0,runId:'wp-legacy-'+id,scratchId:'wp-legacy-ink-'+id,step:6,finished:true,answersChecked:true,passed:Object.fromEntries([0,1,2,3,4,5,6].map(i=>[i,true])),values:{'f:formula:0':'2','a:1':'105','t:2:5':'old-calendar-expression'},updatedAt:new Date().toISOString()});
@@ -606,6 +677,31 @@ for(const id of ['G9-06','G9-08','TB-R01']){
  f.app.open();const card=f.$('[data-wp-problem="'+id+'"]');assert(card);assert(!card.textContent.includes('已完成 ✓'),'Old content does not mark the revised task complete');
  f.close();
 }
+// Balance activities use one total-mass column and one starting equation; transformations belong on paper.
+for(const id of ['TB-I03','TB-I04']){
+ const f=fixture(),problem=f.w.RatioWordProblemsData.find(p=>p.id===id),r=problem.routes[0];
+ f.app.start(id,true);
+ for(const step of [0,1]){f.click('[data-wp-example]');f.checkAndNext(step,'Simplified balance setup '+id+' '+step);}
+ const table=f.$('.wp-quantity-table');
+ assert.equal(table.querySelectorAll('thead th').length,3);
+ assert.equal(table.querySelectorAll('tbody tr').length,2);
+ const writable=table.querySelectorAll('[data-wp-input]');
+ assert.equal(writable.length,id==='TB-I03'?1:2,'Only unknown total masses need filling');
+ assert([...writable].every(input=>input.dataset.wpInput.endsWith(':1')));
+ f.click('[data-wp-example]');f.checkAndNext(2,'Balance totals '+id);
+ assert.equal(f.host.querySelectorAll('.wp-equation-entry').length,1,'Intermediate transformations are not repeated modeling gates');
+ // Alternate total-mass representations must remain accepted after the column indices change.
+ f.click('[data-wp-prev]');
+ for(const option of f.w.RatioWordProblemTableAlternatives.entries().filter(a=>a.problemId===id))f.setInput('t:'+option.rowIndex+':'+option.cellIndex,option.expr);
+ f.checkAndNext(2,'Balance alternate totals '+id);
+ f.click('[data-wp-example]');f.checkAndNext(3,'Balance initial equation '+id);
+ assert.equal(f.host.querySelectorAll('[data-wp-scratch-equation]').length,1);
+ assert.equal(f.$('[data-wp-scratch-prompt]').textContent,r.scratchPrompt);
+ assert(!f.$('.wp-stage').textContent.includes(r.conclusion),'The operation prompt does not reveal the solution');
+ f.completeScratch('Simplified balance '+id,r);f.fillVerification(r);f.click('[data-wp-check]');
+ assert(f.$('.wp-completion'));f.close();
+}
+
 const calendarSimple=fixture();calendarSimple.app.start('TB-R01',true);
 for(const step of [0,1]){calendarSimple.click('[data-wp-example]');calendarSimple.checkAndNext(step,'Calendar setup '+step);}
 assert.equal(calendarSimple.$('.wp-quantity-table').querySelectorAll('thead th').length,2);
@@ -633,6 +729,18 @@ calendarSimple.close();
  assert(paintedPoints.some(([x,y])=>x===180&&y===220),'Points after the save interval remain part of the visible stroke');
  assert.equal(releasedPointers,1,'The pen-up event ends the continuous stroke');
  ink.click('[data-wp-ink="undo"]');assert(ink.$('[data-wp-ink="undo"]').disabled,'The entire long stroke is one undo action');
+ // Starting over after ink exists must open a genuinely blank pad under a new identity.
+ ink.click('[data-wp-ink="redo"]');assert(!ink.$('[data-wp-ink="undo"]').disabled);
+ const previousInkDraft=clone(ink.read().drafts['L7-P1']),previousInkKey=JSON.stringify([ink.owner,previousInkDraft.scratchId,'L7-P1',previousInkDraft.routeId]);
+ const resetInkKeys=[],actualMount=ink.w.RatioWordProblemScratchpad.mount;
+ ink.w.RatioWordProblemScratchpad.mount=(host,options)=>{resetInkKeys.push(options.key);return actualMount(host,options);};
+ ink.click('.wp-stage-top [data-wp-restart]');ink.click('[data-wp-confirm-reset]');
+ assert.equal(ink.currentStep(),0);
+ assert.deepEqual(clone(ink.read().drafts['L7-P1'].values),{});
+ for(const step of [0,1,2,3]){ink.click('[data-wp-example]');ink.checkAndNext(step,'Fresh scratch after reset '+step);}
+ assert.notEqual(resetInkKeys.at(-1),previousInkKey,'Reset supplies a new personal scratchpad key');
+ assert(ink.$('[data-wp-ink="undo"]').disabled,'The new pad contains none of the previous ink');
+ assert(ink.$('[data-wp-ink="redo"]').disabled,'The new pad contains none of the old undo history');
  ink.close();
  // Deferred catalog rendering may not navigate away after the student opens a problem.
  const searching=fixture();searching.app.open();searching.textInput('[data-wp-search]','追');searching.click('[data-wp-location="I00"]');
