@@ -18,13 +18,13 @@ assert.equal(odd.title,'三个连续奇数相加');assert(odd.originalStem.inclu
 assert.deepEqual(or.answers.map(a=>a.expr),['3','5','7']);assert.equal(or.equations[0].answerIndex,1);
 assert(!JSON.stringify(or).includes('105'));assert(!JSON.stringify(R.build(odd,or)).includes('数之积'));
 const calendar=find('TB-R01'),cr=calendar.routes[0],cm=R.build(calendar,cr);
-assert.deepEqual(cr.table.headers,['位置','日期表达式']);assert.equal(cr.table.rows.length,5);
-assert.deepEqual(cr.table.rows.map(r=>r.cells[0].expr),['x','x-1','x+1','x-7','x+7']);
+assert.deepEqual(cr.table.headers,['框形','框内日期个数']);assert.equal(cr.table.rows.length,2);assert.equal(cr.relationshipOnly,true);assert(!cr.discussion);
+assert.deepEqual(cr.table.rows.map(r=>r.cells[0].expr),['3','5']);
 assert.equal(cm.sum.length,2);assert.equal(cm.product.length,2);
 assert.equal(cr.equations.length,0);assert.equal(cr.answers.length,0);assert(cr.additionalVariables.find(v=>v.variable==='s').known);
-assert.match(cr.tableNote,/不同框、不同轮次/);
+assert.match(cr.tableNote,/三数框乘3，十字框乘5/);
 const F=require(path.join(base,'reading.js'));
-assert.equal(F.build(calendar).facts.find(f=>f.id==='center').fields.length,0,'Calendar convention does not turn one frame into a numeric blank');
+assert(!calendar.facts.some(f=>f.id==='center'),'Calendar keeps only the basic frame facts');
 assert.equal(R.reference(calendar,cr).sum.length,0,'Calendar references contain no extra additive relations');
 const life=find('TB-A37'),lifeReference=R.reference(life,life.routes[0]);assert.equal(lifeReference.sum.length,1);assert.equal(lifeReference.sum[0].terms.length,6,'All six life stages share one addition relationship');
 const half=find('TB-I05');assert(!half.facts.some(f=>/平均分|其中1份/.test(f.text)));assert.equal(F.build(half).facts.find(f=>f.id==='half').fields.length,0);assert.equal(R.reference(half,half.routes[0]).product.length,0);

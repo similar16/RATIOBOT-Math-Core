@@ -14,10 +14,24 @@
  const list=(v,n)=>Array.isArray(v)?[...new Set(v.filter(x=>typeof x==='string').map(x=>text(x,80)))].slice(0,n):[];
  const reading=()=>root.RatioWordProblemReading||(typeof module==='object'&&module.exports?require('./reading.js'):null);
  const relations=()=>root.RatioWordProblemRelations||(typeof module==='object'&&module.exports?require('./relations.js'):null);
+ function modelList(raw){
+  const byId=new Map();
+  for(const value of (Array.isArray(raw)?raw:[]).slice(-32)){
+   const m=object(value),id=text(m.id,100);if(!keyOK(id)||typeof m.routeId!=='string'||!keyOK(m.routeId))continue;
+   const table=object(m.table),headers=(Array.isArray(table.headers)?table.headers:[]).slice(0,14).map(v=>text(v,100));
+   const rows=(Array.isArray(table.rows)?table.rows:[]).slice(0,60).map(value=>{const row=object(value);return {label:text(row.label,140),cells:(Array.isArray(row.cells)?row.cells:[]).slice(0,13).map(value=>{const cell=object(value);return cell.note!=null?{note:text(cell.note,300)}:{expr:text(cell.expr,500)};})};});
+   const clean={id,routeId:text(m.routeId,50),routeLabel:text(m.routeLabel,180),variable:text(m.variable,20),meaning:text(m.meaning,180),unit:text(m.unit,40),additionalVariables:(Array.isArray(m.additionalVariables)?m.additionalVariables:[]).slice(0,8).map(value=>{const v=object(value);return {variable:text(v.variable,20),meaning:text(v.meaning,180),unit:text(v.unit,40),known:v.known===true};}),confirmed:m.confirmed===true,createdAt:stamp(m.createdAt)||stamp(m.updatedAt),updatedAt:stamp(m.updatedAt),table:{headers,rows},equations:(Array.isArray(m.equations)?m.equations:[]).slice(0,12).map(value=>{const e=object(value);return {label:text(e.label,180),expression:text(e.expression,500)};})};
+   const previous=byId.get(id);if(!previous||String(clean.updatedAt)>=String(previous.updatedAt))byId.set(id,clean);
+  }
+  const ordered=[...byId.values()].sort((a,b)=>String(a.createdAt).localeCompare(String(b.createdAt))||a.id.localeCompare(b.id));
+  return [...ordered.filter(m=>m.confirmed).slice(0,8),...ordered.filter(m=>!m.confirmed).slice(-8)].sort((a,b)=>String(a.createdAt).localeCompare(String(b.createdAt))||a.id.localeCompare(b.id));
+ }
+ function mergeModels(a,b){return a.modelGroupId&&a.modelGroupId===b.modelGroupId?modelList([...(a.modelMethods||[]),...(b.modelMethods||[])]):null;}
  function cleanDraft(d,update=true){
   if(!d||typeof d!=='object'||Array.isArray(d))return null;
   const hints=counts(d.hints),example=!!d.example||d.status==='example';
   return {schema:1,interactionVersion:integer(d.interactionVersion,4),contentRevision:integer(d.contentRevision),runId:text(d.runId,100),scratchId:text(d.scratchId||d.runId,100),problemId:text(d.problemId,50),routeId:text(d.routeId,50),sourceLocation:text(d.sourceLocation,50),step:integer(d.step,6),
+   modelGroupId:text(d.modelGroupId||d.runId,100),modelId:text(d.modelId||d.runId,100),modelMethods:modelList(d.modelMethods),
    values:values(d.values),passed:flags(d.passed),attempts:counts(d.attempts),firstPass:flags(d.firstPass),hints,
    seen:list(d.seen,60),closure:list(d.closure,30),conditionFound:list(d.conditionFound,80),conditionUsed:list(d.conditionUsed,80),
    derivationSources:Object.fromEntries(entries(d.derivationSources,60).map(([k,v])=>[k,list(v,20)])),
@@ -87,14 +101,15 @@
  }
  function mergeDraft(a,b){
   if(a.contentRevision!==b.contentRevision)return a.contentRevision>b.contentRevision?a:b;
-  if(a.runId!==b.runId||a.routeId!==b.routeId)return String(b.updatedAt||'')>=String(a.updatedAt||'')?b:a;
+  const methods=mergeModels(a,b);
+  if(a.runId!==b.runId||a.routeId!==b.routeId){const latest=String(b.updatedAt||'')>=String(a.updatedAt||'')?b:a;return methods?{...latest,modelMethods:methods}:latest;}
   if(a.interactionVersion>=4&&b.interactionVersion<4)b={...b,conditionFound:a.conditionFound,conditionUsed:a.conditionUsed};
   if(b.interactionVersion>=4&&a.interactionVersion<4)a={...a,conditionFound:b.conditionFound,conditionUsed:b.conditionUsed};
   // An older device may still send v2 data for this run. Align step meanings before merging evidence.
   const target=Math.max(a.interactionVersion,b.interactionVersion);if(target>=3){if(a.interactionVersion>=2&&a.interactionVersion<target)a=migrateDraft(a,target);if(b.interactionVersion>=2&&b.interactionVersion<target)b=migrateDraft(b,target);}
   const latest=String(b.updatedAt||'')>=String(a.updatedAt||'')?b:a;
   // Keep latest expressions and unlocked steps; assistance evidence is irreversible within one run.
-  return {...latest,...mergeFlags(a,b)};
+  return {...latest,...mergeFlags(a,b),...(methods?{modelMethods:methods}:{})};
  }
  function mergeRecord(a,b){
   if(a.problemId!==b.problemId||a.routeId!==b.routeId)return String(b.at||'')>=String(a.at||'')?b:a;
@@ -102,7 +117,7 @@
   if(b.interactionVersion>=4&&a.interactionVersion<4)a={...a,conditionFound:b.conditionFound,conditionUsed:b.conditionUsed};
   const target=Math.max(a.interactionVersion,b.interactionVersion);if(target>=3){if(a.interactionVersion>=2&&a.interactionVersion<target)a={...a,...migrateDraft(a,target)};if(b.interactionVersion>=2&&b.interactionVersion<target)b={...b,...migrateDraft(b,target)};}
   const latest=String(b.at||'')>=String(a.at||'')?b:a;
-  const combined={...latest,...mergeFlags(a,b)};
+  const methods=mergeModels(a,b),combined={...latest,...mergeFlags(a,b),...(methods?{modelMethods:methods}:{})};
   combined.status=a.status==='review'||b.status==='review'?'review':combined.example?'example':combined.assisted?'assisted':'independent';
   return {...combined,...accuracy(combined)};
  }
@@ -128,7 +143,10 @@
   if((route.derivations||[]).some(x=>d.derived[x.id]!==true))throw Error('数据来源推导尚未全部核对，请返回检查.');
   if((route.answers||[]).length&&!d.answersChecked)throw Error('求解结果尚未核对，请先完成求解与检验.');
   if((route.verdictCases||[]).some((c,i)=>d.values['v:'+i]!==c.correct))throw Error('请分别完成每种情形的实际意义判断.');
-  if(d.interactionVersion>=2){
+  if(route.relationshipOnly){
+   const E=root.RatioWordProblemEngine||(typeof module==='object'&&module.exports?require('./engine.js'):null);
+   if(!E||route.table.rows.some((row,i)=>{try{return !E.equivalent(d.values['t:'+i+':0']||'',row.cells[0].expr);}catch{return true;}}))throw Error('请先确认三数框和十字框的基本数量关系.');
+  }else if(d.interactionVersion>=2){
    const F=reading();if(!F)throw Error('数量互动资源尚未准备好，请重试.');
    if(!F.check(problem,d.values).ok||F.build(problem).facts.some(f=>!f.fields.length&&!d.seen.includes(f.id)))throw Error('请完成并核对读题数量填空.');
   }

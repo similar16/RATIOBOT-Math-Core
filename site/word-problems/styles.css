@@ -368,3 +368,23 @@ input.wp-fact-number.is-correct,.wp-fact-number.is-correct input{background:var(
 .wp-relation-reference h4{font-size:13px!important;margin:0 0 7px!important}
 .wp-relation-reference p{font-size:13px!important;line-height:1.8;overflow-wrap:anywhere;margin:6px 0!important}
 .wp-equation-parts{padding:8px 14px;background:rgba(82,107,135,.05);border-radius:10px;margin:16px 0}
+
+/* Preserve independent modeling attempts and compare only confirmed work. */
+.wp-more-models{margin:20px 0;padding:14px 0;border-block:1px solid rgba(62,53,64,.18)}
+.wp-more-models summary{font-weight:700;cursor:pointer;font-size:14px}.wp-more-models p{font-size:13px!important}
+.wp-more-models>div{display:flex;gap:10px;flex-wrap:wrap}.wp-more-models button{white-space:normal;text-align:left}
+.wp-model-comparison{margin:26px 0}.wp-model-comparison>p{font-size:13px!important}
+.wp-model-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:18px;align-items:start}
+.wp-method-card{min-width:0;padding:16px;background:rgba(82,107,135,.035);border-radius:12px}
+.wp-method-card h4{font-size:15px!important;margin:0 0 10px!important}.wp-method-card>p{font-size:13px!important}
+.wp-model-table-scroll{max-width:100%;overflow-x:auto;scrollbar-width:thin}
+.wp-model-table{width:100%;border-collapse:collapse;min-width:260px;font-size:12px}
+.wp-model-table th,.wp-model-table td{padding:8px 5px;text-align:center;border-bottom:1px solid rgba(62,53,64,.15);min-width:48px}
+.wp-model-table th:first-child{min-width:64px}.wp-model-table .katex{font-size:1em}
+.wp-model-equations{margin-top:16px;min-width:0}.wp-model-equations>b{font-size:13px}.wp-model-equations p{display:grid;gap:4px;overflow-x:auto}
+.wp-model-equations small{font-size:11px;color:var(--wp-muted)}
+.wp-basic-relations{display:grid;gap:18px;margin:22px 0}.wp-basic-relation{padding:18px;background:rgba(82,107,135,.04);border-radius:12px}
+.wp-basic-relation h4{margin:0 0 12px!important;font-size:15px!important}.wp-basic-relation>div{display:flex;align-items:center;gap:9px;flex-wrap:wrap;font-size:17px}
+.wp-basic-number{width:64px!important;min-width:56px;text-align:center;font-size:20px!important;padding:10px!important}
+
+.wp-basic-summary{padding:16px 18px;background:rgba(82,107,135,.04);border-radius:12px;margin:20px 0}.wp-basic-summary p{font-size:17px!important;line-height:1.9}
