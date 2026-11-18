@@ -88,5 +88,45 @@ assert(cylinder.product.some(r=>r.terms.includes('底面积')&&r.terms.includes(
 const mixture=model('TB-R09');assert.equal(mixture.sum.length,2,'Three-component totals need two binary sums');
 const calendar=model('TB-R01');assert.equal(calendar.sum.length,2);assert.equal(calendar.product.length,2);assert(calendar.sum.some(r=>r.result==='左右日期和')&&calendar.sum.some(r=>r.result==='上下日期和'));
 assert.throws(()=>R.build({id:'missing'},{id:'missing'}),/缺少数量关系配置/,'Unmapped content must not silently invent a relation');
+
+// Practice is selective: keep one useful relationship, or go straight to the quantity table.
+const allData=[...data,...['data-pep-foundations','data-pep-applications','data-pep-review'].flatMap(f=>require(path.join(base,f+'.js')))];
+const practiceCounts={problems:allData.length,routes:0,retained:0,rows:0};
+for(const p of allData){
+ let retained=false;
+ for(const route of p.routes){
+  const m=R.practice(p,route),answer=R.canonical(m);
+  practiceCounts.routes++;practiceCounts.rows+=m.count;retained ||= m.count>0;
+  assert(m.count===0||m.count===1,p.id+' avoids duplicate relationship drills');
+  assert.equal(m.count,m.sum.length+m.product.length);
+  assert.equal(R.check(m,answer).ok,true,p.id+' selected canonical relationship');
+  const values={};
+  for(const kind of ['sum','product'])for(const [i,row]of m[kind].entries()){
+   assert.deepEqual({terms:row.terms,result:row.result},m.full[kind][row.sourceIndex],'Keep original source addresses');
+   answer[kind][i].forEach((value,j)=>values['r:'+kind+':'+row.sourceIndex+':'+j]=value);
+  }
+  assert.deepEqual(R.practiceAnswers(m,values),answer,p.id+' stable saved answer keys');
+  assert.deepEqual(m.tokens.map(t=>t.id),[...new Set([...m.sum,...m.product].flatMap(r=>[...r.terms,r.result]))],'Only quantities used in the selected relationship appear');
+  assert.equal(R.check(m,R.practiceAnswers(m,{})).ok,m.count===0,p.id+' no hidden relationship gate');
+ }
+ if(retained)practiceCounts.retained++;
+}
+assert.deepEqual(practiceCounts,{problems:150,routes:160,retained:42,rows:47});
+for(const id of ['TB-I17','TB-I03','TB-I04','TB-I05','TB-I08','G9-01','G9-06','G9-08','G9-10','TB-A32','TB-R01']){
+ const p=allData.find(p=>p.id===id);assert(p,id);
+ for(const route of p.routes){const m=R.practice(p,route);assert.equal(m.count,0,id+' needs no separate relationship activity');assert.deepEqual(m.tokens,[]);assert.deepEqual(m.notes,[]);}
+}
+// Old completed activities could arrange their rows freely. Recover by meaning without rewriting history.
+const oldProblem=allData.find(p=>p.id==='S09'),oldRoute=oldProblem.routes[0],selected=R.practice(oldProblem,oldRoute);
+const historical=R.canonical(selected.full),saved={};
+for(const kind of ['sum','product']){
+ historical[kind].reverse().forEach((row,i)=>[row[1],row[0],row[2]].forEach((value,j)=>saved['r:'+kind+':'+i+':'+j]=value));
+}
+const beforeSaved=clone(saved);
+assert.equal(R.check(selected,R.practiceAnswers(selected,saved,false)).ok,false,'Unchecked rows are read at their actual saved address');
+assert.equal(R.check(selected,R.practiceAnswers(selected,saved,true)).ok,true,'Checked historical rows keep their semantic match');
+assert.deepEqual(saved,beforeSaved,'Restoring old progress does not mutate its values');
+assert.equal(selected.sum[0].sourceIndex,3,'The single visible row retains its original storage index');
+console.log('PASS selective relationship practice:',JSON.stringify(practiceCounts));
 console.log('PASS quantity relationship cards:',JSON.stringify(counts));
 console.log('Verified all routes, reversible left terms, arbitrary row order, fixed result roles, reusable quantities, absent relations and multi-step sums/products.');

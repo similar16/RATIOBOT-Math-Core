@@ -77,7 +77,7 @@ function fixture() {
   host.querySelectorAll('[data-wp-seen]').forEach(checkBox);checkAndNext(0,'Read source facts');
  }
  function fillRelations(problem,route){
-  const model=w.RatioWordProblemRelations.build(problem,route),answer=w.RatioWordProblemRelations.canonical(model);
+  const model=w.RatioWordProblemRelations.practice(problem,route),answer=w.RatioWordProblemRelations.canonical(model);
   for(const kind of ['sum','product'])for(const [i,row]of answer[kind].slice().reverse().entries()){
    const swapped=[row[1],row[0],row[2]];
    for(const [j,id]of swapped.entries()){
@@ -103,12 +103,17 @@ function fixture() {
   assert.equal(currentStep(),0);
   assert($('[data-wp-next]').disabled,'No advancing before source step passes');
   confirmFacts();selectRoute(route.id);fillDerivations(route);checkAndNext(1,problem.id+'/'+route.id+' derivations');
+  const practice=w.RatioWordProblemRelations.practice(problem,route);
+  assert.equal(host.querySelectorAll('[data-wp-rel-slot]').length,practice.count*3,'Render only selected relationship slots');
+  assert.equal(host.querySelectorAll('.wp-relation-group').length,practice.count,'No empty sibling relationship panel');
+  if(!practice.count){assert(!$('[data-wp-relation-mount]'));assert.match($('.wp-stage').textContent,/根据题目条件直接填写数量表/);}
   const manual=!!route.discussion||['open','boundary'].includes(problem.kind);
   if(manual)textInput('[data-wp-discussion]','这个表达式由题目给出的数量与关系得到，需要说明所用条件及单位。');
   else route.table.rows.forEach((row,ri)=>row.cells.forEach((cell,ci)=>{
    if(cell.expr&&!cell.given){setInput('t:'+ri+':'+ci,cell.expr);counts.writableCells++;}
   }));
   fillRelations(problem,route);checkAndNext(2,problem.id+'/'+route.id+' table');
+  assert.equal(host.querySelectorAll('[data-wp-rel-slot]').length,practice.count*3,'Equation page repeats only the retained relationship');
   assert(!$('[data-wp-closure]')&&!$('.wp-closure-choices'),'Modeling has no duplicate condition-selection gate');
   if(manual)textInput('[data-wp-discussion]','需要检查方程的适用范围、题目是否给出充分条件，以及所求数量的实际取值要求。');
   else (route.equations||[]).forEach((equation,i)=>{setInput('e:'+i,equation.left+'='+equation.right);counts.equations++;});
@@ -146,6 +151,14 @@ assert.equal(all.read().records.filter(r=>r.problemId==='L8-P2-Q4').length,1,'Bo
 assert.equal(all.read().records.find(r=>r.problemId==='S06').status,'review','Parameter classification remains teacher-reviewed discussion');
 assert.equal(all.read().records.find(r=>r.problemId==='G10-04').status,'review','Nonlinear boundary is not marked a solved linear exercise');
 assert(all.read().records.every(r=>r.first===r.total),'Canonical independent routes pass on their first attempts');
+const monthlyRecord=all.read().records.find(r=>r.problemId==='S09');
+assert(Object.keys(monthlyRecord.values).filter(k=>k.startsWith('r:')).every(k=>k.startsWith('r:sum:3:')),'Visible relationship rows use their original saved address');
+assert.match(monthlyRecord.valueLabels['r:sum:3:0'],/加和关系第1行/,'Teacher records label the single visible row as row one');
+const footballRecord=all.read().records.find(r=>r.problemId==='TB-I17');
+assert(!Object.keys(footballRecord.values).some(k=>k.startsWith('r:')),'Football completes without any relationship-card answers');
+const bypassed=clone(all.read().records.find(r=>r.problemId==='L7-P1'));bypassed.runId='wp-missing-core-relation';
+for(const key of Object.keys(bypassed.values))if(key.startsWith('r:'))delete bypassed.values[key];
+assert.throws(()=>all.w.RatioWordProblemProgress.complete(all.read(),bypassed,data.find(p=>p.id===bypassed.problemId),data.find(p=>p.id===bypassed.problemId).routes[0]),/关键数量关系/,'Completion still grades a retained relationship');
 // The progress layer must not create duplicate completions on replay/retry.
 const latest=all.read().records[0],latestProblem=data.find(p=>p.id===latest.problemId),latestRoute=latestProblem.routes.find(r=>r.id===latest.routeId);
 const duplicated=all.w.RatioWordProblemProgress.complete(all.read(),latest,latestProblem,latestRoute);
@@ -539,6 +552,17 @@ interactive.click('[data-wp-rel-remove]');assert(interactive.$('[data-wp-next]')
 assert(interactive.$('[data-wp-step="3"]').disabled,'The combined condition-and-equation page is invalidated');
 interactive.click('[data-wp-step="3"]');assert.equal(interactive.currentStep(),2);
 interactive.close();
+
+// Removing obvious relationship cards leaves the mathematical table checks in place.
+const football=fixture(),footballProblem=football.w.RatioWordProblemsData.find(p=>p.id==='TB-I17'),footballRoute=footballProblem.routes[0];
+football.app.start(footballProblem.id,true);football.confirmFacts();football.fillDerivations(footballRoute);football.checkAndNext(1,'Football setup');
+assert(!football.$('[data-wp-relation-mount]')&&!football.$('.wp-relation-builder'));
+footballRoute.table.rows.forEach((row,ri)=>row.cells.forEach((cell,ci)=>{if(cell.expr&&!cell.given)football.setInput('t:'+ri+':'+ci,cell.expr);}));
+const footballCell=football.$('[data-wp-input]'),footballKey=footballCell.dataset.wpInput,footballCorrect=footballCell.value;
+football.setInput(footballKey,'9999');football.click('[data-wp-check]');assert(football.$('[data-wp-next]').disabled,'Wrong table values remain blocked');
+football.setInput(footballKey,footballCorrect);football.checkAndNext(2,'Football direct table');
+assert(!football.$('[data-wp-relation-mount]')&&!football.$('.wp-relation-builder'),'Football equation page has no relationship cards');
+football.close();
 
 // Historical records survive the new interaction version; drafts cannot skip the new activities.
 const migrated=fixture(),migrationProblem=migrated.w.RatioWordProblemsData.find(p=>p.id==='L7-P1');

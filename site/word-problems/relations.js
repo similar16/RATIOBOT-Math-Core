@@ -336,6 +336,51 @@
   return {id:key,sum,product,tokens:labels.map(label=>({id:label,label})),count:sum.length+product.length,notes:[...(raw.notes||[])],empty:{sum:sum.length?'':'本题没有需要拼接的加和等式.',product:product.length?'':'本题没有需要拼接的乘积等式.'}};
  }
  function canonical(model){return {sum:model.sum.map(r=>[...r.terms,r.result]),product:model.product.map(r=>[...r.terms,r.result])};}
+ // Only a small number of tasks benefit from a separate relationship activity.
+ // Indices refer to the original authored rows, which remain available for old records.
+ const practicePolicy={
+  'L7-P1':{sum:[0]}, // Introduce the first complete model, without per-piece multiplication drills.
+  'L7-P2':{sum:[1]},
+  'L7-P3':{product:[0]}, // Compare ages at the same future moment.
+  'L7-T1':{sum:[2]},
+  'L7-H3':{sum:[1]}, // Adding girls also changes the denominator (the whole group).
+  'L8-P1':{product:[1]},'L8-P1-V1':{product:[1]},
+  'L8-P1-V2':{sum:[1]},'L8-P1-V3':{sum:[0]},
+  'L8-P2-Q1':{sum:[0]},'L8-P2-Q2':{sum:[0]},'L8-P2-Q3':{sum:[0]},
+  'L8-P2-Q4':{sum:[0]},'L8-P2-Q5':{sum:[0]},
+  'L8-P2-V1':{sum:[0]},'L8-P2-V2':{sum:[0]},'L8-P2-V3':{sum:[0]},
+  'L8-T2':{sum:[0]}, // The faster runner has covered one extra lap.
+  'L8-H1':{sum:[2]}, // Net profit combines a positive profit and a signed loss.
+  'L8-H2':{sum:[0]},'L8-H3':{sum:[0]},
+  'G10-02':{sum:[1]},'G10-03':{sum:[0]},'G10-05':{sum:[0]},'G10-08':{sum:[1]},
+  'S03':{sum:[0]},'S05':{sum:[2]},'S09':{sum:[3]},'S10':{sum:[0]},
+  'PEP-P040':{sum:[0]}, // The entire train must leave the tunnel.
+  'PEP-P041':{product:[1]},'PEP-P042':{sum:[1]},
+  'PEP-P052':{sum:[0]},'PEP-P053':{sum:[1]},'PEP-P054':{sum:[1]},
+  'PEP-P055':{product:[1]},'PEP-P062':{sum:[0]},
+  'PEP-P080':{product:[1]},
+  'TB-A10':{sum:[0]},'TB-A30':{sum:[0]},
+  'TB-R13':{sum:[0]},'TB-R20':{product:[1]} // The second half is based on the first remainder.
+ };
+ function practice(problem,route){
+  const full=build(problem,route),choice=practicePolicy[full.id]||practicePolicy[problem?.id]||{};
+  const select=kind=>(choice[kind]||[]).map(sourceIndex=>{
+   const row=full[kind][sourceIndex];if(!row)throw Error('Invalid practice relation at '+full.id+'/'+kind+':'+sourceIndex);
+   return {...row,terms:[...row.terms],sourceIndex};
+  });
+  const sum=select('sum'),product=select('product'),labels=[...new Set([...sum,...product].flatMap(r=>[...r.terms,r.result]))];
+  return {...full,full,sum,product,count:sum.length+product.length,tokens:labels.map(label=>({id:label,label})),notes:sum.length+product.length?full.notes:[]};
+ }
+ function practiceAnswers(model,values={},checked=false){
+  const answer=Object.fromEntries(['sum','product'].map(kind=>[kind,model[kind].map(row=>[0,1,2].map(j=>normalizeToken(values['r:'+kind+':'+row.sourceIndex+':'+j]||'')))]));
+  // Previously checked full activities allowed arbitrary row order. Recover the
+  // matching retained row by its meaning, without redoing or changing historical work.
+  if(checked&&model.count&&model.full){
+   const legacy=Object.fromEntries(['sum','product'].map(kind=>[kind,model.full[kind].map((_,i)=>[0,1,2].map(j=>normalizeToken(values['r:'+kind+':'+i+':'+j]||'')))]));
+   if(check(model.full,legacy).ok)for(const kind of ['sum','product'])answer[kind]=model[kind].map(row=>legacy[kind].find(a=>signature(a)===signature([...row.terms,row.result])).slice());
+  }
+  return answer;
+ }
  function signature(row){return JSON.stringify([row.slice(0,2).sort(),row[2]]);}
  function check(model,answers){
   const available=new Set(model.tokens.map(t=>t.id));
@@ -349,5 +394,5 @@
   }
   return {ok:true,kind:'correct',message:'关系正确；同类关系的先后顺序以及加数、乘数的顺序都可以交换.'};
  }
- return {build,canonical,check,normalizeToken};
+ return {build,practice,practiceAnswers,canonical,check,normalizeToken};
 });

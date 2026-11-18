@@ -61,7 +61,7 @@
   return Object.fromEntries(Object.keys(answers).map(key=>{
    let label='补充表达';
    if(key.startsWith('f:'))label=(factLabels.get(key)||'题目数量')+'（读题填空）';
-   else if(key.startsWith('r:')){const m=key.match(/^r:(sum|product):(\d+):([012])$/);if(m)label=(m[1]==='sum'?'加和关系':'乘积关系')+'第'+(Number(m[2])+1)+'行 · '+(m[3]==='2'?'结果':'第'+(Number(m[3])+1)+'个量');}
+   else if(key.startsWith('r:')){const m=key.match(/^r:(sum|product):(\d+):([012])$/);if(m){const i=relations()?.practice(problem,route)[m[1]].findIndex(row=>row.sourceIndex===Number(m[2]));label=(m[1]==='sum'?'加和关系':'乘积关系')+'第'+((i>=0?i:Number(m[2]))+1)+'行 · '+(m[3]==='2'?'结果':'第'+(Number(m[3])+1)+'个量');}}
    else if(key.startsWith('d:'))label=((route.derivations||[]).find(d=>d.id===key.slice(2))?.label||'数据推导')+'（来源推导）';
    else {const m=key.match(/^(t|e|a|c|v):(\d+)(?::(\d+))?$/);if(m){const i=Number(m[2]),j=Number(m[3]);
     if(m[1]==='t')label=(route.table?.rows?.[i]?.label||'对象')+' · '+(route.table?.headers?.[j+1]||'数量');
@@ -131,8 +131,8 @@
   if(d.interactionVersion>=2){
    const F=reading(),R=relations();if(!F||!R)throw Error('数量互动资源尚未准备好，请重试.');
    if(!F.check(problem,d.values).ok||F.build(problem).facts.some(f=>!f.fields.length&&!d.seen.includes(f.id)))throw Error('请完成并核对读题数量填空.');
-   const model=R.build(problem,route),answers=Object.fromEntries(['sum','product'].map(kind=>[kind,model[kind].map((_,i)=>[0,1,2].map(j=>d.values['r:'+kind+':'+i+':'+j]||''))]));
-   if(!R.check(model,answers).ok)throw Error('请完成并核对加和、乘积关系.');
+   const model=R.practice(problem,route),answers=R.practiceAnswers(model,d.values,d.passed[2]===true);
+   if(!R.check(model,answers).ok)throw Error('请完成并核对本题的关键数量关系.');
   }
   if(s.records.some(x=>x.runId===d.runId))return {state:s,record:null};
   const discussion=!!route.discussion||['open','boundary'].includes(problem.kind)||!!d.customModel;
