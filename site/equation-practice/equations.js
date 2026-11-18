@@ -3,7 +3,7 @@
 
   let sequence = 0;
 
-  function mount(app, canUse = () => true, { code, onBack, onComplete } = {}) {
+  function mount(app, canUse = () => true, { code, onBack, onComplete, correctionStore } = {}) {
     const E = window.MathIsleEquationEngine;
     const entry = window.MathIsleMathEntry;
     const ink = window.MathIsleHandwriting;
@@ -118,15 +118,20 @@
         '" maxlength="110" autocomplete="off" spellcheck="false"></div>';
     }
 
-    function formBody(q) {
-      const step = needsStep(q, run.index)
-        ? '<p class="equation-prompt">' + prompts[q.focus] + '</p><div class="equation-fields two">' +
+    function stepFields(q) {
+      return '<p class="equation-prompt">' + prompts[q.focus] + '</p><div class="equation-fields two">' +
           field('left', '等号左边') + '<span class="equation-symbol" aria-hidden="true">' + math('=') +
-          '</span>' + field('right', '等号右边') + '</div>'
-        : '';
-      return step + '<p class="equation-prompt">写出未知数的值。</p>' +
+          '</span>' + field('right', '等号右边') + '</div>';
+    }
+
+    function solutionField(q) {
+      return '<p class="equation-prompt">写出未知数的值。</p>' +
         '<div class="equation-fields solution"><span class="equation-symbol" aria-hidden="true">' +
         math(q.variable + '=') + '</span>' + field('value', q.variable + ' 的值', true) + '</div>';
+    }
+
+    function formBody(q) {
+      return (needsStep(q, run.index) ? stepFields(q) : '') + solutionField(q);
     }
 
     function steps(q) {
@@ -205,31 +210,136 @@
       window.scrollTo(0, 0);
     }
 
-    function grade(q, index) {
-      const { left, right, value } = run.answers[index];
-      const checks = [() => E.checkNumber(value, q.answer, q.variable)];
-      if (needsStep(q, index)) checks.unshift(() => E.checkStep(q, left, right).ok);
-      return checks.map(check => {
-        try { return check(); } catch { return false; }
+    function checkedPart(question, part, answer) {
+      try {
+        if (part === 'step') return E.checkStep(question, answer.left || '', answer.right || '');
+        return { ok: E.checkNumber(answer.value || '', question.answer, question.variable),
+          message: '把求出的值代回原方程，再检查等号两边是否相等.' };
+      } catch (error) {
+        return { ok: false, message: error.message };
+      }
+    }
+
+    const stepNames = { isolate: '移项', move: '移项', expand: '去括号', clear: '去分母' };
+    function partName(question, part) {
+      return part === 'step' ? (stepNames[question.focus] || '方程变形') : '方程的解';
+    }
+
+    function inspectAnswers() {
+      return run.questions.map((q, i) => {
+        const parts = needsStep(q, i) ? ['step', 'value'] : ['value'];
+        return parts.map(part => {
+          const firstCorrect = checkedPart(q, part, run.answers[i]).ok;
+          const repair = run.correction.repairs[i]?.[part];
+          const corrected = !firstCorrect && !!repair && checkedPart(q, part, repair).ok;
+          return { index: i, part, firstCorrect, corrected };
+        });
       });
     }
 
     function results() {
-      const elapsed = Math.ceil(performance.now() - (run.started ?? performance.now()));
-      const at = Date.now();
+      run.correction = {
+        kind: 'equation', runId: run.attemptId, code: run.topic.code, number: run.number,
+        answers: run.answers, drafts: run.drafts, repairs: {},
+        elapsed: Math.max(0, Math.ceil(performance.now() - (run.started ?? performance.now()))), at: Date.now(),
+      };
+      const rows = inspectAnswers();
+      if (rows.some(row => row.some(item => !item.firstCorrect))) {
+        run.memoryOnly = correctionStore?.write(run.correction) === false;
+        showCorrection(rows);
+      } else {
+        completeSet(rows);
+      }
+    }
+
+    function previousExpression(item, useRepair = false) {
+      const q = run.questions[item.index];
+      const answer = useRepair ? run.correction.repairs[item.index][item.part] : run.answers[item.index];
+      const tex = useRepair ? answer.tex : run.drafts[item.index];
+      const show = key => tex?.[key] || entry.toLatex(answer[key] || '');
+      return math(item.part === 'step' ? show('left') + '=' + show('right') : q.variable + '=' + show('value'));
+    }
+
+    function correctionSummary(rows) {
+      const wrong = rows.filter(row => row.some(item => !item.firstCorrect));
+      return '<ul class="equation-error-list">' + wrong.map(row => {
+        const q = run.questions[row[0].index];
+        return '<li><b>第 ' + (row[0].index + 1) + ' 题</b> ' + row.map(item => {
+          const status = item.firstCorrect ? '首答正确' : item.corrected ? '✓ 已订正' : '✗ 待订正';
+          return '<span class="equation-part-status' + (!item.firstCorrect && !item.corrected ? ' needs-repair' : '') + '">' +
+            partName(q, item.part) + ' ' + status + '</span>';
+        }).join(' ') + '</li>';
+      }).join('') + '</ul>';
+    }
+
+    function showCorrection(rows) {
+      const outstanding = rows.flat().filter(item => !item.firstCorrect && !item.corrected);
+      if (!outstanding.length) return completeSet(rows);
+      const current = outstanding[0], i = current.index, q = run.questions[i], state = run.correction;
+      const wrongCount = rows.filter(row => row.some(item => !item.firstCorrect)).length;
+      const context = rows[i].filter(item => item.firstCorrect || item.corrected).map(item =>
+        '<p class="equation-accepted">✓ ' + partName(q, item.part) +
+        (item.corrected ? '已订正 ' : '首答正确 ') + previousExpression(item, item.corrected) + '</p>').join('');
+      app.innerHTML = '<div class="equation-title"><div><p class="equation-chapter">' +
+        topicLabel(run.topic) + ' · ' + setLabel(run.topic, run.number) + '</p><h1 tabindex="-1">有错题，请完成订正</h1></div></div>' +
+        '<section class="panel equation-result equation-correction-summary"><h2>✗ ' + wrongCount +
+        ' 道错题，还需订正 ' + outstanding.length + ' 步</h2><p><strong>首答答对 ' +
+        (rows.length - wrongCount) + ' / ' + rows.length + ' 题</strong> · 用时 ' +
+        durationText(state.elapsed) + '</p>' + correctionSummary(rows) +
+        (run.memoryOnly ? '<p role="status">当前浏览器只能暂存订正进度，请在关闭页面前完成订正.</p>' : '') + '</section>' +
+        '<div class="equation-workbench"><section class="panel exercise"><h2 tabindex="-1">订正第 ' +
+        (i + 1) + ' 题 · ' + partName(q, current.part) + '</h2><div class="core-formula">' + math(q.tex, true) +
+        '</div><p class="equation-first-entry">首答有误 ' + previousExpression(current) + '</p>' + context +
+        '<form class="equation-form" id="equation-repair-form">' +
+        (current.part === 'step' ? stepFields(q) : solutionField(q)) +
+        '<div class="equation-note error" role="alert" id="equation-repair-feedback"></div>' +
+        '<div class="equation-actions"><button class="btn" type="submit" id="equation-repair-check">核对这一步</button></div></form>' +
+        '</section><aside id="equation-ink"></aside></div>';
+
+      const form = app.querySelector('#equation-repair-form');
+      const feedback = app.querySelector('#equation-repair-feedback');
+      entry.install(form, 'equation', true, { variable: q.variable, open: run.keyboardOpen,
+        onToggle: open => { if (run?.correction === state) run.keyboardOpen = open; } });
+      ink.mount(app.querySelector('#equation-ink'), 'equations:' + run.id + ':' + i);
+      form.onsubmit = event => {
+        event.preventDefault();
+        if (!form.isConnected || run?.correction !== state || !canUse()) return;
+        const answer = Object.fromEntries(new FormData(form));
+        const result = checkedPart(q, current.part, answer);
+        if (!result.ok) {
+          feedback.textContent = '✗ 这一步仍有误. ' + (result.message || '请重新填写.').replaceAll('。', '.');
+          return;
+        }
+        const tex = Object.fromEntries([...form.querySelectorAll('math-field')].map(field =>
+          [field.id.slice(3, -5), field.value]));
+        (state.repairs[i] ||= {})[current.part] = { ...answer, tex };
+        run.memoryOnly = correctionStore?.write(state) === false;
+        showCorrection(inspectAnswers());
+      };
+      app.querySelector('h1').focus({ preventScroll: true });
+      window.scrollTo(0, 0);
+    }
+
+    function durationText(elapsed) {
+      return window.RatioAutumnBreak?.time(elapsed) ?? (elapsed / 1000).toFixed(2) + ' 秒';
+    }
+
+    function completeSet(rows) {
+      if (!canUse()) return;
+      const total = rows.length;
+      const correct = rows.filter(row => row.every(item => item.firstCorrect)).length;
+      const { elapsed, at, runId } = run.correction;
+      const activity = onComplete?.({ id: runId, code: run.topic.code, correct, elapsed, at });
+      if (correct < total) correctionStore?.clear(runId);
       clearDrafts();
-      const grades = run.questions.map(grade);
-      const correct = grades.filter(checks => checks.every(Boolean)).length;
-      const total = run.questions.length;
-      const activity = onComplete?.({id:run.attemptId,code:run.topic.code,correct,elapsed,at});
-      const duration = window.RatioAutumnBreak?.time(elapsed) ?? (elapsed / 1000).toFixed(2) + ' 秒';
+      const duration = durationText(elapsed);
       const nextTopic = E.topics[E.topics.indexOf(run.topic) + 1];
       const lastSet = run.number === E.setCount;
       const nextNumber = lastSet ? run.number : run.number + 1;
       app.innerHTML = '<div class="equation-title"><div><p class="equation-chapter">' +
         topicLabel(run.topic) + ' · ' + setLabel(run.topic, run.number) +
-        '</p><h1 tabindex="-1">本套结果</h1></div>' + setPicker() + '</div>' +
-        '<section class="panel equation-result"><p><strong>答对 ' + correct + ' / ' + total + ' 题</strong>' +
+        '</p><h1 tabindex="-1">' + (correct < total ? '✓ 本套错步已全部订正' : '本套结果') + '</h1></div>' + setPicker() + '</div>' +
+        '<section class="panel equation-result"><p><strong>' + (correct < total ? '首答答对 ' : '答对 ') + correct + ' / ' + total + ' 题</strong>' +
         ' · 用时 ' + duration + '</p>' +
         (activity ? '<p role="status">' + escape(activity) + '</p>' : '') + '<div class="equation-actions">' +
         '<button class="btn" type="button" id="equation-again">' +
@@ -239,15 +349,17 @@
         (onBack ? backLabel : '返回题型') + '</button>' +
         '</div><ol class="equation-results-list">' +
         run.questions.map((q, i) => {
-          const checks = grades[i];
-          const { left, right, value } = run.drafts[i];
+          const checks = rows[i].map(item => item.firstCorrect);
+          const { left, right, value } = run.drafts[i] || run.answers[i];
           const status = checks.length === 2
             ? '步骤' + (checks[0] ? '正确' : '有误') + ' · 答案' + (checks[1] ? '正确' : '有误')
             : (checks[0] ? '正确' : '有误');
           return '<li><details><summary><span>第 ' + (i + 1) + ' 题</span>' +
-            math(q.tex) + '<small>' + status + '</small></summary><p>你的作答：' +
+            math(q.tex) + '<small>' + (checks.every(Boolean) ? status : '已订正 · 首答' + status) +
+            '</small></summary><p>首次作答 ' +
             (left ? math(left + '=' + right) + '，' : '') + math(q.variable + '=' + value) +
-            '</p><p>参考步骤</p>' + steps(q) + '</details></li>';
+            '</p>' + rows[i].filter(item => item.corrected).map(item => '<p>✓ ' + partName(q, item.part) +
+              '已订正 ' + previousExpression(item, true) + '</p>').join('') + '<p>参考步骤</p>' + steps(q) + '</details></li>';
         }).join('') + '</ol></section>';
       app.querySelector('#equation-again').onclick = () => start(run.topic.code, nextNumber);
       if (nextTopic) app.querySelector('#equation-next-topic').onclick = () => start(nextTopic.code);
@@ -264,7 +376,17 @@
     }
     app.addEventListener('click', requireSession, true);
     app.addEventListener('submit', requireSession, true);
-    if (code && E.topics.some(topic => topic.code === code)) start(code);
+    const saved = correctionStore?.read();
+    const savedTopic = saved?.kind === 'equation' && E.topics.find(topic => topic.code === saved.code);
+    if (savedTopic && Number.isInteger(saved.number) && saved.number >= 1 && saved.number <= E.setCount &&
+        Array.isArray(saved.answers) && saved.answers.length === E.questionCount && saved.answers.every(answer => answer && typeof answer.value === 'string')) {
+      run = {
+        id: ++sequence, topic: savedTopic, number: saved.number, questions: E.getSet(savedTopic.code, saved.number),
+        index: 0, answers: saved.answers, drafts: saved.drafts || [], keyboardOpen: true,
+        attemptId: saved.runId, correction: { ...saved, repairs: saved.repairs || {} },
+      };
+      showCorrection(inspectAnswers());
+    } else if (code && E.topics.some(topic => topic.code === code)) start(code);
     else showTopics();
 
     return {

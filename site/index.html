@@ -2930,8 +2930,23 @@ window.addEventListener('message',ev=>{const d=ev.data;if(!d||d.type!=='ratiobot
       const flags=window.SpecialPracticeEngine.grade(card,result.values),correct=flags.filter(Boolean).length;
       const saved=p.economy.modules.specialPractice||(p.economy.modules.specialPractice={records:[],best:{}});
       if(saved.records.some(r=>r.runId===result.runId))return;
+      // Credit the first attempt once, only after all initially wrong answers have been repaired.
+      if(correct<card.questions.length){
+        const finalAnswers=flags.map((ok,i)=>ok?result.values[i]:result.correctedValues?.[i]);
+        const complete=finalAnswers.every((row,i)=>Array.isArray(row)&&row.length===card.answers[i].length);
+        if(!complete||!window.SpecialPracticeEngine.grade(card,finalAnswers).every(Boolean)){
+          throw Error('请逐项完成错题订正后再保存.');
+        }
+      }
+      const now=new Date().toISOString();
       const rec={runId:result.runId,cardId:card.id,title:card.title,code:card.code,correct,flags,
-        values:result.values.map(row=>row.map(x=>String(x).slice(0,40))),at:new Date().toISOString()};
+        values:result.values.map(row=>row.map(x=>String(x).slice(0,40))),at:now};
+      if(correct<card.questions.length){
+        rec.corrected=true;
+        rec.correctedAt=now;
+        const submittedAt=Date.parse(result.submittedAt);
+        if(Number.isFinite(submittedAt)&&submittedAt<=Date.parse(now))rec.submittedAt=new Date(submittedAt).toISOString();
+      }
       saved.records.unshift(rec);saved.records=saved.records.slice(0,120);saved.best[card.id]=Math.max(saved.best[card.id]||0,correct);
       p.games++;p.questions+=5;
       p.history.unshift({...rec,game:'specialPractice',stage:'专项加练·'+card.title,numberType:'5题专项',difficulty:'专项',accuracy:correct*20,first:correct,questions:5,bestCombo:0,avgTime:Math.max(0,Math.min(3600,Number(result.avgTime)||0)),xp:0,rGain:0,level:levelInfo(p.xp).level});

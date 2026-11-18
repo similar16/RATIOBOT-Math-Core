@@ -26,14 +26,36 @@ function linear(input){
  return out;
 }
 function linearEqual(a,b){const x=linear(a),y=linear(b);return !!(x&&y&&['a','b','c','x','y','constant'].every(k=>(x[k]||0)===(y[k]||0)));}
-function grade(card,values){
- return card.answers.map((expected,i)=>{
-  const entered=values[i]||[];
-  if(card.code==='B7'){
-   return entered.length===expected.length && expected.every(root=>entered.some(value=>equal(value,root)));
+// For an unordered set of roots, consume each expected root only once.
+// Already confirmed fields take priority during correction.
+function gradeFields(card, values, accepted = []) {
+ return card.answers.map((expected, i) => {
+  const entered = values[i] || [];
+  if (card.code === 'B7') {
+   const remaining = expected.slice();
+   const flags = expected.map(() => false);
+   const order = expected.map((_, j) => j);
+   order.sort((a, b) => Number(accepted[i]?.[b] != null) - Number(accepted[i]?.[a] != null));
+   for (const j of order) {
+    const index = remaining.findIndex(root => equal(entered[j], root));
+    if (index >= 0) {
+     flags[j] = true;
+     remaining.splice(index, 1);
+    }
+   }
+   return flags;
   }
-  return expected.every((a,j)=>['B4','B5','C3'].includes(card.code)?linearEqual(entered[j],a):card.code==='C2'?clean(entered[j]).toUpperCase()===a:equal(entered[j],a,card.code==='A9'));
+  return expected.map((answer, j) => {
+   if (['B4','B5','C3'].includes(card.code)) return linearEqual(entered[j], answer);
+   if (card.code === 'C2') return clean(entered[j]).toUpperCase() === answer;
+   return equal(entered[j], answer, card.code === 'A9');
+  });
  });
 }
-root.SpecialPracticeEngine={number,equal,linear,linearEqual,grade};if(typeof module!=='undefined')module.exports=root.SpecialPracticeEngine;
+function grade(card, values) {
+ return gradeFields(card, values).map((fields, i) =>
+  fields.every(Boolean) && (values[i] || []).length === card.answers[i].length
+ );
+}
+root.SpecialPracticeEngine={number,equal,linear,linearEqual,gradeFields,grade};if(typeof module!=='undefined')module.exports=root.SpecialPracticeEngine;
 })(typeof window!=='undefined'?window:globalThis);

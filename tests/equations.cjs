@@ -257,8 +257,19 @@ async function exerciseNavigation() {
     await finishSet(50, 1);
     assert.match(get('.equation-result strong').textContent, /4 \/ 5/);
     assert.match(get('.equation-result').textContent, /用时 0\.00 秒/);
-    assert.match(get('.equation-results-list small').textContent, /步骤正确 · 答案有误/);
+    assert.match(get('.equation-error-list').textContent, /去分母 首答正确/);
+    assert.match(get('.equation-error-list').textContent, /方程的解 ✗ 待订正/);
     assert.match(get('.equation-title').textContent, /D5-50/);
+    assert.equal(get('#equation-again'), null, 'Next set is unavailable until the error is corrected');
+    assert.equal(get('#equation-set'), null);
+    assert.equal(get('#eq-value-math').value, '', 'The wrong value is entered afresh');
+    assert.equal(get('#eq-left-math'), null, 'An already-correct transformation is retained');
+    assert.equal(attempts.length, 0, 'An unresolved attempt is not complete');
+    get('#eq-value-math').value = E.numericTex(question.answer);
+    get('#equation-repair-check').click();
+    assert.match(get('.equation-title').textContent, /错步已全部订正/);
+    assert.equal(attempts.length, 1);
+    assert.equal(attempts[0].correct, 4, 'A repaired set retains its first score');
     assert.equal(get('#equation-again').textContent, '重练本套');
     get('#equation-again').click();
     assert.equal(get('.core-formula annotation').textContent, question.tex);
@@ -312,3 +323,4 @@ exerciseNavigation().catch(error => {
   console.error(error);
   process.exitCode = 1;
 });
+
