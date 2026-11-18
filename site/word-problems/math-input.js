@@ -32,9 +32,10 @@
    onChange(value);
   };
   listen('beforeinput',event=>{
+   if(event.inputType==='insertReplacementText'){event.preventDefault();event.stopImmediatePropagation();return;}
    if(!event.data||event.isComposing)return;
    // Reject predictive replacements before they can replace an already correct letter.
-   if(event.inputType==='insertReplacementText'||/[^\x20-\x7e０-９Ａ-Ｚａ-ｚ−×÷·⋅≤≥≠≈]/u.test(event.data)){
+   if(/[^\x20-\x7e０-９Ａ-Ｚａ-ｚ−×÷·⋅≤≥≠≈]/u.test(event.data)){
     const normalized=clean(event.data,options());if(normalized!==event.data.normalize('NFKC')){event.preventDefault();event.stopImmediatePropagation();}
    }
   },true);

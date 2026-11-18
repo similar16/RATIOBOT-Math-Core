@@ -8,9 +8,10 @@ let stored='';w.RatioWordProblemMathInput.bind(formula,{variables:()=>['x','y'],
 formula.value='２Ｘ+3Y中文🌙';formula.dispatchEvent(new w.Event('input'));
 assert.equal(formula.value,'2x+3y');assert.equal(stored,'2x+3y');
 for(const [name,value]of Object.entries({autocorrect:'off',autocapitalize:'off',spellcheck:'false',inputmode:'url'}))assert.equal(formula.getAttribute(name),value);
-for(const text of ['🌙','月亮','乘号']){
+for(const text of ['🌙','月亮','×','÷','乘号']){
  const e=new w.InputEvent('beforeinput',{data:text,inputType:'insertReplacementText',bubbles:true,cancelable:true});formula.dispatchEvent(e);assert(e.defaultPrevented,'Predictive replacements cannot overwrite Latin variables');
 }
+const explicitTimes=new w.InputEvent('beforeinput',{data:'×',inputType:'insertText',bubbles:true,cancelable:true});formula.dispatchEvent(explicitTimes);assert(!explicitTimes.defaultPrevented,'An explicitly typed multiplication sign remains available');
 w.RatioWordProblemMathInput.bind(number,{numberOnly:true});number.value='１/２月亮🌙y';number.dispatchEvent(new w.Event('input'));assert.equal(number.value,'1/2');
 story.value='买了两本练习本🌙';story.dispatchEvent(new w.Event('input'));assert.equal(story.value,'买了两本练习本🌙','Free writing retains its normal input');
 class FakeMathfield extends w.HTMLElement{constructor(){super();this.value='';}insert(s){this.value+=s;}}
