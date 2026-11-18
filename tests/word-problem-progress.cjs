@@ -6,7 +6,7 @@ const route={id:'sets',label:'设套数',derivations:[{id:'rate'}],answers:[{exp
 // Calendar completion requires both the spatial table and its two sum expressions.
 {
  const calendar=require(path.resolve(process.env.SITE_DIR||'site','word-problems/data-textbook-review.js')).find(p=>p.id==='TB-R01'),r=calendar.routes[0];
- const F=require(path.resolve(process.env.SITE_DIR||'site','word-problems/reading.js')),values=F.canonical(calendar);r.table.rows.forEach((row,i)=>row.cells.forEach((cell,j)=>{if(cell.expr&&!cell.given)values['t:'+i+':'+j]=cell.expr;}));r.sumExpressions.forEach((item,i)=>values['e:'+i]=item.expr);
+ const F=require(path.resolve(process.env.SITE_DIR||'site','word-problems/reading.js')),values=F.canonical(calendar);r.table.rows.forEach((row,i)=>row.cells.forEach((cell,j)=>{if(cell.expr&&!cell.given)values['t:'+i+':'+j]=cell.expr;}));r.sumExpressions.forEach((item,i)=>{values['e:'+i]=r.table.rows[item.rowIndexes[0]].cells.filter(cell=>cell.expr).map(cell=>'('+cell.expr+')').join('+');values['c:'+i]=item.expr;});
  const d={runId:'wp-calendar-current',problemId:calendar.id,routeId:r.id,interactionVersion:4,contentRevision:calendar.contentRevision,values,seen:calendar.facts.map(f=>f.id),passed:Object.fromEntries(Array.from({length:7},(_,i)=>[i,true])),answersChecked:true};
  assert.equal(P.complete(null,d,calendar,r).record.status,'independent');
  assert.throws(()=>P.complete(null,{...d,values:{...values,'f:three:0':''}},calendar,r),/读题数量/);
@@ -14,7 +14,11 @@ const route={id:'sets',label:'设套数',derivations:[{id:'rate'}],answers:[{exp
  assert.throws(()=>P.complete(null,{...d,values:{...values,'t:2:3':'x+7'}},calendar,r),/各方向/);
  assert.throws(()=>P.complete(null,{...d,values:{...values,'e:1':'3*x'}},calendar,r),/ S/);
  assert.throws(()=>P.complete(null,{...d,values:{...values,'e:0':''}},calendar,r),/ S/);
- assert.throws(()=>P.complete(null,{...d,contentRevision:3},calendar,r),/内容已更新/);
+ assert.throws(()=>P.complete(null,{...d,values:{...values,'e:0':'3*x'}},calendar,r),/完整 S/);
+ assert.throws(()=>P.complete(null,{...d,values:{...values,'c:1':''}},calendar,r),/化简结果/);
+ assert.throws(()=>P.complete(null,{...d,values:{...values,'c:0':'x+x+x'}},calendar,r),/化简结果/);
+ assert.throws(()=>P.complete(null,{...d,answersChecked:false},calendar,r),/化简结果/);
+ assert.throws(()=>P.complete(null,{...d,contentRevision:5},calendar,r),/内容已更新/);
 }
 function draft(patch={}){return {runId:'wp-one',problemId:problem.id,routeId:route.id,step:6,values:{'d:rate':'1/12','t:0:0':'0.6x','a:0':'7'},passed:Object.fromEntries(Array.from({length:7},(_,i)=>[i,true])),firstPass:{0:true,1:true,2:true,3:true,4:true,5:true},attempts:{},hints:{},derived:{rate:true},seen:['quantity'],closure:['total'],derivationSources:{rate:['whole','time']},answersChecked:true,verdict:'valid',reflection:'改变杯数，杯子的用泥量随之改变。',startedAt:'2026-11-16T01:00:00Z',updatedAt:'2026-11-16T01:05:00Z',...patch};}
 

@@ -80,9 +80,9 @@
    else if(key.startsWith('dm:'))label=((route.derivations||[]).find(d=>d.id===key.slice(3))?.label||'数据推导')+'（推导方法）';
    else {const m=key.match(/^(t|e|a|c|v):(\d+)(?::(\d+))?$/);if(m){const i=Number(m[2]),j=Number(m[3]);
     if(m[1]==='t')label=(route.table?.rows?.[i]?.label||'对象')+' · '+(route.table?.headers?.[j+1]||'数量');
-    if(m[1]==='e')label=route.sumExpressions?.[i]?.label?route.sumExpressions[i].label+'的日期之和':route.equations?.[i]?.label||'数量等式';
+    if(m[1]==='e')label=route.sumExpressions?.[i]?.label?route.sumExpressions[i].label+'的完整求和算式':route.equations?.[i]?.label||'数量等式';
     if(m[1]==='a')label=route.answers?.[i]?.label||'所求量';
-    if(m[1]==='c')label=route.checks?.[i]?.text||'代回检验';
+    if(m[1]==='c')label=route.sumExpressions?.[i]?.label?route.sumExpressions[i].label+'合并同类项后的结果':route.checks?.[i]?.text||'代回检验';
     if(m[1]==='v')label=(route.verdictCases?.[i]?.label||'分情形检验')+'（实际意义判断）';
    }}return [key,text(label,300)];
   }));
@@ -147,7 +147,8 @@
   if(route.relationshipOnly){
    const E=root.RatioWordProblemEngine||(typeof module==='object'&&module.exports?require('./engine.js'):null);
    if(!E||route.table.rows.some((row,i)=>row.cells.some((cell,j)=>!cell.note&&!cell.given&&!E.checkTableCell(d.values['t:'+i+':'+j]||'',cell,route.variable).ok)))throw Error('请先确认框内各方向的日期表达式.');
-   if((route.sumExpressions||[]).some((item,i)=>!E.checkTableCell(d.values['e:'+i]||'',{...item,allowedNumbers:[1,3,5,7]},route.variable).ok))throw Error('请先确认三数框和十字框的 S.');
+   if((route.sumExpressions||[]).some((item,i)=>!E.checkQuantitySum(d.values['e:'+i]||'',{...item,termSets:(item.rowIndexes||[]).map(index=>route.table.rows[index].cells.filter(cell=>cell.expr).map(cell=>cell.expr))},route.variable).ok))throw Error('请先确认三数框和十字框的完整 S 求和算式.');
+   if(!d.answersChecked||(route.sumExpressions||[]).some((item,i)=>!E.checkSimplifiedTerm(d.values['c:'+i]||'',item,route.variable).ok))throw Error('请先填写并确认合并同类项后的化简结果.');
   }
   if(d.interactionVersion>=2){
    const F=reading();if(!F)throw Error('数量互动资源尚未准备好，请重试.');
