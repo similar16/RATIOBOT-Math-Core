@@ -1,7 +1,7 @@
 /* Structured editing only; serialization preserves unsimplified fractions for legacy grading. */
 (function(root){'use strict';
 function toLegacy(latex,kind='algebra'){
- let s=String(latex).replace(/\\(?:left|right|displaystyle|textstyle)/g,'').replace(/\\(?:,|;|!|quad|qquad| )/g,'').replace(/[−－]/g,'-').replace(/\\(?:cdot|times)/g,'*').replace(/\\div/g,'/').replace(/\\pi/g,'π').replace(/\\lbrace/g,'(').replace(/\\rbrace/g,')').replace(/\s+/g,'');
+ let s=String(latex).normalize('NFKC').replace(/\\(?:left|right|displaystyle|textstyle)/g,'').replace(/\\(?:,|;|!|quad|qquad| )/g,'').replace(/[−－]/g,'-').replace(/\\(?:cdot|times)/g,'*').replace(/\\div/g,'/').replace(/\\pi/g,'π').replace(/\\lbrace/g,'(').replace(/\\rbrace/g,')').replace(/\s+/g,'');
  if(/\\placeholder|#\?|\\[dt]?frac\s*\{\s*\}|\^\s*\{\s*\}/.test(s))throw Error('请补全分子、分母或指数。');
  // Recursive groups, no evaluation: 2/4 must remain 2/4, not become 1/2.
  let i=0;function group(){if(s[i]!=='{'){if(!s[i]||s[i]==='}'||s[i]==='\\')throw Error('请补全公式。');return s[i++]}i++;let out=read('}');if(s[i]!=='}')throw Error('请补全公式。');i++;return out}
@@ -15,17 +15,21 @@ function toLegacy(latex,kind='algebra'){
 function toLatex(value){return String(value||'').replace(/(-?\d+)又(\d+)\/(\d+)/g,'$1\\frac{$2}{$3}').replace(/(?<![\\{\da-z])((?:\d+(?:\.\d+)?)?(?:[a-z](?:\^\d+)?)+|\d+)\/(\d+)/g,'\\frac{$1}{$2}').replace(/\^(\d+)/g,'^{$1}').replace(/\*/g,'\\cdot ')}
 let ready;function load(){if(root.MathfieldElement)return Promise.resolve();return ready||(ready=new Promise((resolve,reject)=>{const s=document.createElement('script');s.src='assets/mathlive/0.111.4/mathlive.min.js';s.onload=()=>{root.MathfieldElement.fontsDirectory='assets/mathlive/0.111.4/fonts';root.MathfieldElement.soundsDirectory=null;root.MathfieldElement.computeEngine=null;resolve()};s.onerror=()=>{ready=null;reject(Error('公式输入未加载，请刷新后重试。'))};document.head.append(s)}))}
 const contexts=new WeakMap();
+let nativeKeyboard=false;
 function install(form,kind='algebra',compact=false,disclosure){
  if(contexts.has(form)){sync(contexts.get(form));return}
  const inputs=[...form.querySelectorAll('input:not([type=radio]):not([type=checkbox]):not([type=hidden])')];if(!inputs.length)return;
- const ctx={form,kind,inputs,fields:[],active:null};contexts.set(form,ctx);
+ const ctx={form,kind,inputs,fields:[],active:null,nativeMode:nativeKeyboard};contexts.set(form,ctx);
  inputs.forEach(input=>{input.required=false;input.hidden=true;input.setAttribute('aria-hidden','true')});
  const loading=document.createElement('p');loading.className='input-help';loading.textContent='正在准备公式输入…';form.append(loading);
  // Block submission until the editor is ready and all visible expressions are complete.
- form.addEventListener('submit',ev=>{let message='';if(!ctx.fields.length)message='公式输入还在加载，请稍候。';else for(const f of ctx.fields){try{f.input.value=toLegacy(f.mf.value,kind);if(!f.input.value)throw Error('请填写每一空的答案。')}catch(err){message=err.message;form.dispatchEvent(new CustomEvent('math-entry-invalid',{detail:{input:f.input}}));f.mf.focus();break}}if(message){ev.preventDefault();ev.stopImmediatePropagation();loading.hidden=false;loading.textContent=message}},true);
+ form.addEventListener('submit',ev=>{let message='';if(!ctx.fields.length)message='公式输入还在加载，请稍候。';else for(const f of ctx.fields){try{f.input.value=toLegacy(f.mf.value,kind);if(!f.input.value)throw Error('请填写每一空的答案。')}catch(err){message=err.message;form.dispatchEvent(new CustomEvent('math-entry-invalid',{detail:{input:f.input}}));(ctx.nativeMode?f.input:f.mf).focus();break}}if(message){ev.preventDefault();ev.stopImmediatePropagation();loading.hidden=false;loading.textContent=message}},true);
  load().then(()=>{if(!form.isConnected)return;loading.hidden=true;
  for(const input of inputs){const mf=document.createElement('math-field');mf.id=input.id?input.id+'-math':'';mf.setAttribute('aria-label',input.getAttribute('aria-label')||input.labels?.[0]?.textContent||'你的答案');mf.mathVirtualKeyboardPolicy='manual';mf.smartFence=true;mf.defaultMode='math';mf.value=input.dataset.latex||toLatex(input.value);mf.readOnly=input.readOnly||input.disabled;input.after(mf);const f={input,mf};ctx.fields.push(f);ctx.active||=f;
- mf.addEventListener('focusin',()=>{ctx.active=f;sync(ctx)});mf.addEventListener('input',()=>{try{input.value=toLegacy(mf.value,kind);loading.hidden=true}catch(err){input.value='';loading.hidden=false;loading.textContent=err.message}input.dataset.latex=mf.value;input.dispatchEvent(new Event('input',{bubbles:true}))});mf.addEventListener('keydown',ev=>{if(ev.key==='Enter'){ev.preventDefault();if(!mf.readOnly){const next=form.closest('#specialPractice')?.querySelector('#spForward:not([hidden])');if(next)next.click();else form.requestSubmit()}}})}
+ input.setAttribute('inputmode','text');input.setAttribute('autocapitalize','off');input.setAttribute('autocorrect','off');input.spellcheck=false;
+ input.addEventListener('focus',()=>{ctx.active=f;sync(ctx)});
+ input.addEventListener('input',()=>{if(!ctx.nativeMode)return;mf.value=toLatex(input.value.normalize('NFKC'));input.dataset.latex=mf.value;loading.hidden=true});
+ mf.addEventListener('focusin',()=>{ctx.active=f;sync(ctx)});mf.addEventListener('input',()=>{try{input.value=toLegacy(mf.value,kind);loading.hidden=true}catch(err){input.value='';loading.hidden=false;loading.textContent=err.message}input.dataset.latex=mf.value;input.dispatchEvent(new Event('input',{bubbles:true}))});mf.addEventListener('keydown',ev=>{if(ev.key==='Enter'&&!ev.isComposing&&ev.keyCode!==229){ev.preventDefault();if(!mf.readOnly){const next=form.closest('#specialPractice')?.querySelector('#spForward:not([hidden])');if(next)next.click();else form.requestSubmit()}}})}
  form.dispatchEvent(new Event('math-entry-ready'));
  const section=document.createElement('section');section.className='formula-keypad';section.setAttribute('aria-label','数学输入键盘');ctx.section=section;
  const keys=['7','8','9','分数','乘方','⌫','4','5','6','+','−','清空','1','2','3','(',')','退出','0','.','←','→','↑','↓'];
@@ -52,10 +56,29 @@ function install(form,kind='algebra',compact=false,disclosure){
   form.append(details);
  }else{const row=form.querySelector('.button-row');if(row)row.before(section);else form.append(section)}
  const more=document.createElement('details');more.className='more-symbols';more.innerHTML='<summary>更多符号</summary><div class="formula-letters">'+(kind==='equation'?'abcdefghijklmnopqrstuvwxyz'.split(''):['c','t','z','π','×','÷']).map(html).join('')+'</div>';section.append(more);
+ const keyboardSwitch=document.createElement('button');
+ keyboardSwitch.type='button';keyboardSwitch.className='text-button input-keyboard-switch';
+ function applyKeyboardMode(focus){
+  for(const {input,mf} of ctx.fields){
+   input.hidden=!ctx.nativeMode;input.setAttribute('aria-hidden',String(!ctx.nativeMode));
+   mf.hidden=ctx.nativeMode;mf.style.display=ctx.nativeMode?'none':'';
+  }
+  const details=form.querySelector('.keypad-disclosure');
+  if(details)details.hidden=ctx.nativeMode;else section.hidden=ctx.nativeMode;
+  keyboardSwitch.textContent=ctx.nativeMode?'使用公式键盘':'使用系统键盘';
+  keyboardSwitch.setAttribute('aria-pressed',String(ctx.nativeMode));
+  if(focus){const field=ctx.active;if(field)(ctx.nativeMode?field.input:field.mf).focus({preventScroll:true})}
+ }
+ keyboardSwitch.onclick=()=>{
+  ctx.nativeMode=!ctx.nativeMode;nativeKeyboard=ctx.nativeMode;
+  if(!ctx.nativeMode){const details=form.querySelector('.keypad-disclosure');if(details)details.open=true}
+  applyKeyboardMode(true);
+ };
+ form.append(keyboardSwitch);applyKeyboardMode(false);
  section.addEventListener('pointerdown',ev=>{if(ev.target.closest('button'))ev.preventDefault()});section.addEventListener('click',ev=>{if(ev.target.closest('.keypad-next')){const a=ctx.fields.filter(f=>!f.mf.readOnly&&!f.mf.closest('[hidden]'));ctx.active=a[(a.indexOf(ctx.active)+1)%a.length];ctx.active?.mf.focus();return}const b=ev.target.closest('[data-math-key]');if(!b||!ctx.active||ctx.active.mf.readOnly)return;const mf=ctx.active.mf,k=b.dataset.mathKey;mf.focus({preventScroll:true});const cmds={'⌫':'deleteBackward','←':'moveToPreviousChar','→':'moveToNextChar','↑':'moveUp','↓':'moveDown','退出':'moveAfterParent'};
  if(cmds[k])mf.executeCommand(cmds[k]);else if(k==='清空'){mf.executeCommand('selectAll');mf.executeCommand('deleteBackward')}else if(k==='分数')mf.insert('\\frac{#0}{#?}',{selectionMode:'placeholder'});else if(k==='乘方')mf.executeCommand('moveToSuperscript');else mf.insert({'−':'-','π':'\\pi','×':'\\times','÷':'\\div'}[k]||k);mf.dispatchEvent(new Event('input',{bubbles:true}));sync(ctx)});sync(ctx);
  }).catch(err=>{loading.hidden=false;loading.textContent=err.message});
 }
-function sync(ctx){for(const {input,mf} of ctx.fields){const locked=input.readOnly||input.disabled;if(mf.readOnly!==locked)mf.readOnly=locked}const editable=ctx.fields.filter(f=>!f.mf.readOnly&&!f.mf.closest('[hidden]'));if(!editable.includes(ctx.active))ctx.active=editable[0];ctx.section?.querySelectorAll('[data-math-key]').forEach(b=>b.disabled=!ctx.active);const next=ctx.section?.querySelector('.keypad-next');if(next)next.hidden=editable.length<2}
+function sync(ctx){for(const {input,mf} of ctx.fields){const locked=input.readOnly||input.disabled;if(mf.readOnly!==locked)mf.readOnly=locked}const editable=ctx.fields.filter(f=>!f.mf.readOnly&&!(ctx.nativeMode?f.input:f.mf).closest('[hidden]'));if(!editable.includes(ctx.active))ctx.active=editable[0];ctx.section?.querySelectorAll('[data-math-key]').forEach(b=>b.disabled=!ctx.active);const next=ctx.section?.querySelector('.keypad-next');if(next)next.hidden=editable.length<2}
 root.MathIsleMathEntry={install,toLegacy,toLatex,load};
 })(window);
