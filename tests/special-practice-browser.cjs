@@ -7,11 +7,12 @@ const path = require('node:path');
 const { spawn } = require('node:child_process');
 const { once } = require('node:events');
 
-async function studentFlow() {
+async function studentFlow(resumed) {
   const select = selector => document.querySelector(selector);
   const assert = (value, message) => { if (!value) throw Error(message); };
   const waitFor = async selector => {
-    for (let i = 0; i < 400; i++) {
+    const deadline = Date.now()+10000;
+    while (Date.now()<deadline) {
       const element = select(selector);
       if (element) return element;
       await new Promise(resolve => setTimeout(resolve, 25));
@@ -32,7 +33,8 @@ async function studentFlow() {
       assert(editor.value, 'Native input did not reach the real math editor');
     }
   }
-  const resumed = sessionStorage.getItem('resume-after-step') === 'yes';
+  const note = message => console.log('SMOKE ' + message);
+  note(resumed?'restoring correction after reload':'opening the directory');
   assert(window.innerWidth === 390, 'Fixture must have a mobile viewport');
   assert(!window.MathIsleEquationEngine, 'Start from the menu before loading the equation bank');
   window.SpecialPracticeUI.open();
@@ -47,6 +49,7 @@ async function studentFlow() {
         answers.left = i === 0 ? '1' : left;
         answers.right = i === 0 ? '1' : right;
       }
+      note('entering D2 question '+(i+1));
       await enterWithSystemKeyboard(answers);
       select('#equation-next').click();
     }
@@ -58,8 +61,7 @@ async function studentFlow() {
     select('#equation-repair-check').click();
     assert(document.querySelectorAll('.needs-repair').length === 1, 'Only the solution should remain');
     assert(!sessionStorage.getItem('completed'), 'Partial correction cannot complete the set');
-    sessionStorage.setItem('resume-after-step','yes');
-    location.reload();
+    note('first wrong step corrected');
     return;
   }
   await waitFor('#equation-repair-form');
@@ -72,63 +74,132 @@ async function studentFlow() {
   assert(select('h1').textContent.includes('已全部订正'), 'Completion feedback missing');
   const completed = JSON.parse(sessionStorage.getItem('completed') || '[]');
   assert(completed.length === 1 && completed[0].correct === 4 && completed[0].code === 'D2', 'Keep the first score and complete once');
-  await fetch('/outcome', {method:'POST',body:JSON.stringify({ok:true})});
+  note('completed once with the first score');
+}
+
+// Chrome's DevTools pipe uses NUL-delimited JSON and requires no network listener or third-party client.
+function devTools(chrome) {
+  let counter=0, buffer='';
+  const waiting=new Map(), listeners=new Set();
+  function rejectPending(error){
+    for(const request of waiting.values())request.reject(error);
+    waiting.clear();
+  }
+  chrome.once('error',rejectPending);
+  chrome.once('exit',(code,signal)=>rejectPending(Error('Chrome exited ('+(signal||code)+')')));
+  chrome.stdio[3].on('error',rejectPending);
+  chrome.stdio[4].setEncoding('utf8');
+  chrome.stdio[4].on('data',text=>{
+    buffer+=text;
+    let end;
+    while((end=buffer.indexOf('\0'))>=0){
+      const message=JSON.parse(buffer.slice(0,end));buffer=buffer.slice(end+1);
+      if(message.id){
+        const request=waiting.get(message.id);
+        if(!request)continue;
+        waiting.delete(message.id);
+        if(message.error)request.reject(Error(request.method+': '+message.error.message));
+        else request.resolve(message.result);
+      }else for(const listener of listeners)listener(message);
+    }
+  });
+  return {
+    call(method,params={},sessionId){
+      return new Promise((resolve,reject)=>{
+        const id=++counter;
+        waiting.set(id,{resolve,reject,method});
+        chrome.stdio[3].write(JSON.stringify({id,method,params,sessionId})+'\0');
+      });
+    },
+    listeners,
+  };
 }
 
 async function run() {
-  const root = path.resolve(process.env.SITE_DIR || 'site');
-  const profile = fs.mkdtempSync(path.join(os.tmpdir(),'ratio-equations-chrome-'));
-  const mime = {'.js':'text/javascript','.css':'text/css','.woff2':'font/woff2','.woff':'font/woff'};
-  const app = `<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-    <link rel="stylesheet" href="/special-practice.css"><main id="specialPractice"></main>
-    <script src="/special-practice-data.js"></script><script src="/special-practice-engine.js"></script>
+  const root=path.resolve(process.env.SITE_DIR||'site');
+  const profile=fs.mkdtempSync(path.join(os.tmpdir(),'ratio-equations-chrome-'));
+  const mime={'.js':'text/javascript','.css':'text/css','.woff2':'font/woff2','.woff':'font/woff'};
+  const app=`<!doctype html><html lang="zh-CN"><head><meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/special-practice.css"></head>
+    <body><main id="specialPractice"></main><script src="/special-practice-data.js"></script><script src="/special-practice-engine.js"></script>
     <script>window.RatioPracticeBridge={ready:()=>true,key:()=>'isolated-test|46',profile:()=>({}),go(){},
       completeEquation(record){const records=JSON.parse(sessionStorage.getItem('completed')||'[]');records.push(record);sessionStorage.setItem('completed',JSON.stringify(records))}};
-    </script><script src="/special-practice.js"></script>
-    <script>(${studentFlow.toString()})().catch(error=>fetch('/outcome',{method:'POST',body:JSON.stringify({ok:false,error:error.stack})}));</script></html>`;
-  let finish, fail, chrome, timer;
-  const result = new Promise((resolve,reject) => {finish=resolve;fail=reject;});
-  const server = http.createServer(async (req,res) => {
-    const url = new URL(req.url,'http://localhost');
-    if (req.method === 'POST' && url.pathname === '/outcome') {
-      try {
-        let body='';
-        for await (const chunk of req) body+=chunk;
-        const report=JSON.parse(body);
-        res.writeHead(204).end();
-        if(report.ok)finish();else fail(Error(report.error));
-      } catch(error){res.writeHead(400).end();fail(error);}
-      return;
+    </script><script src="/special-practice.js"></script></body></html>`;
+  let lastRequest='(no requests)',phase='starting server',stderr='',browserError='',chrome,client,session,timer;
+  const server=http.createServer(async (req,res)=>{
+    const {pathname}=new URL(req.url,'http://localhost');
+    lastRequest=pathname;
+    if(pathname==='/practice'){
+      res.writeHead(200,{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store'}).end(app);return;
     }
-    if(url.pathname==='/' || url.pathname==='/practice'){
-      res.writeHead(200,{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store'});
-      res.end(url.pathname==='/practice'?app:'<!doctype html><iframe title="专项练习" width="390" height="780" src="/practice"></iframe>');
-      return;
-    }
-    if(req.method!=='GET' || !/^\/(?:special-practice(?:-data|-engine)?\.js|special-practice\.css|equation-practice\/[a-z-]+\.(?:js|css)|assets\/mathlive\/[\d.]+\/(?:mathlive\.min\.js|fonts\/[\w.-]+\.(?:woff2?|otf)))$/.test(url.pathname)){
+    if(req.method!=='GET'||!/^\/(?:special-practice(?:-data|-engine)?\.js|special-practice\.css|equation-practice\/[a-z-]+\.(?:js|css)|assets\/mathlive\/[\d.]+\/(?:mathlive\.min\.js|fonts\/[\w.-]+\.(?:woff2?|otf)))$/.test(pathname)){
       res.writeHead(404).end();return;
     }
-    let file=path.join(root,url.pathname);
-    if(!process.env.SITE_DIR && !fs.existsSync(file) && url.pathname.startsWith('/assets/mathlive/')){
-      file=path.join('node_modules/mathlive',url.pathname.split('/').slice(4).join('/'));
+    let file=path.join(root,pathname);
+    if(!process.env.SITE_DIR&&!fs.existsSync(file)&&pathname.startsWith('/assets/mathlive/')){
+      file=path.join('node_modules/mathlive',pathname.split('/').slice(4).join('/'));
     }
-    try {const data=await fs.promises.readFile(file);res.writeHead(200,{'Content-Type':mime[path.extname(file)]||'application/octet-stream'}).end(data);}
+    try {const bytes=await fs.promises.readFile(file);res.writeHead(200,{'Content-Type':mime[path.extname(file)]||'application/octet-stream'}).end(bytes);}
     catch {res.writeHead(404).end();}
   });
+
+  async function exercise(){
+    phase='attaching to Chrome';
+    client=devTools(chrome);
+    const {targetId}=await client.call('Target.createTarget',{url:'about:blank'});
+    session=(await client.call('Target.attachToTarget',{targetId,flatten:true})).sessionId;
+    const send=(method,params)=>client.call(method,params,session);
+    client.listeners.add(message=>{
+      if(message.sessionId!==session)return;
+      if(message.method==='Runtime.exceptionThrown')browserError=message.params.exceptionDetails.exception?.description||message.params.exceptionDetails.text;
+      if(message.method==='Runtime.consoleAPICalled'){
+        const note=message.params.args[0]?.value;
+        if(typeof note==='string'&&note.startsWith('SMOKE ')){phase=note.slice(6);console.log('Chrome: '+phase);}
+      }
+    });
+    await send('Page.enable');await send('Runtime.enable');
+    await send('Emulation.setDeviceMetricsOverride',{width:390,height:780,deviceScaleFactor:2,mobile:true});
+    await send('Emulation.setTouchEmulationEnabled',{enabled:true});
+    await send('Page.bringToFront');
+    for(const resumed of [false,true]){
+      phase=resumed?'reloading the exercise':'navigating to the exercise';
+      const loaded=new Promise(resolve=>{
+        const listener=message=>{
+          if(message.sessionId===session&&message.method==='Page.loadEventFired'){client.listeners.delete(listener);resolve();}
+        };
+        client.listeners.add(listener);
+      });
+      if(resumed)await send('Page.reload',{ignoreCache:true});
+      else {
+        const navigation=await send('Page.navigate',{url:'http://127.0.0.1:'+server.address().port+'/practice'});
+        if(navigation.errorText)throw Error(navigation.errorText);
+      }
+      await loaded;
+      const report=await send('Runtime.evaluate',{expression:'('+studentFlow.toString()+')('+resumed+')',awaitPromise:true,userGesture:true,returnByValue:true});
+      if(report.exceptionDetails)throw Error(report.exceptionDetails.exception?.description||report.exceptionDetails.text);
+    }
+  }
+
   try {
-    server.listen(0,'127.0.0.1');
-    await once(server,'listening');
-    chrome=spawn(process.env.CHROME_BIN||'google-chrome',['--headless','--no-sandbox','--disable-gpu','--disable-dev-shm-usage','--no-first-run',
-      '--disable-background-networking','--disable-component-update','--disable-sync','--host-resolver-rules=MAP * ~NOTFOUND, EXCLUDE localhost',
-      '--user-data-dir='+profile,'http://127.0.0.1:'+server.address().port+'/'],{stdio:'ignore'});
-    chrome.once('error',fail);
-    chrome.once('exit',code=>fail(Error('Chrome exited before reporting an outcome ('+code+')')));
-    timer=setTimeout(()=>fail(Error('Chrome did not finish the equation exercise within 75 seconds')),75000);
-    await result;
+    server.listen(0,'127.0.0.1');await once(server,'listening');
+    chrome=spawn(process.env.CHROME_BIN||'google-chrome',['--headless','--no-sandbox','--disable-gpu','--disable-dev-shm-usage',
+      '--remote-debugging-pipe','--no-proxy-server','--no-first-run','--no-default-browser-check','--disable-background-networking',
+      '--disable-component-update','--disable-sync','--disable-background-timer-throttling','--user-data-dir='+profile,'about:blank'],
+      {stdio:['ignore','ignore','pipe','pipe','pipe']});
+    chrome.stderr.on('data',buffer=>{stderr=(stderr+buffer.toString()).slice(-1600);});
+    const deadline=new Promise((_,reject)=>{timer=setTimeout(()=>reject(Error('Timed out after 75 seconds')),75000);});
+    await Promise.race([exercise(),deadline]);
     console.log('PASS Chrome 390px: real MathLive/native keyboard, both D2 corrections, partial reload, first score 4/5');
+  } catch(error){
+    let page='(unavailable)';
+    if(session&&chrome.exitCode===null&&chrome.signalCode===null){
+      const dom=client.call('Runtime.evaluate',{expression:"JSON.stringify({url:location.href,ready:document.readyState,heading:document.querySelector('h1')?.textContent,inputs:[...document.querySelectorAll('form input')].map(i=>[i.name,i.hidden]),text:document.body?.innerText.slice(-800)})",returnByValue:true},session);
+      try { const reply=await Promise.race([dom,new Promise(resolve=>setTimeout(()=>resolve(null),1200))]);page=reply?.result?.value||page; } catch {}
+    }
+    throw Error(error.message+'\nPhase: '+phase+'\nLast HTTP request: '+lastRequest+'\nPage: '+page+'\nBrowser error: '+(browserError||'(none)')+'\nChrome stderr: '+stderr);
   } finally {
     clearTimeout(timer);
-    if(chrome?.pid && chrome.exitCode===null && chrome.signalCode===null){
+    if(chrome?.pid&&chrome.exitCode===null&&chrome.signalCode===null){
       const stopped=once(chrome,'exit');chrome.kill('SIGKILL');await stopped;
     }
     server.closeAllConnections();server.close();
