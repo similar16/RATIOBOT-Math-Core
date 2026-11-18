@@ -121,7 +121,8 @@
   F('rule','胜1场得3分，平1场得1分，负1场得0分.'),F('matches','该队9场比赛保持不败.'),F('score','第一问该队9场比赛共得21分.'),F('equal-score','第二问另行讨论胜场总积分与平场总积分相等的可能性.'),F('integer','不败说明负场为0；胜场、平场均为非负整数.','property')
  ],[R({label:'两问分别设胜场数为x',meaning:'所讨论情形中的胜场数；两问各自求x',unit:'场',domain:'每一问的x都应为0至9之间的整数',
   table:T(['结果','每场得分/分','场数/场','该类积分/分'],[
-   ['胜',C('3','rule',true),C('x','unknown',true),C('3*x','rule|unknown')],['平',C('1','rule',true),C('9-x','matches|unknown'),C('1*(9-x)','rule|matches|unknown')],['负',C('0','rule',true),C('0','integer',true),C('0*0','rule|integer')]
+   ['胜',C('3','rule',true),C('x','unknown',true),C('3*x','rule|unknown')],['平',C('1','rule',true),C('9-x','matches|unknown'),C('1*(9-x)','rule|matches|unknown')],['负',C('0','rule',true),C('0','integer',true),C('0*0','rule|integer')],
+   ['总计',N('—'),C('9','matches',true),C('3*x+1*(9-x)+0*0','rule|matches|integer|unknown')]
   ]),relationTriples:relation([['胜场数','平场数','不败比赛总场数'],['胜场总积分','平场总积分','球队总积分']],[['该结果每场得分','该结果场数','该结果总积分']]),
   closure:{sources:['score','equal-score'],text:'第一问使用总积分21分，第二问另用胜场总积分等于平场总积分；两条方程描述不同情形，不联立.'},
   equations:[Q('第一问：积分为21分','3*x+1*(9-x)','21'),Q('第二问：胜场与平场总积分相等','3*x','1*(9-x)',2)],
@@ -130,7 +131,7 @@
   checks:[K('第一问总场数','6+3','9'),K('第一问总积分','3*6+1*3','21'),K('第二问候选胜场积分','3*(9/4)','27/4'),K('第二问候选平场积分','9-9/4','27/4')],
   verdictCases:[{label:'第一问：胜6场、平3场，满足9场不败且得21分',correct:'valid'},{label:'第二问：胜9/4场、平27/4场，能作为实际比赛场次',correct:'impossible'}],
   conclusion:'第一问胜6场、平3场.第二问会得到非整数胜场数9/4，因此胜场总积分不可能等于平场总积分.两问的条件分别使用.',verdict:{correct:'multiple',explain:'两问分别检验：第一问可实现，第二问的候选场次不是整数，不能实现.'}
- })],{tags:['胜平负','独立情形','整数检验']});
+ })],{contentRevision:1,tags:['胜平负','独立情形','整数检验']});
 
  const activities=[['七年级',12.5,4,3],['八年级',10.5,3,3],['九年级',7,null,null]];
  P('P051','兴趣小组活动时间与整数次数','计分与整数检验','existence','表中记录某校七年级至九年级某月课外兴趣小组的活动时间；各年级同一兴趣小组每次活动时间相同.请填写九年级文艺小组与科技小组的活动次数.先从七、八年级的记录求每次时长，再检查次数为非负整数的条件.',[

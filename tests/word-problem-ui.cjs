@@ -48,7 +48,7 @@ function fixture() {
  const currentStep=()=>Number($('[aria-current="step"]')?.dataset.wpStep);
  const feedback=()=>$('.wp-feedback')?.textContent||'';
  function expectPassed(step,where){assert.equal(currentStep(),step,where+' is current step');const next=$('[data-wp-next]');assert(next&&!next.disabled,where+' did not pass: '+feedback());}
- function checkAndNext(step,where){assert($('.wp-stage-top [data-wp-restart]'),'Reset remains available at '+where);click('[data-wp-check]');expectPassed(step,where);click('[data-wp-next]');assert.equal(currentStep(),step===2&&read().drafts[$('[data-wp-current-problem]').dataset.wpCurrentProblem]?.problemId==='TB-R01'?6:step===3?5:step===0&&read().drafts[$('[data-wp-current-problem]').dataset.wpCurrentProblem]?.problemId==='S01'?2:step+1,where+' advances');}
+ function checkAndNext(step,where){assert($('.wp-stage-top [data-wp-restart]'),'Reset remains available at '+where);click('[data-wp-check]');expectPassed(step,where);click('[data-wp-next]');assert.equal(currentStep(),step===3&&read().drafts[$('[data-wp-current-problem]').dataset.wpCurrentProblem]?.problemId==='TB-R01'?6:step===3?5:step===0&&read().drafts[$('[data-wp-current-problem]').dataset.wpCurrentProblem]?.problemId==='S01'?2:step+1,where+' advances');}
  function completeScratch(where,route){
   assert.equal(currentStep(),5,where+' reaches the scratchpad and answer confirmation');
   assert.equal($('.wp-stage h3')?.textContent,'在草稿纸上解方程并确认答案');
@@ -67,7 +67,7 @@ function fixture() {
   assert(!$('[data-wp-input="a:0"]'),'The final page has no answer-confirmation input');
  }
  function fillVerification(route){
-  (route.checks||[]).forEach((check,i)=>setInput('c:'+i,check.result));
+  (route.checks||[]).forEach((check,i)=>setInput('c:'+i,check.input==='exponent'?check.exponent:check.result));
   if((route.verdictCases||[]).length)for(const [i,c]of route.verdictCases.entries())checkBox(host.querySelector('[data-wp-case="'+i+'"][value="'+c.correct+'"]'));
   else checkBox([...host.querySelectorAll('[name="wp-verdict"]')].find(x=>x.value===route.verdict.correct));
  }
@@ -91,7 +91,13 @@ function fixture() {
  }
  function canonicalRoute(problem,route){
   app.start(problem.id,true);
-  if(route.relationshipOnly){assert.equal(currentStep(),2);assert(!$('.wp-stage textarea'));assert.equal(host.querySelectorAll('[data-wp-input]').length,2);setInput('t:0:0','3');setInput('t:1:0','5');checkAndNext(2,'Basic calendar relations');assert(!$('.wp-stage textarea'));click('[data-wp-check]');assert($('.wp-completion'));if(!teacher)counts.completed++;counts.routes++;return read().records[0];}
+  if(route.relationshipOnly){
+   assert.equal(currentStep(),2);assert(!$('.wp-stage textarea'));
+   route.table.rows.forEach((row,i)=>row.cells.forEach((cell,j)=>{if(cell.expr&&!cell.given)setInput('t:'+i+':'+j,cell.expr);}));
+   checkAndNext(2,'Calendar directions');assert(!$('.wp-stage textarea'));
+   route.sumExpressions.forEach((item,i)=>setInput('e:'+i,item.expr));checkAndNext(3,'Calendar sums');
+   assert(!$('.wp-stage textarea'));click('[data-wp-check]');assert($('.wp-completion'));if(!teacher)counts.completed++;counts.routes++;return read().records[0];
+  }
   assert.equal(currentStep(),0);
   assert($('[data-wp-next]').disabled,'No advancing before source step passes');
   confirmFacts();if(!route.reverseModel){selectRoute(route.id);fillDerivations(route);checkAndNext(1,problem.id+'/'+route.id+' derivations');}
@@ -726,14 +732,74 @@ for(const id of ['TB-I03','TB-I04']){
  assert(f.$('.wp-completion'));f.close();
 }
 
+// Multiple derivations keep their real calculation and source dependencies.
+const sequenceMethods=fixture(),sequenceProblem=sequenceMethods.w.RatioWordProblemsData.find(p=>p.id==='PEP-P014'),sequenceRoute=sequenceProblem.routes[0];
+const selectMethod=(id,methodId)=>sequenceMethods.checkBox(sequenceMethods.$('[data-wp-derivation-method="'+id+'"][value="'+methodId+'"]'));
+function confirmSequenceDerivation(raw,method){
+ sequenceMethods.setInput('d:'+raw.id,method.expr);
+ for(const id of method.sources)sequenceMethods.checkBox(sequenceMethods.$('[data-wp-derived-source="'+raw.id+'"][value="'+id+'"]'));
+ sequenceMethods.click('[data-wp-check-derived="'+raw.id+'"]');
+ assert(sequenceMethods.$('[data-wp-derivation="'+raw.id+'"] .wp-success-tag'),raw.id+'/'+method.id+': '+sequenceMethods.feedback());
+ assert.equal(sequenceMethods.read().drafts[sequenceProblem.id].values['dm:'+raw.id],method.id);
+ assert(sequenceMethods.$('[data-wp-derivation="'+raw.id+'"] .wp-derived-chain').textContent.includes(sequenceMethods.w.RatioWordProblemEngine.formatCalculation(method.expr)));
+}
+for(const raw of sequenceRoute.derivations)for(const method of raw.methods){
+ sequenceMethods.app.start(sequenceProblem.id,true);sequenceMethods.confirmFacts();
+ if(raw.id==='twiceRatio')confirmSequenceDerivation(sequenceRoute.derivations[0],sequenceRoute.derivations[0].methods[0]);
+ selectMethod(raw.id,method.id);confirmSequenceDerivation(raw,method);
+}
+sequenceMethods.app.start(sequenceProblem.id,true);
+assert(sequenceMethods.$('.wp-stem').textContent.includes('^{n}'),'The original term renders an exponent');
+assert(sequenceMethods.$('.wp-fact-line sup'),'The term in the cloze condition also uses a raised exponent');
+sequenceMethods.confirmFacts();
+sequenceMethods.setInput('d:ratio','-6/2');
+for(const id of ['sequence','law'])sequenceMethods.checkBox(sequenceMethods.$('[data-wp-derived-source="ratio"][value="'+id+'"]'));
+sequenceMethods.click('[data-wp-check-derived="ratio"]');assert(!sequenceMethods.$('[data-wp-derivation="ratio"] .wp-success-tag'),'Unexplained numbers remain blocked');
+// A pupil may type another supported quotient without first switching its radio button.
+confirmSequenceDerivation(sequenceRoute.derivations[0],sequenceRoute.derivations[0].methods[1]);
+confirmSequenceDerivation(sequenceRoute.derivations[1],sequenceRoute.derivations[1].methods[0]);
+sequenceMethods.checkAndNext(1,'Multiple sequence derivations');
+assert(sequenceMethods.$('.wp-quantity-table').textContent.includes('27'),'The table references the actual chosen quotient');
+sequenceMethods.click('[data-wp-prev]');selectMethod('ratio','pair-34');
+assert(!sequenceMethods.read().drafts[sequenceProblem.id].derived.ratio&&!sequenceMethods.read().drafts[sequenceProblem.id].derived.twiceRatio,'Changing a method invalidates dependent derivations');
+sequenceMethods.remount();sequenceMethods.app.start(sequenceProblem.id);
+assert.equal(sequenceMethods.$('[data-wp-derivation-method="ratio"]:checked').value,'pair-34','The selected method survives reload');
+sequenceMethods.close();
+
+const sequencePower=fixture();sequencePower.app.start('PEP-P014',true);
+for(const step of [0,1,2,3]){sequencePower.click('[data-wp-example]');sequencePower.checkAndNext(step,'Sequence exponent check '+step);}
+sequencePower.completeScratch('Sequence exponent check');
+const powerRoute=sequencePower.w.RatioWordProblemsData.find(p=>p.id==='PEP-P014').routes[0];sequencePower.fillVerification(powerRoute);
+assert(sequencePower.$('.wp-power-check sup [data-wp-input="c:3"]'),'The exponent itself is the answer field');
+sequencePower.setInput('c:3','-243');sequencePower.click('[data-wp-check]');assert(!sequencePower.$('.wp-completion'));
+sequencePower.setInput('c:3','5');sequencePower.click('[data-wp-check]');assert(sequencePower.$('.wp-completion'));
+sequencePower.close();
+
+const footballTotal=fixture();footballTotal.app.start('PEP-P050',true);
+for(const step of [0,1]){footballTotal.click('[data-wp-example]');footballTotal.checkAndNext(step,'Football total '+step);}
+assert.equal(footballTotal.$('.wp-total-row th').textContent,'总计');
+assert(footballTotal.$('.wp-total-row [data-wp-input="t:3:2"]'),'The total score remains a pupil expression');
+assert(!footballTotal.$('.wp-total-row [data-wp-input="t:3:0"]'),'Per-match points are never summed');footballTotal.close();
+
 const calendarSimple=fixture();calendarSimple.app.start('TB-R01',true);
-assert.equal(calendarSimple.currentStep(),2);assert.equal(calendarSimple.host.querySelectorAll('[data-wp-input]').length,2);
+const calendarProblem=calendarSimple.w.RatioWordProblemsData.find(p=>p.id==='TB-R01'),calendarRoute=calendarProblem.routes[0];
+assert.equal(calendarSimple.currentStep(),2);assert.equal(calendarSimple.host.querySelectorAll('[data-wp-input]').length,8);
+assert.deepEqual([...calendarSimple.host.querySelectorAll('[data-wp-step]')].map(b=>Number(b.dataset.wpStep)),[2,3,6]);
 assert(!calendarSimple.$('[data-wp-discussion]')&&!calendarSimple.$('.wp-relation-reference'));
 assert(!calendarSimple.$('.wp-stage').textContent.includes('开放问题'));
-calendarSimple.setInput('t:0:0','4');calendarSimple.setInput('t:1:0','5');calendarSimple.click('[data-wp-check]');assert(calendarSimple.$('[data-wp-next]').disabled);
-calendarSimple.setInput('t:0:0','3');calendarSimple.checkAndNext(2,'Basic center-number multipliers');
-assert.equal(calendarSimple.$('[data-wp-check]').textContent,'确认并保存');assert(!calendarSimple.$('textarea'));
+assert(!calendarSimple.$('.wp-stage').textContent.includes('这张表表达了哪些关系'));
+calendarRoute.table.rows.forEach((row,i)=>row.cells.forEach((cell,j)=>{if(cell.expr&&!cell.given)calendarSimple.setInput('t:'+i+':'+j,cell.expr);}));
+calendarSimple.setInput('t:2:3','x+7');calendarSimple.click('[data-wp-check]');assert(calendarSimple.$('[data-wp-next]').disabled);
+calendarSimple.setInput('t:2:3','x-7');calendarSimple.checkAndNext(2,'Calendar date expressions');
+assert.equal(calendarSimple.host.querySelectorAll('.wp-equation-entry').length,2);assert(!calendarSimple.$('textarea'));
+assert.deepEqual([...calendarSimple.host.querySelectorAll('.wp-answer-prefix')].map(e=>e.textContent.replace(/\s/g,'')),['S=','S=']);
+assert(!calendarSimple.$('.wp-stage').textContent.includes('建模思路'));
+calendarSimple.setInput('e:0','3*x');calendarSimple.setInput('e:1','4*x');calendarSimple.click('[data-wp-check]');assert(calendarSimple.$('[data-wp-next]').disabled);
+calendarSimple.setInput('e:0','(x-7)+x+(x+7)');calendarSimple.setInput('e:1','(x-1)+x+(x+1)+(x-7)+(x+7)');calendarSimple.checkAndNext(3,'Two distinct S expressions');
+assert(!calendarSimple.$('[data-wp-scratch-mount]'));assert.equal(calendarSimple.$('[data-wp-check]').textContent,'确认并保存');
 calendarSimple.click('[data-wp-check]');assert(calendarSimple.$('.wp-completion'));assert.equal(calendarSimple.read().records[0].status,'independent');
+const calendarRecord=clone(calendarSimple.read().records[0]);calendarSimple.remount();calendarSimple.app.start('TB-R01');assert(calendarSimple.$('.wp-completion'));assert.deepEqual(clone(calendarSimple.read().records[0]),calendarRecord);
+calendarSimple.click('[data-wp-step="2"]');calendarSimple.setInput('t:0:0','x+1');assert(calendarSimple.$('[data-wp-next]').disabled);calendarSimple.remount();calendarSimple.app.start('TB-R01');assert(!calendarSimple.read().drafts['TB-R01'].passed[3]);
 calendarSimple.close();
 
 {

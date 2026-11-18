@@ -111,7 +111,7 @@ for(const p of allData){
  }
  if(retained)practiceCounts.retained++;
 }
-assert.deepEqual(practiceCounts,{problems:150,routes:160,retained:42,rows:47});
+assert.deepEqual(practiceCounts,{problems:150,routes:162,retained:42,rows:47});
 for(const id of ['TB-I17','TB-I03','TB-I04','TB-I05','TB-I08','G9-01','G9-06','G9-08','G9-10','TB-A32','TB-R01']){
  const p=allData.find(p=>p.id===id);assert(p,id);
  for(const route of p.routes){const m=R.practice(p,route);assert.equal(m.count,0,id+' needs no separate relationship activity');assert.deepEqual(m.tokens,[]);assert.deepEqual(m.notes,[]);}

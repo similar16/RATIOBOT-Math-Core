@@ -3,6 +3,17 @@ const path=require('node:path');
 const P=require(path.resolve(process.env.SITE_DIR||'site','word-problems/progress.js'));
 const problem={id:'L7-P1',title:'茶具',source:'教学设计171页',kind:'linear'};
 const route={id:'sets',label:'设套数',derivations:[{id:'rate'}],answers:[{expr:'7'}]};
+// Calendar completion requires both the spatial table and its two sum expressions.
+{
+ const calendar=require(path.resolve(process.env.SITE_DIR||'site','word-problems/data-textbook-review.js')).find(p=>p.id==='TB-R01'),r=calendar.routes[0];
+ const values={};r.table.rows.forEach((row,i)=>row.cells.forEach((cell,j)=>{if(cell.expr&&!cell.given)values['t:'+i+':'+j]=cell.expr;}));r.sumExpressions.forEach((item,i)=>values['e:'+i]=item.expr);
+ const d={runId:'wp-calendar-current',problemId:calendar.id,routeId:r.id,interactionVersion:4,contentRevision:calendar.contentRevision,values,passed:Object.fromEntries(Array.from({length:7},(_,i)=>[i,true])),answersChecked:true};
+ assert.equal(P.complete(null,d,calendar,r).record.status,'independent');
+ assert.throws(()=>P.complete(null,{...d,values:{...values,'t:2:3':'x+7'}},calendar,r),/各方向/);
+ assert.throws(()=>P.complete(null,{...d,values:{...values,'e:1':'3*x'}},calendar,r),/ S/);
+ assert.throws(()=>P.complete(null,{...d,values:{...values,'e:0':''}},calendar,r),/ S/);
+ assert.throws(()=>P.complete(null,{...d,contentRevision:3},calendar,r),/内容已更新/);
+}
 function draft(patch={}){return {runId:'wp-one',problemId:problem.id,routeId:route.id,step:6,values:{'d:rate':'1/12','t:0:0':'0.6x','a:0':'7'},passed:Object.fromEntries(Array.from({length:7},(_,i)=>[i,true])),firstPass:{0:true,1:true,2:true,3:true,4:true,5:true},attempts:{},hints:{},derived:{rate:true},seen:['quantity'],closure:['total'],derivationSources:{rate:['whole','time']},answersChecked:true,verdict:'valid',reflection:'改变杯数，杯子的用泥量随之改变。',startedAt:'2026-11-16T01:00:00Z',updatedAt:'2026-11-16T01:05:00Z',...patch};}
 
 const clean=P.cleanDraft(draft());

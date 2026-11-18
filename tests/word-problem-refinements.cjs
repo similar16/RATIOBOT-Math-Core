@@ -18,11 +18,11 @@ assert.equal(odd.title,'三个连续奇数相加');assert(odd.originalStem.inclu
 assert.deepEqual(or.answers.map(a=>a.expr),['3','5','7']);assert.equal(or.equations[0].answerIndex,1);
 assert(!JSON.stringify(or).includes('105'));assert(!JSON.stringify(R.build(odd,or)).includes('数之积'));
 const calendar=find('TB-R01'),cr=calendar.routes[0],cm=R.build(calendar,cr);
-assert.deepEqual(cr.table.headers,['框形','框内日期个数']);assert.equal(cr.table.rows.length,2);assert.equal(cr.relationshipOnly,true);assert(!cr.discussion);
-assert.deepEqual(cr.table.rows.map(r=>r.cells[0].expr),['3','5']);
+assert.deepEqual(cr.table.headers,['框形','左边数','中心数','右边数','上方数','下方数']);assert.equal(cr.table.rows.length,3);assert.equal(cr.relationshipOnly,true);assert(!cr.discussion);
+assert.equal(cr.table.rows.flatMap(r=>r.cells).filter(c=>c.expr&&!c.given).length,8);assert.deepEqual(cr.sumExpressions.map(item=>item.expr),['3*x','5*x']);
 assert.equal(cm.sum.length,2);assert.equal(cm.product.length,2);
-assert.equal(cr.equations.length,0);assert.equal(cr.answers.length,0);assert(cr.additionalVariables.find(v=>v.variable==='s').known);
-assert.match(cr.tableNote,/三数框乘3，十字框乘5/);
+assert.equal(cr.equations.length,0);assert.equal(cr.answers.length,0);assert(!cr.additionalVariables.find(v=>v.variable==='S').known);
+assert.match(cr.tableNote,/左、右、上、下/);assert.equal(cr.checks.length,0);
 const F=require(path.join(base,'reading.js'));
 assert(!calendar.facts.some(f=>f.id==='center'),'Calendar keeps only the basic frame facts');
 assert.equal(R.reference(calendar,cr).sum.length,0,'Calendar references contain no extra additive relations');

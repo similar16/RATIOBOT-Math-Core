@@ -148,8 +148,9 @@
       const exponent = evaluate(ast.right);
       if (!isConstant(exponent)) fail('指数含有未知数，暂不自动核对.', 'unsupported');
       const e = coefficient(exponent, '');
-      if (e.d !== 1n || e.n < 0n || e.n > BigInt(MAX_DEGREE)) fail('当前只核对0至4的整数次幂.', 'unsupported');
-      const base = evaluate(ast.left); let p = constant(R1);
+      const base = evaluate(ast.left), limit = isConstant(base) ? 32 : MAX_DEGREE;
+      if (e.d !== 1n || e.n < 0n || e.n > BigInt(limit)) fail('当前只核对0至'+limit+'的整数次幂.', 'unsupported');
+      let p = constant(R1);
       for (let j = 0; j < Number(e.n); j++) p = pMultiply(p, base);
       return p;
     }
@@ -495,6 +496,14 @@
         if (!d?.id || refs.has(d.id)) error(where + '/推导ID缺失或重复: ' + d?.id);
         expression(d?.expr, d?.id || '推导');
         if (d?.result != null && !equivalent(d.expr, d.result, route.variable)) error(where + '/' + d.id + '计算结果不相等');
+        const methods = new Set();
+        for (const method of d.methods || []) {
+          if (!method.id || methods.has(method.id)) error(where + '/' + d.id + '的推导方法ID缺失或重复');
+          methods.add(method.id);
+          sources(method, d.id + '/' + method.id);
+          expression(method.expr, d.id + '/' + method.id);
+          if (!equivalent(method.expr, d.result, route.variable)) error(where + '/' + d.id + '/' + method.id + '计算结果不相等');
+        }
         refs.add(d?.id);
       }
       if (!route?.table?.headers || !Array.isArray(route.table.rows)) error(where + '/缺少数量表');
@@ -512,9 +521,11 @@
         }
       }
       if (route?.closure) sources(route.closure, '列式依据');
+      for (const item of route?.sumExpressions || []) { sources(item, item.label); expression(item.expr, item.label); }
       for (const [i, equation] of (route?.equations || []).entries()) { expression(equation.left, '方程' + i + '左边', problem.kind === 'boundary'); expression(equation.right, '方程' + i + '右边', problem.kind === 'boundary'); }
       for (const [i, answer] of (route?.answers || []).entries()) expression(answer.expr, '答案' + i);
       for (const [i, check] of (route?.checks || []).entries()) if (check.expr != null && check.result != null && !equivalent(check.expr, check.result, route.variable)) error(where + '/检验' + i + '两边不相等');
+      for (const check of route?.checks || []) if (check.input === 'exponent' && !equivalent('('+check.base+')^('+check.exponent+')', check.result)) error(where + '/指数检验设置不正确');
       if (route?.verdict && !['valid', 'impossible', 'multiple', 'boundary', 'open'].includes(route.verdict.correct)) error(where + '/检验结论无效');
     }
     return errors;
