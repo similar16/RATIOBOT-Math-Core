@@ -213,6 +213,14 @@
     [0,3,'40+x','second,transfer,equal,unknown','两根调整后等长，可用第二根的长度表示第一根.'],
     [1,3,'90-x','first,transfer,equal,unknown','两根调整后等长，可用第一根的长度表示第二根.']
   ]);
+  define('PEP-P005', 'equal-length', 'first,second', '调整后共同长度为x，再用原长减截出长度或加接入长度.', [
+    [0,1,'x-40','second,transfer,unknown','截下和接入的是同一段，可用第二条增加的长度表示截出长度.'],
+    [1,2,'90-x','first,transfer,unknown','接入长度也可用第一条减少的长度表示.']
+  ]);
+  define('PEP-P077', 'years', 'fatherThen,daughterThen', '再把两个时刻的年龄与题设倍数联系起来，年份差的方向保持一致.', [
+    [0,2,'(91-x)-2*x','sum,fatherThen,gap,unknown','两个时刻相同，女儿的年份差可由父亲的两个年龄相减表示.'],
+    [1,2,'x-(91-x)/3','sum,daughterThen,gap,unknown','父亲的年份差也可由女儿现在年龄减去另一时刻年龄表示.']
+  ]);
   define('PEP-P015', 'main', 'last,this', '再用相邻两年的产量倍数连接三个年份.', [
     [1,2,'550-x-2*1.5*x','total,last,this,unknown','第二年产量等于三年总量减第一年和第三年产量.'],
     [2,2,'550-x-1.5*x','total,last,unknown','第三年产量等于三年总量减前两年产量.']

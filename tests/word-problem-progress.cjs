@@ -67,7 +67,10 @@ assert.throws(()=>P.complete(null,draft({derived:{}}),problem,route),/来源推�
 assert.throws(()=>P.complete(null,draft({answersChecked:false}),problem,route),/求解结果/);
 assert.throws(()=>P.complete(null,draft({runId:'not-a-run'}),problem,route),/不完整/);
 assert.throws(()=>P.complete(null,draft({routeId:'different'}),problem,route),/不完整/);
-const open=P.complete(null,draft({derived:{},answersChecked:false}),{...problem,kind:'open'},{...route,derivations:[],answers:[],discussion:'说明条件'});
+const open=P.complete(null,draft({derived:{},answersChecked:false,discussion:'根据数量表说明已知条件与未知量的关系',passed:{0:true,1:true,2:true,3:true,4:true}}),{...problem,kind:'open'},{...route,derivations:[],answers:[],discussion:'说明条件'});
+assert(!open.record.passed[5]&&!open.record.passed[6]);
+assert.throws(()=>P.complete(null,draft({derived:{},discussion:'',passed:{0:true,1:true,2:true,3:true,4:true}}),{...problem,kind:'open'},{...route,derivations:[],answers:[]}),/模型的分析说明/);
+assert.throws(()=>P.complete(null,draft({derived:{},discussion:'分析模型中的数量关系与参数含义',passed:{0:true,1:true,2:true}}),{...problem,kind:'open'},{...route,derivations:[],answers:[]}),/请依次完成/);
 assert.equal(open.record.status,'review');assert.equal(P.summary(open.state).completed,0);assert.equal(P.summary(open.state).review,1);
 assert.equal(P.complete(null,draft({assisted:true}),problem,route).record.status,'assisted');
 assert.equal(P.complete(null,draft({example:true}),problem,route).record.status,'example');

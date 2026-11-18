@@ -216,7 +216,10 @@ const data = [
           {
             "label": "三数框",
             "expr": "3*x",
-            "rowIndexes": [0, 1],
+            "rowIndexes": [
+              0,
+              1
+            ],
             "sources": [
               "three",
               "calendar",
@@ -226,7 +229,9 @@ const data = [
           {
             "label": "十字框",
             "expr": "5*x",
-            "rowIndexes": [2],
+            "rowIndexes": [
+              2
+            ],
             "sources": [
               "five",
               "calendar",
@@ -454,8 +459,9 @@ const data = [
       },
       {
         "id": "half",
-        "text": "一半表示把基准量平均分成2份，取其中1份.",
-        "kind": "property"
+        "text": "一半即二分之一.",
+        "kind": "property",
+        "numericBlanks": false
       }
     ],
     "routes": [
@@ -589,7 +595,8 @@ const data = [
     "originalStem": "小明读一本科普书，星期六读了20页，星期日读了剩余部分的一半后，还剩15页没有读.这本科普书共有多少页？",
     "originalStems": {
       "R04": "小明读一本科普书，星期六读了20页，星期日读了剩余部分的一半后，还剩15页没有读.这本科普书共有多少页？"
-    }
+    },
+    "contentRevision": 1
   },
   {
     "id": "TB-R05",
@@ -3481,8 +3488,9 @@ const data = [
       },
       {
         "id": "half",
-        "text": "一半表示把基准量平均分成2份，取其中1份.",
-        "kind": "property"
+        "text": "一半即二分之一.",
+        "kind": "property",
+        "numericBlanks": false
       }
     ],
     "routes": [
@@ -3625,7 +3633,8 @@ const data = [
     "originalStem": "一根铁丝，第一次用去它的一半少1 m，第二次用去剩下的一半多1 m，结果还剩下3 m.这根铁丝原来有多长？",
     "originalStems": {
       "R20": "一根铁丝，第一次用去它的一半少1 m，第二次用去剩下的一半多1 m，结果还剩下3 m.这根铁丝原来有多长？"
-    }
+    },
+    "contentRevision": 1
   },
   {
     "id": "TB-R21",
@@ -3974,43 +3983,11 @@ const data = [
           "text": "用给定方程解释付款减购买金额等于找零.",
           "hint": "哪些条件已经用来填表，哪个条件还必须由等式满足？"
         },
-        "equations": [
-          {
-            "label": "给定方程的一种解释",
-            "left": "50-6*x",
-            "right": "8.6"
-          }
-        ],
-        "answers": [
-          {
-            "label": "这一种解释中买梨的质量",
-            "expr": "6.9",
-            "unit": "斤"
-          },
-          {
-            "label": "换成千克",
-            "expr": "3.45",
-            "unit": "千克"
-          }
-        ],
-        "steps": [
-          "50-6*x=8.6",
-          "x=(50-8.6)/6=6.9",
-          "6.9*0.5=3.45"
-        ],
-        "checks": [
-          {
-            "text": "找回金额",
-            "expr": "50-6*6.9",
-            "result": "8.6"
-          },
-          {
-            "text": "斤换成千克",
-            "expr": "6.9*0.5",
-            "result": "3.45"
-          }
-        ],
-        "conclusion": "一种解释是买6.9斤梨（3.45千克），付50元，找8.6元.原题要求的是解释和编题，情境并非唯一；自编方程须与图中单价、斤和千克的单位对应.",
+        "equations": [],
+        "answers": [],
+        "steps": [],
+        "checks": [],
+        "conclusion": "一种解释：拿50元购买x斤梨，每斤6元，找回8.6元，列出50−6x=8.6.再按其他水果的原图单价另编方程，标明自编条件和单位；本次不要求求出质量.",
         "verdict": {
           "correct": "open",
           "prompt": "代回原条件，结果是否完整并符合实际意义？",
@@ -4030,7 +4007,9 @@ const data = [
     "sourceFigure": {
       "file": "figures/fruit-prices.svg",
       "alt": "原题水果价格，单位元每斤"
-    }
+    },
+    "contentRevision": 1,
+    "analysisNote": "本次只分析数量关系、解释模型或编写题目，完成分析后保存."
   }
 ];
 if(typeof module==='object'&&module.exports)module.exports=data;else(root.RatioWordProblemsData ||= []).push(...data);
