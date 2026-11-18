@@ -772,7 +772,7 @@ sequencePower.completeScratch('Sequence exponent check');
 const powerRoute=sequencePower.w.RatioWordProblemsData.find(p=>p.id==='PEP-P014').routes[0];sequencePower.fillVerification(powerRoute);
 assert(sequencePower.$('.wp-power-check sup [data-wp-input="c:3"]'),'The exponent itself is the answer field');
 sequencePower.setInput('c:3','-243');sequencePower.click('[data-wp-check]');assert(!sequencePower.$('.wp-completion'));
-sequencePower.setInput('c:3','5');sequencePower.click('[data-wp-check]');assert(sequencePower.$('.wp-completion'));
+sequencePower.click('[data-wp-example]');assert.equal(sequencePower.$('[data-wp-input="c:3"]').value,'5','The verification example fills the exponent rather than the power value');sequencePower.click('[data-wp-check]');assert(sequencePower.$('.wp-completion'));
 sequencePower.close();
 
 const footballTotal=fixture();footballTotal.app.start('PEP-P050',true);
