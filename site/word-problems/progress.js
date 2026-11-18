@@ -70,7 +70,7 @@
   return {...d,interactionVersion:4,answersChecked:answerReady,step:d.finished?6:d.step===4?3:d.step===6&&!answerReady?5:d.step,passed,firstPass,attempts,hints};
  }
  function accuracy(d){const graded=Object.keys(d.firstPass).filter(k=>(d.interactionVersion>=4?/^(?:[0-3]|5|6)$/:d.interactionVersion>=3?/^(?:[0-4]|6)$/:/^[0-5]$/).test(k)),first=graded.filter(k=>d.firstPass[k]===true).length;return {first,total:graded.length,accuracy:graded.length?Math.round(100*first/graded.length):null};}
- function valueLabels(route,answers,problem){
+ function valueLabels(route,answers,problem,model){
   const factLabels=new Map((reading()?.build(problem).fields||[]).map(f=>[f.key,f.label]));
   return Object.fromEntries(Object.keys(answers).map(key=>{
    let label='补充表达';
@@ -80,7 +80,7 @@
    else if(key.startsWith('dm:'))label=((route.derivations||[]).find(d=>d.id===key.slice(3))?.label||'数据推导')+'（推导方法）';
    else {const m=key.match(/^(t|e|a|c|v):(\d+)(?::(\d+))?$/);if(m){const i=Number(m[2]),j=Number(m[3]);
     if(m[1]==='t')label=(route.table?.rows?.[i]?.label||'对象')+' · '+(route.table?.headers?.[j+1]||'数量');
-    if(m[1]==='e')label=route.sumExpressions?.[i]?.label?route.sumExpressions[i].label+'的完整求和算式':route.equations?.[i]?.label||'数量等式';
+    if(m[1]==='e')label=route.sumExpressions?.[i]?.label?route.sumExpressions[i].label+'的完整求和算式':model?.equations?.[i]?.label||route.equations?.[i]?.label||'数量等式';
     if(m[1]==='a')label=route.answers?.[i]?.label||'所求量';
     if(m[1]==='c')label=route.sumExpressions?.[i]?.label?route.sumExpressions[i].label+'合并同类项后的结果':route.checks?.[i]?.text||'代回检验';
     if(m[1]==='v')label=(route.verdictCases?.[i]?.label||'分情形检验')+'（实际意义判断）';
@@ -160,7 +160,7 @@
   }
   if(s.records.some(x=>x.runId===d.runId))return {state:s,record:null};
   const discussion=!!route.discussion||['open','boundary'].includes(problem.kind)||!!d.customModel;
-  const record={...d,finished:true,title:problem.title,source:[...new Set([(problem.textbookSources||[]).find(s=>s.id===d.sourceLocation)?.source,problem.source,...(problem.textbookSources||[]).map(s=>s.source)].filter(Boolean))].join('；'),routeLabel:route.label,valueLabels:valueLabels(route,d.values,problem),at:new Date().toISOString(),
+  const record={...d,finished:true,title:problem.title,source:[...new Set([(problem.textbookSources||[]).find(s=>s.id===d.sourceLocation)?.source,problem.source,...(problem.textbookSources||[]).map(s=>s.source)].filter(Boolean))].join('；'),routeLabel:route.label,valueLabels:valueLabels(route,d.values,problem,d.modelMethods.find(m=>m.id===d.modelId&&m.confirmed)),at:new Date().toISOString(),
    status:discussion?'review':d.example?'example':d.assisted?'assisted':'independent',...accuracy(d)};
   s.records=recordList([record,...s.records]);s.drafts=draftList({...s.drafts,[problem.id]:{...d,finished:true}});return {state:s,record};
  }
