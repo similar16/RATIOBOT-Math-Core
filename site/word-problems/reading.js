@@ -1,6 +1,7 @@
 /* Reading quantities: retain the original fact text and replace only numerical spans. */
 (function(root){
   'use strict';
+  const engine=()=>typeof module==='object'&&module.exports?require('./engine.js'):root.RatioWordProblemEngine;
   const KIND_LABELS={given:'题目条件',property:'已有性质',convention:'建模约定',example:'示例条件'};
   const HAN='零〇一二两三四五六七八九十百千万亿';
   const HAN_DIGITS={零:0,〇:0,一:1,二:2,两:2,三:3,四:4,五:5,六:6,七:7,八:8,九:9};
@@ -15,15 +16,13 @@
     return {n:(negative?-1n:1n)*BigInt((pieces[0]||'0')+(pieces[1]||'')),d:10n**BigInt(places)};
   }
   function rational(value){
-    let s=normalize(value);if(!s||s.length>120)return null;
-    // MathLive may return a simple rendered fraction. Nested expressions remain disallowed.
-    const tex=s.match(/^([+-]?)\\(?:dfrac|tfrac|frac)\{\s*([+-]?(?:\d+(?:\.\d*)?|\.\d+))\s*\}\{\s*([+-]?(?:\d+(?:\.\d*)?|\.\d+))\s*\}$/);
-    let outerSign=1n;if(tex){outerSign=tex[1]==='-'?-1n:1n;s=tex[2]+'/'+tex[3];}
+    const raw=normalize(value);if(!raw||raw.length>120||/[0-9.]\s+[0-9.]/.test(raw))return null;
+    const s=engine()?.numericValue(raw);if(s==null)return null;
     const parts=s.split('/');if(parts.length>2)return null;
     const a=decimal(parts[0].trim());if(!a)return null;
     if(parts.length===1)return a;
     const b=decimal(parts[1].trim());if(!b||b.n===0n)return null;
-    const n=outerSign*a.n*b.d,d=a.d*b.n;return d<0n?{n:-n,d:-d}:{n,d};
+    const n=a.n*b.d,d=a.d*b.n;return d<0n?{n:-n,d:-d}:{n,d};
   }
   function hanNumber(raw){
     if(!raw||![...raw].every(c=>Object.hasOwn(HAN_DIGITS,c)||Object.hasOwn(SMALL_UNITS,c)||c==='万'||c==='亿'))return null;

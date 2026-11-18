@@ -1,7 +1,8 @@
 'use strict';
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),{JSDOM}=require('jsdom'),katex=require('katex');
 const base=path.resolve(process.env.SITE_DIR||'site','word-problems'),M=require(path.join(base,'math-input.js'));
-const dom=new JSDOM('<input id="formula"><input id="number"><textarea id="story"></textarea>',{runScripts:'outside-only'}),w=dom.window;
+(async()=>{
+const dom=new JSDOM('<input id="formula"><input id="number"><input id="search" type="search"><textarea id="story"></textarea>',{runScripts:'outside-only'}),w=dom.window;
 w.eval(fs.readFileSync(path.join(base,'math-input.js'),'utf8'));
 const formula=w.document.querySelector('#formula'),number=w.document.querySelector('#number'),story=w.document.querySelector('#story');
 let stored='';w.RatioWordProblemMathInput.bind(formula,{variables:()=>['x','y'],onChange:v=>stored=v});
@@ -13,7 +14,14 @@ for(const text of ['🌙','月亮','×','÷','乘号']){
 }
 const explicitTimes=new w.InputEvent('beforeinput',{data:'×',inputType:'insertText',bubbles:true,cancelable:true});formula.dispatchEvent(explicitTimes);assert(!explicitTimes.defaultPrevented,'An explicitly typed multiplication sign remains available');
 w.RatioWordProblemMathInput.bind(number,{numberOnly:true});number.value='１/２月亮🌙y';number.dispatchEvent(new w.Event('input'));assert.equal(number.value,'1/2');
-story.value='买了两本练习本🌙';story.dispatchEvent(new w.Event('input'));assert.equal(story.value,'买了两本练习本🌙','Free writing retains its normal input');
+w.RatioWordProblemMathInput.bind(story,{variables:()=>['x','y']});story.value='设月亮为Y，y=2X+1🌙';story.dispatchEvent(new w.Event('input'));assert.equal(story.value,'yy=2x+1','Even notes retain only mathematical input');
+const search=w.document.querySelector('#search');search.value='父女年龄';search.dispatchEvent(new w.Event('input'));assert.equal(search.value,'父女年龄','Only the search field keeps native Chinese input');
+for(const value of [String.raw`\frac{1}{2}`,String.raw`\dfrac{2}{4}`,String.raw`\left(\tfrac{1}{2}\right)`,'1÷2','½','1⁄2']){
+ number.value=value;number.dispatchEvent(new w.Event('input'));assert.notEqual(number.value,'12','A fraction cannot turn into concatenated digits');
+ assert.equal(require(path.join(base,'engine.js')).numericValue(number.value),'1/2',value);
+}
+formula.value='x/½';formula.dispatchEvent(new w.Event('input'));assert(require(path.join(base,'engine.js')).equivalent(formula.value,'2*x'),'A pasted fraction denominator remains grouped');
+number.dispatchEvent(new w.Event('compositionstart'));number.value='月亮🌙';number.dispatchEvent(new w.Event('input'));number.dispatchEvent(new w.Event('compositionend'));await Promise.resolve();assert.equal(number.value,'','Composition cannot retain Chinese or emoji');
 class FakeMathfield extends w.HTMLElement{constructor(){super();this.value='';}insert(s){this.value+=s;}}
 w.customElements.define('math-field',FakeMathfield);const math=w.document.createElement('math-field');w.document.body.append(math);
 w.RatioWordProblemMathInput.bind(math,{variables:()=>['x','y']});
@@ -26,4 +34,6 @@ for(const input of ['2x+','x=','\\frac{1}{2}','\\frac{\\placeholder{}}{\\placeho
 }
 assert.equal(M.clean('XY',{variables:['X','y']}),'Xy','Respect the actual variable case of the problem');
 dom.window.close();
-console.log('PASS literal math input: physical X/Y, IME replacement rejection, numeric paste filtering, independent Chinese writing and rendered incomplete fractions');
+console.log('PASS literal math input: physical X/Y, IME replacement rejection, search-only Chinese, intact numeric fractions and rendered incomplete fractions');
+
+})().catch(error=>{console.error(error);process.exitCode=1;});

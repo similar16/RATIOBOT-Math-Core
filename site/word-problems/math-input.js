@@ -2,14 +2,18 @@
 (function(root){
  'use strict';
  const commands=new Set(['frac','dfrac','tfrac','left','right','times','cdot','div','placeholder','square','le','leq','ge','geq','ne','neq','approx']);
+ const numericCommands=new Set(['frac','dfrac','tfrac','left','right','times','cdot','div']);
  const attributes={autocomplete:'off',autocorrect:'off',autocapitalize:'off',spellcheck:'false','data-lpignore':'true','data-1p-ignore':'','data-form-type':'other'};
  function letter(c,variables=[]){return variables.find(v=>v.toLowerCase()===c.toLowerCase())||c;}
  function clean(value,{numberOnly=false,variables=[]}={}){
-  let s=String(value??'').normalize('NFKC').replace(/[−–－]/g,'-').replace(/[⁄／]/g,'/');
+  // Group a fraction glyph before NFKC, otherwise x/½ would become x/1/2.
+  let s=String(value??'').replace(/[¼½¾⅐-⅞]/g,c=>'('+c.normalize('NFKC')+')').normalize('NFKC').replace(/[−–－]/g,'-').replace(/[⁄／]/g,'/');
   s=s.replace(/\\(?:text|mathrm|operatorname)\{[^{}]*\}/g,'');
   s=s.replace(/\\([a-zA-Z]+)/g,(all,name)=>commands.has(name)?all:'');
-  s=s.replace(/[^0-9a-zA-Z\s.+\-*/^()%=[\]{}\\×÷·⋅≤≥≠≈]/gu,'');
-  if(numberOnly)return s.replace(/[^0-9.\s+\-/]/g,'');
+  s=s.replace(/[^0-9a-zA-Z\s.+\-*/^()%=[\]{}\\×÷·⋅≤≥≠≈<>]/gu,'');
+  // A number may be pasted as a rendered fraction. Keep its syntax intact;
+  // stripping the command and braces would silently turn 1/2 into 12.
+  if(numberOnly)return s.replace(/\\[a-zA-Z]+|[a-zA-Z]/g,token=>token[0]==='\\'&&numericCommands.has(token.slice(1))?token:'');
   return s.replace(/\\[a-zA-Z]+|[a-zA-Z]/g,token=>token[0]==='\\'?token:letter(token,variables));
  }
  function preview(value){
@@ -35,7 +39,7 @@
    if(event.inputType==='insertReplacementText'){event.preventDefault();event.stopImmediatePropagation();return;}
    if(!event.data||event.isComposing)return;
    // Reject predictive replacements before they can replace an already correct letter.
-   if(/[^\x20-\x7e０-９Ａ-Ｚａ-ｚ−×÷·⋅≤≥≠≈]/u.test(event.data)){
+   if(/[^\x20-\x7e０-９Ａ-Ｚａ-ｚ−×÷·⋅≤≥≠≈¼½¾⅐-⅞⁄]/u.test(event.data)){
     const normalized=clean(event.data,options());if(normalized!==event.data.normalize('NFKC')){event.preventDefault();event.stopImmediatePropagation();}
    }
   },true);

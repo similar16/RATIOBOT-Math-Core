@@ -54,6 +54,9 @@ assert.equal(E.checkDerivation('(5-4)/5*x', { expr: '(4/20)*x', allowedNumbers: 
 assert(E.hasNumberSources('x/5+0.2*x=4', ['4','20'], ['1/5']));
 assert(!E.hasNumberSources('5*x=20', ['4','20'], ['1/5']), '5 is not itself available from the known fraction 1/5');
 assert(!E.hasNumberSources('x/5=4', ['4','20'], []));
+assert(E.hasNumberSources('(91-x)*2/6-x=2*x-(91-x)',['91','1','2','3'],['1/3']),'An unreduced coefficient around a quantity is still the known fraction');
+assert(E.inspect('(91-x)/3').numericNotations.includes('1/3'),'A fraction of a quantity exposes its fractional coefficient, not just denominator digits');
+assert(!E.hasNumberSources('(91-x)*(7-5)/6-x=2*x-(91-x)',['91','1','2','3'],['1/3']),'An unrelated numerator calculation is not fraction notation');
 assert.equal(E.checkDerivation('0.2', { expr: '4/20', allowedNumbers: ['1', '5'] }).kind, 'source');
 assert(E.checkDerivation('-0.25', { expr: '0-25%', allowedNumbers: ['-1/4'] }).ok);
 assert.equal(E.checkDerivation('-0.25', { expr: '0-25%', allowedNumbers: ['1/4'] }).kind, 'source');
@@ -63,6 +66,7 @@ assert(E.checkDerivation('(1+25%)x', { expr: '(1+25%)*x' }).ok);
 assert.equal(E.checkDerivation('0.9x', { expr: '0.15*6*x' }).kind, 'source');
 assert(E.checkDerivation('6x*0.15', { expr: '0.15*6*x' }).ok);
 assert(E.checkDerivation('1/12', { expr: '1/12', result: '1/12' }).ok);
+for(const notation of ['2/4','1÷2',String.raw`\dfrac{2}{4}`,'½'])assert(E.checkDerivation(notation,{expr:'1/2',requireCalculation:true}).ok,notation+' preserves exact fraction notation');
 assert(!E.checkDerivation('0.08333', { expr: '1/12', result: '1/12' }).ok);
 assert(E.checkDerivation('x', { expr: 'x' }).ok);
 assert(E.checkDerivation('3', { expr: '3' }).ok);

@@ -209,16 +209,16 @@ function fixture(){
  for(const box of host.querySelectorAll('[data-wp-seen]')){box.checked=true;box.dispatchEvent(new logout.w.Event('change',{bubbles:true}));}
  host.querySelector('[data-wp-check]').click();host.querySelector('[data-wp-next]').click();
  const custom=host.querySelector('[data-wp-custom]');assert(custom,'real module has an editable model field');
- custom.value='退出前立即写入的设元说明';custom.dispatchEvent(new logout.w.Event('input',{bubbles:true}));
+ custom.value='y=6*x';custom.dispatchEvent(new logout.w.Event('input',{bubbles:true}));
  assert.notEqual(logout.t.currentProfile().economy.modules.wordProblems.drafts['L7-P1'].customModel,custom.value,'the latest edit is still waiting in the real 600ms debounce');
  logout.writes.length=0;logout.events.length=0;
  await logout.w.document.getElementById('logoutBtn').onclick();
  const lastUpload=logout.writes.filter(v=>v.table==='progress_snapshots').at(-1).row;
- assert.equal(lastUpload.growth_state.wordProblems.drafts['L7-P1'].customModel,'退出前立即写入的设元说明','logout flushes the real pending input before syncing');
+ assert.equal(lastUpload.growth_state.wordProblems.drafts['L7-P1'].customModel,'y=6*x','logout flushes the real pending input before syncing');
  assert(logout.events.indexOf('write:progress_snapshots')<logout.events.indexOf('sign-out'),'private progress uploads before the old account signs out');
  assert.equal(logout.t.cloudState.user,null);assert.equal(host.innerHTML,'');
  const retained=Object.values(logout.t.loadDB().profiles).find(v=>v.classCode==='WPA');
- assert.equal(retained.economy.modules.wordProblems.drafts['L7-P1'].customModel,'退出前立即写入的设元说明','the same last edit also remains in the old local account');
+ assert.equal(retained.economy.modules.wordProblems.drafts['L7-P1'].customModel,'y=6*x','the same last edit also remains in the old local account');
  logout.dom.window.close();
  console.log('PASS real input debounce is flushed locally and to cloud before logout');
 

@@ -145,7 +145,9 @@
   if((route.derivations||[]).some(x=>d.derived[x.id]!==true))throw Error('数据来源推导尚未全部核对，请返回检查.');
   if(!analysisOnly&&(route.answers||[]).length&&!d.answersChecked)throw Error('求解结果尚未核对，请先完成求解与检验.');
   if(!analysisOnly&&(route.verdictCases||[]).some((c,i)=>d.values['v:'+i]!==c.correct))throw Error('请分别完成每种情形的实际意义判断.');
-  if(analysisOnly&&d.discussion.trim().length<8)throw Error('请完成数量关系与模型的分析说明后保存.');
+  // A relationship such as y=2x is a complete short record. Open analysis is
+  // saved for teacher review rather than graded by a prose-length threshold.
+  if(analysisOnly&&!d.discussion.trim())throw Error('请完成数量关系与模型的分析说明后保存.');
   if(route.relationshipOnly){
    const E=root.RatioWordProblemEngine||(typeof module==='object'&&module.exports?require('./engine.js'):null);
    if(!E||route.table.rows.some((row,i)=>row.cells.some((cell,j)=>!cell.note&&!cell.given&&!E.checkTableCell(d.values['t:'+i+':'+j]||'',cell,route.variable).ok)))throw Error('请先确认框内各方向的日期表达式.');
