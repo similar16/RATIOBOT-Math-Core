@@ -1,0 +1,10 @@
+.autumn-report{margin-top:24px}
+.autumn-report p{line-height:1.8}
+.autumn-record-note{background:#fff3cd;padding:12px 15px;border-radius:10px}
+.autumn-table-scroll{overflow-x:auto}
+.autumn-report table{width:100%;border-collapse:collapse;text-align:left;font-size:14px;white-space:nowrap}
+.autumn-report th,.autumn-report td{padding:12px 14px;border-bottom:1px solid rgba(62,53,64,.14)}
+.autumn-report th{background:var(--panel2,#FFF0EC)}
+.autumn-report summary{cursor:pointer;padding:12px 0;font-weight:700}
+.autumn-student-records{margin:8px 0}
+.autumn-report .teacher-summary{margin:18px 0}
