@@ -59,7 +59,10 @@ function fixture() {
   assert(!$('.wp-solution')&&!$('.wp-verification'),'Verification stays on the next page');
   const problem=w.RatioWordProblemsData.find(p=>p.id===$('[data-wp-current-problem]').dataset.wpCurrentProblem);
   route=route||problem.routes.find(r=>r.id===read().drafts[problem.id]?.routeId)||problem.routes[0];
-  for(const [i,a]of (route.answers||[]).entries())if($('[data-wp-input="a:'+i+'"]').value!==a.expr)setInput('a:'+i,a.expr);
+  for(const [i,a]of (route.answers||[]).entries()){
+   const editor=$('[data-wp-input="a:'+i+'"]');if(a.unit){const line=editor.closest('.wp-answer-input-line');assert(line&&line.querySelector('.wp-answer-unit')?.textContent===a.unit,'Unit follows the answer on the same line: '+a.label);}
+   if(editor.value!==a.expr)setInput('a:'+i,a.expr);
+  }
   click('[data-wp-check]');expectPassed(5,where+' confirms the numerical answers without grading ink');
   assert(!$('.wp-verification'),'Confirming answers does not mix verification onto this page');
   click('[data-wp-next]');assert.equal(currentStep(),6);
@@ -115,6 +118,14 @@ function fixture() {
   assert(!$('[data-wp-closure]')&&!$('.wp-closure-choices'),'Modeling has no duplicate condition-selection gate');
   if(manual)textInput('[data-wp-discussion]','需要检查方程的适用范围、题目是否给出充分条件，以及所求数量的实际取值要求。');
   else (route.equations||[]).forEach((equation,i)=>{setInput('e:'+i,equation.left+'='+equation.right);counts.equations++;});
+  if(problem.kind==='open'){
+   assert(!$('[data-wp-next]'),'Open analysis has no solve or verify page');
+   assert.equal($('[data-wp-check]').textContent,'确认分析并保存');
+   assert(!host.querySelector('[data-wp-step="5"],[data-wp-step="6"]'));
+   click('[data-wp-check]');assert($('.wp-completion'),feedback());assert.equal(currentStep(),3);
+   const record=read().records[0];if(!teacher){assert.equal(record.status,'review');assert(!record.passed[5]&&!record.passed[6],'No fabricated solving/verification credit');assert.equal(record.answersChecked,false);assert(!Object.keys(record.values).some(k=>/^[ac]:/.test(k)));counts.completed++;}
+   counts.routes++;return record;
+  }
   checkAndNext(3,problem.id+'/'+route.id+' condition and equation together');
   completeScratch(problem.id+'/'+route.id,route);
   fillVerification(route);
@@ -569,6 +580,34 @@ assert.equal(story.host.querySelectorAll('[data-wp-input]').length,3,'The story 
 story.click('[data-wp-check]');assert(story.$('[data-wp-next]').disabled,'The table cannot pass with empty entries');
 story.click('[data-wp-example]');story.checkAndNext(2,'Inverse story quantity table');
 assert.match(story.$('.wp-stage h3').textContent,/编写应用题/);assert(story.$('[data-wp-discussion]'));story.close();
+
+// Open tasks save at analysis, reopen there, and can still be revised/reset.
+const openOnly=fixture(),openProblem=openOnly.w.RatioWordProblemsData.find(p=>p.id==='S01');
+const openRecord=openOnly.canonicalRoute(openProblem,openProblem.routes[0]);
+assert.equal(openRecord.step,3);openOnly.remount().start('S01');assert.equal(openOnly.currentStep(),3);assert(openOnly.$('.wp-completion'));assert(!openOnly.$('[data-wp-next]'));
+openOnly.textInput('[data-wp-discussion]','修改后的故事仍对应单价、数量与总价的关系');assert(!openOnly.$('.wp-completion'));openOnly.click('[data-wp-check]');assert(openOnly.$('.wp-completion'));assert.equal(openOnly.read().records.length,2,'Editing preserves the submitted historical analysis');
+openOnly.click('.wp-stage-top [data-wp-restart]');openOnly.click('[data-wp-confirm-reset]');assert.equal(openOnly.currentStep(),0);assert.equal(openOnly.read().records.length,2);openOnly.close();
+
+// Explanations are optional; showing one records help without filling the answer.
+const hiddenHelp=fixture(),work=hiddenHelp.w.RatioWordProblemsData.find(p=>p.id==='PEP-P043');
+hiddenHelp.app.start(work.id,true);hiddenHelp.confirmFacts();
+const help=hiddenHelp.$('[data-wp-derivation-hint]');assert(help&&!help.open);assert.equal(hiddenHelp.$('[data-wp-input="d:a-rate"]').value,'');
+help.open=true;help.dispatchEvent(new hiddenHelp.w.Event('toggle'));hiddenHelp.click('[data-wp-check]');assert(hiddenHelp.read().drafts[work.id].assisted);assert.equal(hiddenHelp.$('[data-wp-input="d:a-rate"]').value,'');
+hiddenHelp.close();
+
+// Compare each requested pair of methods with its own variable meaning and table.
+for(const id of ['PEP-P005','PEP-P077']){
+ const f=fixture(),p=f.w.RatioWordProblemsData.find(p=>p.id===id),[a,b]=p.routes;
+ f.app.start(id,true);f.confirmFacts();f.checkAndNext(1,id+' first variable');
+ a.table.rows.forEach((row,i)=>row.cells.forEach((c,j)=>{if(c.expr&&!c.given)f.setInput('t:'+i+':'+j,c.expr);}));f.checkAndNext(2,id+' first table');
+ if(id==='PEP-P005'){
+  f.setInput('e:0','').focus();f.click('[data-wp-take="0:3"]');f.click('[data-wp-key="="]');f.click('[data-wp-take="1:3"]');
+  assert.equal(f.$('[data-wp-input="e:0"]').value,'90-x=40+x','No redundant parentheses around referenced sums or x');
+ }else f.setInput('e:0',a.equations[0].left+'='+a.equations[0].right);
+ f.click('[data-wp-check]');f.expectPassed(3,id+' first model');f.click('[data-wp-new-model="'+b.id+'"]');assert.equal(f.currentStep(),1);
+ f.checkAndNext(1,id+' second variable');b.table.rows.forEach((row,i)=>row.cells.forEach((c,j)=>{if(c.expr&&!c.given)f.setInput('t:'+i+':'+j,c.expr);}));f.checkAndNext(2,id+' second table');f.setInput('e:0',b.equations[0].left+'='+b.equations[0].right);f.checkAndNext(3,id+' second model');f.completeScratch(id,b);f.fillVerification(b);f.click('[data-wp-check]');
+ assert.equal(f.host.querySelectorAll('.wp-model-comparison .wp-method-card').length,2);assert.equal(f.read().records[0].modelMethods.filter(m=>m.confirmed).length,2);f.close();
+}
 
 // Historical records survive the new interaction version; drafts cannot skip the new activities.
 const migrated=fixture(),migrationProblem=migrated.w.RatioWordProblemsData.find(p=>p.id==='L7-P1');

@@ -29,6 +29,13 @@ assert.equal(R.reference(calendar,cr).sum.length,0,'Calendar references contain 
 const life=find('TB-A37'),lifeReference=R.reference(life,life.routes[0]);assert.equal(lifeReference.sum.length,1);assert.equal(lifeReference.sum[0].terms.length,6,'All six life stages share one addition relationship');
 const half=find('TB-I05');assert(!half.facts.some(f=>/平均分|其中1份/.test(f.text)));assert.equal(F.build(half).facts.find(f=>f.id==='half').fields.length,0);assert.equal(R.reference(half,half.routes[0]).product.length,0);
 assert.equal(find('S01').routes[0].reverseModel,true,'The story task starts from its given equation');
+for(const p of data){
+ for(const fact of p.facts.filter(f=>f.kind==='property'&&/一半|二分之一/.test(f.text)))assert.equal(F.build(p).facts.find(f=>f.id===fact.id).fields.length,0,p.id+' does not ask pupils to fill the definition of one half');
+ if(p.kind==='open')for(const r of p.routes){assert.equal(r.answers.length,0);assert.equal(r.checks.length,0);assert(p.contentRevision>0);}
+}
+const vertical=find('PEP-P037');assert.equal(vertical.facts.length,3);assert.equal(vertical.sourceTable.rows.flat().filter(v=>typeof v==='number').length,31,'Original calendar retained as a reference');assert(F.build(vertical).fields.length<=3,'Only the basic quantities are filled');
+const age=find('PEP-P077');assert.equal(age.routes.length,2);assert.deepEqual(age.routes.map(r=>r.table.headers[3]),['父女年龄差/岁','两时刻的年份差/年']);
+const wire=find('PEP-P005');assert.equal(wire.routes.length,2);assert.deepEqual(wire.routes.map(r=>r.meaning),['从第一条截下的电线长度','两条电线调整后的共同长度']);
 const percent=find('PEP-P063').routes[0];assert.equal(percent.unit,'');assert.equal(percent.answers[0].unit,'');
 assert.match(percent.conclusion,/25%/);
 for(const problem of [trapezoid,odd,calendar]){

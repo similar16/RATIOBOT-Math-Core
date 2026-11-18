@@ -207,6 +207,36 @@
     } catch { return '\\text{' + escapeTex(String(input ?? '').slice(0, MAX_INPUT)) + '}'; }
   }
   const formatCalculation = input => format(input, { division: 'sign' });
+  // Keep a referenced quantity intact without enclosing every number, letter or
+  // product in another pair of parentheses. Do not evaluate or combine terms.
+  function referenceExpression(input, context) {
+    const ungroup = ast => ast.kind === 'group' ? ungroup(ast.value) : ast;
+    function compact(node, parent = 0) {
+      const ast = ungroup(node), pr = precedence(ast);
+      let out;
+      if (ast.kind === 'number') out = ast.raw;
+      else if (ast.kind === 'variable') out = ast.name;
+      else if (ast.kind === 'unary') out = ast.op + compact(ast.value, 3);
+      else if (ast.kind === 'percent') out = compact(ast.value, 5) + '%';
+      else if (ast.kind === 'power') out = compact(ast.left, 5) + '^(' + compact(ast.right) + ')';
+      else out = compact(ast.left, pr) + ast.op + compact(ast.right, ast.op === '-' || ast.op === '/' ? pr + 1 : pr);
+      return pr < parent ? '(' + out + ')' : out;
+    }
+    const ast = ungroup(parse(input).ast), text = compact(ast);
+    const sum = ast.kind === 'binary' && ['+', '-'].includes(ast.op);
+    if (!context) return sum || ast.kind === 'unary' || ast.kind === 'binary' && ast.op === '/' ? '(' + text + ')' : text;
+    const operatorText = value => String(value || '').replace(/\\(?:times|cdot)/g, '*').replace(/\\div/g, '/').replace(/\\(?:left|right)/g, '').replace(/\s/g, '');
+    const before = operatorText(context.before), after = operatorText(context.after);
+    const left = before.slice(-1), right = after[0] || '';
+    const implicitLeft = /[\w)%]/.test(left), implicitRight = /[\w(]/.test(right);
+    const powerOperand = left === '^' || right === '^';
+    const signed = ast.kind === 'unary';
+    const grouped = sum && (/[-*/^]/.test(left) || implicitLeft || /[*/^]/.test(right) || implicitRight)
+      || ast.kind === 'binary' && ast.op === '/' && left === '/'
+      || powerOperand && precedence(ast) < 5
+      || signed && !!left && left !== '=' && left !== '(';
+    return grouped ? '(' + text + ')' : text;
+  }
   function inspect(input) {
     try { const p = read(input), meta = details(p.ast); return { ok: true, normalized: p.normalized, numeric: isConstant(p.poly) ? rstring(coefficient(p.poly, '')) : null, variables: meta.variables, numbers: meta.literals.map(x => x.raw), numericLiterals: meta.literals.map(x => x.value), operations: meta.operations, percent: meta.percent, degree: degree(p.poly), latex: latex(p.ast), calculationLatex: latex(p.ast, true) }; }
     catch (error) { return { ok: false, kind: error.kind || 'input', message: error.message }; }
@@ -593,7 +623,7 @@
     return errors;
   }
 
-  const api = { equivalent, checkDerivation, checkTableCell, checkQuantitySum, checkSimplifiedTerm, checkEquation, hasNumberSources, format, formatCalculation, numeric, validateProblem, normalize, inspect };
+  const api = { equivalent, checkDerivation, checkTableCell, checkQuantitySum, checkSimplifiedTerm, checkEquation, hasNumberSources, format, formatCalculation, referenceExpression, numeric, validateProblem, normalize, inspect };
   if (typeof module === 'object' && module.exports) module.exports = api;
   else root.RatioWordProblemEngine = api;
 })(typeof window === 'undefined' ? globalThis : window);

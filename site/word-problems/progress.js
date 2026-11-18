@@ -140,10 +140,12 @@
   const s=normalized(value),d=cleanDraft(draft);
   if(!d||!problem||!route||d.problemId!==problem.id||d.routeId!==route.id||!/^wp-[\w-]+$/.test(d.runId))throw Error('分析记录不完整，请返回当前题目重试.');
   if(d.contentRevision<integer(problem.contentRevision))throw Error('本题内容已更新，请重新分析后再保存.');
-  if(!Array.from({length:7},(_,i)=>d.passed[i]===true).every(Boolean))throw Error('请依次完成数量、列式、答案与检验，再保存完成记录.');
+  const analysisOnly=problem.kind==='open';
+  if(!(analysisOnly?[0,1,2,3,4]:[0,1,2,3,4,5,6]).every(i=>d.passed[i]===true))throw Error('请依次完成数量、列式、答案与检验，再保存完成记录.');
   if((route.derivations||[]).some(x=>d.derived[x.id]!==true))throw Error('数据来源推导尚未全部核对，请返回检查.');
-  if((route.answers||[]).length&&!d.answersChecked)throw Error('求解结果尚未核对，请先完成求解与检验.');
-  if((route.verdictCases||[]).some((c,i)=>d.values['v:'+i]!==c.correct))throw Error('请分别完成每种情形的实际意义判断.');
+  if(!analysisOnly&&(route.answers||[]).length&&!d.answersChecked)throw Error('求解结果尚未核对，请先完成求解与检验.');
+  if(!analysisOnly&&(route.verdictCases||[]).some((c,i)=>d.values['v:'+i]!==c.correct))throw Error('请分别完成每种情形的实际意义判断.');
+  if(analysisOnly&&d.discussion.trim().length<8)throw Error('请完成数量关系与模型的分析说明后保存.');
   if(route.relationshipOnly){
    const E=root.RatioWordProblemEngine||(typeof module==='object'&&module.exports?require('./engine.js'):null);
    if(!E||route.table.rows.some((row,i)=>row.cells.some((cell,j)=>!cell.note&&!cell.given&&!E.checkTableCell(d.values['t:'+i+':'+j]||'',cell,route.variable).ok)))throw Error('请先确认框内各方向的日期表达式.');

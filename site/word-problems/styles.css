@@ -402,3 +402,11 @@ input.wp-fact-number.is-correct,.wp-fact-number.is-correct input{background:var(
 .wp-power-check sup{align-self:center;transform:translateY(-15px);margin-left:-6px;margin-right:5px;line-height:1}
 .wp-power-check input{width:52px!important;min-height:42px;text-align:center;padding:5px!important;font-size:18px!important}
 .wp-exponent-check{grid-template-columns:1fr}
+
+/* Optional derivation help and inline answer units. */
+.wp-derivation-hint{margin:12px 0;padding:9px 12px;background:var(--bg,#FFF8ED);border-radius:9px;font-size:13px;color:var(--wp-muted)}
+.wp-derivation-hint summary{cursor:pointer;font-weight:700;min-height:28px;display:flex;align-items:center}
+.wp-derivation-hint p{margin:10px 0 0}
+.wp-answer-input-line .wp-answer-unit{flex:none;white-space:nowrap;font-size:13px;color:var(--wp-muted)}
+
+.wp-answer-input-line .wp-editor-host input,.wp-answer-input-line .wp-editor-host math-field{box-sizing:border-box;min-width:0}

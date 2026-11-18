@@ -194,3 +194,16 @@ const withAlternative=structuredClone(p);withAlternative.routes[0].table.rows[0]
 assert(E.validateProblem(withAlternative).some(error=>error.includes('missing')),'Alternative source references are validated');
 for(const unsafe of ['alert(1)','<img>','x^999999','1/(x+6)'])assert(!E.checkTableCell(unsafe,readyCell('x')).ok);
 console.log('PASS flexible quantity-table expressions: exact algebra, explicit source alternatives, dependency gates and retained source traces');
+
+// Referencing a table quantity preserves algebra while dropping redundant fences.
+for(const [raw,context,expected] of [
+ ['((90))',{},'90'],['((x))',{},'x'],['((3))*((x))',{},'3*x'],
+ ['((90-x))',{},'90-x'],['40+x',{before:'90-x='},'40+x'],
+ ['x+7',{before:'x-7+x+'},'x+7'],['x-7',{before:'90-'},'(x-7)'],
+ ['x+7',{before:'3*'},'(x+7)'],['x+7',{after:'*3'},'(x+7)'],
+ ['1/7',{before:'x/'},'(1/7)'],['-3',{before:'x*'},'(-3)'],
+ ['(x^2)^2',{},'(x^(2))^(2)'],['x-(7-x)',{},'x-(7-x)']
+]){const actual=E.referenceExpression(raw,context);assert.equal(actual,expected);assert(E.equivalent(actual,raw),'References retain their exact meaning: '+raw);}
+assert(E.equivalent('90-'+E.referenceExpression('40+x',{before:'90-'}),'90-(40+x)'));
+assert(E.equivalent('3*'+E.referenceExpression('x+7',{before:'3*'}),'3*(x+7)'));
+console.log('PASS quantity references: redundant parentheses removed, subtraction/product/division/power grouping retained');

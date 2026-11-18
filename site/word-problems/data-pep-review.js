@@ -202,7 +202,7 @@
  add('P077','父女在两个时刻的年龄','年龄与前后变化','148','复习题5·综合运用第12题',
  '父亲和女儿现在的年龄之和是91.当父亲的年龄是女儿现在年龄的2倍时，女儿的年龄是父亲现在年龄的1/3.求女儿现在的年龄.',
  [fact('sum','父亲和女儿现在的年龄之和为91岁.'),fact('fatherThen','题述另一时刻，父亲年龄是女儿现在年龄的2倍.'),fact('daughterThen','题述另一时刻，女儿年龄是父亲现在年龄的1/3.'),fact('gap','两人的年龄按相同的时间变化，年龄差保持不变.','property')],
- {meaning:'女儿现在的年龄',unit:'岁',domain:'两人年龄均为正，父亲比女儿年长；另一时刻是过去还是未来，要由求解结果判断.',
+ {label:'方案一：按年龄差列式',meaning:'女儿现在的年龄',unit:'岁',domain:'两人年龄均为正，父亲比女儿年长；另一时刻是过去还是未来，要由求解结果判断.',
   table:{headers:['时刻','女儿年龄/岁','父亲年龄/岁','父女年龄差/岁'],rows:[
    row('现在',cell('x',['unknown'],true),cell('91-x',['sum','unknown']),cell('(91-x)-x',['sum','unknown'])),
    row('题述另一时刻',cell('(91-x)/3',['sum','unknown','daughterThen']),cell('2*x',['fatherThen','unknown']),cell('2*x-(91-x)/3',['fatherThen','daughterThen','sum','unknown']))]},
@@ -213,6 +213,21 @@
   steps:['(91-x)-x=2*x-(91-x)/3','273-6*x=7*x-91','13*x=364','x=28'],
   checks:[check('现在的年龄和','63+28','91'),check('另一时刻父亲年龄','2*28','56'),check('另一时刻女儿年龄','63/3','21'),check('父女经历的时间相同','63-56','28-21')],
   conclusion:'女儿现在28岁，父亲63岁.题述另一时刻为7年前：父亲56岁、女儿21岁，两项倍数条件均成立.'});
+
+ // The same x can be organized by elapsed years instead of the age gap.
+ {
+  const p=data.find(p=>p.id==='PEP-P077'),main=p.routes[0];p.contentRevision=1;
+  p.routes.push({...main,id:'years',label:'方案二：按年份差列式',
+   domain:'两人年龄均为正；年份差按“现在减另一时刻”表示，正负由求解结果判断.',
+   table:{headers:['人物','现在年龄/岁','另一时刻年龄/岁','两时刻的年份差/年'],rows:[
+    row('女儿',cell('x',['unknown'],true),cell('(91-x)/3',['sum','unknown','daughterThen']),cell('x-(91-x)/3',['sum','unknown','daughterThen','gap'])),
+    row('父亲',cell('91-x',['sum','unknown']),cell('2*x',['fatherThen','unknown']),cell('(91-x)-2*x',['sum','unknown','fatherThen','gap']))]},
+   relationTriples:relation([['女儿另一时刻年龄','相同的年份差','女儿现在年龄'],['父亲另一时刻年龄','相同的年份差','父亲现在年龄'],['女儿现在年龄','父亲现在年龄','现在年龄和']],[['女儿现在年龄','题给倍数','父亲另一时刻年龄'],['父亲现在年龄','题给分率','女儿另一时刻年龄']]),
+   closure:{sources:['gap'],text:'父女经历的是相同的两个时刻，分别求出的年份差相等.',hint:'分别用现在年龄减去另一时刻年龄，再令父女的差相等.'},
+   equations:[equation('父女经历的年份差相等','x-(91-x)/3','(91-x)-2*x')],
+   steps:['x-(91-x)/3=(91-x)-2*x','3*x-(91-x)=3*(91-x)-6*x','13*x=364','x=28'],
+   tableNote:'两行都按“现在年龄−另一时刻年龄”表示年份差，方向须一致.解后再判断另一时刻是在过去还是未来.'});
+ }
 
  add('P078','竞赛规则与不可能的得分','数据表与计分规则','148','复习题5·拓广探索第13题',
  '学校组织知识竞赛，共设20道选择题，各题分值相同，每题必答.根据表中5名参赛者的答题与得分情况回答：（1）F得76分，他答对几道题？（2）G说他得80分，有可能吗？为什么？',
@@ -466,6 +481,7 @@
   }
 };
  for(const p of data)Object.assign(p,sourceUpdates[p.id]||{});
+ for(const p of data)if(p.kind==='open'){p.contentRevision=(p.contentRevision||0)+1;p.analysisNote='本次只分析平衡规律与参数关系，完成分析后保存.';for(const r of p.routes){r.answers=[];r.checks=[];r.equations=[];r.steps=['n*x=1*(l/2)'];r.conclusion='两侧重物等重，平衡时两侧的“重物个数×到支点距离”相等，可列n×x=1×(l÷2).n和l是已知参数，x是未知数；本次只分析平衡关系，不求解.';}}
  if(typeof module==='object'&&module.exports)module.exports=data;
  else root.RatioWordProblemsData=(root.RatioWordProblemsData||[]).concat(data);
 })(typeof window==='undefined'?globalThis:window);

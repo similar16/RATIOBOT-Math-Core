@@ -64,7 +64,7 @@ for(const p of pep){
   const t=p.sourceTable;assert(t.headers?.length&&t.rows.length,p.id+' source table shape');
   for(const row of t.rows)assert.equal(row.length,t.headers.length,p.id+' source table width');
   const given=new Set(p.facts.filter(f=>f.kind==='given').flatMap(f=>[...numbers(f.text)]));
-  for(const value of t.rows.flat())if(value!=null)for(const n of numbers(value))assert(given.has(n),p.id+' original table number '+n+' must be read from a fact');
+  for(const value of p.sourceTableReading==='reference'?[]:t.rows.flat())if(value!=null)for(const n of numbers(value))assert(given.has(n),p.id+' original table number '+n+' must be read from a fact');
  }
  for(const r of p.routes){
   counts.routes++;
