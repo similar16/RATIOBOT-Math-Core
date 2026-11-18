@@ -92,7 +92,7 @@ function fixture() {
  function canonicalRoute(problem,route){
   app.start(problem.id,true);
   if(route.relationshipOnly){
-   assert.equal(currentStep(),2);assert(!$('.wp-stage textarea'));
+   assert.equal(currentStep(),0);confirmFacts();assert.equal(currentStep(),1);assert(!$('.wp-stage textarea'));checkAndNext(1,'Calendar variable definition');
    route.table.rows.forEach((row,i)=>row.cells.forEach((cell,j)=>{if(cell.expr&&!cell.given)setInput('t:'+i+':'+j,cell.expr);}));
    checkAndNext(2,'Calendar directions');assert(!$('.wp-stage textarea'));
    route.sumExpressions.forEach((item,i)=>setInput('e:'+i,item.expr));checkAndNext(3,'Calendar sums');
@@ -700,8 +700,8 @@ for(const id of ['G9-06','G9-08','TB-R01','TB-I03','TB-I04','TB-I05']){
  const history={...old,title:id==='G9-08'?'三个连续奇数的积':'旧版本题目',status:'independent',at:old.updatedAt,valueLabels:{'a:1':'旧版三个奇数的积'}};
  f.accounts.set(f.owner,{version:1,records:[history],drafts:{[id]:old}});
  f.remount().start(id);
- const current=f.read().drafts[id];assert.equal(current.contentRevision,f.w.RatioWordProblemsData.find(p=>p.id===id).contentRevision);assert.equal(f.currentStep(),r.relationshipOnly?2:0);assert.equal(current.finished,false);
- assert.notEqual(current.runId,old.runId);assert.notEqual(current.scratchId,old.scratchId);assert.deepEqual(clone(current.values),{});assert.deepEqual(clone(current.passed),r.relationshipOnly?{0:true,1:true}:{});
+ const current=f.read().drafts[id];assert.equal(current.contentRevision,f.w.RatioWordProblemsData.find(p=>p.id===id).contentRevision);assert.equal(f.currentStep(),0);assert.equal(current.finished,false);
+ assert.notEqual(current.runId,old.runId);assert.notEqual(current.scratchId,old.scratchId);assert.deepEqual(clone(current.values),{});assert.deepEqual(clone(current.passed),{});
  assert.equal(f.read().records[0].values['a:1'],'105');assert.equal(f.read().records[0].valueLabels['a:1'],'旧版三个奇数的积');
  assert.match(f.feedback(),/以前已提交的记录完整保留/);
  f.app.open();const card=f.$('[data-wp-problem="'+id+'"]');assert(card);assert(!card.textContent.includes('已完成 ✓'),'Old content does not mark the revised task complete');
@@ -783,8 +783,17 @@ assert(!footballTotal.$('.wp-total-row [data-wp-input="t:3:0"]'),'Per-match poin
 
 const calendarSimple=fixture();calendarSimple.app.start('TB-R01',true);
 const calendarProblem=calendarSimple.w.RatioWordProblemsData.find(p=>p.id==='TB-R01'),calendarRoute=calendarProblem.routes[0];
-assert.equal(calendarSimple.currentStep(),2);assert.equal(calendarSimple.host.querySelectorAll('[data-wp-input]').length,8);
-assert.deepEqual([...calendarSimple.host.querySelectorAll('[data-wp-step]')].map(b=>Number(b.dataset.wpStep)),[2,3,6]);
+assert.equal(calendarSimple.currentStep(),0);assert(calendarSimple.$('.wp-original-problem').open);
+assert.deepEqual([...calendarSimple.host.querySelectorAll('[data-wp-step]')].map(b=>Number(b.dataset.wpStep)),[0,1,2,3,6]);
+assert(calendarSimple.$('[data-wp-step="1"]').disabled&&calendarSimple.$('[data-wp-step="2"]').disabled,'The first two steps cannot be skipped');
+assert(!calendarSimple.$('[data-wp-fact^="f:center:"]'),'The one-frame convention never becomes a number blank');
+calendarSimple.click('[data-wp-check]');assert(calendarSimple.$('[data-wp-next]').disabled);
+calendarSimple.confirmFacts();assert.equal(calendarSimple.currentStep(),1);
+assert(calendarSimple.$('.wp-variable-definition').textContent.includes('本次所选框的中心日期'));
+assert(calendarSimple.$('.wp-variable-definition').textContent.includes('日期之和'));
+assert(!calendarSimple.$('.wp-stage textarea'),'The definition step does not reopen a modeling discussion');
+calendarSimple.checkAndNext(1,'Calendar center-variable definition');
+assert.equal(calendarSimple.host.querySelectorAll('[data-wp-input]').length,8);
 assert(!calendarSimple.$('[data-wp-discussion]')&&!calendarSimple.$('.wp-relation-reference'));
 assert(!calendarSimple.$('.wp-stage').textContent.includes('开放问题'));
 assert(!calendarSimple.$('.wp-stage').textContent.includes('这张表表达了哪些关系'));

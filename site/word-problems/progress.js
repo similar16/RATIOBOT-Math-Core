@@ -148,7 +148,8 @@
    const E=root.RatioWordProblemEngine||(typeof module==='object'&&module.exports?require('./engine.js'):null);
    if(!E||route.table.rows.some((row,i)=>row.cells.some((cell,j)=>!cell.note&&!cell.given&&!E.checkTableCell(d.values['t:'+i+':'+j]||'',cell,route.variable).ok)))throw Error('请先确认框内各方向的日期表达式.');
    if((route.sumExpressions||[]).some((item,i)=>!E.checkTableCell(d.values['e:'+i]||'',{...item,allowedNumbers:[1,3,5,7]},route.variable).ok))throw Error('请先确认三数框和十字框的 S.');
-  }else if(d.interactionVersion>=2){
+  }
+  if(d.interactionVersion>=2){
    const F=reading();if(!F)throw Error('数量互动资源尚未准备好，请重试.');
    if(!F.check(problem,d.values).ok||F.build(problem).facts.some(f=>!f.fields.length&&!d.seen.includes(f.id)))throw Error('请完成并核对读题数量填空.');
   }

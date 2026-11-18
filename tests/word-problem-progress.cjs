@@ -6,9 +6,11 @@ const route={id:'sets',label:'设套数',derivations:[{id:'rate'}],answers:[{exp
 // Calendar completion requires both the spatial table and its two sum expressions.
 {
  const calendar=require(path.resolve(process.env.SITE_DIR||'site','word-problems/data-textbook-review.js')).find(p=>p.id==='TB-R01'),r=calendar.routes[0];
- const values={};r.table.rows.forEach((row,i)=>row.cells.forEach((cell,j)=>{if(cell.expr&&!cell.given)values['t:'+i+':'+j]=cell.expr;}));r.sumExpressions.forEach((item,i)=>values['e:'+i]=item.expr);
- const d={runId:'wp-calendar-current',problemId:calendar.id,routeId:r.id,interactionVersion:4,contentRevision:calendar.contentRevision,values,passed:Object.fromEntries(Array.from({length:7},(_,i)=>[i,true])),answersChecked:true};
+ const F=require(path.resolve(process.env.SITE_DIR||'site','word-problems/reading.js')),values=F.canonical(calendar);r.table.rows.forEach((row,i)=>row.cells.forEach((cell,j)=>{if(cell.expr&&!cell.given)values['t:'+i+':'+j]=cell.expr;}));r.sumExpressions.forEach((item,i)=>values['e:'+i]=item.expr);
+ const d={runId:'wp-calendar-current',problemId:calendar.id,routeId:r.id,interactionVersion:4,contentRevision:calendar.contentRevision,values,seen:calendar.facts.map(f=>f.id),passed:Object.fromEntries(Array.from({length:7},(_,i)=>[i,true])),answersChecked:true};
  assert.equal(P.complete(null,d,calendar,r).record.status,'independent');
+ assert.throws(()=>P.complete(null,{...d,values:{...values,'f:three:0':''}},calendar,r),/读题数量/);
+ assert.throws(()=>P.complete(null,{...d,seen:[]},calendar,r),/读题数量/);
  assert.throws(()=>P.complete(null,{...d,values:{...values,'t:2:3':'x+7'}},calendar,r),/各方向/);
  assert.throws(()=>P.complete(null,{...d,values:{...values,'e:1':'3*x'}},calendar,r),/ S/);
  assert.throws(()=>P.complete(null,{...d,values:{...values,'e:0':''}},calendar,r),/ S/);
