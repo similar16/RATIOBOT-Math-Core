@@ -169,7 +169,10 @@ assert(provenance.host.querySelector('[data-wp-derivation="'+growth.id+'"] .wp-s
 provenance.setInput('d:'+growth.id,'1+25%=1.25');
 provenance.click('[data-wp-check-derived="'+growth.id+'"]');
 assert(provenance.$('[data-wp-derivation="'+growth.id+'"] .wp-success-tag'),'An optional correct result is accepted');
-provenance.setInput('d:'+growth.id,'1+25%=1.5');
+const editedCalculation=provenance.setInput('d:'+growth.id,'1+25%=1.5');
+assert.equal(provenance.$('[data-wp-input="d:'+growth.id+'"]'),editedCalculation,'Editing preserves the active input element');
+assert(!provenance.$('[data-wp-derivation="'+growth.id+'"] .wp-success-tag'),'Editing immediately removes the stale success badge');
+assert(!provenance.$('[data-wp-derivation="'+growth.id+'"] .wp-derived-chain'),'Editing immediately removes the previously verified result');
 provenance.click('[data-wp-check-derived="'+growth.id+'"]');
 assert(!provenance.$('[data-wp-derivation="'+growth.id+'"] .wp-success-tag'),'An incorrect optional result is still checked');
 provenance.setInput('d:'+growth.id,'1+25%');
