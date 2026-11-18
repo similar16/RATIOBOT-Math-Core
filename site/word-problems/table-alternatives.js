@@ -501,13 +501,11 @@
     [6,1,'381-x-2*x-4*x-8*x-16*x-32*x','total,unknown,double,factor3,factor4,factor5,factor6','第七层灯数等于总灯数减前六层灯数.']
   ]);
   define('TB-I03', 'standard', 'left,balance', '再用左盘两个同样小球的质量和砝码质量.', [
-    [0,0,'5-1','rightMass,left,balance','小球总质量等于平衡的右盘总质量减左盘砝码质量.'],
-    [0,2,'5','rightMass,balance','天平平衡，左盘总质量等于右盘5克.']
+    [0,1,'5','rightMass,balance','天平平衡，左盘总质量等于右盘5克.']
   ]);
   define('TB-I04', 'standard', 'left,right', '再用两边实际的小球个数与砝码质量连接总质量.', [
-    [0,0,'y+6','unknown,rightMass,balance','左盘只有小球，小球总质量等于右盘总质量.'],
-    [0,2,'y+6','unknown,rightMass,balance','天平平衡，两盘总质量相等.'],
-    [1,2,'3*y','left,balance,unknown','天平平衡，右盘总质量等于左盘3个小球的质量.']
+    [0,1,'y+6','unknown,rightMass,balance','天平平衡，两盘总质量相等.'],
+    [1,1,'3*y','left,balance,unknown','天平平衡，右盘总质量等于左盘3个小球的质量.']
   ]);
   define('TB-I05', 'standard', 'half,more', '再用先取一半、再加2的运算关系.', [
     [1,0,'5-2','result,more','取一半后的数等于最终结果减最后加上的2.'],

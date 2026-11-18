@@ -109,6 +109,15 @@
 .wp-stage{min-width:0;background:var(--wp-paper);border-radius:22px;padding:25px;border:3px solid var(--wp-ink);box-shadow:var(--wp-shadow)}
 .wp-stage-top{display:flex;align-items:center;justify-content:space-between;gap:14px;font-size:11px;color:var(--wp-muted)}
 .wp-stage-top small{font-size:11px;color:var(--wp-ink);font-weight:1000;padding:4px 9px;background:var(--wp-teal-soft);border:2px solid var(--wp-ink);border-radius:7px;white-space:nowrap}
+.wp-stage-tools{display:flex;align-items:center;justify-content:flex-end;gap:4px 12px;flex-wrap:wrap;min-width:0}
+.wp-stage-tools [data-wp-save-status]{text-align:right}
+.wp-stage-tools .wp-reset-button{min-height:44px;white-space:nowrap}
+.wp-reset-confirm{margin:14px 0;padding:16px;background:var(--wp-yellow-soft);border:2px solid var(--wp-ink);border-radius:12px}
+.wp-reset-confirm[hidden]{display:none}
+.wp-reset-confirm strong{font-size:15px}
+.wp-reset-confirm p{font-size:13px;margin:8px 0 12px}
+.wp-reset-confirm>div{display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap}
+
 .wp-stage>h3{margin:18px 0 12px}.wp-stage>p{font-size:14px;color:var(--wp-muted)}
 
 /* Read-and-fill facts. Checkbox sizing never affects numerical blanks. */
@@ -293,7 +302,7 @@ input.wp-fact-number.is-correct,.wp-fact-number.is-correct input{background:var(
   .wp-book-tabs{gap:10px}.wp-book-tabs button{flex:1;padding:11px 10px;font-size:14px!important}
   .wp-header-actions{gap:10px}.wp-header-actions button{font-size:12px!important;min-height:44px;padding:9px 12px}
   .wp-relation-pair{grid-template-columns:1fr}.wp-answer-grid{grid-template-columns:1fr}.wp-check-row{grid-template-columns:1fr}.wp-check-row .wp-answer-field{margin-top:0}
-  .wp-stage{padding:14px}.wp-stage-top{align-items:flex-start;gap:10px}.wp-stage-top>span{font-size:10px;text-align:right}
+  .wp-stage{padding:14px}.wp-stage-top{align-items:flex-start;gap:10px}.wp-stage-top [data-wp-save-status]{font-size:10px;text-align:right}
   .wp-keypad{padding:9px}.wp-keys{gap:6px}.wp-keys button{min-height:44px;font-size:17px!important}
   .wp-actions>div{gap:8px}.wp-actions .wp-primary,.wp-actions .wp-secondary{flex:1;padding:10px 8px;font-size:13px!important;white-space:nowrap}
   .wp-read-facts>label,.wp-read-facts>article,.wp-read-facts>.wp-read-fact,.wp-read-facts>.wp-fact-card,.wp-read-facts>.wp-fact-line{padding:12px}
