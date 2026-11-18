@@ -55,7 +55,10 @@ const practiceScript='_site/special-practice.js';
 const practiceSource=fs.readFileSync(practiceScript,'utf8');
 fs.writeFileSync(practiceScript,practiceSource.replace('__EQUATION_PRACTICE_VERSION__',equationBundle.digest('hex').slice(0,12)));
 const wordProblemBundle=createHash('sha256');
-for(const file of fs.readdirSync('_site/word-problems').sort())wordProblemBundle.update(file).update(fs.readFileSync('_site/word-problems/'+file));
+for(const file of fs.readdirSync('_site/word-problems',{recursive:true}).sort()){
+ const target='_site/word-problems/'+file;
+ if(fs.statSync(target).isFile())wordProblemBundle.update(file).update(fs.readFileSync(target));
+}
 const wordProblemEntry='_site/word-problems-entry.js';
 fs.writeFileSync(wordProblemEntry,fs.readFileSync(wordProblemEntry,'utf8').replace('__WORD_PROBLEMS_VERSION__',wordProblemBundle.digest('hex').slice(0,12)));
 let entry=fs.readFileSync('_site/index.html','utf8');

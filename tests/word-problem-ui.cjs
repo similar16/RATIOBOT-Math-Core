@@ -512,7 +512,7 @@ pinned.close();
 // Reading is now a cloze task, and relations must be assembled before the table gate opens.
 const interactive=fixture(),interactiveProblem=interactive.w.RatioWordProblemsData.find(p=>p.id==='L7-P1'),interactiveRoute=interactiveProblem.routes[0];
 interactive.app.start(interactiveProblem.id,true);
-assert.equal(interactive.$('.wp-stem').textContent,interactiveProblem.stem,'The original problem remains available for reading');
+assert.equal(interactive.$('.wp-stem').textContent,interactiveProblem.originalStem,'The source wording remains separate from modeling instructions');
 const blanks=[...interactive.host.querySelectorAll('[data-wp-fact]')];assert(blanks.length>0);assert(blanks.every(x=>x.value===''));
 assert.equal(interactive.host.querySelectorAll('[data-wp-condition]').length,0,'The pinned list starts empty until facts have been found');
 interactive.click('[data-wp-check]');assert(interactive.$('[data-wp-next]').disabled);assert(interactive.$('[aria-invalid="true"]'));
@@ -663,7 +663,7 @@ for(const [id,prefixes]of [['G9-08',['','x=','']],['L8-H1',['x=','y=','']],['PEP
  if(id==='PEP-P051')assert.equal(f.$('.wp-feedback-title')?.textContent,undefined,'A newly entered page has no stale success indicator');
  f.close();
 }
-for(const id of ['G9-06','G9-08','TB-R01','TB-I03','TB-I04']){
+for(const id of ['G9-06','G9-08','TB-R01','TB-I03','TB-I04','TB-I05']){
  const f=fixture(),problem=f.w.RatioWordProblemsData.find(p=>p.id===id),r=problem.routes[0];
  f.app.start(id,true);const old=clone(f.read().drafts[id]);f.app.destroy();
  Object.assign(old,{contentRevision:0,runId:'wp-legacy-'+id,scratchId:'wp-legacy-ink-'+id,step:6,finished:true,answersChecked:true,passed:Object.fromEntries([0,1,2,3,4,5,6].map(i=>[i,true])),values:{'f:formula:0':'2','a:1':'105','t:2:5':'old-calendar-expression'},updatedAt:new Date().toISOString()});
