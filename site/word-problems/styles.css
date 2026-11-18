@@ -243,7 +243,9 @@ input.wp-fact-number.is-correct,.wp-fact-number.is-correct input{background:var(
 .wp-answer-prefix{flex:none;white-space:nowrap;font-size:22px;font-weight:900}
 .wp-table-note{padding:12px 14px;border-left:4px solid var(--wp-teal);background:var(--wp-teal-soft);border-radius:0 9px 9px 0}
 .wp-original-figure{margin:12px 0}
-.wp-original-figure img{display:block;width:100%;height:auto;border:2px solid var(--wp-ink);border-radius:9px;background:#fff}
+.wp-original-figure img{display:block;width:100%;height:auto;border:0;border-radius:0;background:transparent}
+.wp-original-problem .wp-stem{white-space:pre-line}
+.wp-analysis-note{padding:10px 12px;border-left:3px solid var(--wp-yellow);font-size:12px;line-height:1.7;background:var(--wp-yellow-soft)}
 .wp-original-figure figcaption{font-size:12px;line-height:1.65;margin-top:8px;color:var(--wp-muted)}
 .wp-original-figure a{text-decoration:underline;text-underline-offset:3px}
 .wp-image-fallback{padding:12px;border:2px solid var(--wp-ink);border-radius:9px;background:var(--wp-yellow-soft)}

@@ -56,7 +56,7 @@ function chase(host,p){
 }
 function chess(host){
  let reveal=false;
- range(host,'选择观察的图案序号 n',6,1,1,(n,d,o)=>{
+ range(host,'选择观察的图案序号 n',18,1,1,(n,d,o)=>{
   o.textContent='第 '+n+' 幅';const side=n+1,step=Math.min(42,204/n),left=(640-n*step)/2,top=25,r=Math.min(12,step*.27);
   let body='';for(let row=0;row<side;row++)for(let col=0;col<side;col++){
    const black=row===0||col===0||row===col,x=left+col*step,y=top+row*step;
@@ -71,32 +71,12 @@ function chess(host){
   d.querySelector('button').onclick=()=>{reveal=!reveal;host.querySelector('input').dispatchEvent(new Event('input'));};
  },1);
 }
-function fish(host,p){
- const data=p.diagramData||{},source=data.sourceUrl||'https://www.zyjl.cn/ans_list_17weL4Q1.html';
- host.innerHTML='<figure class="wp-original-figure"><img data-wp-fish-source src="'+esc(data.imageUrl||'')+'" width="872" height="197" alt="相连火柴棒小鱼的同题原图，依次显示1条、2条、3条小鱼的搭法" referrerpolicy="no-referrer" decoding="async"><figcaption>'+esc(data.sourceLabel||'苏科版配套练习同题配图')+' · <a href="'+esc(source)+'" target="_blank" rel="noopener noreferrer">查看配图出处</a></figcaption><p class="wp-image-fallback" hidden>配图暂未加载.可点击上面的出处查看原图，再观察第一条与后续每条分别用了多少根火柴.</p></figure><div data-wp-fish-count></div>';
- const img=host.querySelector('[data-wp-fish-source]'),fallback=host.querySelector('.wp-image-fallback');
- const showFallback=()=>{img.hidden=true;fallback.hidden=false;};img.addEventListener('error',showFallback);
- const counter=host.querySelector('[data-wp-fish-count]');
- range(counter,'选择观察的小鱼条数 n（观察值）',4,1,1,(n,d,o)=>{
+function fish(host){
+ range(host,'选择观察的小鱼条数 n（观察值）',4,1,1,(n,d,o)=>{
   o.textContent=n+' 条';
-  d.innerHTML=note('对照上方原图：第一条用8根；后加一条仍有8条边，其中2根与已有图形共用.下方计算只说明计数依据，不另画改变外形的小鱼.')+
+  d.innerHTML=note('对照原题中的透明配图：第一条用8根；后加一条仍有8条边，其中2根与已有图形共用.共用的火柴只计一次.')+
    '<p>每次新添：'+equation('8-2',6)+' 根</p><p>后续小鱼条数：'+equation(n+'-1',n-1)+' 条</p><p>总根数：'+equation('8+('+n+'-1)*(8-2)',8+(n-1)*6)+' 根</p>';
  },1);
- mounted.set(host,()=>{img.removeEventListener('error',showFallback);destroy(counter);});
-}
-function pagoda(host,p){
- const data=p.diagramData||{},layers=data.layers||7,ratio=data.ratio||2,total=data.total||381;
- let body='';
- for(let i=0;i<layers;i++){
-  const width=148+i*40,left=300-width/2,right=300+width/2,y=24+i*53;
-  body+='<polygon points="'+(left-20)+','+(y+13)+' '+left+','+y+' '+right+','+y+' '+(right+20)+','+(y+13)+'" fill="#F7D56B" stroke="#3E3540" stroke-width="2"/>'+
-   '<rect x="'+left+'" y="'+(y+13)+'" width="'+width+'" height="32" fill="'+(i%2?'#CDEFF1':'#FFFDF8')+'" stroke="#3E3540" stroke-width="2"/>'+
-   '<text x="300" y="'+(y+36)+'" text-anchor="middle" fill="#3E3540" font-size="24">'+(i===0?'顶层：x 盏':'第'+(i+1)+'层')+'</text>';
-  if(i<layers-1)body+=line(550,y+28,550,y+66,'#35B8C8',3)+'<path d="M544 '+(y+58)+' L550 '+(y+67)+' L556 '+(y+58)+'" fill="none" stroke="#35B8C8" stroke-width="3"/><text x="566" y="'+(y+54)+'" fill="#3E3540" font-size="24">×'+ratio+'</text>';
- }
- body+=line(75,402,525,402,'#3E3540',4)+'<text x="300" y="440" text-anchor="middle" fill="#3E3540" font-size="25">'+layers+'层灯数相加，共'+total+'盏</text>';
- host.innerHTML=note('依据题意绘制的示意图：从顶层向下，每下一层的灯数是上一层的'+ratio+'倍.塔的外形不表示灯的具体数量.')+svg(body,'七层宝塔灯数关系','顶层灯数设为x，每下一层乘2，七层灯数之和为381.',462)+
-  '<details class="wp-pagoda-count"><summary>逐层写出灯数的来源</summary>'+Array.from({length:layers},(_,i)=>'<p>'+(i===0?'顶层':'向下第'+(i+1)+'层')+'：'+math('x'+('*'+ratio).repeat(i))+' 盏</p>').join('')+'</details>';
 }
 function rhombi(host){
  range(host,'选择观察的大菱形个数 n',6,1,1,(n,d,o)=>{
@@ -131,7 +111,7 @@ function work(host,p){
 function destroy(host){mounted.get(host)?.();mounted.delete(host);host?.replaceChildren();}
 function mount(host,problem,route){
  if(!host)return()=>{};destroy(host);
- const renderers={age,chase,chess,fish,pagoda,rhombi,tiers,work};
+ const renderers={age,chase,chess,fish,rhombi,tiers,work};
  if(renderers[problem?.diagram])renderers[problem.diagram](host,problem,route);
  return()=>destroy(host);
 }
