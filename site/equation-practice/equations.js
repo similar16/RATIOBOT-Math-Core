@@ -164,6 +164,7 @@
       }
       formElement.addEventListener('math-entry-ready', () => { currentRun.started ??= performance.now(); }, { once: true });
       entry.install(formElement, 'equation', true, {
+        variable: q.variable,
         open: currentRun.keyboardOpen,
         onToggle: open => { currentRun.keyboardOpen = open; },
       });

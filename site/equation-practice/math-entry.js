@@ -32,7 +32,7 @@ function install(form,kind='algebra',compact=false,disclosure){
  if(kind==='equation')keys[keys.indexOf('乘方')]='×';
  const names={'⌫':'删除','←':'光标左移','→':'光标右移','↑':'光标上移','↓':'光标下移','退出':'移到分数或指数后','分数':'插入分数','乘方':'插入指数'};
  const html=k=>`<button type="button" data-math-key="${k}" aria-label="${names[k]||k}" class="formula-key ${k.length>1?'word-key':''}">${k==='分数'?'<span class="fraction-icon"><i>□</i><i>□</i></span>':k==='乘方'?'<span>x<sup>□</sup></span>':k}</button>`;
- section.innerHTML='<div class="keypad-heading"><span>点按公式可移动光标</span><button type="button" class="text-button keypad-next">下一空 →</button></div><div class="formula-keys">'+keys.map(html).join('')+'</div>'+(kind!=='rational'?'<div class="formula-letters">'+(kind==='equation'?['x','y','÷']:['x','y','a','b','m','n']).map(html).join('')+'</div>':'');
+ section.innerHTML='<div class="keypad-heading"><span>点按公式可移动光标</span><button type="button" class="text-button keypad-next">下一空 →</button></div><div class="formula-keys">'+keys.map(html).join('')+'</div>'+(kind!=='rational'?'<div class="formula-letters">'+(kind==='equation'?[...new Set([disclosure?.variable,'x','y','a','b','m','n'].filter(k=>/^[a-z]$/.test(k)))].concat('÷'):['x','y','a','b','m','n']).map(html).join('')+'</div>':'');
  if(compact){
   const details=document.createElement('details');
   details.className='keypad-disclosure';
@@ -51,7 +51,7 @@ function install(form,kind='algebra',compact=false,disclosure){
   details.append(summary,section);
   form.append(details);
  }else{const row=form.querySelector('.button-row');if(row)row.before(section);else form.append(section)}
- const more=document.createElement('details');more.className='more-symbols';more.innerHTML='<summary>更多符号</summary><div class="formula-letters">'+['c','t','z','π','×','÷'].map(html).join('')+'</div>';if(kind!=='equation')section.append(more);
+ const more=document.createElement('details');more.className='more-symbols';more.innerHTML='<summary>更多符号</summary><div class="formula-letters">'+(kind==='equation'?'abcdefghijklmnopqrstuvwxyz'.split(''):['c','t','z','π','×','÷']).map(html).join('')+'</div>';section.append(more);
  section.addEventListener('pointerdown',ev=>{if(ev.target.closest('button'))ev.preventDefault()});section.addEventListener('click',ev=>{if(ev.target.closest('.keypad-next')){const a=ctx.fields.filter(f=>!f.mf.readOnly&&!f.mf.closest('[hidden]'));ctx.active=a[(a.indexOf(ctx.active)+1)%a.length];ctx.active?.mf.focus();return}const b=ev.target.closest('[data-math-key]');if(!b||!ctx.active||ctx.active.mf.readOnly)return;const mf=ctx.active.mf,k=b.dataset.mathKey;mf.focus({preventScroll:true});const cmds={'⌫':'deleteBackward','←':'moveToPreviousChar','→':'moveToNextChar','↑':'moveUp','↓':'moveDown','退出':'moveAfterParent'};
  if(cmds[k])mf.executeCommand(cmds[k]);else if(k==='清空'){mf.executeCommand('selectAll');mf.executeCommand('deleteBackward')}else if(k==='分数')mf.insert('\\frac{#0}{#?}',{selectionMode:'placeholder'});else if(k==='乘方')mf.executeCommand('moveToSuperscript');else mf.insert({'−':'-','π':'\\pi','×':'\\times','÷':'\\div'}[k]||k);mf.dispatchEvent(new Event('input',{bubbles:true}));sync(ctx)});sync(ctx);
  }).catch(err=>{loading.hidden=false;loading.textContent=err.message});
