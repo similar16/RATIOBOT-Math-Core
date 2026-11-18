@@ -24,7 +24,7 @@ assert.equal(cm.sum.length,2);assert.equal(cm.product.length,2);
 assert.equal(cr.equations.length,0);assert.equal(cr.answers.length,0);assert(!cr.additionalVariables.find(v=>v.variable==='S').known);
 assert.match(cr.tableNote,/左、右、上、下/);assert.equal(cr.checks.length,0);
 const F=require(path.join(base,'reading.js'));
-assert(!calendar.facts.some(f=>f.id==='center'),'Calendar keeps only the basic frame facts');
+assert.equal(calendar.facts.find(f=>f.id==='center').numericBlanks,false);assert.equal(F.build(calendar).facts.find(f=>f.id==='center').fields.length,0,'The one-frame convention remains a readable statement');
 assert.equal(R.reference(calendar,cr).sum.length,0,'Calendar references contain no extra additive relations');
 const life=find('TB-A37'),lifeReference=R.reference(life,life.routes[0]);assert.equal(lifeReference.sum.length,1);assert.equal(lifeReference.sum[0].terms.length,6,'All six life stages share one addition relationship');
 const half=find('TB-I05');assert(!half.facts.some(f=>/平均分|其中1份/.test(f.text)));assert.equal(F.build(half).facts.find(f=>f.id==='half').fields.length,0);assert.equal(R.reference(half,half.routes[0]).product.length,0);
