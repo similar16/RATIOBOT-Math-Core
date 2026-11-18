@@ -175,6 +175,7 @@
       });
       formElement.onsubmit = event => {
         event.preventDefault();
+        if (!formElement.isConnected || run !== currentRun || run.correction || !canUse()) return;
         saveDraft(formElement);
         run.answers[run.index] = Object.fromEntries(new FormData(formElement));
         if (!last) return goTo(run.index + 1);

@@ -366,6 +366,7 @@ async function submit(event) {
  event.preventDefault();
  if (!check() || !run || run.submitted || run.saving) return;
  const current = run, card = current.card, form = page.querySelector('#spForm');
+ if (event.currentTarget !== form) return;
  current.saving = true;
  try {
   const entered = readFields(form,card);
