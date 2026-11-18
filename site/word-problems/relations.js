@@ -336,6 +336,15 @@
   return {id:key,sum,product,tokens:labels.map(label=>({id:label,label})),count:sum.length+product.length,notes:[...(raw.notes||[])],empty:{sum:sum.length?'':'本题没有需要拼接的加和等式.',product:product.length?'':'本题没有需要拼接的乘积等式.'}};
  }
  function canonical(model){return {sum:model.sum.map(r=>[...r.terms,r.result]),product:model.product.map(r=>[...r.terms,r.result])};}
+ // Modeling references are available on demand. They are never completion gates.
+ function reference(problem,route){
+  const model=build(problem,route);
+  if(problem.id==='TB-A37')model.sum=[{terms:['童年年数','童年后至长出胡须年数','长出胡须至结婚年数','结婚至生子年数','孩子一生年数','孩子去世后年数'],result:'一生年数'}];
+  if(problem.id==='TB-I05'){model.sum=[{terms:['a的二分之一','2'],result:'5'}];model.product=[];}
+  if(problem.id==='TB-R01')model.sum=[];
+  model.count=model.sum.length+model.product.length;
+  return model;
+ }
  // Only a small number of tasks benefit from a separate relationship activity.
  // Indices refer to the original authored rows, which remain available for old records.
  const practicePolicy={
@@ -394,5 +403,5 @@
   }
   return {ok:true,kind:'correct',message:'关系正确；同类关系的先后顺序以及加数、乘数的顺序都可以交换.'};
  }
- return {build,practice,practiceAnswers,canonical,check,normalizeToken};
+ return {build,reference,practice,practiceAnswers,canonical,check,normalizeToken};
 });

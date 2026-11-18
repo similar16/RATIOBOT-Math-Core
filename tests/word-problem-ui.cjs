@@ -5,7 +5,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { JSDOM } = require('jsdom');
 const base = path.resolve(process.env.SITE_DIR || 'site', 'word-problems');
-const files = ['engine.js','progress.js','data-l7-l8.js','data-l9-review.js','data-textbook-intro.js','data-textbook-applications.js','data-textbook-review.js','data-pep-foundations.js','data-pep-applications.js','data-pep-review.js','catalog.js','table-alternatives.js','textbook-index.js','supplement-index.js','reading.js','relations.js','relation-builder.js','scratchpad.js','diagrams.js','app.js'];
+const files = ['engine.js','math-input.js','progress.js','data-l7-l8.js','data-l9-review.js','data-textbook-intro.js','data-textbook-applications.js','data-textbook-review.js','data-pep-foundations.js','data-pep-applications.js','data-pep-review.js','catalog.js','table-alternatives.js','textbook-index.js','supplement-index.js','reading.js','relations.js','relation-builder.js','scratchpad.js','diagrams.js','app.js'];
 const sources = files.map(file => ({ file, text:fs.readFileSync(path.join(base,file),'utf8') }));
 const clone = v => JSON.parse(JSON.stringify(v));
 const counts = { routes:0, sourceSteps:0, writableCells:0, equations:0, completed:0 };
@@ -48,7 +48,7 @@ function fixture() {
  const currentStep=()=>Number($('[aria-current="step"]')?.dataset.wpStep);
  const feedback=()=>$('.wp-feedback')?.textContent||'';
  function expectPassed(step,where){assert.equal(currentStep(),step,where+' is current step');const next=$('[data-wp-next]');assert(next&&!next.disabled,where+' did not pass: '+feedback());}
- function checkAndNext(step,where){assert($('.wp-stage-top [data-wp-restart]'),'Reset remains available at '+where);click('[data-wp-check]');expectPassed(step,where);click('[data-wp-next]');assert.equal(currentStep(),step===3?5:step+1,where+' advances');}
+ function checkAndNext(step,where){assert($('.wp-stage-top [data-wp-restart]'),'Reset remains available at '+where);click('[data-wp-check]');expectPassed(step,where);click('[data-wp-next]');assert.equal(currentStep(),step===3?5:step===0&&read().drafts[$('[data-wp-current-problem]').dataset.wpCurrentProblem]?.problemId==='S01'?2:step+1,where+' advances');}
  function completeScratch(where,route){
   assert.equal(currentStep(),5,where+' reaches the scratchpad and answer confirmation');
   assert.equal($('.wp-stage h3')?.textContent,'在草稿纸上解方程并确认答案');
@@ -76,16 +76,7 @@ function fixture() {
   for(const [key,value]of Object.entries(w.RatioWordProblemReading.canonical(problem)))textInput('[data-wp-fact="'+key+'"]',value);
   host.querySelectorAll('[data-wp-seen]').forEach(checkBox);checkAndNext(0,'Read source facts');
  }
- function fillRelations(problem,route){
-  const model=w.RatioWordProblemRelations.practice(problem,route),answer=w.RatioWordProblemRelations.canonical(model);
-  for(const kind of ['sum','product'])for(const [i,row]of answer[kind].slice().reverse().entries()){
-   const swapped=[row[1],row[0],row[2]];
-   for(const [j,id]of swapped.entries()){
-    click([...host.querySelectorAll('[data-wp-token]')].find(b=>b.dataset.wpToken===id));
-    click('[data-wp-rel-slot="'+kind+':'+i+':'+j+'"]');
-   }
-  }
- }
+ function fillRelations(){assert.equal(host.querySelectorAll('[data-wp-rel-slot],[data-wp-token]').length,0,'Modeling references never require dragging');}
 
  function selectRoute(routeId){const b=[...host.querySelectorAll('[data-wp-route]')].find(x=>x.dataset.wpRoute===routeId);assert(b,'Route '+routeId);click(b);}
  function fillDerivations(route){
@@ -102,18 +93,18 @@ function fixture() {
   app.start(problem.id,true);
   assert.equal(currentStep(),0);
   assert($('[data-wp-next]').disabled,'No advancing before source step passes');
-  confirmFacts();selectRoute(route.id);fillDerivations(route);checkAndNext(1,problem.id+'/'+route.id+' derivations');
-  const practice=w.RatioWordProblemRelations.practice(problem,route);
-  assert.equal(host.querySelectorAll('[data-wp-rel-slot]').length,practice.count*3,'Render only selected relationship slots');
-  assert.equal(host.querySelectorAll('.wp-relation-group').length,practice.count,'No empty sibling relationship panel');
-  if(!practice.count){assert(!$('[data-wp-relation-mount]'));assert.match($('.wp-stage').textContent,/根据题目条件直接填写数量表/);}
+  confirmFacts();if(!route.reverseModel){selectRoute(route.id);fillDerivations(route);checkAndNext(1,problem.id+'/'+route.id+' derivations');}
+  const reference=$('.wp-relation-reference');
+  if(reference)assert(!reference.open,'Modeling references start collapsed');
+  assert.equal(host.querySelectorAll('[data-wp-rel-slot],[data-wp-token]').length,0);
+  assert($('.wp-original-problem').open,'The original problem stays expanded at every stage');
   const manual=!!route.discussion||['open','boundary'].includes(problem.kind);
-  if(manual)textInput('[data-wp-discussion]','这个表达式由题目给出的数量与关系得到，需要说明所用条件及单位。');
+  if(manual&&!route.reverseModel)textInput('[data-wp-discussion]','这个表达式由题目给出的数量与关系得到，需要说明所用条件及单位。');
   else route.table.rows.forEach((row,ri)=>row.cells.forEach((cell,ci)=>{
    if(cell.expr&&!cell.given){setInput('t:'+ri+':'+ci,cell.expr);counts.writableCells++;}
   }));
   fillRelations(problem,route);checkAndNext(2,problem.id+'/'+route.id+' table');
-  assert.equal(host.querySelectorAll('[data-wp-rel-slot]').length,practice.count*3,'Equation page repeats only the retained relationship');
+  assert.equal(host.querySelectorAll('[data-wp-rel-slot]').length,0,'The equation page uses read-only references');
   assert(!$('[data-wp-closure]')&&!$('.wp-closure-choices'),'Modeling has no duplicate condition-selection gate');
   if(manual)textInput('[data-wp-discussion]','需要检查方程的适用范围、题目是否给出充分条件，以及所求数量的实际取值要求。');
   else (route.equations||[]).forEach((equation,i)=>{setInput('e:'+i,equation.left+'='+equation.right);counts.equations++;});
@@ -139,11 +130,12 @@ function fixture() {
  };
 }
 
+(async()=>{
 // Every authored normal, branching, arithmetic, open and boundary route reaches its appropriate saved record.
 const all=fixture();
 const data=all.w.RatioWordProblemsData;
 assert.equal(data.length,150);
-for(const problem of data)for(const route of problem.routes)all.canonicalRoute(problem,route);
+for(const problem of data)for(const route of problem.routes){all.canonicalRoute(problem,route);if(counts.routes%10===0)await new Promise(resolve=>setImmediate(resolve));}
 assert.equal(counts.routes,data.reduce((sum,p)=>sum+p.routes.length,0));
 assert.equal(counts.completed,counts.routes);
 assert.equal(all.read().records.length,counts.routes);
@@ -151,20 +143,17 @@ assert.equal(all.read().records.filter(r=>r.problemId==='L8-P2-Q4').length,1,'Bo
 assert.equal(all.read().records.find(r=>r.problemId==='S06').status,'review','Parameter classification remains teacher-reviewed discussion');
 assert.equal(all.read().records.find(r=>r.problemId==='G10-04').status,'review','Nonlinear boundary is not marked a solved linear exercise');
 assert(all.read().records.every(r=>r.first===r.total),'Canonical independent routes pass on their first attempts');
-const monthlyRecord=all.read().records.find(r=>r.problemId==='S09');
-assert(Object.keys(monthlyRecord.values).filter(k=>k.startsWith('r:')).every(k=>k.startsWith('r:sum:3:')),'Visible relationship rows use their original saved address');
-assert.match(monthlyRecord.valueLabels['r:sum:3:0'],/加和关系第1行/,'Teacher records label the single visible row as row one');
-const footballRecord=all.read().records.find(r=>r.problemId==='TB-I17');
-assert(!Object.keys(footballRecord.values).some(k=>k.startsWith('r:')),'Football completes without any relationship-card answers');
-const bypassed=clone(all.read().records.find(r=>r.problemId==='L7-P1'));bypassed.runId='wp-missing-core-relation';
-for(const key of Object.keys(bypassed.values))if(key.startsWith('r:'))delete bypassed.values[key];
-assert.throws(()=>all.w.RatioWordProblemProgress.complete(all.read(),bypassed,data.find(p=>p.id===bypassed.problemId),data.find(p=>p.id===bypassed.problemId).routes[0]),/关键数量关系/,'Completion still grades a retained relationship');
+assert(all.read().records.every(r=>!Object.keys(r.values).some(k=>k.startsWith('r:'))),'All tasks complete without relationship-card answers');
+all.app.open();
+assert(all.host.querySelectorAll('.wp-problem-card.is-completed').length>0,'Completed tasks use a distinct card state');
+assert(all.host.querySelectorAll('.wp-problem-card.is-completed').length<all.host.querySelectorAll('.wp-problem-card').length,'Open discussions remain distinct from finished tasks');
 // The progress layer must not create duplicate completions on replay/retry.
 const latest=all.read().records[0],latestProblem=data.find(p=>p.id===latest.problemId),latestRoute=latestProblem.routes.find(r=>r.id===latest.routeId);
 const duplicated=all.w.RatioWordProblemProgress.complete(all.read(),latest,latestProblem,latestRoute);
 assert.equal(duplicated.record,null);
 assert.equal(duplicated.state.records.length,all.read().records.length);
 all.close();
+await new Promise(resolve=>setImmediate(resolve));
 
 // A correct multiplier is still incomplete without its source calculation and the chosen basis.
 const provenance=fixture(),shirt=provenance.w.RatioWordProblemsData.find(p=>p.id==='L8-H1'),shirtRoute=shirt.routes[0];
@@ -539,18 +528,17 @@ assert(interactive.$('[data-wp-next]').disabled,'A filled but incorrect quantity
 assert.equal(interactive.$('[data-wp-fact="'+wrongFactKey+'"]').getAttribute('aria-invalid'),'true','The incorrect numerical field is identified');
 interactive.confirmFacts();interactive.fillDerivations(interactiveRoute);interactive.checkAndNext(1,'Quantity cloze confirmed');
 interactiveRoute.table.rows.forEach((row,ri)=>row.cells.forEach((cell,ci)=>{if(cell.expr&&!cell.given)interactive.setInput('t:'+ri+':'+ci,cell.expr);}));
-assert(interactive.host.querySelectorAll('[data-wp-rel-slot]').length>0);assert.equal(interactive.host.querySelectorAll('[data-wp-rel-slot][data-filled="true"]').length,0);
-interactive.click('[data-wp-check]');assert(interactive.$('[data-wp-next]').disabled,'Correct numeric table cannot bypass empty relationship boxes');
-interactive.fillRelations(interactiveProblem,interactiveRoute);interactive.click('[data-wp-check]');interactive.expectPassed(2,'Reordered drag relationships and table');
+assert.equal(interactive.host.querySelectorAll('[data-wp-rel-slot]').length,0);
+assert(!interactive.$('.wp-relation-reference').open);
+interactive.click('.wp-relation-reference summary');assert(interactive.$('.wp-relation-reference').open,'Relationship references open when requested');
+interactive.click('[data-wp-check]');interactive.expectPassed(2,'Table passes without assembling any relationships');
 interactive.click('[data-wp-next]');
-interactive.click('[data-wp-example]');interactive.checkAndNext(3,'Relation edit prerequisite');
-assert.equal(interactive.currentStep(),5,'The combined modeling page opens calculation directly');
-assert.equal(interactive.read().drafts[interactiveProblem.id].passed[3],true);
-assert.equal(interactive.read().drafts[interactiveProblem.id].passed[4],true);
+interactive.click('[data-wp-example]');interactive.checkAndNext(3,'Read-only relationship reference');
 interactive.click('[data-wp-step="2"]');
-interactive.click('[data-wp-rel-remove]');assert(interactive.$('[data-wp-next]').disabled,'Editing a checked relationship reopens dependent gates');
-assert(interactive.$('[data-wp-step="3"]').disabled,'The combined condition-and-equation page is invalidated');
-interactive.click('[data-wp-step="3"]');assert.equal(interactive.currentStep(),2);
+interactive.click('.wp-relation-reference summary');assert(!interactive.$('[data-wp-next]').disabled,'Opening a reference does not invalidate checked work');
+const changedTable=interactive.$('[data-wp-input]');interactive.setInput(changedTable.dataset.wpInput,'9999');
+assert(interactive.$('[data-wp-next]').disabled,'Editing the table reopens dependent gates');
+assert(interactive.$('[data-wp-step="3"]').disabled,'The equation page depends on the table');
 interactive.close();
 
 // Removing obvious relationship cards leaves the mathematical table checks in place.
@@ -563,6 +551,17 @@ football.setInput(footballKey,'9999');football.click('[data-wp-check]');assert(f
 football.setInput(footballKey,footballCorrect);football.checkAndNext(2,'Football direct table');
 assert(!football.$('[data-wp-relation-mount]')&&!football.$('.wp-relation-builder'),'Football equation page has no relationship cards');
 football.close();
+
+// The inverse story task first decomposes the equation, then requires real table entries.
+const story=fixture(),storyProblem=story.w.RatioWordProblemsData.find(p=>p.id==='S01'),storyRoute=storyProblem.routes[0];
+story.app.start('S01',true);
+assert.deepEqual([...story.host.querySelectorAll('.wp-steps button')].slice(0,2).map(b=>b.textContent),['1拆表','2填写数量表']);
+assert(story.$('.wp-equation-parts'));story.click('[data-wp-example]');story.checkAndNext(0,'Inverse story decomposition');
+assert.equal(story.currentStep(),2);assert(!story.$('[data-wp-discussion]'));assert(!story.$('.wp-stage').textContent.includes('这张表表达了哪些关系'));
+assert.equal(story.host.querySelectorAll('[data-wp-input]').length,3,'The story quantity table is writable');
+story.click('[data-wp-check]');assert(story.$('[data-wp-next]').disabled,'The table cannot pass with empty entries');
+story.click('[data-wp-example]');story.checkAndNext(2,'Inverse story quantity table');
+assert.match(story.$('.wp-stage h3').textContent,/编写应用题/);assert(story.$('[data-wp-discussion]'));story.close();
 
 // Historical records survive the new interaction version; drafts cannot skip the new activities.
 const migrated=fixture(),migrationProblem=migrated.w.RatioWordProblemsData.find(p=>p.id==='L7-P1');
@@ -694,7 +693,7 @@ for(const id of ['G9-06','G9-08','TB-R01','TB-I03','TB-I04','TB-I05']){
  const history={...old,title:id==='G9-08'?'三个连续奇数的积':'旧版本题目',status:'independent',at:old.updatedAt,valueLabels:{'a:1':'旧版三个奇数的积'}};
  f.accounts.set(f.owner,{version:1,records:[history],drafts:{[id]:old}});
  f.remount().start(id);
- const current=f.read().drafts[id];assert.equal(current.contentRevision,1);assert.equal(f.currentStep(),0);assert.equal(current.finished,false);
+ const current=f.read().drafts[id];assert.equal(current.contentRevision,f.w.RatioWordProblemsData.find(p=>p.id===id).contentRevision);assert.equal(f.currentStep(),0);assert.equal(current.finished,false);
  assert.notEqual(current.runId,old.runId);assert.notEqual(current.scratchId,old.scratchId);assert.deepEqual(clone(current.values),{});assert.deepEqual(clone(current.passed),{});
  assert.equal(f.read().records[0].values['a:1'],'105');assert.equal(f.read().records[0].valueLabels['a:1'],'旧版三个奇数的积');
  assert.match(f.feedback(),/以前已提交的记录完整保留/);
@@ -773,7 +772,7 @@ calendarSimple.close();
  const upgrading=fixture();upgrading.app.start('L8-H1',true);
  for(let step=0;step<3;step++){upgrading.click('[data-wp-example]');upgrading.checkAndNext(step,'Delayed editor setup '+step);}
  upgrading.setInput('e:1','10+').focus();
- class FakeMathfield extends upgrading.w.HTMLElement{constructor(){super();this.value='';}insert(value){this.value+=value;}}
+ class FakeMathfield extends upgrading.w.HTMLElement{constructor(){super();this.value='';}insert(value){this.value+=value;}set inlineShortcuts(value){assert(this.isConnected,'MathLive options require a mounted field');this._shortcuts=value;}get inlineShortcuts(){return this._shortcuts;}}
  upgrading.w.customElements.define('math-field',FakeMathfield);upgrading.w.MathfieldElement=FakeMathfield;
  const loader=upgrading.w.document.querySelector('script[src*="mathlive.min.js"]');assert(loader);loader.onload();
  await Promise.resolve();await Promise.resolve();
@@ -787,3 +786,5 @@ calendarSimple.close();
 
 console.log('PASS word-problem UI:',JSON.stringify(counts));
 console.log('Verified complete authored flows, explicit percent origins, source gating, prerequisite invalidation, ungraded scratchpad transition, pupil-equation preview, direct verification save, answer revisions, v1/v2/v3 draft migration, identity isolation and teacher preview.');
+
+})().catch(error=>{console.error(error);process.exitCode=1;});

@@ -23,6 +23,12 @@ assert.deepEqual(cr.table.rows.map(r=>r.cells[0].expr),['x','x-1','x+1','x-7','x
 assert.equal(cm.sum.length,2);assert.equal(cm.product.length,2);
 assert.equal(cr.equations.length,0);assert.equal(cr.answers.length,0);assert(cr.additionalVariables.find(v=>v.variable==='s').known);
 assert.match(cr.tableNote,/不同框、不同轮次/);
+const F=require(path.join(base,'reading.js'));
+assert.equal(F.build(calendar).facts.find(f=>f.id==='center').fields.length,0,'Calendar convention does not turn one frame into a numeric blank');
+assert.equal(R.reference(calendar,cr).sum.length,0,'Calendar references contain no extra additive relations');
+const life=find('TB-A37'),lifeReference=R.reference(life,life.routes[0]);assert.equal(lifeReference.sum.length,1);assert.equal(lifeReference.sum[0].terms.length,6,'All six life stages share one addition relationship');
+const half=find('TB-I05');assert(!half.facts.some(f=>/平均分|其中1份/.test(f.text)));assert.equal(F.build(half).facts.find(f=>f.id==='half').fields.length,0);assert.equal(R.reference(half,half.routes[0]).product.length,0);
+assert.equal(find('S01').routes[0].reverseModel,true,'The story task starts from its given equation');
 const percent=find('PEP-P063').routes[0];assert.equal(percent.unit,'');assert.equal(percent.answers[0].unit,'');
 assert.match(percent.conclusion,/25%/);
 for(const problem of [trapezoid,odd,calendar]){

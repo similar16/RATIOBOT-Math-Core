@@ -358,3 +358,13 @@ input.wp-fact-number.is-correct,.wp-fact-number.is-correct input{background:var(
  .wp-scratchpad-expanded .wp-scratchpad-status{font-size:11px!important;margin-top:8px!important}
  .wp-scratchpad-expanded .wp-scratchpad-help{font-size:11px!important}
 }
+
+/* Optional modeling references and a quiet completed state. */
+.wp-problem-card.is-completed,.wp-problem-card.is-completed:hover{background:#f3f3f3}
+.wp-steps button.is-completed:not([aria-current=step]){background:#f3f3f3}
+.wp-relation-reference{margin:16px 0 20px;border-block:1px solid rgba(62,53,64,.18);padding:12px 0}
+.wp-relation-reference>summary{cursor:pointer;font-size:13px;font-weight:700}
+.wp-relation-reference>div{display:grid;gap:14px;padding:12px 0 0;min-width:0}
+.wp-relation-reference h4{font-size:13px!important;margin:0 0 7px!important}
+.wp-relation-reference p{font-size:13px!important;line-height:1.8;overflow-wrap:anywhere;margin:6px 0!important}
+.wp-equation-parts{padding:8px 14px;background:rgba(82,107,135,.05);border-radius:10px;margin:16px 0}
