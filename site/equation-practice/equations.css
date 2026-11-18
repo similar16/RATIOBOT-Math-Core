@@ -205,3 +205,16 @@
 @media (max-width: 370px) {
   #equations .formula-keys { grid-template-columns: repeat(5, minmax(0, 1fr)); }
 }
+#equations .equation-correction-summary {
+  border: 2px solid #ad3939;
+  border-left-width: 6px;
+  background: #fff2ef;
+  margin-bottom: 14px;
+}
+#equations .equation-correction-summary h2 { margin: 0; color: #852b2b; font-size: 21px; }
+#equations .equation-error-list { padding: 0; margin: 10px 0 0; list-style: none; }
+#equations .equation-error-list li { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; margin: 6px 0; }
+#equations .equation-part-status { font-size: 14px; }
+#equations .equation-part-status.needs-repair { color: #852b2b; font-weight: 750; }
+#equations .equation-first-entry { overflow-x: auto; color: #852b2b; }
+#equations #equation-repair-feedback:not(:empty) { border-left: 4px solid #ad3939; color: #852b2b; font-weight: 650; }
