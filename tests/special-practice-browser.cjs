@@ -200,10 +200,18 @@ async function run() {
   } finally {
     clearTimeout(timer);
     if(chrome?.pid&&chrome.exitCode===null&&chrome.signalCode===null){
-      const stopped=once(chrome,'exit');chrome.kill('SIGKILL');await stopped;
+      const stopped=once(chrome,'exit');
+      // A hard kill of only the parent leaves Chrome children writing profile
+      // files during rmSync. Close the browser tree normally before removal.
+      const forceStop=setTimeout(()=>chrome.kill('SIGKILL'),5000);
+      try {
+        if(client)await client.call('Browser.close').catch(()=>{});
+        else chrome.kill('SIGTERM');
+        await stopped;
+      } finally {clearTimeout(forceStop);}
     }
     server.closeAllConnections();server.close();
-    fs.rmSync(profile,{recursive:true,force:true,maxRetries:5,retryDelay:100});
+    fs.rmSync(profile,{recursive:true,force:true,maxRetries:10,retryDelay:200});
   }
 }
 if(process.env.GITHUB_ACTIONS==='true')run().catch(error=>{console.error(error);process.exitCode=1;});
