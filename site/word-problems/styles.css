@@ -413,3 +413,5 @@ input.wp-fact-number.is-correct,.wp-fact-number.is-correct input{background:var(
 .wp-answer-input-line .wp-answer-unit{flex:none;white-space:nowrap;font-size:13px;color:var(--wp-muted)}
 
 .wp-answer-input-line .wp-editor-host input,.wp-answer-input-line .wp-editor-host math-field{box-sizing:border-box;min-width:0}
+
+.wp-relation-equation.is-multi-term{display:flex;flex-wrap:wrap}.wp-relation-equation.is-multi-term>.wp-relation-cell{flex:1 0 100px;min-width:0}

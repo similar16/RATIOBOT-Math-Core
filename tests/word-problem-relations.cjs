@@ -130,3 +130,6 @@ assert.equal(selected.sum[0].sourceIndex,3,'The single visible row retains its o
 console.log('PASS selective relationship practice:',JSON.stringify(practiceCounts));
 console.log('PASS quantity relationship cards:',JSON.stringify(counts));
 console.log('Verified all routes, reversible left terms, arbitrary row order, fixed result roles, reusable quantities, absent relations and multi-step sums/products.');
+
+for(const p of allData)for(const route of p.routes){const m=R.reference(p,route);assert.equal(R.check(m,R.canonical(m)).ok,true,p.id+'/'+route.id+' original reference can be assembled');assert.deepEqual(m.tokens.map(t=>t.id),[...new Set([...m.sum,...m.product].flatMap(r=>[...r.terms,r.result]))]);}
+console.log('PASS all original reference models include usable quantity cards, including simplified half and combined Diophantus sum');

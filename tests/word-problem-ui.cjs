@@ -10,7 +10,7 @@ const sources = files.map(file => ({ file, text:fs.readFileSync(path.join(base,f
 const clone = v => JSON.parse(JSON.stringify(v));
 const counts = { routes:0, sourceSteps:0, writableCells:0, equations:0, completed:0 };
 
-function fixture() {
+function fixture(autoRelations=true) {
  const dom = new JSDOM('<!doctype html><html lang="zh-CN"><head></head><body><section id="host"></section></body></html>', {
   url:'https://test.invalid/RATIOBOT-Math-Core/', runScripts:'outside-only', pretendToBeVisual:true,
  });
@@ -41,7 +41,7 @@ function fixture() {
  };
  let app=w.RatioWordProblemApp.mount(host,bridge);
  const $=selector=>host.querySelector(selector);
- const click=selector=>{const e=typeof selector==='string'?$(selector):selector;assert(e,'Missing control '+selector);e.click();return e;};
+ const click=selector=>{const e=typeof selector==='string'?$(selector):selector;assert(e,'Missing control '+selector);e.click();if(autoRelations&&e.matches('[data-wp-next],[data-wp-new-model]')&&currentStep()===2&&$('[data-wp-table-pending]'))$('[data-wp-reference-reveal]').click();return e;};
  const textInput=(selector,value)=>{const e=$(selector);assert(e,'Missing input '+selector);e.value=value;e.dispatchEvent(new w.Event('input',{bubbles:true}));return e;};
  const setInput=(key,value)=>{const e=[...host.querySelectorAll('[data-wp-input]')].find(x=>x.dataset.wpInput===key);assert(e,'Missing formula '+key);e.value=value;e.dispatchEvent(new w.Event('input',{bubbles:true}));return e;};
  const checkBox=element=>{assert(element,'Missing checkbox');element.checked=true;element.dispatchEvent(new w.Event('change',{bubbles:true}));};
@@ -79,7 +79,7 @@ function fixture() {
   for(const [key,value]of Object.entries(w.RatioWordProblemReading.canonical(problem)))textInput('[data-wp-fact="'+key+'"]',value);
   host.querySelectorAll('[data-wp-seen]').forEach(checkBox);checkAndNext(0,'Read source facts');
  }
- function fillRelations(){const ref=$('.wp-relation-reference');if(ref)assert(!ref.open,'Quantity relation practice is optional and collapsed');}
+ function fillRelations(){if($('[data-wp-table-pending]'))click('[data-wp-reference-reveal]');if($('.wp-relation-reference')&&currentStep()===2&&!w.RatioWordProblemsData.find(p=>p.id===$('[data-wp-current-problem]').dataset.wpCurrentProblem)?.routes.find(r=>r.id===read().drafts[$('[data-wp-current-problem]').dataset.wpCurrentProblem]?.routeId)?.reverseModel)assert($('.wp-relation-reference').open,'Relations remain above the table');}
 
  function selectRoute(routeId){const b=[...host.querySelectorAll('[data-wp-route]')].find(x=>x.dataset.wpRoute===routeId);assert(b,'Route '+routeId);click(b);}
  function fillDerivations(route){
@@ -105,12 +105,12 @@ function fixture() {
   assert($('[data-wp-next]').disabled,'No advancing before source step passes');
   confirmFacts();if(!route.reverseModel){selectRoute(route.id);fillDerivations(route);checkAndNext(1,problem.id+'/'+route.id+' derivations');}
   const reference=$('.wp-relation-reference');
-  if(reference)assert(!reference.open,'Modeling references start collapsed');
+  if(reference)assert.equal(reference.open,!route.reverseModel,'Quantity relationships precede the table');
   fillRelations();
   assert($('.wp-original-problem').open,'The original problem stays expanded at every stage');
   const manual=!!route.discussion||['open','boundary'].includes(problem.kind);
   const variantsAvailable=problem.routes.some(r=>r.id!==route.id&&!r.discussion)||(route.table.signedDifferences||[]).length||route.table.rows.some((row,i)=>row.cells.some((c,j)=>!c.given&&!c.note&&((c.alternatives||[]).length||w.RatioWordProblemTableAlternatives.options(problem,route,i,j).length)));
-  if(!manual&&variantsAvailable){assert.equal($('.wp-more-models')?.tagName,'SECTION',problem.id+'/'+route.id+' has a visible options entry while filling the table');assert($('.wp-more-models').compareDocumentPosition($('.wp-quantity-table'))&w.Node.DOCUMENT_POSITION_FOLLOWING,'Options appear above the table');}
+  if(!manual&&variantsAvailable){assert.equal($('.wp-more-models')?.tagName,'SECTION',problem.id+'/'+route.id+' has a visible options entry while filling the table');assert($('.wp-quantity-table'),problem.id+'/'+route.id+' table is displayed after relationships: '+$('.wp-stage').textContent.slice(0,400));assert($('.wp-more-models').compareDocumentPosition($('.wp-quantity-table'))&w.Node.DOCUMENT_POSITION_FOLLOWING,'Options appear above the table');}
   if(manual&&!route.reverseModel)textInput('[data-wp-discussion]',route.table.rows.flatMap(row=>row.cells).find(c=>c.expr&&!c.given)?.expr||route.variable);
   else route.table.rows.forEach((row,ri)=>row.cells.forEach((cell,ci)=>{
    if(cell.expr&&!cell.given){setInput('t:'+ri+':'+ci,cell.expr);counts.writableCells++;}
@@ -153,19 +153,32 @@ function fixture() {
 
 (async()=>{
 // Every authored normal, branching, arithmetic, open and boundary route reaches its appropriate saved record.
-// Optional quantity relation builder: show, check, retry, and resume independently of table gates.
-const refPractice=fixture(),refProblem=refPractice.w.RatioWordProblemsData.find(p=>p.id==='L8-P1'),refRoute=refProblem.routes[0];
+// Quantity relations precede table construction: manual assembly, reveal, retry and resume.
+const refPractice=fixture(false),refProblem=refPractice.w.RatioWordProblemsData.find(p=>p.id==='L8-P1'),refRoute=refProblem.routes[0];
 refPractice.app.start(refProblem.id,true);refPractice.confirmFacts();refPractice.fillDerivations(refRoute);refPractice.checkAndNext(1,'Relation practice fixture');
 assert(refPractice.$('[data-wp-reference-builder] [data-wp-token]'));
 assert(refPractice.$('[data-wp-rel-slot][data-filled="false"]'));
 const referenceModel=refPractice.w.RatioWordProblemRelations.reference(refProblem,refRoute);
-refPractice.click('[data-wp-reference-reveal]');
+assert(!refPractice.$('.wp-quantity-table'),'No table is shown before relations');
+assert(!refPractice.$('.wp-keypad'),'No table keyboard before relations');
+refPractice.click('[data-wp-check]');assert.match(refPractice.feedback(),/先确认原题数量关系/);
+refPractice.click('[data-wp-reference-check]');assert(!refPractice.$('.wp-quantity-table'),'Incomplete relations do not reveal table');
+for(const kind of ['sum','product'])for(const [ri,row] of refPractice.w.RatioWordProblemRelations.canonical(referenceModel)[kind].entries())for(const [si,label]of row.entries()){
+ const token=[...refPractice.host.querySelectorAll('[data-wp-token]')].find(t=>t.dataset.wpToken===label);
+ const slots=[...refPractice.host.querySelectorAll('[data-wp-rel-slot]')].filter(t=>t.dataset.wpRelSlot.startsWith(kind+':'+ri+':'));
+ assert(token);token.click();slots[si].click();
+}
+assert(!refPractice.$('.wp-quantity-table'),'Table waits for confirmation after manual assembly');
+refPractice.click('[data-wp-reference-check]');assert(refPractice.$('.wp-quantity-table'),'Confirmed relationships reveal the blank table');
+assert([...refPractice.host.querySelectorAll('[data-wp-input]')].every(t=>!t.value),'Relations do not prefill expressions');
+refPractice.click('[data-wp-reference-clear]');assert(!refPractice.$('.wp-quantity-table'));
+refPractice.click('[data-wp-reference-reveal]');assert(refPractice.$('.wp-quantity-table'),'One-click display also enables table');
 assert.equal(refPractice.host.querySelectorAll('[data-wp-rel-slot][data-filled="false"]').length,0);
 refPractice.click('[data-wp-reference-check]');assert.match(refPractice.$('[data-wp-reference-status]').textContent,/关系正确/);
 assert.equal(refPractice.read().drafts[refProblem.id].passed[2],undefined,'Displaying reference cannot pass the table');
 refPractice.remount().start(refProblem.id);
 assert.equal(refPractice.host.querySelectorAll('[data-wp-rel-slot][data-filled="false"]').length,0,'Resume retains shown reference');
-refPractice.click('[data-wp-reference-clear]');assert.equal(refPractice.host.querySelectorAll('[data-wp-rel-slot][data-filled="false"]').length,referenceModel.count*3);
+refPractice.click('[data-wp-reference-clear]');assert.equal(refPractice.host.querySelectorAll('[data-wp-rel-slot][data-filled="false"]').length,referenceModel.count*3);assert(!refPractice.$('.wp-quantity-table'),'Retry hides table again');
 const token=refPractice.$('[data-wp-token]'),slot=refPractice.$('[data-wp-rel-slot]');token.click();slot.click();assert.equal(refPractice.host.querySelectorAll('[data-wp-rel-slot][data-filled="true"]').length,1);
 refPractice.close();
 const all=fixture();
@@ -565,9 +578,8 @@ assert.equal(interactive.$('[data-wp-fact="'+wrongFactKey+'"]').getAttribute('ar
 interactive.confirmFacts();interactive.fillDerivations(interactiveRoute);interactive.checkAndNext(1,'Quantity cloze confirmed');
 interactiveRoute.table.rows.forEach((row,ri)=>row.cells.forEach((cell,ci)=>{if(cell.expr&&!cell.given)interactive.setInput('t:'+ri+':'+ci,cell.expr);}));
 assert(interactive.$('[data-wp-reference-reveal]'),'Reference supports one-click display');
-assert(!interactive.$('.wp-relation-reference').open);
-interactive.click('.wp-relation-reference summary');assert(interactive.$('.wp-relation-reference').open,'Relationship references open when requested');
-interactive.click('[data-wp-check]');interactive.expectPassed(2,'Table passes without assembling any relationships');
+assert(interactive.$('.wp-relation-reference').open,'Relationships stay visible above the table');
+interactive.click('[data-wp-check]');interactive.expectPassed(2,'Table passes after one-click relationships');
 interactive.click('[data-wp-next]');
 interactive.click('[data-wp-example]');interactive.checkAndNext(3,'Read-only relationship reference');
 interactive.click('[data-wp-step="2"]');
@@ -580,7 +592,7 @@ interactive.close();
 // Removing obvious relationship cards leaves the mathematical table checks in place.
 const football=fixture(),footballProblem=football.w.RatioWordProblemsData.find(p=>p.id==='TB-I17'),footballRoute=footballProblem.routes[0];
 football.app.start(footballProblem.id,true);football.confirmFacts();football.fillDerivations(footballRoute);football.checkAndNext(1,'Football setup');
-assert(!football.$('[data-wp-relation-mount]'));assert(!football.$('.wp-relation-reference')?.open,'Football relation practice stays optional and folded');
+assert(!football.$('[data-wp-relation-mount]'));assert(football.$('.wp-relation-reference')?.open,'Football relationships appear before its table');
 footballRoute.table.rows.forEach((row,ri)=>row.cells.forEach((cell,ci)=>{if(cell.expr&&!cell.given)football.setInput('t:'+ri+':'+ci,cell.expr);}));
 const footballCell=football.$('[data-wp-input]'),footballKey=footballCell.dataset.wpInput,footballCorrect=footballCell.value;
 football.setInput(footballKey,'9999');football.click('[data-wp-check]');assert(football.$('[data-wp-next]').disabled,'Wrong table values remain blocked');

@@ -15,13 +15,13 @@
  function mount(host,options){
   const {model,seed='',readonly=false,onChange=()=>{}}=options;
   const visibleKinds=kinds.filter(kind=>(model[kind]||[]).length);
-  const orderHelp=visibleKinds.length===1&&model[visibleKinds[0]].length===1?(visibleKinds[0]==='sum'?'两个加数可以交换位置.':'两个乘数可以交换位置.'):'同类关系可以交换行；两个加数或两个乘数可以交换位置.';
+  const orderHelp=visibleKinds.length===1&&model[visibleKinds[0]].length===1?(visibleKinds[0]==='sum'?'加数可以交换位置.':'乘数可以交换位置.'):'同类关系可以交换行；两个加数或乘数可以交换位置.';
   const tokens=new Map((model.tokens||[]).map(t=>[t.id,t.label])),bank=shuffle(model.tokens||[],seed);
-  const answers=Object.fromEntries(kinds.map(kind=>[kind,(model[kind]||[]).map((_,i)=>Array.from({length:3},(_,j)=>tokens.has(options.answers?.[kind]?.[i]?.[j])?options.answers[kind][i][j]:''))]));
+  const answers=Object.fromEntries(kinds.map(kind=>[kind,(model[kind]||[]).map((r,i)=>Array.from({length:r.terms.length+1},(_,j)=>tokens.has(options.answers?.[kind]?.[i]?.[j])?options.answers[kind][i][j]:''))]));
   let selected=null,drag=null,cleanupPointer=null,suppressClickUntil=0,alive=true;
   const snapshot=()=>Object.fromEntries(kinds.map(k=>[k,answers[k].map(row=>row.slice())]));
   const address=(kind,row,col)=>kind+':'+row+':'+col;
-  function parseAddress(value){const m=String(value).match(/^(sum|product):(\d+):([012])$/);return m&&answers[m[1]]?.[Number(m[2])]?{kind:m[1],row:Number(m[2]),col:Number(m[3])}:null;}
+  function parseAddress(value){const m=String(value).match(/^(sum|product):(\d+):(\d+)$/);return m&&Number(m[3])<answers[m[1]]?.[Number(m[2])]?.length?{kind:m[1],row:Number(m[2]),col:Number(m[3])}:null;}
   function valueAt(value){const p=parseAddress(value);return p?answers[p.kind][p.row][p.col]:'';}
   function tell(text){const status=host.querySelector('[data-wp-relation-status]');if(status)status.textContent=text;}
   function refreshSelection(){host.querySelectorAll('[data-wp-token]').forEach(b=>b.setAttribute('aria-pressed',String(selected?.id===b.dataset.wpToken&&!selected.from)));host.querySelectorAll('[data-wp-rel-slot]').forEach(b=>b.classList.toggle('is-selected',selected?.from===b.dataset.wpRelSlot));}
@@ -74,12 +74,12 @@
    });
   }
   function slot(kind,row,col){
-   const key=address(kind,row,col),id=answers[kind][row][col],name=names[kind]+'第'+(row+1)+'行'+(col===2?'的结果':'的第'+(col+1)+'个量');
+   const key=address(kind,row,col),id=answers[kind][row][col],name=names[kind]+'第'+(row+1)+'行'+(col===model[kind][row].terms.length?'的结果':'的第'+(col+1)+'个量');
    return '<div class="wp-relation-cell"><button type="button" class="wp-relation-slot" data-wp-rel-slot="'+key+'" data-filled="'+Boolean(id)+'" aria-label="'+esc(name+(id?'：'+tokens.get(id):'：空框'))+'"'+(readonly?' disabled':id?' draggable="true"':'')+'>'+esc(id?tokens.get(id):'□')+'</button>'+(!readonly&&id?'<button type="button" class="wp-relation-remove" data-wp-rel-remove="'+key+'" aria-label="清空'+esc(name)+'">×</button>':'')+'</div>';
   }
   function paint(){
    if(!alive)return;cleanupPointer?.();
-   host.innerHTML='<div class="wp-relation-builder">'+(!readonly&&bank.length?'<p class="wp-relation-help">把上方的量拖进框里，也可以先点一个量，再点空框.同一个量可以重复使用.</p><div class="wp-relation-bank" role="group" aria-label="可拖拽的数量">'+bank.map(t=>'<button type="button" class="wp-relation-token" data-wp-token="'+esc(t.id)+'" draggable="true" aria-pressed="false">'+esc(t.label)+'</button>').join('')+'</div>':'')+'<div class="wp-relation-pair">'+visibleKinds.map(kind=>'<section class="wp-relation-group" data-kind="'+kind+'"><h4>'+names[kind]+'</h4>'+(model[kind]||[]).map((_,i)=>'<div class="wp-relation-row"><div class="wp-relation-equation" role="group" aria-label="'+names[kind]+'第'+(i+1)+'行">'+slot(kind,i,0)+'<span class="wp-relation-operator">'+(kind==='sum'?'+':'×')+'</span>'+slot(kind,i,1)+'<span class="wp-relation-operator">=</span>'+slot(kind,i,2)+'</div></div>').join('')+'</section>').join('')+'</div>'+(!readonly?'<p class="wp-relation-status" data-wp-relation-status role="status" aria-live="polite">'+orderHelp+'</p>':'')+'</div>';
+   host.innerHTML='<div class="wp-relation-builder">'+(!readonly&&bank.length?'<p class="wp-relation-help">把上方的量拖进框里，也可以先点一个量，再点空框.同一个量可以重复使用.</p><div class="wp-relation-bank" role="group" aria-label="可拖拽的数量">'+bank.map(t=>'<button type="button" class="wp-relation-token" data-wp-token="'+esc(t.id)+'" draggable="true" aria-pressed="false">'+esc(t.label)+'</button>').join('')+'</div>':'')+'<div class="wp-relation-pair">'+visibleKinds.map(kind=>'<section class="wp-relation-group" data-kind="'+kind+'"><h4>'+names[kind]+'</h4>'+(model[kind]||[]).map((r,i)=>'<div class="wp-relation-row"><div class="wp-relation-equation'+(r.terms.length>2?' is-multi-term':'')+'" role="group" aria-label="'+names[kind]+'第'+(i+1)+'行">'+r.terms.map((_,j)=>(j?'<span class="wp-relation-operator">'+(kind==='sum'?'+':'×')+'</span>':'')+slot(kind,i,j)).join('')+'<span class="wp-relation-operator">=</span>'+slot(kind,i,r.terms.length)+'</div></div>').join('')+'</section>').join('')+'</div>'+(!readonly?'<p class="wp-relation-status" data-wp-relation-status role="status" aria-live="polite">'+orderHelp+'</p>':'')+'</div>';
    if(readonly)return;
    host.querySelectorAll('[data-wp-token]').forEach(button=>{const payload={id:button.dataset.wpToken,from:''};button.onclick=()=>{if(Date.now()>=suppressClickUntil)select(payload.id);};bindDraggable(button,payload);});
    host.querySelectorAll('[data-wp-rel-slot]').forEach(button=>{

@@ -336,13 +336,14 @@
   return {id:key,sum,product,tokens:labels.map(label=>({id:label,label})),count:sum.length+product.length,notes:[...(raw.notes||[])],empty:{sum:sum.length?'':'本题没有需要拼接的加和等式.',product:product.length?'':'本题没有需要拼接的乘积等式.'}};
  }
  function canonical(model){return {sum:model.sum.map(r=>[...r.terms,r.result]),product:model.product.map(r=>[...r.terms,r.result])};}
- // Modeling references are available on demand. They are never completion gates.
+ // Original quantity relationships also support the relation-first table workflow.
  function reference(problem,route){
   const model=build(problem,route);
   if(problem.id==='TB-A37')model.sum=[{terms:['童年年数','童年后至长出胡须年数','长出胡须至结婚年数','结婚至生子年数','孩子一生年数','孩子去世后年数'],result:'一生年数'}];
   if(problem.id==='TB-I05'){model.sum=[{terms:['a的二分之一','2'],result:'5'}];model.product=[];}
   if(problem.id==='TB-R01')model.sum=[];
   model.count=model.sum.length+model.product.length;
+  model.tokens=[...new Set([...model.sum,...model.product].flatMap(r=>[...r.terms,r.result]))].map(label=>({id:label,label}));
   return model;
  }
  // Only a small number of tasks benefit from a separate relationship activity.
@@ -390,16 +391,16 @@
   }
   return answer;
  }
- function signature(row){return JSON.stringify([row.slice(0,2).sort(),row[2]]);}
+ function signature(row){return JSON.stringify([row.slice(0,-1).sort(),row.at(-1)]);}
  function check(model,answers){
   const available=new Set(model.tokens.map(t=>t.id));
   for(const type of ['sum','product']){
    const wanted=model[type],raw=answers?.[type],actual=Array.isArray(raw)?raw.map(row=>Array.isArray(row)?row.map(normalizeToken):row):raw;
-   if(!Array.isArray(actual)||actual.length!==wanted.length)return {ok:false,kind:'incomplete',type,message:'请把每条'+(type==='sum'?'加和':'乘积')+'关系的三个框都填完整.'};
-   if(actual.some(row=>!Array.isArray(row)||row.length!==3||row.some(v=>typeof v!=='string'||!available.has(v))))return {ok:false,kind:'incomplete',type,message:'还有数量框没有填好，请从上方选择对应的数量.'};
+   if(!Array.isArray(actual)||actual.length!==wanted.length)return {ok:false,kind:'incomplete',type,message:'请把每条'+(type==='sum'?'加和':'乘积')+'关系的所有框都填完整.'};
+   if(actual.some(row=>!Array.isArray(row)||!wanted.some(w=>w.terms.length+1===row.length)||row.some(v=>typeof v!=='string'||!available.has(v))))return {ok:false,kind:'incomplete',type,message:'还有数量框没有填好，请从上方选择对应的数量.'};
    const counts=new Map();
    for(const row of wanted){const k=signature([...row.terms,row.result]);counts.set(k,(counts.get(k)||0)+1);}
-   for(const [i,row]of actual.entries()){const k=signature(row),left=counts.get(k)||0;if(!left)return {ok:false,kind:'relation',type,row:i,message:'再看数量的含义：等号左边的两个量合成什么量？同类关系可以换行，两个加数或乘数也可以交换.'};counts.set(k,left-1);}
+   for(const [i,row]of actual.entries()){const k=signature(row),left=counts.get(k)||0;if(!left)return {ok:false,kind:'relation',type,row:i,message:'再看数量的含义：等号左边的量合成什么量？同类关系可以换行，加数或乘数也可以交换.'};counts.set(k,left-1);}
   }
   return {ok:true,kind:'correct',message:'关系正确；同类关系的先后顺序以及加数、乘数的顺序都可以交换.'};
  }
