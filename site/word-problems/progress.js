@@ -34,6 +34,7 @@
    modelGroupId:text(d.modelGroupId||d.runId,100),modelId:text(d.modelId||d.runId,100),modelMethods:modelList(d.modelMethods),
    values:values(d.values),passed:flags(d.passed),attempts:counts(d.attempts),firstPass:flags(d.firstPass),hints,
    seen:list(d.seen,60),closure:list(d.closure,30),conditionFound:list(d.conditionFound,80),conditionUsed:list(d.conditionUsed,80),
+   referenceRelations:Object.fromEntries(entries(d.referenceRelations,32).map(([key,answer])=>[key,Object.fromEntries(['sum','product'].map(kind=>[kind,(Array.isArray(answer?.[kind])?answer[kind]:[]).slice(0,60).map(row=>Array.from({length:3},(_,i)=>text(Array.isArray(row)?row[i]:'',300)))]))])),
    derivationSources:Object.fromEntries(entries(d.derivationSources,60).map(([k,v])=>[k,list(v,20)])),
    derived:flags(d.derived,60,false),verdict:text(d.verdict,30),reflection:text(d.reflection,1600),customModel:text(d.customModel,1600),
    discussion:text(d.discussion,2000),assisted:!!d.assisted||example||d.status==='assisted'||Object.values(hints).some(n=>n>0),example,

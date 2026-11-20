@@ -16,7 +16,7 @@
   const E=root.RatioWordProblemEngine,P=root.RatioWordProblemProgress,R=root.RatioWordProblemRelations,M=root.RatioWordProblemMathInput,F=root.RatioWordProblemReading,C=root.RatioWordProblemCatalog,T=root.RatioWordProblemTableAlternatives,index=root.RatioWordProblemTextbookIndex||{items:[],references:[]},supplement=root.RatioWordProblemSupplementIndex;
   const data=root.RatioWordProblemsData||[];
   data.forEach(p=>{p.textbookSources=[...index.items,...(index.references||[])].filter(s=>s.problemId===p.id);});
-  let owner=B.key(),run=null,problem=null,route=null,alive=true,saveTimer=null,searchTimer=null,renderToken=0,activeField=null,keypadOpen=true,book='textbook',filter='',query='',feedback='',feedbackKind='',observing=false,mathFields=[],inputBindings=[],scratchUI=null,resetTrigger=null,equationPlanCache=null;
+  let owner=B.key(),run=null,problem=null,route=null,alive=true,saveTimer=null,searchTimer=null,renderToken=0,activeField=null,keypadOpen=true,book='textbook',filter='',query='',feedback='',feedbackKind='',observing=false,mathFields=[],inputBindings=[],scratchUI=null,referenceUIs=[],resetTrigger=null,equationPlanCache=null;
   const math=(s,process=false)=>{try{return root.katex.renderToString(process?E.formatCalculation(s):E.format(s),{throwOnError:false,output:'htmlAndMathml',strict:'ignore'});}catch{return '<span class="wp-plain-math">'+esc(s)+'</span>';}};
   const modelMath=value=>{try{return math(E.normalize(value).split('=').map(part=>E.referenceExpression(part,{})).join('='));}catch{return math(value);}};
   const ready=()=>alive&&B.ready()&&B.key()===owner;
@@ -81,7 +81,7 @@
   function header(){return '<div class="page-heading wp-heading"><div><div class="eyebrow">EQUATION · MODELING</div><h2 tabindex="-1">方程应用题分析</h2><p>每个量说清来源，每一步写出关系.</p></div><div class="wp-header-actions"><button type="button" class="ghost wp-back-button" data-wp-back>← 返回上一级</button>'+(run?'<button type="button" class="ghost" data-wp-home>'+esc(B.isTeacher()?'返回教师端':'返回首页')+'</button>':'')+'</div></div>'+(B.isTeacher()?'<div class="wp-preview-note">教师演示 · 可查看完整过程；这里的操作不计入学生记录.</div>':'');}
   function bindHome(){host.querySelector('[data-wp-home]')?.addEventListener('click',()=>{save();B.go(B.isTeacher()?'teacher':'home');});host.querySelector('[data-wp-back]')?.addEventListener('click',()=>{save();if(run)catalog();else B.go(B.isTeacher()?'teacher':'home');});}
   function catalogRows(){return C.build(data,index,supplement);}
-  function catalog(){if(!guard())return;save();clearInputBindings();clearTimeout(searchTimer);scratchUI?.destroy();scratchUI=null;run=null;problem=null;route=null;feedback='';renderToken++;mathFields=[];
+  function catalog(){if(!guard())return;save();clearInputBindings();clearTimeout(searchTimer);scratchUI?.destroy();scratchUI=null;referenceUIs.forEach(ui=>ui.destroy());referenceUIs=[];run=null;problem=null;route=null;feedback='';renderToken++;mathFields=[];
    const progress=P.summary(B.progress()),view=C.forBook(data,index,supplement,book),rows=view.rows,list=C.select(rows,{category:filter,query}),groups=view.groups,done=new Set(progress.records.filter(r=>r.status!=='review'&&(r.contentRevision||0)>=(data.find(p=>p.id===r.problemId)?.contentRevision||0)).map(r=>r.problemId));
    const draft=B.progress()?.drafts||{},ids=new Set(rows.map(r=>r.problem.id)),completed=[...ids].filter(id=>done.has(id)).length;
    const books='<div class="wp-book-tabs" role="group" aria-label="选择题目来源">'+[['textbook','苏科版教材'],['guide','补充练习']].map(([id,label])=>'<button type="button" data-wp-book="'+id+'" aria-pressed="'+(book===id)+'">'+label+' <small>'+C.forBook(data,index,supplement,id).itemCount+'</small></button>').join('')+'</div>';
@@ -174,10 +174,22 @@
   }
   function relationSummary(){
    if(problem.id==='TB-R01'&&run.step===2)return '';
-   const model=R.reference(problem,route),original=[['sum','加和关系','＋'],['product','乘积关系','×']].filter(([kind])=>model[kind].length).map(([kind,name,operator])=>'<section><h4>'+name+'</h4>'+model[kind].map(row=>'<p>'+row.terms.map(esc).join(' '+operator+' ')+' ＝ '+esc(row.result)+'</p>').join('')+'</section>').join('');
+   const model=R.reference(problem,route),original=model.count?'<div class="wp-original-relation-practice"><p>从上方选择数量，拖入下面的关系式.熟悉数量关系的同学也可以一键显示.</p><div data-wp-reference-builder></div><div class="wp-model-options"><button type="button" class="wp-secondary" data-wp-reference-check>确认数量关系</button><button type="button" class="wp-secondary" data-wp-reference-reveal>一键显示</button><button type="button" class="wp-text-button" data-wp-reference-clear>重新拖动</button></div><p data-wp-reference-status role="status" aria-live="polite"></p></div>':'';
    const entries=run.step===3?equationPlan().entries:[];
    if(entries.length)return '<details class="wp-relation-reference wp-current-basis"><summary>查看当前填法可用的列式依据</summary><div>'+entries.map(entry=>'<section><h4>'+esc(equationEntryLabel(entry.index))+'</h4>'+[...new Set(entry.choices.map(c=>c.label))].map(label=>'<p>'+esc(label)+'</p>').join('')+'</section>').join('')+(original?'<details><summary>查看原题中的其他数量关系</summary>'+original+'</details>':'')+'</div></details>';
    return original?'<details class="wp-relation-reference"><summary>查看原题数量关系（参考）</summary><div>'+original+'</div></details>':'';
+  }
+  function mountReferenceRelations(){
+   const box=host.querySelector('[data-wp-reference-builder]');if(!box)return;
+   const model=R.reference(problem,route),key=route.id;
+   run.referenceRelations=run.referenceRelations||{};
+   let ui;
+   const message=(text,ok=false)=>{const status=host.querySelector('[data-wp-reference-status]');if(status){status.textContent=text;status.className=ok?'wp-good-note':'wp-notice';}};
+   const mount=()=>{ui?.destroy();ui=root.RatioWordProblemRelationBuilder.mount(box,{model,seed:run.runId+':'+key,answers:run.referenceRelations[key]||{},onChange:answers=>{if(!guard())return;run.referenceRelations[key]=answers;message('');queueSave();}});};
+   mount();referenceUIs.push({destroy:()=>ui?.destroy()});
+   host.querySelector('[data-wp-reference-reveal]').onclick=()=>{if(!guard())return;run.referenceRelations[key]=R.canonical(model);mount();message('已显示数量关系，可继续拖动调整或重新练习.',true);queueSave();};
+   host.querySelector('[data-wp-reference-clear]').onclick=()=>{if(!guard())return;delete run.referenceRelations[key];mount();message('已清空，可以重新拖动数量.');queueSave();};
+   host.querySelector('[data-wp-reference-check]').onclick=()=>{if(!guard())return;const result=R.check(model,ui.answers());message(result.message,result.ok);};
   }
   function scratchEquations(){return '<div class="wp-scratch-equations"><h4>已列出的方程</h4>'+((route.equations||[]).length&&!manual()?route.equations.map((q,i)=>'<div data-wp-scratch-equation="'+i+'"><small>'+esc(equationBasis(i).label)+'</small><div class="wp-math-line">'+math(run.values['e:'+i]||'')+'</div></div>').join(''):manual()?'<p>'+esc(run.discussion||run.customModel||'结合题目条件，写下计算或分析过程.')+'</p>':'<p>按照数量表中的关系，写下计算过程.</p>')+'</div>';}
   function mountScratch(){const box=host.querySelector('[data-wp-scratch-mount]');if(!box)return;const pad=root.RatioWordProblemScratchpad;if(!pad){box.innerHTML='<p class="wp-notice">手写草稿暂未加载，可先在纸上演算，再核对答案.</p>';return;}scratchUI=pad.mount(box,{key:JSON.stringify([owner,run.scratchId||run.runId,problem.id,route.id]),headingHTML:scratchEquations()});}
@@ -204,9 +216,9 @@
   function requestReset(button){if(!guard()||!run)return;const panel=host.querySelector('[data-wp-reset-confirm]');if(!panel)return;resetTrigger=button;panel.hidden=false;host.querySelectorAll('[data-wp-restart]').forEach(b=>b.setAttribute('aria-expanded','true'));panel.scrollIntoView({block:'nearest',behavior:'smooth'});panel.querySelector('[data-wp-cancel-reset]')?.focus({preventScroll:true});}
   function cancelReset(){if(!guard())return;const panel=host.querySelector('[data-wp-reset-confirm]');if(panel)panel.hidden=true;host.querySelectorAll('[data-wp-restart]').forEach(b=>b.setAttribute('aria-expanded','false'));if(resetTrigger?.isConnected)resetTrigger.focus({preventScroll:true});resetTrigger=null;}
   function resetAnalysis(){if(!guard()||!run)return;clearTimeout(saveTimer);const location=run.sourceLocation;run=newRun(problem,route);run.sourceLocation=location;feedback='本题已重置，请从读题找量重新开始.已提交的历史记录会保留.';feedbackKind='hint';observing=false;render();host.querySelector('h2')?.focus({preventScroll:true});}
-  function render(){if(!guard()||!run)return;clearInputBindings();resetTrigger=null;scratchUI?.destroy();scratchUI=null;renderToken++;activeField=null;mathFields=[];
+  function render(){if(!guard()||!run)return;clearInputBindings();resetTrigger=null;scratchUI?.destroy();scratchUI=null;referenceUIs.forEach(ui=>ui.destroy());referenceUIs=[];renderToken++;activeField=null;mathFields=[];
    host.innerHTML=header()+'<nav class="wp-steps" aria-label="分析步骤">'+visibleFlow().map((step,i)=>'<button type="button" class="'+(run.passed[step]?'is-completed':'')+'" data-wp-step="'+step+'" '+(step>0&&!run.passed[step-1]?'disabled':'')+' aria-current="'+(run.step===step?'step':'false')+'"><span>'+(run.passed[step]?'✓':i+1)+'</span>'+stepLabel(step)+'</button>').join('')+'</nav><div class="wp-workspace">'+problemPanel()+'<section class="wp-stage" aria-label="'+stepLabel(run.step)+'"><div class="wp-stage-top"><small>步骤 '+(visibleFlow().indexOf(run.step)+1)+' / '+visibleFlow().length+'</small><div class="wp-stage-tools"><span data-wp-save-status>'+(B.isTeacher()?'教师演示':'过程自动保存在当前账号')+'</span><button type="button" class="wp-text-button wp-reset-button" data-wp-restart aria-controls="wp-reset-confirm" aria-expanded="false">↺ 重置本题</button></div></div>'+resetConfirmation()+'<div data-wp-model-options-host data-wp-model-options-state="'+esc(modelOptionsState())+'">'+moreModels()+'</div>'+stage()+'<div class="wp-feedback '+esc(feedbackKind)+'" role="status" aria-live="polite">'+feedbackHTML()+'</div><div class="wp-actions"><div>'+(run.step===5||relationshipOnly()&&run.step>=2?'':'<button type="button" class="wp-text-button" data-wp-hint>给我一点提示</button><button type="button" class="wp-text-button" data-wp-example>查看本步示范</button>')+'</div><div>'+(visibleFlow().indexOf(run.step)>0?'<button type="button" class="wp-secondary" data-wp-prev>上一步</button>':'')+(!run.finished||run.step===5?'<button type="button" class="wp-primary" data-wp-check>'+checkLabel()+'</button>':'')+(run.step!==finalStep()?'<button type="button" class="wp-primary" data-wp-next '+(!run.passed[run.step]?'disabled':'')+'>'+(run.step===5?'进入检验 →':'下一步 →')+'</button>':'<button type="button" class="wp-primary" data-wp-catalog>返回题目目录</button>')+'</div></div><div data-wp-keyboard-slot></div></section></div>';
-   bindHome();bind();bindTableValues();updateConditionPanel();mountScratch();if(host.querySelector('[data-wp-editor]')){host.querySelector('[data-wp-keyboard-slot]').innerHTML=keyboard();bindKeys();void installEditors(renderToken);}save();
+   bindHome();bind();mountReferenceRelations();bindTableValues();updateConditionPanel();mountScratch();if(host.querySelector('[data-wp-editor]')){host.querySelector('[data-wp-keyboard-slot]').innerHTML=keyboard();bindKeys();void installEditors(renderToken);}save();
   }
   function bind(){
    host.querySelectorAll('[data-wp-catalog]').forEach(b=>b.onclick=catalog);host.querySelectorAll('[data-wp-step]').forEach(b=>b.onclick=()=>{const next=Number(b.dataset.wpStep);if(next>0&&!run.passed[next-1])return;save();run.step=next;feedback='';render();});
@@ -275,7 +287,7 @@
    if(run.step===6){(route.checks||[]).forEach((c,i)=>run.values['c:'+i]=E.format(c.input==='exponent'?c.exponent:c.result));run.verdict=route.verdict?.correct||'valid';(route.verdictCases||[]).forEach((c,i)=>{run.values['v:'+i]=c.correct;});}
    feedback='本步已显示示范.本次会记录为看过示范，你仍可回到目录重新独立分析.';feedbackKind='hint';render();
   }
-  function destroy(){save();clearInputBindings();scratchUI?.destroy();scratchUI=null;alive=false;renderToken++;clearTimeout(saveTimer);clearTimeout(searchTimer);mathFields=[];activeField=null;}
+  function destroy(){save();clearInputBindings();scratchUI?.destroy();scratchUI=null;referenceUIs.forEach(ui=>ui.destroy());referenceUIs=[];alive=false;renderToken++;clearTimeout(saveTimer);clearTimeout(searchTimer);mathFields=[];activeField=null;}
   return {open:catalog,start,destroy};
  }
  root.RatioWordProblemApp={mount};
