@@ -23,7 +23,7 @@ for(const p of data){
  }
 }
 // Distinct methods really use different conditions, not one copied preset basis.
-for(const id of ['01','02','03','04','07','08']){const p=data.find(p=>p.id==='C21-'+id);assert(new Set(p.routes.map(r=>r.closure.text)).size>=2,p.id+' closure changes');}
+for(const id of ['01','02','03','04','05','07','08','09','10','11']){const p=data.find(p=>p.id==='C21-'+id);assert(new Set(p.routes.map(r=>r.closure.text)).size>=2,p.id+' closure changes');}
 const open=data.find(p=>p.id==='C21-06');assert.equal(open.kind,'open');assert(open.routes[0].discussion);assert.equal(open.routes[0].answers.length,0);assert.equal(open.routes[0].checks.length,0);
 const rest=data.find(p=>p.id==='C21-11');assert(rest.routes.every(r=>r.table.rows.some(row=>row.label==='休息'&&row.cells[0].note&&row.cells.at(-1).note)),'Rest is not assigned a fake speed or distance');
 assert(data.find(p=>p.id==='C21-05').routes[0].table.headers.length===5,'Original four-distance table preserved');

@@ -2156,10 +2156,11 @@ const data=[
                   "given": true
                 },
                 {
-                  "expr": "(x/(1/2))/3",
+                  "expr": "x/(1/2)-x-4",
                   "sources": [
                     "car",
-                    "boat",
+                    "walk",
+                    "parts",
                     "unknown"
                   ]
                 }
@@ -2199,9 +2200,9 @@ const data=[
         },
         "equations": [
           {
-            "label": "按乘车路程还原全程后核对三段和",
-            "left": "x+(x/(1/2))/3+4",
-            "right": "x/(1/2)",
+            "label": "乘船剩余路程占全程的三分之一",
+            "left": "x/(1/2)-x-4",
+            "right": "(x/(1/2))/3",
             "answerIndex": 0
           }
         ],
@@ -2230,14 +2231,15 @@ const data=[
           }
         ],
         "steps": [
-          "x+(x/(1/2))/3+4=x/(1/2)",
+          "x/(1/2)-x-4=(x/(1/2))/3",
+          "x-4=2x/3",
           "x=12",
           "12/(1/2)=24"
         ],
         "closure": {
-          "text": "由乘车路程和所占比例还原全程，再将三段路程相加核对.",
+          "text": "先把乘船路程写成全程扣除乘车和步行，最后用乘船路程占全程1/3的关系列式.",
           "sources": [
-            "parts"
+            "boat"
           ]
         },
         "relationTriples": {
@@ -2281,10 +2283,11 @@ const data=[
           "correct": "valid",
           "prompt": "代回原条件，数量关系与实际范围是否都成立？",
           "explain": "核对原题全部条件，以及所求量、单位和范围."
-        }
+        },
+        "tableNote": "乘船路程由总路程减去另两段填写；它与表中已知的1/3全程尚须相等."
       }
     ],
-    "contentRevision": 1,
+    "contentRevision": 2,
     "tags": [
       "补充练习",
       "2021.12资料",
@@ -3415,17 +3418,19 @@ const data=[
                   "given": true
                 },
                 {
-                  "expr": "x-1/3",
+                  "expr": "(500-60*x)/100",
                   "sources": [
-                    "lead",
+                    "distance",
+                    "slow",
+                    "fast",
                     "unknown"
                   ]
                 },
                 {
-                  "expr": "100*(x-1/3)",
+                  "expr": "500-60*x",
                   "sources": [
-                    "fast",
-                    "lead",
+                    "distance",
+                    "slow",
                     "unknown"
                   ]
                 }
@@ -3435,9 +3440,9 @@ const data=[
         },
         "equations": [
           {
-            "label": "以慢车计时后两车路程仍合计500千米",
-            "left": "60*x+100*(x-1/3)",
-            "right": "500",
+            "label": "慢车用时比快车多先行的三分之一小时",
+            "left": "x",
+            "right": "(500-60*x)/100+1/3",
             "answerIndex": 0
           }
         ],
@@ -3466,16 +3471,15 @@ const data=[
           }
         ],
         "steps": [
-          "60x+100(x-1/3)=500",
+          "x=(500-60x)/100+1/3",
           "160x=1600/3",
           "x=10/3",
           "10/3-1/3=3"
         ],
         "closure": {
-          "text": "快车时间由慢车时间减去先行时间表示，再以两车路程和列式.",
+          "text": "先由总路程减去慢车路程得到快车路程，再求快车用时；最后以慢车用时比快车多1/3小时列式.",
           "sources": [
-            "distance",
-            "motion"
+            "lead"
           ]
         },
         "relationTriples": {
@@ -3513,10 +3517,11 @@ const data=[
           "correct": "valid",
           "prompt": "代回原条件，数量关系与实际范围是否都成立？",
           "explain": "核对原题全部条件，以及所求量、单位和范围."
-        }
+        },
+        "tableNote": "总路程已用于填出快车路程，本方案的独立列式依据改为出发时间差."
       }
     ],
-    "contentRevision": 1,
+    "contentRevision": 2,
     "tags": [
       "补充练习",
       "2021.12资料",
@@ -4232,19 +4237,21 @@ const data=[
                   "given": true
                 },
                 {
-                  "expr": "100*x/80",
+                  "expr": "5-30/60-x",
                   "sources": [
-                    "out",
-                    "back",
-                    "route",
+                    "total",
+                    "rest",
+                    "unit",
                     "unknown"
                   ]
                 },
                 {
-                  "expr": "100*x",
+                  "expr": "80*(5-30/60-x)",
                   "sources": [
-                    "out",
-                    "route",
+                    "back",
+                    "total",
+                    "rest",
+                    "unit",
                     "unknown"
                   ]
                 }
@@ -4264,10 +4271,13 @@ const data=[
                   "given": true
                 },
                 {
-                  "expr": "100*x+100*x",
+                  "expr": "100*x+80*(5-30/60-x)",
                   "sources": [
                     "out",
-                    "route",
+                    "back",
+                    "total",
+                    "rest",
+                    "unit",
                     "unknown"
                   ]
                 }
@@ -4277,9 +4287,9 @@ const data=[
         },
         "equations": [
           {
-            "label": "按去程时间表示三个阶段后合计5小时",
-            "left": "x+30/60+100*x/80",
-            "right": "5",
+            "label": "去程与返程的单程路程相等",
+            "left": "100*x",
+            "right": "80*(5-30/60-x)",
             "answerIndex": 0
           }
         ],
@@ -4308,15 +4318,15 @@ const data=[
           }
         ],
         "steps": [
-          "x+30/60+100x/80=5",
-          "9x/4=9/2",
+          "100x=80(5-30/60-x)",
+          "180x=360",
           "x=2",
           "100×2=200"
         ],
         "closure": {
-          "text": "先用去程时间表示同一个单程路程，再倒推返程时间，最后核对三个阶段合计时间.",
+          "text": "总时间先用于填写返程时间，再用去程、返程是同一段两城路程列式.",
           "sources": [
-            "total"
+            "route"
           ]
         },
         "relationTriples": {
@@ -4354,10 +4364,11 @@ const data=[
           "correct": "valid",
           "prompt": "代回原条件，数量关系与实际范围是否都成立？",
           "explain": "核对原题全部条件，以及所求量、单位和范围."
-        }
+        },
+        "tableNote": "返程时间先由总历时扣除去程和休息得到，不能再以同一总时间恒等式求解."
       }
     ],
-    "contentRevision": 1,
+    "contentRevision": 2,
     "tags": [
       "补充练习",
       "2021.12资料",

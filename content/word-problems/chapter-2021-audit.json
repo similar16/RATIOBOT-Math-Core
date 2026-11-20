@@ -534,7 +534,59 @@
       ],
       "reason": "相同书价连接不同付款与找零倍数；区别于总价分配和两种单价.",
       "visuallyChecked": true,
-      "transferCompletion": false
+      "transferCompletion": false,
+      "reviewedMethods": [
+        {
+          "id": "price",
+          "label": "设书价为x元",
+          "meaning": "这本书的价格",
+          "tableHeaders": [
+            "购书人",
+            "付款/元",
+            "书价/元",
+            "找回金额/元"
+          ],
+          "equations": [
+            {
+              "label": "甲找零是乙的6倍",
+              "left": "20-x",
+              "right": "6*(10-x)",
+              "answerIndex": 0
+            }
+          ],
+          "closure": {
+            "text": "还需满足甲找零是乙找零的6倍.",
+            "sources": [
+              "ratio"
+            ]
+          }
+        },
+        {
+          "id": "change",
+          "label": "设乙找回x元",
+          "meaning": "乙找回的金额",
+          "tableHeaders": [
+            "购书人",
+            "付款/元",
+            "找回金额/元",
+            "按找零求书价/元"
+          ],
+          "equations": [
+            {
+              "label": "两人购买同样书的价格相等",
+              "left": "10-x",
+              "right": "20-6*x",
+              "answerIndex": 0
+            }
+          ],
+          "closure": {
+            "text": "找零倍数用于填表，剩下的条件是两本相同的书价格相等.",
+            "sources": [
+              "pay"
+            ]
+          }
+        }
+      ]
     },
     {
       "sourceId": "CH21-016",
@@ -579,7 +631,60 @@
       ],
       "reason": "内部转移保持总人数，转移后又有倍数关系；区别于从外部增员及等长电线.",
       "visuallyChecked": true,
-      "transferCompletion": false
+      "transferCompletion": false,
+      "reviewedMethods": [
+        {
+          "id": "transfer",
+          "label": "设从甲组抽调x人",
+          "meaning": "从甲组调到乙组的人数",
+          "tableHeaders": [
+            "小组",
+            "原有人数/人",
+            "抽调人数/人",
+            "现有人数/人"
+          ],
+          "equations": [
+            {
+              "label": "现乙组是现甲组的2倍",
+              "left": "25+x",
+              "right": "2*(17-x)",
+              "answerIndex": 0
+            }
+          ],
+          "closure": {
+            "text": "调出、调入关系已用于填表，用调整后的2倍关系列方程.",
+            "sources": [
+              "ratio"
+            ]
+          }
+        },
+        {
+          "id": "remaining-a",
+          "label": "设调整后甲组有x人",
+          "meaning": "调整后甲组人数",
+          "tableHeaders": [
+            "小组",
+            "原有人数/人",
+            "抽调人数/人",
+            "现有人数/人"
+          ],
+          "equations": [
+            {
+              "label": "乙组原有人数加调入人数等于现有人数",
+              "left": "25+(17-x)",
+              "right": "2*x",
+              "answerIndex": 0
+            }
+          ],
+          "closure": {
+            "text": "倍数关系用于填写现人数，列式改用乙组“原有＋调入＝现有”.",
+            "sources": [
+              "b",
+              "move"
+            ]
+          }
+        }
+      ]
     },
     {
       "sourceId": "CH21-019",
@@ -744,7 +849,84 @@
       ],
       "reason": "两种作物分别按各自计划量增长，同时给计划与实际两个总量；基准不同于单一增长题.",
       "visuallyChecked": true,
-      "transferCompletion": false
+      "transferCompletion": false,
+      "reviewedMethods": [
+        {
+          "id": "planned-wheat",
+          "label": "设计划小麦产量为x吨",
+          "meaning": "计划生产的小麦产量",
+          "tableHeaders": [
+            "作物",
+            "计划产量/吨",
+            "超产量/吨",
+            "实际产量/吨"
+          ],
+          "equations": [
+            {
+              "label": "实际两种产量合计20吨",
+              "left": "x+12%*x+(18-x)+10%*(18-x)",
+              "right": "20",
+              "answerIndex": 0
+            }
+          ],
+          "closure": {
+            "text": "计划总量已用于填表，尚需满足实际总量20吨.",
+            "sources": [
+              "actual"
+            ]
+          }
+        },
+        {
+          "id": "actual-wheat",
+          "label": "设实际小麦产量为x吨",
+          "meaning": "实际小麦产量",
+          "tableHeaders": [
+            "作物",
+            "实际产量/吨",
+            "计划产量/吨",
+            "超产量/吨"
+          ],
+          "equations": [
+            {
+              "label": "倒推的计划产量合计18吨",
+              "left": "x/(1+12%)+(20-x)/(1+10%)",
+              "right": "18",
+              "answerIndex": 0
+            }
+          ],
+          "closure": {
+            "text": "实际总量用于分出两种作物，用各自超产率倒推计划量，再以计划合计18吨列式.",
+            "sources": [
+              "plan"
+            ]
+          }
+        },
+        {
+          "id": "wheat-increase",
+          "label": "设小麦超产x吨",
+          "meaning": "小麦超出计划的产量",
+          "tableHeaders": [
+            "作物",
+            "计划产量/吨",
+            "超产量/吨",
+            "实际产量/吨"
+          ],
+          "equations": [
+            {
+              "label": "两种计划量之和是18吨",
+              "left": "x/12%+(20-18-x)/10%",
+              "right": "18",
+              "answerIndex": 0
+            }
+          ],
+          "closure": {
+            "text": "先由实际总量减计划总量分配超产量，再倒推计划量，以计划总量列式.",
+            "sources": [
+              "plan"
+            ]
+          }
+        }
+      ]
     },
     {
       "sourceId": "CH21-030",
@@ -849,7 +1031,65 @@
       ],
       "reason": "两种购入数量之外新增零售与利润小问；原题价格表必须保留.",
       "visuallyChecked": true,
-      "transferCompletion": false
+      "transferCompletion": false,
+      "reviewedMethods": [
+        {
+          "id": "tomato-mass",
+          "label": "设番茄批发x千克",
+          "meaning": "批发番茄的质量",
+          "tableHeaders": [
+            "商品",
+            "质量/千克",
+            "批发单价/元每千克",
+            "批发金额/元",
+            "零售单价/元每千克",
+            "零售金额/元",
+            "利润/元"
+          ],
+          "equations": [
+            {
+              "label": "两类批发金额之和是120元",
+              "left": "2.4*x+3.2*(45-x)",
+              "right": "120",
+              "answerIndex": 0
+            }
+          ],
+          "closure": {
+            "text": "总质量用于分出两种质量，批发总金额120元作为列方程依据.",
+            "sources": [
+              "cost"
+            ]
+          }
+        },
+        {
+          "id": "tomato-cost",
+          "label": "设番茄批发金额为x元",
+          "meaning": "批发番茄花费的金额",
+          "tableHeaders": [
+            "商品",
+            "质量/千克",
+            "批发单价/元每千克",
+            "批发金额/元",
+            "零售单价/元每千克",
+            "零售金额/元",
+            "利润/元"
+          ],
+          "equations": [
+            {
+              "label": "用金额倒推的两种质量合计45千克",
+              "left": "x/2.4+(120-x)/3.2",
+              "right": "45",
+              "answerIndex": 0
+            }
+          ],
+          "closure": {
+            "text": "总批发金额用于分配费用，最后改用两种质量合计45千克列方程.",
+            "sources": [
+              "mass"
+            ]
+          }
+        }
+      ]
     },
     {
       "sourceId": "CH21-037",
@@ -864,7 +1104,59 @@
       ],
       "reason": "两个分率都以全程为基准，已知的是第三段，使用原资料四种路程的横表.",
       "visuallyChecked": true,
-      "transferCompletion": false
+      "transferCompletion": false,
+      "reviewedMethods": [
+        {
+          "id": "whole",
+          "label": "设总路程为x千米",
+          "meaning": "甲、乙两地的总路程",
+          "tableHeaders": [
+            "行程",
+            "乘车路程/千米",
+            "乘船路程/千米",
+            "步行路程/千米",
+            "总路程/千米"
+          ],
+          "equations": [
+            {
+              "label": "三段路程相加等于全程",
+              "left": "x/2+x/3+4",
+              "right": "x",
+              "answerIndex": 0
+            }
+          ],
+          "closure": {
+            "text": "两个分率用于填表，最后用三段路程相加等于全程列式.",
+            "sources": [
+              "parts"
+            ]
+          }
+        },
+        {
+          "id": "car-distance",
+          "label": "设乘车路程为x千米",
+          "meaning": "乘车路程",
+          "tableHeaders": [
+            "路段",
+            "占全程比例",
+            "路程/千米"
+          ],
+          "equations": [
+            {
+              "label": "乘船剩余路程占全程的三分之一",
+              "left": "x/(1/2)-x-4",
+              "right": "(x/(1/2))/3",
+              "answerIndex": 0
+            }
+          ],
+          "closure": {
+            "text": "先把乘船路程写成全程扣除乘车和步行，最后用乘船路程占全程1/3的关系列式.",
+            "sources": [
+              "boat"
+            ]
+          }
+        }
+      ]
     },
     {
       "sourceId": "CH21-038",
@@ -909,7 +1201,30 @@
       ],
       "reason": "原方程两边是两种同量表示，自编情境的结构不同于原有总价拆分、价差编题；仅分析.",
       "visuallyChecked": true,
-      "transferCompletion": false
+      "transferCompletion": false,
+      "reviewedMethods": [
+        {
+          "id": "expressions",
+          "label": "拆解两种同量表示",
+          "meaning": "自编情境中选择的未知数量",
+          "tableHeaders": [
+            "同一量的两种表示",
+            "每份量",
+            "份数",
+            "增加量",
+            "减少量",
+            "同一总量"
+          ],
+          "equations": [],
+          "closure": {
+            "text": "两边必须表示同一个具体数量；各项量义和单位须能解释，不把随意拼接的文字当作唯一答案.",
+            "sources": [
+              "equation",
+              "meaning"
+            ]
+          }
+        }
+      ]
     },
     {
       "sourceId": "CH21-041",
@@ -984,7 +1299,58 @@
       ],
       "reason": "两维同时加长并改变长宽倍数，求原周长；不同于面积不变问题.",
       "visuallyChecked": true,
-      "transferCompletion": false
+      "transferCompletion": false,
+      "reviewedMethods": [
+        {
+          "id": "old-width",
+          "label": "设扩建前宽为x米",
+          "meaning": "扩建前操场的宽",
+          "tableHeaders": [
+            "状态",
+            "宽/米",
+            "长/米"
+          ],
+          "equations": [
+            {
+              "label": "新长为新宽的2倍",
+              "left": "2.5*x+20",
+              "right": "2*(x+20)",
+              "answerIndex": 0
+            }
+          ],
+          "closure": {
+            "text": "原倍数与加长量已用于填表，以扩建后的长宽倍数列式.",
+            "sources": [
+              "ratio-after"
+            ]
+          }
+        },
+        {
+          "id": "new-width",
+          "label": "设扩建后宽为x米",
+          "meaning": "扩建后操场的宽",
+          "tableHeaders": [
+            "尺寸",
+            "扩建前/米",
+            "加长/米",
+            "扩建后/米"
+          ],
+          "equations": [
+            {
+              "label": "新长等于原长加20米",
+              "left": "2*x",
+              "right": "2.5*(x-20)+20",
+              "answerIndex": 0
+            }
+          ],
+          "closure": {
+            "text": "两个状态的倍数已用于填表，改用长增加20米的关系列式.",
+            "sources": [
+              "change"
+            ]
+          }
+        }
+      ]
     },
     {
       "sourceId": "CH21-046",
@@ -1014,7 +1380,59 @@
       ],
       "reason": "全班人数不变而每组人数与组数同时改变，且须满足整数组数.",
       "visuallyChecked": true,
-      "transferCompletion": false
+      "transferCompletion": false,
+      "reviewedMethods": [
+        {
+          "id": "old-groups",
+          "label": "设原来分成x组",
+          "meaning": "原来的组数",
+          "tableHeaders": [
+            "编组方案",
+            "每组人数/人",
+            "组数/组",
+            "全班人数/人"
+          ],
+          "equations": [
+            {
+              "label": "两种分组对应全班同一总人数",
+              "left": "8*x",
+              "right": "6*(x+2)",
+              "answerIndex": 0
+            }
+          ],
+          "closure": {
+            "text": "组数变化用于填表，以全班人数始终相同列式.",
+            "sources": [
+              "same"
+            ]
+          }
+        },
+        {
+          "id": "class-size",
+          "label": "设全班有x人",
+          "meaning": "全班总人数",
+          "tableHeaders": [
+            "编组方案",
+            "全班人数/人",
+            "每组人数/人",
+            "组数/组"
+          ],
+          "equations": [
+            {
+              "label": "新组数比原组数多2组",
+              "left": "x/6",
+              "right": "x/8+2",
+              "answerIndex": 0
+            }
+          ],
+          "closure": {
+            "text": "总人数不变用于填表，剩下的独立条件是组数增加2组.",
+            "sources": [
+              "more"
+            ]
+          }
+        }
+      ]
     },
     {
       "sourceId": "CH21-048",
@@ -1059,7 +1477,60 @@
       ],
       "reason": "两端相向但出发时刻不同，以已知速度和总路程建模；补齐直接行程的计时点比较.",
       "visuallyChecked": true,
-      "transferCompletion": false
+      "transferCompletion": false,
+      "reviewedMethods": [
+        {
+          "id": "fast-time",
+          "label": "设快车开出x小时后相遇",
+          "meaning": "快车从出发到相遇的时间",
+          "tableHeaders": [
+            "车辆",
+            "速度/千米每小时",
+            "时间/小时",
+            "路程/千米"
+          ],
+          "equations": [
+            {
+              "label": "相遇路程和等于500千米",
+              "left": "60*(x+1/3)+100*x",
+              "right": "500",
+              "answerIndex": 0
+            }
+          ],
+          "closure": {
+            "text": "先行时间已用于填表，以两车相遇的路程和列式.",
+            "sources": [
+              "distance",
+              "motion"
+            ]
+          }
+        },
+        {
+          "id": "slow-time",
+          "label": "设慢车行驶x小时后相遇",
+          "meaning": "慢车从出发到相遇的时间",
+          "tableHeaders": [
+            "车辆",
+            "速度/千米每小时",
+            "时间/小时",
+            "路程/千米"
+          ],
+          "equations": [
+            {
+              "label": "慢车用时比快车多先行的三分之一小时",
+              "left": "x",
+              "right": "(500-60*x)/100+1/3",
+              "answerIndex": 0
+            }
+          ],
+          "closure": {
+            "text": "先由总路程减去慢车路程得到快车路程，再求快车用时；最后以慢车用时比快车多1/3小时列式.",
+            "sources": [
+              "lead"
+            ]
+          }
+        }
+      ]
     },
     {
       "sourceId": "CH21-051",
@@ -1089,7 +1560,62 @@
       ],
       "reason": "已收录的同向相遇条件用于新的反向追问，保留独有小问，不重复只求速度的旧题.",
       "visuallyChecked": true,
-      "transferCompletion": false
+      "transferCompletion": false,
+      "reviewedMethods": [
+        {
+          "id": "grandpa-speed",
+          "label": "先设爷爷速度为x米/分",
+          "meaning": "爷爷跑步的速度",
+          "tableHeaders": [
+            "人物",
+            "速度/米每分",
+            "同向用时/分",
+            "同向路程/米"
+          ],
+          "equations": [
+            {
+              "label": "小红比爷爷多跑一圈",
+              "left": "5*(5/3)*x",
+              "right": "5*x+400",
+              "answerIndex": 0
+            }
+          ],
+          "closure": {
+            "text": "先用同向路程差为一圈求速度，再用反向路程和为一圈求转向后的时间.",
+            "sources": [
+              "circle",
+              "circle-rule"
+            ]
+          }
+        },
+        {
+          "id": "turn-time",
+          "label": "直接设转向后再过x分钟相遇",
+          "meaning": "小红转向后到再次相遇的时间",
+          "tableHeaders": [
+            "人物",
+            "速度/米每分",
+            "转向后时间/分",
+            "转向后路程/米"
+          ],
+          "equations": [
+            {
+              "label": "反向再次相遇的路程和是一圈",
+              "left": "120*x+200*x",
+              "right": "400",
+              "answerIndex": 0
+            }
+          ],
+          "closure": {
+            "text": "同向首次相遇先用于推导两个速度，转向后的路程和用于列方程.",
+            "sources": [
+              "circle",
+              "turn",
+              "circle-rule"
+            ]
+          }
+        }
+      ]
     },
     {
       "sourceId": "CH21-053",
@@ -1179,7 +1705,59 @@
       ],
       "reason": "往返中明确加入不产生路程的休息阶段；总历时不可当作纯行驶时间.",
       "visuallyChecked": true,
-      "transferCompletion": false
+      "transferCompletion": false,
+      "reviewedMethods": [
+        {
+          "id": "distance",
+          "label": "设两城距离为x千米",
+          "meaning": "甲、乙两城之间的路程",
+          "tableHeaders": [
+            "阶段",
+            "速度/千米每小时",
+            "用时/小时",
+            "路程/千米"
+          ],
+          "equations": [
+            {
+              "label": "去程、休息与返程时间之和为5小时",
+              "left": "x/100+30/60+x/80",
+              "right": "5",
+              "answerIndex": 0
+            }
+          ],
+          "closure": {
+            "text": "两段路程相同用于填表，列式必须把休息时间也计入总时间.",
+            "sources": [
+              "total"
+            ]
+          }
+        },
+        {
+          "id": "out-time",
+          "label": "设去程开车用x小时",
+          "meaning": "去程行驶时间",
+          "tableHeaders": [
+            "阶段",
+            "速度/千米每小时",
+            "用时/小时",
+            "路程/千米"
+          ],
+          "equations": [
+            {
+              "label": "去程与返程的单程路程相等",
+              "left": "100*x",
+              "right": "80*(5-30/60-x)",
+              "answerIndex": 0
+            }
+          ],
+          "closure": {
+            "text": "总时间先用于填写返程时间，再用去程、返程是同一段两城路程列式.",
+            "sources": [
+              "route"
+            ]
+          }
+        }
+      ]
     },
     {
       "sourceId": "CH21-059",
