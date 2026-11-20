@@ -190,7 +190,7 @@ function travelModel(problem,variant=0){
  else if(id==='TB-A30'){alternatives=['车站距家1800米','车站距家960米'];length=variant===1?960:1800;duration=variant===1?19:20;linear('妈妈',0,0,60,length/60);linear('小明',15,0,240,15+length/240);event(0,'妈妈先出发');event(15,'小明出发送手机');if(variant===1){event(16,'妈妈先到站');event(19,'小明到站，未在途中追上');}else event(20,'到站前追上妈妈');}
  else if(id==='S10'){length=8;duration=5;linear('甲队',0,1,1.2);linear('乙队',0,3,.8);event(0,'从不同营地同时出发');event(5,'甲在途中追上乙');landmarks=[{pos:1,label:'一号营地'},{pos:3,label:'二号营地'}];}
  else if(id==='TB-R16'||id==='L8-H2'){
-  const h=id==='L8-H2';length=h?5:20;duration=h?1.25:2;linear(h?'步行较快者':'快车',0,0,h?5:10,h?1:2);linear(h?'步行较慢者':'慢车',0,0,h?4:6,h?1.25:Infinity);event(0,'同时出发');event(h?1:2,h?'较快者先到达':'快车到达，慢车还在途中');if(h)event(1.25,'较慢者到达');
+  const h=id==='L8-H2';length=h?5:20;duration=h?1.25:2;linear(h?'小明':'甲（骑车）',0,0,h?5:10,h?1:2);linear(h?'小丽':'乙（步行）',0,0,h?4:6,h?1.25:Infinity);event(0,'同时出发');event(h?1:2,h?'小明先到达':'甲到达，乙还在途中');if(h)event(1.25,'小丽到达');
  }
  else if(id==='TB-I12'){length=600;duration=2.5;linear('提速前',0,0,240,2.5);linear('提速后',0,0,300,2);event(0,'对齐各自出发时刻');event(2,'提速后先到达');event(2.5,'提速前到达');noteText='两种方案按经过时间对照，不表示两次行程同时发生.';}
  else if(id==='TB-I01'){length=150;duration=.5;linear('高铁',0,0,300,.5);event(0,'列车出发');event(.5,'行驶0.5小时，到达150千米处');}
