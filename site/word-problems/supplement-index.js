@@ -1014,7 +1014,7 @@ const index={
     "existingOrSimilarProblemPositions": 70,
     "mergedSources": [
       {
-        "source": "《第四章 用一元一次方程解决问题》资料（文件名标注2021.12），PDF第1页 · 4.1正文",
+        "source": "《第四章 用一元一次方程解决问题》资料，第1页 · 4.1正文",
         "title": "汽车行驶240千米",
         "problemIds": [
           "TB-I01"
@@ -1024,7 +1024,7 @@ const index={
         "transferCompletion": false
       },
       {
-        "source": "《第四章 用一元一次方程解决问题》资料（文件名标注2021.12），PDF第1页 · 4.1探究1",
+        "source": "《第四章 用一元一次方程解决问题》资料，第1页 · 4.1探究1",
         "title": "天平平衡",
         "problemIds": [
           "TB-I03"
@@ -1034,7 +1034,7 @@ const index={
         "transferCompletion": false
       },
       {
-        "source": "《第四章 用一元一次方程解决问题》资料（文件名标注2021.12），PDF第1页 · 4.1探究2",
+        "source": "《第四章 用一元一次方程解决问题》资料，第1页 · 4.1探究2",
         "title": "两车同时相向而行",
         "problemIds": [
           "TB-A29"
@@ -1044,7 +1044,7 @@ const index={
         "transferCompletion": false
       },
       {
-        "source": "《第四章 用一元一次方程解决问题》资料（文件名标注2021.12），PDF第2页 · 4.1探究3",
+        "source": "《第四章 用一元一次方程解决问题》资料，第2页 · 4.1探究3",
         "title": "篮球联赛胜负场数",
         "problemIds": [
           "TB-I09"
@@ -1054,7 +1054,7 @@ const index={
         "transferCompletion": false
       },
       {
-        "source": "《第四章 用一元一次方程解决问题》资料（文件名标注2021.12），PDF第2页 · 4.1思考1",
+        "source": "《第四章 用一元一次方程解决问题》资料，第2页 · 4.1思考1",
         "title": "小红年龄是爸爸的四分之一",
         "problemIds": [
           "L7-P3"
@@ -1064,7 +1064,7 @@ const index={
         "transferCompletion": false
       },
       {
-        "source": "《第四章 用一元一次方程解决问题》资料（文件名标注2021.12），PDF第2页 · 4.1思考2",
+        "source": "《第四章 用一元一次方程解决问题》资料，第2页 · 4.1思考2",
         "title": "合资买狗",
         "problemIds": [
           "S02"
@@ -1074,7 +1074,7 @@ const index={
         "transferCompletion": false
       },
       {
-        "source": "《第四章 用一元一次方程解决问题》资料（文件名标注2021.12），PDF第3页 · 4.1练习1",
+        "source": "《第四章 用一元一次方程解决问题》资料，第3页 · 4.1练习1",
         "title": "长方形花坛的宽",
         "problemIds": [
           "TB-I01"
@@ -1084,7 +1084,7 @@ const index={
         "transferCompletion": false
       },
       {
-        "source": "《第四章 用一元一次方程解决问题》资料（文件名标注2021.12），PDF第3页 · 4.1练习2",
+        "source": "《第四章 用一元一次方程解决问题》资料，第3页 · 4.1练习2",
         "title": "蓝鲸平均每天增重",
         "problemIds": [
           "TB-I13"
@@ -1094,7 +1094,7 @@ const index={
         "transferCompletion": false
       },
       {
-        "source": "《第四章 用一元一次方程解决问题》资料（文件名标注2021.12），PDF第3页 · 4.1练习3",
+        "source": "《第四章 用一元一次方程解决问题》资料，第3页 · 4.1练习3",
         "title": "分装大米",
         "problemIds": [
           "TB-I06"
@@ -1104,7 +1104,7 @@ const index={
         "transferCompletion": false
       },
       {
-        "source": "《第四章 用一元一次方程解决问题》资料（文件名标注2021.12），PDF第3页 · 4.1练习4",
+        "source": "《第四章 用一元一次方程解决问题》资料，第3页 · 4.1练习4",
         "title": "铁路提速缩短时间",
         "problemIds": [
           "TB-I12"
@@ -1114,7 +1114,7 @@ const index={
         "transferCompletion": false
       },
       {
-        "source": "《第四章 用一元一次方程解决问题》资料（文件名标注2021.12），PDF第3页 · 4.1习题1",
+        "source": "《第四章 用一元一次方程解决问题》资料，第3页 · 4.1习题1",
         "title": "汽车驶往乙站",
         "problemIds": [
           "TB-I01"
@@ -1124,7 +1124,7 @@ const index={
         "transferCompletion": false
       },
       {
-        "source": "《第四章 用一元一次方程解决问题》资料（文件名标注2021.12），PDF第3页 · 4.1习题2",
+        "source": "《第四章 用一元一次方程解决问题》资料，第3页 · 4.1习题2",
         "title": "邮购书籍与邮费",
         "problemIds": [
           "TB-I19"
@@ -1134,7 +1134,7 @@ const index={
         "transferCompletion": false
       },
       {
-        "source": "《第四章 用一元一次方程解决问题》资料（文件名标注2021.12），PDF第3页 · 4.1习题3",
+        "source": "《第四章 用一元一次方程解决问题》资料，第3页 · 4.1习题3",
         "title": "练习本与圆珠笔",
         "problemIds": [
           "TB-I18"
@@ -1144,7 +1144,7 @@ const index={
         "transferCompletion": false
       },
       {
-        "source": "《第四章 用一元一次方程解决问题》资料（文件名标注2021.12），PDF第3页 · 4.1习题4",
+        "source": "《第四章 用一元一次方程解决问题》资料，第3页 · 4.1习题4",
         "title": "出租车起步费与超程费",
         "problemIds": [
           "TB-I20"
@@ -1154,7 +1154,7 @@ const index={
         "transferCompletion": false
       },
       {
-        "source": "《第四章 用一元一次方程解决问题》资料（文件名标注2021.12），PDF第4页 · 4.3（1）问题1",
+        "source": "《第四章 用一元一次方程解决问题》资料，第4页 · 4.3（1）问题1",
         "title": "树苗长到一米",
         "problemIds": [
           "TB-I13"
@@ -1164,7 +1164,7 @@ const index={
         "transferCompletion": false
       },
       {
-        "source": "《第四章 用一元一次方程解决问题》资料（文件名标注2021.12），PDF第5页 · 4.3（1）问题2",
+        "source": "《第四章 用一元一次方程解决问题》资料，第5页 · 4.3（1）问题2",
         "title": "按标价八折与固定利润",
         "problemIds": [
           "L8-T1"
@@ -1174,7 +1174,7 @@ const index={
         "transferCompletion": false
       },
       {
-        "source": "《第四章 用一元一次方程解决问题》资料（文件名标注2021.12），PDF第6页 · 4.3（1）练习1",
+        "source": "《第四章 用一元一次方程解决问题》资料，第6页 · 4.3（1）练习1",
         "title": "换季服装标价",
         "problemIds": [
           "L8-T1"
@@ -1184,7 +1184,7 @@ const index={
         "transferCompletion": false
       },
       {
-        "source": "《第四章 用一元一次方程解决问题》资料（文件名标注2021.12），PDF第6页 · 4.3（1）练习2",
+        "source": "《第四章 用一元一次方程解决问题》资料，第6页 · 4.3（1）练习2",
         "title": "足球黑白皮块比例",
         "problemIds": [
           "TB-I17"
@@ -1194,7 +1194,7 @@ const index={
         "transferCompletion": false
       },
       {
-        "source": "《第四章 用一元一次方程解决问题》资料（文件名标注2021.12），PDF第7页 · 4.3（1）习题1",
+        "source": "《第四章 用一元一次方程解决问题》资料，第7页 · 4.3（1）习题1",
         "title": "计算机达到检修时间",
         "problemIds": [
           "TB-I13"
@@ -1204,7 +1204,7 @@ const index={
         "transferCompletion": false
       },
       {
-        "source": "《第四章 用一元一次方程解决问题》资料（文件名标注2021.12），PDF第7页 · 4.3（1）习题2",
+        "source": "《第四章 用一元一次方程解决问题》资料，第7页 · 4.3（1）习题2",
         "title": "弹簧长度与重物质量",
         "problemIds": [
           "TB-R03"
@@ -1214,7 +1214,7 @@ const index={
         "transferCompletion": false
       },
       {
-        "source": "《第四章 用一元一次方程解决问题》资料（文件名标注2021.12），PDF第7页 · 4.3（1）习题3",
+        "source": "《第四章 用一元一次方程解决问题》资料，第7页 · 4.3（1）习题3",
         "title": "两个旅游团人数",
         "problemIds": [
           "TB-R06"
@@ -1224,7 +1224,7 @@ const index={
         "transferCompletion": false
       },
       {
-        "source": "《第四章 用一元一次方程解决问题》资料（文件名标注2021.12），PDF第8页 · 4.3（1）习题4",
+        "source": "《第四章 用一元一次方程解决问题》资料，第8页 · 4.3（1）习题4",
         "title": "寄信与明信片费用",
         "problemIds": [
           "TB-I18"
@@ -1234,7 +1234,7 @@ const index={
         "transferCompletion": false
       },
       {
-        "source": "《第四章 用一元一次方程解决问题》资料（文件名标注2021.12），PDF第8页 · 4.3（1）习题5",
+        "source": "《第四章 用一元一次方程解决问题》资料，第8页 · 4.3（1）习题5",
         "title": "增加女生后的比例",
         "problemIds": [
           "L7-H3"
@@ -1244,7 +1244,7 @@ const index={
         "transferCompletion": false
       },
       {
-        "source": "《第四章 用一元一次方程解决问题》资料（文件名标注2021.12），PDF第8页 · 4.3（1）习题6",
+        "source": "《第四章 用一元一次方程解决问题》资料，第8页 · 4.3（1）习题6",
         "title": "140根火柴搭小鱼",
         "problemIds": [
           "G9-07"
@@ -1254,7 +1254,7 @@ const index={
         "transferCompletion": false
       },
       {
-        "source": "《第四章 用一元一次方程解决问题》资料（文件名标注2021.12），PDF第9页 · 4.3（2）问题1",
+        "source": "《第四章 用一元一次方程解决问题》资料，第9页 · 4.3（2）问题1",
         "title": "购买苹果和橘子",
         "problemIds": [
           "L7-P2"
@@ -1264,7 +1264,7 @@ const index={
         "transferCompletion": false
       },
       {
-        "source": "《第四章 用一元一次方程解决问题》资料（文件名标注2021.12），PDF第10页 · 4.3（2）问题2",
+        "source": "《第四章 用一元一次方程解决问题》资料，第10页 · 4.3（2）问题2",
         "title": "晨练跑步与步行",
         "problemIds": [
           "TB-R08"
@@ -1274,7 +1274,7 @@ const index={
         "transferCompletion": false
       },
       {
-        "source": "《第四章 用一元一次方程解决问题》资料（文件名标注2021.12），PDF第11页 · 4.3（2）练习1",
+        "source": "《第四章 用一元一次方程解决问题》资料，第11页 · 4.3（2）练习1",
         "title": "成人票和学生票",
         "problemIds": [
           "TB-R07"
@@ -1284,7 +1284,7 @@ const index={
         "transferCompletion": false
       },
       {
-        "source": "《第四章 用一元一次方程解决问题》资料（文件名标注2021.12），PDF第11页 · 4.3（2）练习2",
+        "source": "《第四章 用一元一次方程解决问题》资料，第11页 · 4.3（2）练习2",
         "title": "大船小船租赁",
         "problemIds": [
           "G10-01"
@@ -1294,7 +1294,7 @@ const index={
         "transferCompletion": false
       },
       {
-        "source": "《第四章 用一元一次方程解决问题》资料（文件名标注2021.12），PDF第12页 · 4.3（2）习题1",
+        "source": "《第四章 用一元一次方程解决问题》资料，第12页 · 4.3（2）习题1",
         "title": "代售青奥会门票",
         "problemIds": [
           "TB-R07"
@@ -1304,7 +1304,7 @@ const index={
         "transferCompletion": false
       },
       {
-        "source": "《第四章 用一元一次方程解决问题》资料（文件名标注2021.12），PDF第12页 · 4.3（2）习题2",
+        "source": "《第四章 用一元一次方程解决问题》资料，第12页 · 4.3（2）习题2",
         "title": "两种奖项发奖金",
         "problemIds": [
           "TB-R07"
@@ -1314,7 +1314,7 @@ const index={
         "transferCompletion": false
       },
       {
-        "source": "《第四章 用一元一次方程解决问题》资料（文件名标注2021.12），PDF第12页 · 4.3（2）习题3",
+        "source": "《第四章 用一元一次方程解决问题》资料，第12页 · 4.3（2）习题3",
         "title": "两本书分别打折",
         "problemIds": [
           "C21-03"
@@ -1324,7 +1324,7 @@ const index={
         "transferCompletion": false
       },
       {
-        "source": "《第四章 用一元一次方程解决问题》资料（文件名标注2021.12），PDF第13页 · 4.3（2）习题4",
+        "source": "《第四章 用一元一次方程解决问题》资料，第13页 · 4.3（2）习题4",
         "title": "初高中按不同幅度增长",
         "problemIds": [
           "C21-03"
@@ -1334,7 +1334,7 @@ const index={
         "transferCompletion": false
       },
       {
-        "source": "《第四章 用一元一次方程解决问题》资料（文件名标注2021.12），PDF第14页 · 4.3（3）问题2",
+        "source": "《第四章 用一元一次方程解决问题》资料，第14页 · 4.3（3）问题2",
         "title": "桌面桌腿用料",
         "problemIds": [
           "L7-P1"
@@ -1344,7 +1344,7 @@ const index={
         "transferCompletion": false
       },
       {
-        "source": "《第四章 用一元一次方程解决问题》资料（文件名标注2021.12），PDF第15页 · 4.3（3）问题3",
+        "source": "《第四章 用一元一次方程解决问题》资料，第15页 · 4.3（3）问题3",
         "title": "家具九折售价与进价",
         "problemIds": [
           "L8-T1"
@@ -1354,7 +1354,7 @@ const index={
         "transferCompletion": false
       },
       {
-        "source": "《第四章 用一元一次方程解决问题》资料（文件名标注2021.12），PDF第15页 · 4.3（3）练习1",
+        "source": "《第四章 用一元一次方程解决问题》资料，第15页 · 4.3（3）练习1",
         "title": "上坡下坡与平路",
         "problemIds": [
           "C21-05"
@@ -1364,7 +1364,7 @@ const index={
         "transferCompletion": false
       },
       {
-        "source": "《第四章 用一元一次方程解决问题》资料（文件名标注2021.12），PDF第16页 · 4.3（3）练习2",
+        "source": "《第四章 用一元一次方程解决问题》资料，第16页 · 4.3（3）练习2",
         "title": "提价标价再打折",
         "problemIds": [
           "L8-P1"
@@ -1374,7 +1374,7 @@ const index={
         "transferCompletion": false
       },
       {
-        "source": "《第四章 用一元一次方程解决问题》资料（文件名标注2021.12），PDF第16页 · 4.3（3）习题1",
+        "source": "《第四章 用一元一次方程解决问题》资料，第16页 · 4.3（3）习题1",
         "title": "印刷三册小说的时间",
         "problemIds": [
           "C21-05"
@@ -1384,7 +1384,7 @@ const index={
         "transferCompletion": false
       },
       {
-        "source": "《第四章 用一元一次方程解决问题》资料（文件名标注2021.12），PDF第16页 · 4.3（3）习题2",
+        "source": "《第四章 用一元一次方程解决问题》资料，第16页 · 4.3（3）习题2",
         "title": "提价后九折的成本",
         "problemIds": [
           "PEP-P048"
@@ -1394,7 +1394,7 @@ const index={
         "transferCompletion": false
       },
       {
-        "source": "《第四章 用一元一次方程解决问题》资料（文件名标注2021.12），PDF第17页 · 4.3（3）习题4",
+        "source": "《第四章 用一元一次方程解决问题》资料，第17页 · 4.3（3）习题4",
         "title": "大小书包利润相同",
         "problemIds": [
           "PEP-P047"
@@ -1404,7 +1404,7 @@ const index={
         "transferCompletion": false
       },
       {
-        "source": "《第四章 用一元一次方程解决问题》资料（文件名标注2021.12），PDF第17页 · 4.3（3）习题6",
+        "source": "《第四章 用一元一次方程解决问题》资料，第17页 · 4.3（3）习题6",
         "title": "同售价衣服盈亏",
         "problemIds": [
           "L8-H1"
@@ -1414,7 +1414,7 @@ const index={
         "transferCompletion": false
       },
       {
-        "source": "《第四章 用一元一次方程解决问题》资料（文件名标注2021.12），PDF第18页 · 4.3（4）问题1",
+        "source": "《第四章 用一元一次方程解决问题》资料，第18页 · 4.3（4）问题1",
         "title": "自行车摩托车相向相遇",
         "problemIds": [
           "TB-A29"
@@ -1424,7 +1424,7 @@ const index={
         "transferCompletion": false
       },
       {
-        "source": "《第四章 用一元一次方程解决问题》资料（文件名标注2021.12），PDF第19页 · 4.3（4）问题3",
+        "source": "《第四章 用一元一次方程解决问题》资料，第19页 · 4.3（4）问题3",
         "title": "环形跑道同向相遇",
         "problemIds": [
           "L8-T2"
@@ -1434,7 +1434,7 @@ const index={
         "transferCompletion": false
       },
       {
-        "source": "《第四章 用一元一次方程解决问题》资料（文件名标注2021.12），PDF第20页 · 4.3（4）练习1",
+        "source": "《第四章 用一元一次方程解决问题》资料，第20页 · 4.3（4）练习1",
         "title": "两车相遇的速度差",
         "problemIds": [
           "PEP-P035"
@@ -1444,7 +1444,7 @@ const index={
         "transferCompletion": false
       },
       {
-        "source": "《第四章 用一元一次方程解决问题》资料（文件名标注2021.12），PDF第20页 · 4.3（4）练习2",
+        "source": "《第四章 用一元一次方程解决问题》资料，第20页 · 4.3（4）练习2",
         "title": "环形跑道反向相遇",
         "problemIds": [
           "PEP-P075"
@@ -1454,7 +1454,7 @@ const index={
         "transferCompletion": false
       },
       {
-        "source": "《第四章 用一元一次方程解决问题》资料（文件名标注2021.12），PDF第21页 · 4.3（4）习题1",
+        "source": "《第四章 用一元一次方程解决问题》资料，第21页 · 4.3（4）习题1",
         "title": "同时到楼顶",
         "problemIds": [
           "L8-P2-Q1"
@@ -1464,7 +1464,7 @@ const index={
         "transferCompletion": false
       },
       {
-        "source": "《第四章 用一元一次方程解决问题》资料（文件名标注2021.12），PDF第21页 · 4.3（4）习题2",
+        "source": "《第四章 用一元一次方程解决问题》资料，第21页 · 4.3（4）习题2",
         "title": "小明小丽到村时间差",
         "problemIds": [
           "L8-H2"
@@ -1474,7 +1474,7 @@ const index={
         "transferCompletion": false
       },
       {
-        "source": "《第四章 用一元一次方程解决问题》资料（文件名标注2021.12），PDF第21页 · 4.3（4）习题3",
+        "source": "《第四章 用一元一次方程解决问题》资料，第21页 · 4.3（4）习题3",
         "title": "快马追慢马",
         "problemIds": [
           "L8-P2-Q1"
@@ -1484,7 +1484,7 @@ const index={
         "transferCompletion": false
       },
       {
-        "source": "《第四章 用一元一次方程解决问题》资料（文件名标注2021.12），PDF第22页 · 4.3（4）习题5",
+        "source": "《第四章 用一元一次方程解决问题》资料，第22页 · 4.3（4）习题5",
         "title": "飞机顺逆风",
         "problemIds": [
           "PEP-P022"
@@ -1494,7 +1494,7 @@ const index={
         "transferCompletion": false
       },
       {
-        "source": "《第四章 用一元一次方程解决问题》资料（文件名标注2021.12），PDF第22页 · 4.3（4）习题6",
+        "source": "《第四章 用一元一次方程解决问题》资料，第22页 · 4.3（4）习题6",
         "title": "相遇后先到达对岸",
         "problemIds": [
           "PEP-P062"
@@ -1504,7 +1504,7 @@ const index={
         "transferCompletion": false
       },
       {
-        "source": "《第四章 用一元一次方程解决问题》资料（文件名标注2021.12），PDF第23页 · 4.3（5）问题1",
+        "source": "《第四章 用一元一次方程解决问题》资料，第23页 · 4.3（5）问题1",
         "title": "水上工程两队合做",
         "problemIds": [
           "PEP-P043"
@@ -1514,7 +1514,7 @@ const index={
         "transferCompletion": false
       },
       {
-        "source": "《第四章 用一元一次方程解决问题》资料（文件名标注2021.12），PDF第23页 · 4.3（5）问题2",
+        "source": "《第四章 用一元一次方程解决问题》资料，第23页 · 4.3（5）问题2",
         "title": "甲先做再合作",
         "problemIds": [
           "G10-02"
@@ -1524,7 +1524,7 @@ const index={
         "transferCompletion": false
       },
       {
-        "source": "《第四章 用一元一次方程解决问题》资料（文件名标注2021.12），PDF第24页 · 4.3（5）练习1",
+        "source": "《第四章 用一元一次方程解决问题》资料，第24页 · 4.3（5）练习1",
         "title": "地下管线合作",
         "problemIds": [
           "PEP-P043"
@@ -1534,7 +1534,7 @@ const index={
         "transferCompletion": false
       },
       {
-        "source": "《第四章 用一元一次方程解决问题》资料（文件名标注2021.12），PDF第24页 · 4.3（5）练习2",
+        "source": "《第四章 用一元一次方程解决问题》资料，第24页 · 4.3（5）练习2",
         "title": "整理图书先后工作",
         "problemIds": [
           "G10-02"
@@ -1544,7 +1544,7 @@ const index={
         "transferCompletion": false
       },
       {
-        "source": "《第四章 用一元一次方程解决问题》资料（文件名标注2021.12），PDF第25页 · 4.3（5）练习3",
+        "source": "《第四章 用一元一次方程解决问题》资料，第25页 · 4.3（5）练习3",
         "title": "工程模型迁移到行程",
         "problemIds": [
           "G10-05"
@@ -1554,7 +1554,7 @@ const index={
         "transferCompletion": false
       },
       {
-        "source": "《第四章 用一元一次方程解决问题》资料（文件名标注2021.12），PDF第25页 · 4.3（5）习题1",
+        "source": "《第四章 用一元一次方程解决问题》资料，第25页 · 4.3（5）习题1",
         "title": "整理操场总时间",
         "problemIds": [
           "G10-08"
@@ -1564,7 +1564,7 @@ const index={
         "transferCompletion": false
       },
       {
-        "source": "《第四章 用一元一次方程解决问题》资料（文件名标注2021.12），PDF第26页 · 4.3（5）习题2",
+        "source": "《第四章 用一元一次方程解决问题》资料，第26页 · 4.3（5）习题2",
         "title": "甲先一天乙加入",
         "problemIds": [
           "G10-02"
@@ -1574,7 +1574,7 @@ const index={
         "transferCompletion": false
       },
       {
-        "source": "《第四章 用一元一次方程解决问题》资料（文件名标注2021.12），PDF第26页 · 4.3（5）习题3",
+        "source": "《第四章 用一元一次方程解决问题》资料，第26页 · 4.3（5）习题3",
         "title": "录入资料先后工作",
         "problemIds": [
           "G10-02"
@@ -1584,7 +1584,7 @@ const index={
         "transferCompletion": false
       },
       {
-        "source": "《第四章 用一元一次方程解决问题》资料（文件名标注2021.12），PDF第26页 · 4.3（5）习题4",
+        "source": "《第四章 用一元一次方程解决问题》资料，第26页 · 4.3（5）习题4",
         "title": "增员完成四分之三",
         "problemIds": [
           "PEP-P042"
@@ -1594,7 +1594,7 @@ const index={
         "transferCompletion": false
       },
       {
-        "source": "《第四章 用一元一次方程解决问题》资料（文件名标注2021.12），PDF第27页 · 4.3（5）习题5",
+        "source": "《第四章 用一元一次方程解决问题》资料，第27页 · 4.3（5）习题5",
         "title": "增员整理图书",
         "problemIds": [
           "PEP-P042"
@@ -1604,7 +1604,7 @@ const index={
         "transferCompletion": false
       },
       {
-        "source": "《第四章 用一元一次方程解决问题》资料（文件名标注2021.12），PDF第27页 · 4.3（5）习题6",
+        "source": "《第四章 用一元一次方程解决问题》资料，第27页 · 4.3（5）习题6",
         "title": "铺管道先合作后单独",
         "problemIds": [
           "G10-08"
@@ -1614,7 +1614,7 @@ const index={
         "transferCompletion": false
       },
       {
-        "source": "《第四章 用一元一次方程解决问题》资料（文件名标注2021.12），PDF第28页 · 4.3（6）问题1",
+        "source": "《第四章 用一元一次方程解决问题》资料，第28页 · 4.3（6）问题1",
         "title": "中国结盈不足",
         "problemIds": [
           "S02"
@@ -1624,7 +1624,7 @@ const index={
         "transferCompletion": false
       },
       {
-        "source": "《第四章 用一元一次方程解决问题》资料（文件名标注2021.12），PDF第28页 · 4.3（6）问题2",
+        "source": "《第四章 用一元一次方程解决问题》资料，第28页 · 4.3（6）问题2",
         "title": "集邮展览人数与总张数",
         "problemIds": [
           "S02"
@@ -1634,7 +1634,7 @@ const index={
         "transferCompletion": false
       },
       {
-        "source": "《第四章 用一元一次方程解决问题》资料（文件名标注2021.12），PDF第29页 · 4.3（6）思考",
+        "source": "《第四章 用一元一次方程解决问题》资料，第29页 · 4.3（6）思考",
         "title": "另设邮票总数为x",
         "problemIds": [
           "S02"
@@ -1644,7 +1644,7 @@ const index={
         "transferCompletion": false
       },
       {
-        "source": "《第四章 用一元一次方程解决问题》资料（文件名标注2021.12），PDF第29页 · 4.3（6）练习1",
+        "source": "《第四章 用一元一次方程解决问题》资料，第29页 · 4.3（6）练习1",
         "title": "分糖盈不足",
         "problemIds": [
           "S02"
@@ -1654,7 +1654,7 @@ const index={
         "transferCompletion": false
       },
       {
-        "source": "《第四章 用一元一次方程解决问题》资料（文件名标注2021.12），PDF第29页 · 4.3（6）练习2",
+        "source": "《第四章 用一元一次方程解决问题》资料，第29页 · 4.3（6）练习2",
         "title": "货车一剩余一恰好",
         "problemIds": [
           "S02"
@@ -1664,7 +1664,7 @@ const index={
         "transferCompletion": false
       },
       {
-        "source": "《第四章 用一元一次方程解决问题》资料（文件名标注2021.12），PDF第30页 · 4.3（6）习题1",
+        "source": "《第四章 用一元一次方程解决问题》资料，第30页 · 4.3（6）习题1",
         "title": "分书盈不足",
         "problemIds": [
           "S02"
@@ -1674,7 +1674,7 @@ const index={
         "transferCompletion": false
       },
       {
-        "source": "《第四章 用一元一次方程解决问题》资料（文件名标注2021.12），PDF第30页 · 4.3（6）习题2",
+        "source": "《第四章 用一元一次方程解决问题》资料，第30页 · 4.3（6）习题2",
         "title": "种树盈不足",
         "problemIds": [
           "S02"
@@ -1684,7 +1684,7 @@ const index={
         "transferCompletion": false
       },
       {
-        "source": "《第四章 用一元一次方程解决问题》资料（文件名标注2021.12），PDF第30页 · 4.3（6）习题3",
+        "source": "《第四章 用一元一次方程解决问题》资料，第30页 · 4.3（6）习题3",
         "title": "孔明菜分配",
         "problemIds": [
           "S02"
@@ -1694,7 +1694,7 @@ const index={
         "transferCompletion": false
       },
       {
-        "source": "《第四章 用一元一次方程解决问题》资料（文件名标注2021.12），PDF第31页 · 4.3（6）习题4",
+        "source": "《第四章 用一元一次方程解决问题》资料，第31页 · 4.3（6）习题4",
         "title": "鸽子增加后分笼",
         "problemIds": [
           "PEP-P076"
@@ -1704,7 +1704,7 @@ const index={
         "transferCompletion": false
       },
       {
-        "source": "《第四章 用一元一次方程解决问题》资料（文件名标注2021.12），PDF第31页 · 4.3（6）习题5",
+        "source": "《第四章 用一元一次方程解决问题》资料，第31页 · 4.3（6）习题5",
         "title": "新旧工艺排量",
         "problemIds": [
           "PEP-P018"
@@ -1714,7 +1714,7 @@ const index={
         "transferCompletion": false
       },
       {
-        "source": "《第四章 用一元一次方程解决问题》资料（文件名标注2021.12），PDF第31页 · 4.3（6）习题6",
+        "source": "《第四章 用一元一次方程解决问题》资料，第31页 · 4.3（6）习题6",
         "title": "机器每台日产量与装箱",
         "problemIds": [
           "PEP-P038"

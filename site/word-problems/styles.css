@@ -415,3 +415,7 @@ input.wp-fact-number.is-correct,.wp-fact-number.is-correct input{background:var(
 .wp-answer-input-line .wp-editor-host input,.wp-answer-input-line .wp-editor-host math-field{box-sizing:border-box;min-width:0}
 
 .wp-relation-equation.is-multi-term{display:flex;flex-wrap:wrap}.wp-relation-equation.is-multi-term>.wp-relation-cell{flex:1 0 100px;min-width:0}
+
+.wp-travel-diagram{margin-top:24px;padding:18px 0;border-top:1px solid var(--line,#ddd)}.wp-travel-diagram>summary{font-weight:800;cursor:pointer}.wp-travel-diagram>svg{max-width:740px;margin:12px auto}.wp-travel-quantities{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}.wp-travel-quantities section{padding:12px;background:rgba(82,107,135,.045);border-radius:12px;min-width:0}.wp-travel-quantities h5{margin:0 0 8px;font-size:15px}.wp-travel-quantities p{display:flex;flex-wrap:wrap;gap:6px 12px;justify-content:space-between;margin:6px 0;font-size:14px}.wp-travel-quantities b{overflow-wrap:anywhere}.wp-travel-blank{font-weight:400;color:var(--muted,#666)}
+
+.wp-travel-drawing{max-width:100%;overflow-x:auto}.wp-travel-drawing>svg{min-width:560px;max-width:740px;margin:12px auto}

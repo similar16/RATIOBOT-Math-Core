@@ -115,5 +115,44 @@ function mount(host,problem,route){
  if(renderers[problem?.diagram])renderers[problem.diagram](host,problem,route);
  return()=>destroy(host);
 }
-const api={mount,destroy};if(typeof module==='object'&&module.exports)module.exports=api;else root.RatioWordProblemDiagrams=api;
+// Quantity-first schematics. Positions are illustrative, never numerical solutions.
+function travelMarkup(problem,route,{step=0,tablePassed=false,values={},derived={}}={}){
+ const blue='#526B87',red='#BD8882',gold='#B79A5C',ink='#3E3540';
+ const rows=(route.table?.rows||[]).map((r,i)=>({...r,index:i})).filter(r=>!/^总|^合计|^全程/.test(r.label)).slice(0,4);
+ const id=problem.id;
+ const type=['C21-05','TB-R08','TB-A18','S03'].includes(id)?'segments':['C21-11','L8-H3','PEP-P022'].includes(id)?'roundtrip':['C21-10','L8-T2','PEP-P075'].includes(id)?'circle':['C21-09','TB-A29','PEP-P035','G10-09','G10-05','PEP-P062'].includes(id)?'meeting':/^L8-P2-|^S10$|^TB-A30$/.test(id)?'chase':'tracks';
+ const ln=(a,y,b,col=blue,dashed=false)=>'<line x1="'+a+'" y1="'+y+'" x2="'+b+'" y2="'+y+'" stroke="'+col+'" stroke-width="3"'+(dashed?' stroke-dasharray="6 5"':'')+'/>';
+ const txt=(x,y,label,anchor='start',col=ink)=>'<text x="'+x+'" y="'+y+'" text-anchor="'+anchor+'" fill="'+col+'" font-size="18">'+esc(label)+'</text>';
+ const tick=(x,y)=>'<path d="M'+x+' '+(y-7)+'v14" stroke="'+ink+'" stroke-width="2"/>';
+ const arrow=(a,y,b,col=blue)=>ln(a,y,b,col)+'<path d="M'+(b+(b>a?-10:10))+' '+(y-6)+'L'+b+' '+y+'L'+(b+(b>a?-10:10))+' '+(y+6)+'" fill="none" stroke="'+col+'" stroke-width="2"/>';
+ const fixedNames={'C21-09':['慢车','快车'],'TB-A29':['甲','乙'],'PEP-P035':['甲车','乙车'],'G10-09':['野鸭','大雁'],'G10-05':['甲车','乙车'],'PEP-P062':['李明（骑车）','刘伟（步行）']};
+ const names=fixedNames[id]||rows.filter(r=>r.label!=='休息').slice(0,2).map(r=>r.label.length>12?r.label.slice(0,12)+'…':r.label);
+ let body='',height=220,description='各线段仅用于对应数量关系，不按实际路程比例绘制.';
+ if(type==='segments'){
+  const labels=id==='C21-05'?['乘车','乘船','步行']:id==='TB-R08'?['跑步','步行']:id==='TB-A18'?['前段跑步','最后冲刺']:['普通公路','高速公路'];
+  const w=560/labels.length;body=txt(40,38,'起点')+txt(600,38,'终点','end');
+  labels.forEach((v,i)=>{const a=40+i*w,b=a+w;body+=ln(a,100,b,i%2?red:blue)+tick(a,100)+txt((a+b)/2,78,v,'middle');});body+=tick(600,100)+arrow(40,145,600,gold)+txt(320,185,'整段路程由各段组成','middle');
+ }else if(type==='meeting'){
+  body=txt(40,35,'起点 A')+txt(600,35,'起点 B','end')+ln(40,105,600,ink)+tick(40,105)+tick(600,105)+tick(330,105)+arrow(70,70,275,blue)+arrow(570,70,385,red)+txt(170,55,names[0]||'从A出发者','middle')+txt(480,55,names[1]||'从B出发者','middle')+txt(330,135,'相遇位置（示意）','middle')+txt(320,183,id==='C21-09'?'先辨清先出发者与后出发者的行驶时间':'从两端出发，比较两段行程','middle');
+ }else if(type==='roundtrip'){
+  body=txt(40,34,'甲地 / 起点')+txt(600,34,'乙地 / 折返点','end')+arrow(40,85,600,blue)+txt(320,67,id==='L8-H3'?'上山':'去程','middle')+arrow(600,160,40,red)+txt(320,141,id==='L8-H3'?'下山':id==='PEP-P022'?'逆水返回':'返程','middle');
+  if(id==='C21-11'){height=260;body+=txt(320,210,'到达乙城 → 休息30分钟 → 返回','middle')+txt(320,243,'休息计入时间，不计入行驶路程','middle');}else body+=txt(320,205,'两个方向分别记时间，同一路程对应比较','middle');
+ }else if(type==='circle'){
+  height=id==='C21-10'?290:245;
+  const ring=(cx,cy,label,opposite)=>'<circle cx="'+cx+'" cy="'+cy+'" r="57" fill="none" stroke="'+ink+'" stroke-width="2"/>'+txt(cx,cy+85,label,'middle')+txt(cx,cy-70,'共同起点','middle')+'<circle cx="'+cx+'" cy="'+(cy-57)+'" r="4" fill="'+ink+'"/>'+'<path data-wp-runner="red" data-direction="'+(opposite?'counterclockwise':'clockwise')+'" d="M'+(cx-40)+' '+(cy+(opposite?40:-40))+' A57 57 0 0 '+(opposite?'0':'1')+' '+(cx+57)+' '+cy+'m-6 '+(opposite?'10':'-10')+'l6 '+(opposite?'-10':'10')+'l6 '+(opposite?'10':'-10')+'" fill="none" stroke="'+red+'" stroke-width="4"/>'+'<path data-wp-runner="blue" data-direction="clockwise" d="M'+(cx+40)+' '+(cy+40)+' A57 57 0 0 1 '+(cx-57)+' '+cy+'m-6 10 l6 -10 l6 10" fill="none" stroke="'+blue+'" stroke-width="4"/>';
+  if(id==='C21-10')body=ring(170,120,'先同向跑',false)+txt(320,124,'转向','middle')+ring(470,120,'相遇后反向跑',true)+txt(320,268,'转向前后分开比较，不把两种相遇混为同一过程','middle');
+  else body=ring(320,105,id==='PEP-P075'?'同一点反向出发':'同一点同向出发',id==='PEP-P075');
+ }else{
+  height=Math.max(200,rows.length*70+65);
+  rows.forEach((r,i)=>{const y=65+i*70;body+=txt(40,y-20,r.label)+arrow(id==='S10'&&i===1?160:40,y,590,i%2?red:blue);});
+  body+=txt(320,height-12,type==='chase'?'同向行进：起点、出发时刻与经过时间分别比较':'各行对应当前表格的对象或阶段','middle');
+ }
+ if(type==='circle')body+=txt(320,id==='C21-10'?240:225,id==='PEP-P075'?'蓝色：李明　红色：刘伟':'蓝色：爷爷　红色：小红','middle');
+ const picture=svg(body,'行程数量关系示意图',description,height);
+ const cols=(route.table?.headers||[]).map((h,i)=>({label:h,index:i-1})).filter(c=>c.index>=0&&/速度|时间|用时|路程|距离/.test(c.label));
+ const quantities=step>0&&cols.length?'<div class="wp-travel-quantities">'+rows.map(r=>'<section><h5>'+esc(r.label)+'</h5>'+cols.map(c=>{const cell=r.cells[c.index];if(!cell)return '';const value=cell.note!=null?esc(cell.note):cell.given&&cell.sources.every(id=>id==='unknown'||problem.facts.some(f=>f.id===id)||derived[id])?math(cell.expr):tablePassed&&values['t:'+r.index+':'+c.index]?math(values['t:'+r.index+':'+c.index]):'<span class="wp-travel-blank">待表示</span>';return '<p><span>'+esc(c.label)+'</span><b>'+value+'</b></p>';}).join('')+'</section>').join('')+'</div>':'';
+ return '<details class="wp-travel-diagram" data-wp-travel-diagram data-kind="'+type+'" open><summary>行程示意图</summary><p class="wp-table-note">示意图不按比例绘制，线段位置不代表实际相遇点.可配合上面的数量关系与表格分析.</p><div class="wp-travel-drawing" tabindex="0" role="region" aria-label="行程示意图，可横向滚动">'+picture+'</div>'+quantities+'</details>';
+}
+
+const api={mount,destroy,travelMarkup};if(typeof module==='object'&&module.exports)module.exports=api;else root.RatioWordProblemDiagrams=api;
 })(typeof window==='undefined'?globalThis:window);

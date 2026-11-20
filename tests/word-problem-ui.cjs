@@ -181,6 +181,11 @@ assert.equal(refPractice.host.querySelectorAll('[data-wp-rel-slot][data-filled="
 refPractice.click('[data-wp-reference-clear]');assert.equal(refPractice.host.querySelectorAll('[data-wp-rel-slot][data-filled="false"]').length,referenceModel.count*3);assert(!refPractice.$('.wp-quantity-table'),'Retry hides table again');
 const token=refPractice.$('[data-wp-token]'),slot=refPractice.$('[data-wp-rel-slot]');token.click();slot.click();assert.equal(refPractice.host.querySelectorAll('[data-wp-rel-slot][data-filled="true"]').length,1);
 refPractice.close();
+// Travel schematics sit below analysis, hide unconfirmed values, and use clean source captions.
+const travelSchematic=fixture(),travelP=travelSchematic.w.RatioWordProblemsData.find(p=>p.id==='C21-09'),travelR=travelP.routes[0];
+travelSchematic.app.start(travelP.id,true);assert(travelSchematic.$('.wp-stage [data-wp-travel-diagram]'));assert(!/文件名标注|PDF/.test(travelSchematic.$('.wp-citation').textContent));
+travelSchematic.confirmFacts();travelSchematic.checkAndNext(1,'Travel diagram setup');travelR.table.rows.forEach((row,i)=>row.cells.forEach((c,j)=>{if(!c.note&&!c.given)travelSchematic.setInput('t:'+i+':'+j,c.expr);}));travelSchematic.click('[data-wp-check]');travelSchematic.expectPassed(2,'Travel linked table');
+travelSchematic.$('[data-wp-travel-diagram]').open=false;travelSchematic.setInput('t:0:1','99999');assert(!travelSchematic.$('[data-wp-travel-diagram]').open);assert(!travelSchematic.$('[data-wp-travel-diagram]').textContent.includes('99999'));assert(travelSchematic.$('[data-wp-travel-diagram] .wp-travel-blank'));travelSchematic.close();
 const all=fixture();
 const data=all.w.RatioWordProblemsData;
 assert.equal(data.length,161);
