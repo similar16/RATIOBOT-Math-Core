@@ -419,3 +419,21 @@ input.wp-fact-number.is-correct,.wp-fact-number.is-correct input{background:var(
 .wp-travel-diagram{margin-top:24px;padding:18px 0;border-top:1px solid var(--line,#ddd)}.wp-travel-diagram>summary{font-weight:800;cursor:pointer}.wp-travel-diagram>svg{max-width:740px;margin:12px auto}.wp-travel-quantities{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}.wp-travel-quantities section{padding:12px;background:rgba(82,107,135,.045);border-radius:12px;min-width:0}.wp-travel-quantities h5{margin:0 0 8px;font-size:15px}.wp-travel-quantities p{display:flex;flex-wrap:wrap;gap:6px 12px;justify-content:space-between;margin:6px 0;font-size:14px}.wp-travel-quantities b{overflow-wrap:anywhere}.wp-travel-blank{font-weight:400;color:var(--muted,#666)}
 
 .wp-travel-drawing{max-width:100%;overflow-x:auto}.wp-travel-drawing>svg{min-width:560px;max-width:740px;margin:12px auto}
+
+/* Movement is controlled by the learner; left reference shares its current event. */
+.wp-motion-controls{padding:16px;background:#F5F6F8;border-radius:12px;display:grid;gap:12px}
+.wp-motion-buttons,.wp-motion-events{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.wp-motion-controls button{font:inherit;cursor:pointer;border:1px solid #D6DADF;border-radius:8px;padding:8px 12px;background:#fff;color:#3E3540}
+.wp-motion-controls button[aria-pressed="true"]{background:#526B87;color:#fff}
+.wp-motion-controls select{font:inherit;max-width:100%;padding:6px;border:1px solid #D6DADF;border-radius:6px;background:white;color:#3E3540}
+.wp-motion-progress{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.wp-motion-progress input{flex:1;min-width:140px;accent-color:#526B87;touch-action:pan-y}
+.wp-motion-progress output{min-width:3em;text-align:right;font-variant-numeric:tabular-nums}
+.wp-motion-event{color:#3E3540;font-weight:600;margin:6px 0;min-height:1.5em}
+.wp-motion-actor{display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap;margin:4px 12px 4px 0;color:var(--actor-color);font-size:14px}
+.wp-motion-actor i{width:10px;height:10px;border-radius:50%;background:var(--actor-color);flex:none}
+.wp-motion-reference{margin:18px 0;padding-top:12px;border-top:1px solid #E1E4E8}
+.wp-motion-reference summary{font-weight:600;cursor:pointer}
+.wp-motion-reference .wp-travel-drawing>svg{min-width:480px;width:100%;margin:8px auto}
+.wp-motion-reference .wp-motion-actor{display:flex}
+.wp-motion-variant{display:flex;gap:8px;flex-wrap:wrap;align-items:center}

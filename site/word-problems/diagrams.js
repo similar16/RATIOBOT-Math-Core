@@ -154,5 +154,116 @@ function travelMarkup(problem,route,{step=0,tablePassed=false,values={},derived=
  return '<details class="wp-travel-diagram" data-wp-travel-diagram data-kind="'+type+'" open><summary>行程示意图</summary><p class="wp-table-note">示意图不按比例绘制，线段位置不代表实际相遇点.可配合上面的数量关系与表格分析.</p><div class="wp-travel-drawing" tabindex="0" role="region" aria-label="行程示意图，可横向滚动">'+picture+'</div>'+quantities+'</details>';
 }
 
-const api={mount,destroy,travelMarkup};if(typeof module==='object'&&module.exports)module.exports=api;else root.RatioWordProblemDiagrams=api;
+/* Authored kinematics; internal coordinates are deliberately not answer labels. */
+const motionColors=['#526B87','#BD8882','#B79A5C'];
+const clamp=(v,a=0,b=1)=>Math.max(a,Math.min(b,v));
+function travelModel(problem,variant=0){
+ const id=problem.id,events=[],actors=[];
+ let duration=1,length=1,circle=false,noteText='',alternatives=[],landmarks=[],train=false;
+ const event=(t,label)=>events.push({t,label});
+ const actor=(name,position,start=0,finish=Infinity)=>actors.push({name,position,start,finish});
+ const linear=(name,start,origin,speed,end=Infinity)=>actor(name,t=>origin+speed*Math.max(0,Math.min(t,end)-start),start,end);
+ const meet=(L,a,b,delay=0,names=['甲','乙'])=>{length=L;duration=(L+b*delay)/(a+b);linear(names[0],0,0,a);linear(names[1],delay,L,-b);event(0,delay?'先出发者出发':'两者同时出发');if(delay)event(delay,'后出发者出发');event(duration,'两者相遇');};
+ const stages=(labels,distances,times,returning=false,rest=0)=>{
+  let total=0,pos=0;const parts=[];length=returning?distances[0]:distances.reduce((a,b)=>a+b,0);
+  labels.forEach((label,i)=>{const next=pos+distances[i]*(returning&&i>0?-1:1);parts.push({a:total,b:total+times[i],from:pos,to:next,label});event(total,label+'开始');total+=times[i];pos=next;if(rest&&i===0){parts.push({a:total,b:total+rest,from:pos,to:pos,label:'休息'});event(total,'到达折返点，开始休息');total+=rest;}});
+  duration=total;actor('行进者',t=>{const p=parts.find(p=>t<=p.b)||parts.at(-1);return p.from+(p.to-p.from)*clamp((t-p.a)/(p.b-p.a));},0,total);event(total,returning?'返回起点':'到达终点');
+  landmarks=parts.filter(p=>p.label!=='休息').map(p=>({pos:p.from,label:p.label}));
+ };
+ if(id==='C21-09')meet(500,60,100,1/3,['慢车','快车']);
+ else if(id==='TB-A29')meet(160,20,60);
+ else if(id==='PEP-P035')meet(84,94,74,0,['甲车','乙车']);
+ else if(id==='G10-09')meet(1,1/7,1/9,0,['野鸭','大雁']);
+ else if(id==='G10-05')meet(1,1/18,1/12,8,['甲车','乙车']);
+ else if(id==='PEP-P062'){meet(8,16,4,0,['李明（骑车）','刘伟（步行）']);actors.length=0;linear('李明（骑车）',0,0,16,.5);linear('刘伟（步行）',0,8,-4,2);duration=2;event(.5,'李明到达B地后停止');event(2,'刘伟到达A地');}
+ else if(id==='PEP-P039'){length=27;duration=1;linear('李明',0,0,18);linear('刘伟',0,27,-18);event(0,'8时：同时出发');event(.5,'8时半：相遇前相距9千米');event(.75,'两人相遇');event(1,'9时：相遇后再次相距9千米');noteText='原题只确定速度和；图中采用等速示意，不表示两人的实际速度相等.';}
+ else if(/^L8-P2-/.test(id)){
+  let delay=.5;if(id==='L8-P2-V3'){alternatives=['观察时小明在前','观察时小亮在前'];delay=variant===1?.3:.7;}
+  const catchTime=1.5*delay;
+  duration=/Q[12]$|V[12]$/.test(id)?catchTime:id.endsWith('Q3')||id.endsWith('Q5')?1.5:id.endsWith('V3')?Math.max(catchTime,delay+.25):1.2;
+  length=15*(duration-delay)*1.08;linear('小明（步行）',0,0,5);linear('小亮（骑车）',delay,0,15);
+  event(0,'小明先出发');event(delay,'小亮后出发');event(catchTime,'小亮追上小明');
+  if(id.endsWith('Q4')){event(.65,'追上前相距1千米');event(.85,'追上后相距1千米');}
+  if(id.endsWith('V3'))event(delay+.25,'小亮出发0.25小时，两人相距1千米');
+  if(id.endsWith('Q3'))event(1.5,'小亮出发1小时');if(id.endsWith('Q5'))event(1.5,'比较两人从学校出发后的路程');
+ }
+ else if(id==='TB-A30'){alternatives=['车站距家1800米','车站距家960米'];length=variant===1?960:1800;duration=variant===1?19:20;linear('妈妈',0,0,60,length/60);linear('小明',15,0,240,15+length/240);event(0,'妈妈先出发');event(15,'小明出发送手机');if(variant===1){event(16,'妈妈先到站');event(19,'小明到站，未在途中追上');}else event(20,'到站前追上妈妈');}
+ else if(id==='S10'){length=8;duration=5;linear('甲队',0,1,1.2);linear('乙队',0,3,.8);event(0,'从不同营地同时出发');event(5,'甲在途中追上乙');landmarks=[{pos:1,label:'一号营地'},{pos:3,label:'二号营地'}];}
+ else if(id==='TB-R16'||id==='L8-H2'){
+  const h=id==='L8-H2';length=h?5:20;duration=h?1.25:2;linear(h?'步行较快者':'快车',0,0,h?5:10,h?1:2);linear(h?'步行较慢者':'慢车',0,0,h?4:6,h?1.25:Infinity);event(0,'同时出发');event(h?1:2,h?'较快者先到达':'快车到达，慢车还在途中');if(h)event(1.25,'较慢者到达');
+ }
+ else if(id==='TB-I12'){length=600;duration=2.5;linear('提速前',0,0,240,2.5);linear('提速后',0,0,300,2);event(0,'对齐各自出发时刻');event(2,'提速后先到达');event(2.5,'提速前到达');noteText='两种方案按经过时间对照，不表示两次行程同时发生.';}
+ else if(id==='TB-I01'){length=150;duration=.5;linear('高铁',0,0,300,.5);event(0,'列车出发');event(.5,'行驶0.5小时，到达150千米处');}
+ else if(id==='C21-11')stages(['去程','返程'],[200,200],[2,2.5],true,.5);
+ else if(id==='L8-H3')stages(['上山','下山'],[3.75,3.75],[1.25,.75],true);
+ else if(id==='PEP-P022')stages(['顺水','逆水返回'],[60,60],[2,2.5],true);
+ else if(id==='C21-05'){stages(['乘车','乘船','步行'],[12,8,4],[1,1,1]);noteText='原题没有给出各段速度；各段播放时长只表示先后顺序，不代表实际用时.';}
+ else if(id==='TB-R08')stages(['跑步','步行'],[840,1260],[4,14]);
+ else if(id==='TB-A18')stages(['前段跑步','最后冲刺'],[120,80],[20,10]);
+ else if(id==='S03')stages(['普通公路','高速公路'],[75,225],[1.5,2.5]);
+ else if(id==='PEP-P025'){length=300;duration=5;linear('汽车',0,0,60,5);event(0,'10:00 经过王家庄');event(3,'13:00 经过青山');event(23/6,'经过翠湖');event(5,'15:00 经过绿水');landmarks=[{pos:0,label:'王家庄'},{pos:180,label:'青山'},{pos:230,label:'翠湖'},{pos:300,label:'绿水'}];}
+ else if(['C21-10','L8-T2','PEP-P075'].includes(id)){
+  circle=true;length=id==='PEP-P075'?600:400;duration=id==='C21-10'?6.25:id==='PEP-P075'?3:5;
+  if(id==='PEP-P075'){linear('李明',0,0,190);linear('刘伟',0,0,-210);event(0,'同一点反向出发');event(1.5,'第一次相遇');event(3,'第二次相遇');}
+  else{linear('爷爷',0,0,120);actor('小红',t=>t<=5?200*t:1000-200*(t-5));event(0,'同一点同向出发');event(5,id==='C21-10'?'第一次相遇，小红立即转向':'再次相遇');if(id==='C21-10')event(6.25,'转向后再次相遇');}
+ }
+ else if(id==='PEP-P040'){train=true;length=900;alternatives=['整列火车通过隧道','整列火车经过灯下'];duration=variant===1?10:20;linear('火车车头',0,300,30,duration);event(0,variant===1?'车头经过灯下':'车头进入隧道');if(variant===1){event(10,'车尾经过灯下');landmarks=[{pos:300,label:'灯的位置'}];}else{event(10,'车头离开隧道，车尾进入隧道');event(20,'车尾离开隧道');landmarks=[{pos:300,label:'隧道入口'},{pos:600,label:'隧道出口'}];}noteText='长条代表整列火车；看车头进入到车尾离开的整个过程，两种情形的行进速度相同.';}
+ else return null;
+ events.sort((a,b)=>a.t-b.t);
+ return {id,length,duration,circle,train,actors,events,alternatives,note:noteText,landmarks,
+  sample(progress){const t=clamp(progress)*duration;return actors.map((a,i)=>({name:a.name,color:motionColors[i],position:a.position(t),status:t<a.start?'尚未出发':t>=a.finish?'已到达':id==='C21-11'&&t>=2&&t<2.5?'休息中':id==='C21-10'&&i===1&&t>=5?'已转向，反向前进':'行进中'}));}};
+}
+function motionPicture(model,progress){
+ const state=model.sample(progress),t=progress*model.duration,ink='#3E3540';
+ const label=(x,y,v,color=ink,anchor='start')=>'<text x="'+x+'" y="'+y+'" text-anchor="'+anchor+'" font-size="17" fill="'+color+'">'+esc(v)+'</text>';
+ let body='';
+ if(model.circle){
+  body='<circle cx="320" cy="150" r="86" fill="none" stroke="'+ink+'" stroke-width="2"/>'+label(320,32,'共同起点',ink,'middle')+'<circle cx="320" cy="64" r="3" fill="'+ink+'"/>';
+  if(model.id==='C21-10'&&t>=5)body+='<circle cx="320" cy="236" r="5" fill="none" stroke="'+motionColors[1]+'" stroke-width="2"/>'+label(320,266,'第一次相遇处，小红在此转向',motionColors[1],'middle');
+  state.forEach((a,i)=>{const angle=a.position/model.length*2*Math.PI-Math.PI/2,r=86+(i?7:-7),x=320+r*Math.cos(angle),y=150+r*Math.sin(angle);body+='<circle data-wp-moving-actor="'+i+'" cx="'+x+'" cy="'+y+'" r="8" fill="'+a.color+'" stroke="white" stroke-width="2"/>';const delta=progress<1?model.sample(Math.min(1,progress+.001))[i].position-a.position:a.position-model.sample(Math.max(0,progress-.001))[i].position,sign=delta<0?-1:1,dx=-Math.sin(angle)*sign,dy=Math.cos(angle)*sign,px=x-dx*12,py=y-dy*12;body+='<path d="M'+(x-dx*30)+' '+(y-dy*30)+'L'+px+' '+py+'l'+(-dx*6-dy*5)+' '+(-dy*6+dx*5)+'M'+px+' '+py+'l'+(-dx*6+dy*5)+' '+(-dy*6-dx*5)+'" fill="none" stroke="'+a.color+'" stroke-width="2"/>';});
+ }else{
+  const x=p=>50+540*clamp(p/model.length);
+  body='<path d="M50 132H590" fill="none" stroke="'+ink+'" stroke-width="2"/>'+label(50,165,model.id==='S10'?'大本营':'起点 A')+label(590,165,model.id==='S10'||/^L8-P2-/.test(model.id)?'前进方向 →':'终点 B',ink,'end');
+  model.landmarks.forEach((v,i)=>{body+='<path d="M'+x(v.pos)+' 124v16" stroke="'+ink+'"/>'+label(x(v.pos),190+(i%2)*24,v.label,ink, v.pos===0?'start':v.pos===model.length?'end':'middle');});
+  if(model.train){body+=model.landmarks.length===1?'<path d="M'+x(300)+' 35v90" stroke="'+motionColors[2]+'" stroke-width="3" stroke-dasharray="4 3"/>': '<path d="M'+x(300)+' 100H'+x(600)+'" stroke="'+ink+'" stroke-width="10" stroke-dasharray="4 3"/>';const head=x(state[0].position),tail=x(state[0].position-300);body+='<path d="M'+tail+' 122H'+head+'" stroke="'+motionColors[0]+'" stroke-width="16"/>'+label(head,82,'车头',motionColors[0],'end')+label(tail,62,'车尾',motionColors[0]);}
+  else state.forEach((a,i)=>{const px=x(a.position),y=64+i*38;body+='<path d="M'+px+' '+(y+9)+'V132" stroke="'+a.color+'" stroke-dasharray="4 4"/><circle data-wp-moving-actor="'+i+'" cx="'+px+'" cy="'+y+'" r="8" fill="'+a.color+'"/>';const next=model.sample(Math.min(1,progress+.001))[i].position,dir=next<a.position?-1:1;if(Math.abs(next-a.position)>1e-8)body+='<path d="M'+(px-dir*20)+' '+y+'h'+(dir*12)+'m'+(-dir*5)+' -5l'+(dir*5)+' 5l'+(-dir*5)+' 5" fill="none" stroke="'+a.color+'" stroke-width="2"/>';});
+ }
+ if(!model.circle&&!model.train&&state.length===2&&!model.landmarks.length){const x=p=>50+540*clamp(p/model.length),a=x(state[0].position),b=x(state[1].position);body+='<path d="M'+a+' 228H'+b+'M'+a+' 223v10M'+b+' 223v10" stroke="'+motionColors[2]+'" stroke-width="3"/>'+label(320,208,Math.abs(a-b)<.01?'位置重合':'比较两者之间的距离',motionColors[2],'middle');}
+ state.forEach((a,i)=>{body+=label(i?600:40,20,a.name,a.color,i?'end':'start');});
+ const evt=[...model.events].reverse().find(e=>e.t<=t+1e-8)?.label||'';
+ return svg(body,'行程运动演示',state.map(a=>a.name+'：'+a.status).join('；')+'；'+evt,model.circle?285:255);
+}
+function travelReferenceMarkup(problem,route){
+ const html=travelMarkup(problem,route),picture=html.match(/<div class="wp-travel-drawing"[^>]*>([\s\S]*?)<\/div>/)?.[1]||'';
+ return '<details class="wp-motion-reference" open><summary>线段图与运动对照</summary><p class="wp-table-note">与右侧演示共用颜色与观察进度，可对照起点、方向和阶段；线段图可横向查看.</p><div class="wp-travel-drawing" tabindex="0" role="region" aria-label="左侧线段图，可横向滚动">'+picture+'</div><div data-wp-motion-linked aria-live="off"></div></details>';
+}
+function mountTravel(host,problem,route){
+ const box=host.querySelector('[data-wp-travel-diagram]');if(!box||!travelModel(problem))return null;
+ let model=travelModel(problem),progress=0,playing=false,frame=null,last=null,rate=1,disposed=false;
+ const drawing=box.querySelector('.wp-travel-drawing');box.querySelector('summary').textContent='行程运动演示';box.querySelector('.wp-table-note').textContent='播放或拖动进度，观察对象的位置变化；可点击关键时刻，与左侧线段图对照.';
+ drawing.insertAdjacentHTML('afterend','<div class="wp-motion-controls"><div class="wp-motion-buttons"><button type="button" data-motion-play>播放</button><button type="button" data-motion-reset>回到起点</button><label>速度 <select data-motion-rate><option value="0.5">0.5倍</option><option value="1" selected>1倍</option><option value="2">2倍</option></select></label></div><label class="wp-motion-progress">观察进度 <input type="range" min="0" max="1000" step="1" value="0" aria-label="拖动观察行程运动" data-motion-progress><output data-motion-percent>0%</output></label><div class="wp-motion-events" aria-label="关键时刻" data-motion-events></div><p class="wp-motion-event" data-motion-current role="status" aria-live="polite"></p><div data-motion-legend></div><p class="wp-table-note" data-motion-note></p></div>');
+ const play=box.querySelector('[data-motion-play]'),slider=box.querySelector('[data-motion-progress]'),select=box.querySelector('[data-motion-rate]'),evt=box.querySelector('[data-motion-current]');
+ let alternatives=null;
+ if(model.alternatives.length){const lab=host.ownerDocument.createElement('label');lab.className='wp-motion-variant';lab.textContent='选择题设情形 ';alternatives=host.ownerDocument.createElement('select');model.alternatives.forEach((v,i)=>{const o=host.ownerDocument.createElement('option');o.value=i;o.textContent=v;alternatives.append(o);});lab.append(alternatives);box.querySelector('.wp-motion-controls').prepend(lab);}
+ function stop(){playing=false;last=null;if(frame!=null)root.cancelAnimationFrame(frame);frame=null;play.textContent='播放';play.setAttribute('aria-pressed','false');}
+ function paint(){
+  drawing.innerHTML=motionPicture(model,progress);slider.value=Math.round(progress*1000);box.querySelector('[data-motion-percent]').textContent=Math.round(progress*100)+'%';
+  const current=[...model.events].reverse().find(e=>e.t<=progress*model.duration+1e-8)?.label||'';
+  if(evt.textContent!==current)evt.textContent=current;
+  const legend=model.sample(progress).map(a=>'<span class="wp-motion-actor" style="--actor-color:'+a.color+'"><i aria-hidden="true"></i>'+esc(a.name)+'：'+esc(a.status)+'</span>').join('');
+  box.querySelector('[data-motion-legend]').innerHTML=legend;
+  host.querySelectorAll('[data-wp-motion-linked]').forEach(el=>{el.innerHTML='<p class="wp-motion-event">'+esc(current)+'</p>'+legend;el.dataset.progress=String(Math.round(progress*1000));});
+  box.querySelectorAll('[data-motion-event]').forEach(b=>b.setAttribute('aria-pressed',String(Math.abs(Number(b.dataset.motionEvent)-progress)<.0001)));
+ }
+ function setup(){box.querySelector('[data-motion-events]').innerHTML=model.events.map(e=>'<button type="button" data-motion-event="'+e.t/model.duration+'">'+esc(e.label)+'</button>').join('');box.querySelector('[data-motion-note]').textContent=(model.note?model.note+' ':'')+'按题设关系演示；观察进度不是待求时间的数值，图中不提前给出待求答案.';paint();}
+ function tick(now){if(disposed||!playing)return;if(last!=null)progress=Math.min(1,progress+Math.min(now-last,100)*rate/16000);last=now;paint();if(progress>=1)stop();else frame=root.requestAnimationFrame(tick);}
+ play.onclick=()=>{if(playing){stop();return;}if(progress>=1)progress=0;playing=true;play.textContent='暂停';play.setAttribute('aria-pressed','true');frame=root.requestAnimationFrame(tick);};
+ box.querySelector('[data-motion-reset]').onclick=()=>{stop();progress=0;paint();};slider.oninput=()=>{stop();progress=Number(slider.value)/1000;paint();};select.onchange=()=>{rate=Number(select.value);last=null;};
+ const eventsClick=e=>{const b=e.target.closest('[data-motion-event]');if(!b)return;stop();progress=Number(b.dataset.motionEvent);paint();};box.querySelector('[data-motion-events]').addEventListener('click',eventsClick);
+ if(alternatives)alternatives.onchange=()=>{stop();model=travelModel(problem,Number(alternatives.value));progress=0;setup();};
+ const visibility=()=>{if(host.ownerDocument.hidden)stop();};host.ownerDocument.addEventListener('visibilitychange',visibility);
+ const toggle=()=>{if(!box.open)stop();};box.addEventListener('toggle',toggle);setup();
+ return {getState:()=>({progress,playing,variant:alternatives?Number(alternatives.value):0}),setProgress(v){stop();progress=clamp(v);paint();},updateContext(context){const fragment=host.ownerDocument.createElement('template');fragment.innerHTML=travelMarkup(problem,route,context);const next=fragment.content.querySelector('.wp-travel-quantities'),old=box.querySelector('.wp-travel-quantities');if(old)old.remove();if(next)box.append(next);},destroy(){if(disposed)return;stop();disposed=true;host.ownerDocument.removeEventListener('visibilitychange',visibility);box.removeEventListener('toggle',toggle);box.querySelector('[data-motion-events]').removeEventListener('click',eventsClick);}};
+}
+const api={mount,destroy,travelMarkup,travelModel,motionPicture,travelReferenceMarkup,mountTravel};if(typeof module==='object'&&module.exports)module.exports=api;else root.RatioWordProblemDiagrams=api;
 })(typeof window==='undefined'?globalThis:window);
