@@ -1,7 +1,7 @@
 'use strict';
 const assert=require('node:assert/strict'),path=require('node:path');
 const base=path.resolve(process.env.SITE_DIR||'site','word-problems'),E=require(path.join(base,'engine.js')),A=require(path.join(base,'table-alternatives.js')),Q=require(path.join(base,'table-equations.js'));
-const data=['data-l7-l8','data-l9-review','data-textbook-intro','data-textbook-applications','data-textbook-review','data-pep-foundations','data-pep-applications','data-pep-review'].flatMap(f=>require(path.join(base,f+'.js')));
+const data=['data-l7-l8','data-l9-review','data-textbook-intro','data-textbook-applications','data-textbook-review','data-pep-foundations','data-pep-applications','data-pep-review','data-chapter-2021'].flatMap(f=>require(path.join(base,f+'.js')));
 function fixture(id,routeId,alternatives=[]){
  const problem=data.find(p=>p.id===id),route=problem.routes.find(r=>r.id===routeId);
  const cells=route.table.rows.flatMap((row,ri)=>row.cells.flatMap((cell,ci)=>cell.expr?[{rowIndex:ri,cellIndex:ci,rowLabel:row.label,columnLabel:route.table.headers[ci+1],originalExpr:cell.expr,originalSources:cell.sources,expr:cell.expr}]:[]));

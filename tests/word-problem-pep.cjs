@@ -29,7 +29,7 @@ for(const item of coverage.items){
 assert.deepEqual(pep.map(p=>p.id).sort(),applications.filter(p=>p.implementation.status==='interactive').flatMap(p=>p.implementation.problem_ids).sort());
 assert.equal(supplement.uniqueCount,27,'Original guide accounting stays intact');
 assert.equal(supplement.uniqueIds.length,27);assert.equal(supplement.excludedCount,28);
-assert.equal(supplement.mergedUniqueCount,71);assert.equal(new Set(supplement.mergedUniqueIds).size,71);
+assert.equal(supplement.mergedUniqueCount,82);assert.equal(new Set(supplement.mergedUniqueIds).size,82);
 
 const rows=C.build(all,source,supplement);
 assert.equal(C.categories.length,13);assert.equal(rows.length,150);

@@ -3,7 +3,7 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),{JSDOM}=require('jsdom');
 const base=path.resolve(process.env.SITE_DIR||'site','word-problems');
 const E=require(path.join(base,'engine.js')),P=require(path.join(base,'progress.js')),R=require(path.join(base,'relations.js'));
-const data=['data-l7-l8','data-l9-review','data-textbook-intro','data-textbook-applications','data-textbook-review','data-pep-foundations','data-pep-applications','data-pep-review'].flatMap(f=>require(path.join(base,f+'.js')));
+const data=['data-l7-l8','data-l9-review','data-textbook-intro','data-textbook-applications','data-textbook-review','data-pep-foundations','data-pep-applications','data-pep-review','data-chapter-2021'].flatMap(f=>require(path.join(base,f+'.js')));
 const find=id=>data.find(p=>p.id===id);
 const trapezoid=find('G9-06'),tr=trapezoid.routes[0];
 assert.match(trapezoid.facts.find(f=>f.id==='formula').text,/×1\/2/);

@@ -68,7 +68,7 @@ function fixture(){
  }
  async function loadModule(){
   w.katex={renderToString:s=>String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))};
-  for(const file of ['engine.js','math-input.js','data-l7-l8.js','data-l9-review.js','data-textbook-intro.js','data-textbook-applications.js','data-textbook-review.js','data-pep-foundations.js','data-pep-applications.js','data-pep-review.js','catalog.js','textbook-index.js','supplement-index.js','table-alternatives.js','table-equations.js','reading.js','relations.js','relation-builder.js','scratchpad.js','diagrams.js','app.js'])w.eval(read('word-problems/'+file));
+  for(const file of ['engine.js','math-input.js','data-l7-l8.js','data-l9-review.js','data-textbook-intro.js','data-textbook-applications.js','data-textbook-review.js','data-pep-foundations.js','data-pep-applications.js','data-pep-review.js','data-chapter-2021.js','catalog.js','textbook-index.js','supplement-index.js','table-alternatives.js','table-equations.js','reading.js','relations.js','relation-builder.js','scratchpad.js','diagrams.js','app.js'])w.eval(read('word-problems/'+file));
   const append=w.document.head.append.bind(w.document.head);
   w.document.head.append=(...nodes)=>{append(...nodes);for(const node of nodes){const url=node.src||node.href||'';if(url.includes('/word-problems/'))queueMicrotask(()=>node.onload?.());}};
   await w.RatioWordProblemsUI.open();

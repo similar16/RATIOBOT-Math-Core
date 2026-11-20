@@ -7,7 +7,7 @@ const E = require(path.join(site, 'engine.js'));
 const A = require(path.join(site, 'table-alternatives.js'));
 const problems = [
   'data-l7-l8', 'data-l9-review', 'data-textbook-intro', 'data-textbook-applications',
-  'data-textbook-review', 'data-pep-foundations', 'data-pep-applications', 'data-pep-review'
+  'data-textbook-review', 'data-pep-foundations', 'data-pep-applications', 'data-pep-review', 'data-chapter-2021'
 ].flatMap(name => require(path.join(site, name + '.js')));
 const byId = new Map(problems.map(problem => [problem.id, problem]));
 

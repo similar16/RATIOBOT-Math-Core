@@ -4,7 +4,7 @@ const assert=require('node:assert/strict');
 const path=require('node:path');
 const base=path.resolve(process.env.SITE_DIR||'site','word-problems');
 const load=name=>require(path.join(base,name+'.js'));
-const data=['data-l7-l8','data-l9-review','data-textbook-intro','data-textbook-applications','data-textbook-review','data-pep-foundations','data-pep-applications','data-pep-review'].flatMap(load);
+const data=['data-l7-l8','data-l9-review','data-textbook-intro','data-textbook-applications','data-textbook-review','data-pep-foundations','data-pep-applications','data-pep-review','data-chapter-2021'].flatMap(load);
 const C=load('catalog'),index=load('textbook-index'),supplement=load('supplement-index');
 const before=JSON.stringify({data,index,supplement});
 const textbook=C.forBook(data,index,supplement);
@@ -28,15 +28,15 @@ assert.deepEqual(C.select(textbook.rows,{query:'126 鸡兔'}).map(row=>row.locat
 assert.equal(textbook.filterLabel,'选择教材内容');assert.equal(textbook.allLabel,'全部教材内容');
 
 const guide=C.forBook(data,index,supplement,'guide');
-assert.equal(guide.itemCount,71);assert.equal(guide.taskCount,71);
+assert.equal(guide.itemCount,82);assert.equal(guide.taskCount,82);
 assert.equal(guide.groups.length,13);assert.deepEqual(guide.groups.map(g=>g.id),C.categories.map(c=>c.id));
-assert.equal(new Set(guide.rows.map(row=>row.problem.id)).size,71);
+assert.equal(new Set(guide.rows.map(row=>row.problem.id)).size,82);
 assert(guide.rows.every(row=>row.book==='guide'&&row.category===row.topicId));
 assert.equal(C.select(guide.rows,{category:'fees'}).length,9);
 assert(C.select(guide.rows,{query:'人教版 110'}).some(row=>row.problem.id==='S10'),'Merged PEP page searches still find the representative');
 const topicOrder=new Map(C.categories.map((category,i)=>[category.id,i]));
 for(let i=1;i<guide.rows.length;i++)assert(topicOrder.get(guide.rows[i].category)>=topicOrder.get(guide.rows[i-1].category));
 assert.equal(guide.filterLabel,'选择题型');assert.equal(guide.allLabel,'全部题型');
-assert.equal(C.build(data,index,supplement).length,150,'The original identity-level coverage API stays compatible');
+assert.equal(C.build(data,index,supplement).length,161,'The original identity-level coverage API stays compatible');
 assert.equal(JSON.stringify({data,index,supplement}),before,'Catalog navigation never edits problem, route, source or progress identities');
-console.log('PASS textbook order: 81 source positions / 79 tasks in 7 book sections; supplement: 71 tasks in 13 topics; shared identities, source search and original coverage preserved.');
+console.log('PASS textbook order: 81 source positions / 79 tasks in 7 book sections; supplement: 82 tasks in 13 topics; shared identities, source search and original coverage preserved.');
