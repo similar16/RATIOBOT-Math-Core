@@ -222,3 +222,5 @@ assert.equal(E.format('(x^2)^3'), '\\left(x^{2}\\right)^{3}');
 assert.equal(E.format('(1/2)^2'), '\\left(\\frac{1}{2}\\right)^{2}');
 assert.equal(E.formatCalculation('x/(2*3)'), 'x\\div \\left(2\\times 3\\right)');
 console.log('PASS compact display: redundant groups removed; differences, divisors, negative and fractional power bases preserved');
+assert.equal(E.format('3+(-2)'), '3+\\left(-2\\right)');
+assert.equal(E.format('x*(-3)'), 'x\\times \\left(-3\\right)');

@@ -198,7 +198,10 @@
     else {
       const pr = precedence(ast);
       const symbol = { '+': '+', '-': '-', '*': '\\times ', '/': '\\div ' }[ast.op];
-      out = latex(ast.left, calculation, pr) + symbol + latex(ast.right, calculation, ast.op === '-' || ast.op === '/' ? pr + 1 : pr);
+      let right = ast.right;
+      while (right.kind === 'group') right = right.value;
+      const rightParent = right.kind === 'unary' ? 4 : ast.op === '-' || ast.op === '/' ? pr + 1 : pr;
+      out = latex(ast.left, calculation, pr) + symbol + latex(right, calculation, rightParent);
     }
     return precedence(ast) < parent && !(ast.kind === 'binary' && ast.op === '/' && !calculation) ? '\\left(' + out + '\\right)' : out;
   }
