@@ -35,3 +35,9 @@ console.log('PASS travel motion: '+routes+' route models; meetings, waits, rever
 globalThis.RatioWordProblemEngine=require(path.join(base,'engine.js'));
 for(const p of data.filter(p=>C.categoryFor(p)?.id==='travel'))for(const r of p.routes){const context={route:r,answersChecked:true,answerPassed:true,values:Object.fromEntries(r.answers.map((a,i)=>['a:'+i,a.expr]))};const m=D.travelModel(p,0,context);assert.equal(m.mode,['C21-05','PEP-P039'].includes(p.id)?'partial':'result',p.id+'/'+r.id);}
 const v=problem('L8-P2-V1'),vr=v.routes[0];assert.equal(D.travelModel(v).sample(.5)[1].speed,'速度待求');assert.equal(D.travelModel(v,0,{route:vr,answersChecked:true,answerPassed:true,values:{'a:0':'30/2'}}).sample(.8)[1].speed,'15千米/小时');
+
+// Travelled distance counts both directions; station waits never lengthen a bar.
+const roundTrip=model('C21-11');near(D.travelledDistance(roundTrip,0,.4),200);near(D.travelledDistance(roundTrip,0,.48),200);near(D.travelledDistance(roundTrip,0,1),400);const completed=D.travelledLanes(roundTrip,1);assert.equal(completed.length,2);near(completed[0].to,200);near(completed[1].from,200);near(completed[1].to,0);
+const camps=model('S10');near(D.travelledDistance(camps,0,1),6);near(camps.sample(1)[0].position,7);
+const reversal=model('C21-10');near(D.travelledDistance(reversal,1,1),1250);const laps=new JSDOM(D.motionPicture(reversal,1));assert.equal(laps.window.document.querySelectorAll('[data-wp-actor="1"][data-wp-lap]').length,4);laps.window.close();
+console.log('PASS solid travel paths: opaque phase rows, two-way accumulation, stationary rest, camp origins and repeated circle laps');

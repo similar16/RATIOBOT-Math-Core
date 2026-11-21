@@ -227,7 +227,7 @@ function travelModel(problem,variant=0,context={}){
   if(!solved&&known!==true&&!context.derived?.[known])return '速度待求';
   return typeof value==='string'?value:clean(value)+scene.speedUnit;
  };
- return {id,length,duration,circle,train,actors,events,alternatives,note:noteText,landmarks,scene,mode,solved,
+ return {id,length,duration,circle,train,actors,events,alternatives,note:noteText,landmarks,scene,mode,solved,phases,
   sample(progress){const t=clamp(progress)*duration;return actors.map((a,i)=>{
    const part=phases.find(p=>t>=p.a&&t<p.b)||phases.at(-1);
    const status=t<a.start?'尚未出发':t>=a.finish?'已到达'+(Math.abs(a.position(t))<1e-8?scene.start:scene.end):part?.label==='休息'?(scene.rest||'休息中'):part?.label|| (id==='C21-10'&&i===1&&t>=5?'已转向，反向前进':'行进中');
@@ -235,25 +235,44 @@ function travelModel(problem,variant=0,context={}){
   });}};
 }
 
+// Accumulated path length, including direction changes, is distinct from position.
+function travelledDistance(model,actorIndex,progress){
+ const t=clamp(progress)*model.duration,actor=model.actors[actorIndex];
+ const cuts=[0,...model.events.map(e=>e.t).filter(v=>v>0&&v<t),t].sort((a,b)=>a-b);
+ return cuts.slice(1).reduce((sum,end,i)=>sum+Math.abs(actor.position(end)-actor.position(cuts[i])),0);
+}
+function travelledLanes(model,progress){
+ const t=clamp(progress)*model.duration;
+ if(model.phases?.length)return model.phases.filter(p=>p.label!=='休息').map((p,i)=>({label:p.label,from:p.from,to:p.from+(p.to-p.from)*clamp((t-p.a)/(p.b-p.a)),color:motionColors[i%motionColors.length],active:t>=p.a&&t<p.b}));
+ return model.actors.map((a,i)=>({label:a.name,from:a.position(0),to:a.position(t),color:motionColors[i],active:t>=a.start&&t<a.finish}));
+}
 function motionPicture(model,progress){
- const state=model.sample(progress),t=progress*model.duration,ink='#3E3540';
+ const state=model.sample(progress),t=progress*model.duration,ink='#3E3540',lanes=travelledLanes(model,progress);let height=355;
  const label=(x,y,v,color=ink,anchor='start',size=17)=>'<text x="'+x+'" y="'+y+'" text-anchor="'+anchor+'" font-size="'+size+'" fill="'+color+'">'+esc(v)+'</text>';
  const tag=(a,x,y,i)=>{const anchor=x>410?'end':'start',tx=x+(anchor==='end'?-12:12),ty=y-19;return label(tx,ty,a.name+' · '+a.speed,ink,anchor,16)+label(tx,y+25,a.status,ink,anchor,14);};
+ const bar=(x,y,width,color,attrs='')=>'<rect data-wp-travelled-lane '+attrs+' x="'+x+'" y="'+y+'" width="'+Math.max(0,width)+'" height="13" rx="2" fill="'+color+'" fill-opacity="1"/>';
  let body='';
  if(model.circle){
   body='<circle cx="320" cy="185" r="100" fill="none" stroke="'+ink+'" stroke-width="3"/>'+label(320,38,'共同起点',ink,'middle')+'<circle cx="320" cy="85" r="4" fill="'+ink+'"/>';
+  state.forEach((a,i)=>{const r=100+(i?8:-8),distance=travelledDistance(model,i,progress),angle=a.position/model.length*2*Math.PI-Math.PI/2,x=320+r*Math.cos(angle),y=185+r*Math.sin(angle);if(distance>=model.length)body+='<circle data-wp-travelled-arc="'+i+'" cx="320" cy="185" r="'+r+'" fill="none" stroke="'+a.color+'" stroke-width="12" stroke-opacity="1"/>';else if(distance>0)body+='<path data-wp-travelled-arc="'+i+'" d="M320 '+(185-r)+' A'+r+' '+r+' 0 '+(distance/model.length>.5?1:0)+' '+(a.position>=0?1:0)+' '+x+' '+y+'" fill="none" stroke="'+a.color+'" stroke-width="12" stroke-opacity="1"/>';});
   if(model.id==='C21-10'&&t>=5)body+='<circle cx="320" cy="285" r="6" fill="none" stroke="'+motionColors[1]+'" stroke-width="2"/>'+label(345,303,'首次相遇处',ink,'start',13);
   state.forEach((a,i)=>{const angle=a.position/model.length*2*Math.PI-Math.PI/2,r=100+(i?8:-8),x=320+r*Math.cos(angle),y=185+r*Math.sin(angle),tx=clamp(x,180,460),ty=y+(i?48:-36);body+='<path d="M'+x+' '+y+'L'+tx+' '+ty+'" stroke="'+a.color+'" stroke-dasharray="3 3"/><circle data-wp-moving-actor="'+i+'" cx="'+x+'" cy="'+y+'" r="8" fill="'+a.color+'" stroke="white" stroke-width="2"/>'+label(tx,ty,a.name+' · '+a.speed,ink,'middle',15);const delta=progress<1?model.sample(Math.min(1,progress+.001))[i].position-a.position:a.position-model.sample(Math.max(0,progress-.001))[i].position,sign=delta<0?-1:1,dx=-Math.sin(angle)*sign,dy=Math.cos(angle)*sign;body+='<path d="M'+(x-dx*30)+' '+(y-dy*30)+'L'+(x-dx*12)+' '+(y-dy*12)+'" stroke="'+a.color+'" stroke-width="3"/>';});
+  let rowY=370;
+  state.forEach((a,i)=>{body+=label(40,rowY,a.name+'：每行表示一圈路程',ink,'start',15);rowY+=12;const distance=travelledDistance(model,i,progress),count=Math.max(1,Math.ceil((distance-1e-8)/model.length));for(let lap=0;lap<count;lap++){const fraction=clamp(distance/model.length-lap);body+=label(45,rowY+14,'第'+(lap+1)+'圈',ink,'start',14)+'<path d="M120 '+(rowY+7)+'H590" stroke="'+ink+'" stroke-width="1"/>'+bar(120,rowY,470*fraction,a.color,'data-wp-lap="'+lap+'" data-wp-actor="'+i+'"');rowY+=24;}rowY+=18;});
+  height=Math.max(440,rowY+5);
  }else{
-  const x=p=>50+540*clamp(p/model.length);
-  body='<path d="M50 205H590" fill="none" stroke="'+ink+'" stroke-width="3"/>'+label(50,235,model.scene.start)+label(590,235,model.scene.end,ink,'end');
-  model.landmarks.forEach((v,i)=>{body+='<path d="M'+x(v.pos)+' 198v14" stroke="'+ink+'"/>'+label(x(v.pos),268+(i%2)*24,v.label,ink,'middle',15);});
+  const x=p=>50+540*clamp(p/model.length),firstY=model.train?245:205,endY=firstY+(lanes.length-1)*42;
+  height=Math.max(355,endY+112);
+  lanes.forEach((v,i)=>{const y=firstY+i*42,a=x(v.from),b=x(v.to),short=model.phases?.length?(model.id==='C21-11'?(i?'返程':'去程'):v.label):v.label;body+='<path d="M50 '+y+'H590" fill="none" stroke="'+ink+'" stroke-width="2"/>'+bar(Math.min(a,b),y-6,Math.abs(b-a),v.color,'data-wp-phase="'+i+'"')+label(50,y-13,short,ink,'start',14);});
+  body+=label(50,endY+34,model.scene.start)+label(590,endY+34,model.scene.end,ink,'end');
+  model.landmarks.forEach((v,i)=>{body+='<path d="M'+x(v.pos)+' '+(endY-7)+'v14" stroke="'+ink+'"/>'+label(x(v.pos),endY+65+(i%2)*22,v.label,ink,'middle',15);});
   if(model.train){body+=model.landmarks.length===1?'<path d="M'+x(300)+' 40v160" stroke="'+motionColors[2]+'" stroke-width="3" stroke-dasharray="4 3"/>':'<path d="M'+x(300)+' 177H'+x(600)+'" stroke="'+ink+'" stroke-width="10" stroke-dasharray="4 3"/>';const head=x(state[0].position),tail=x(state[0].position-300);body+='<path d="M'+tail+' 195H'+head+'" stroke="'+motionColors[0]+'" stroke-width="16"/>'+label(head,152,'车头',motionColors[0],'end')+label(tail,152,'车尾',motionColors[0])+tag(state[0],head,90,0);}
-  else state.forEach((a,i)=>{const px=x(a.position),y=90+i*65;body+='<path d="M'+px+' '+(y+9)+'V205" stroke="'+a.color+'" stroke-dasharray="4 4"/><circle data-wp-moving-actor="'+i+'" cx="'+px+'" cy="'+y+'" r="9" fill="'+a.color+'"/>'+tag(a,px,y,i);const next=model.sample(Math.min(1,progress+.001))[i].position,dir=next<a.position?-1:1;if(Math.abs(next-a.position)>1e-8)body+='<path d="M'+(px-dir*24)+' '+y+'h'+(dir*13)+'m'+(-dir*5)+' -5l'+(dir*5)+' 5l'+(-dir*5)+' 5" fill="none" stroke="'+a.color+'" stroke-width="2"/>';});
-  if(state.length===2&&!model.landmarks.length){const a=x(state[0].position),b=x(state[1].position);body+='<path d="M'+a+' 305H'+b+'M'+a+' 300v10M'+b+' 300v10" stroke="'+motionColors[2]+'" stroke-width="3"/>'+label(320,282,Math.abs(a-b)<.01?'位置重合':'两者之间的距离',motionColors[2],'middle');}
+  else state.forEach((a,i)=>{const px=x(a.position),y=90+i*65;let lane=i;if(model.phases?.length){const active=lanes.findIndex(v=>v.active);lane=active>=0?active:(t>=model.duration?lanes.length-1:0);}const targetY=firstY+lane*42;body+='<path d="M'+px+' '+(y+9)+'V'+targetY+'" stroke="'+a.color+'" stroke-dasharray="4 4"/><circle data-wp-moving-actor="'+i+'" cx="'+px+'" cy="'+y+'" r="9" fill="'+a.color+'"/>'+tag(a,px,y,i);const next=model.sample(Math.min(1,progress+.001))[i].position,dir=next<a.position?-1:1;if(Math.abs(next-a.position)>1e-8)body+='<path d="M'+(px-dir*24)+' '+y+'h'+(dir*13)+'m'+(-dir*5)+' -5l'+(dir*5)+' 5l'+(-dir*5)+' 5" fill="none" stroke="'+a.color+'" stroke-width="2"/>';});
+  if(state.length===2&&!model.landmarks.length){const a=x(state[0].position),b=x(state[1].position);body+='<path d="M'+a+' '+(endY+86)+'H'+b+'M'+a+' '+(endY+81)+'v10M'+b+' '+(endY+81)+'v10" stroke="'+motionColors[2]+'" stroke-width="3"/>'+label(320,endY+64,Math.abs(a-b)<.01?'位置重合':'两者之间的距离',motionColors[2],'middle');}
+  if(model.phases?.length){const total=travelledDistance(model,0,progress),unit=model.scene.speedUnit.includes('千米')?'千米':'米';body+=label(320,height-12,model.solved?'累计走过的路程：'+clean(total)+unit:'实心色条表示已走路程；不同阶段换行保留，休息时不增长',ink,'middle',14);}
  }
  const evt=[...model.events].reverse().find(e=>e.t<=t+1e-8)?.label||'';
- return svg(body,'行程运动演示',state.map(a=>a.name+'：'+a.speed+'，'+a.status).join('；')+'；'+evt,355);
+ return svg(body,'行程运动演示',state.map(a=>a.name+'：'+a.speed+'，'+a.status).join('；')+'；'+evt,height);
 }
 function mountTravel(host,problem,route,initialContext={}){
  const box=host.querySelector('[data-wp-travel-diagram]');if(!box||!travelModel(problem))return null;
@@ -275,7 +294,7 @@ function mountTravel(host,problem,route,initialContext={}){
  }
  function setup(){
   box.dataset.motionMode=model.mode;
-  box.querySelector('[data-motion-mode]').textContent=model.mode==='illustration'?'示意演示：展示一种可能的情形.图中位置和时间比例不作为题目数据，已知速度按原题标注.':model.mode==='partial'?'已确认部分结果：仅使用可以确定的数据；未确定的速度或各段用时仍为示意.':'结果演示：根据原题条件和你已确认的解答进行演示.';
+  box.querySelector('[data-motion-mode]').textContent=model.mode==='illustration'?'示意演示：展示一种可能的情形.图中位置和时间比例不作为题目数据，已知速度按原题标注.实心色条表示已走路程，返程或重复行程分行累计.':model.mode==='partial'?'已确认部分结果：仅使用可以确定的数据；未确定的速度或各段用时仍为示意.':'结果演示：根据原题条件和你已确认的解答进行演示.';
   box.querySelector('[data-motion-events]').innerHTML=model.events.map(e=>'<button type="button" class="wp-secondary" data-motion-event="'+e.t/model.duration+'">'+esc(e.label)+'</button>').join('');
   box.querySelector('[data-motion-note]').textContent=(model.note?model.note+' ':'')+(model.scene.normalized?'全程按1表示，速度是每天或每小时行进的全程比例. ':'')+(model.solved?'可用这些结果回看各阶段，并核对原题条件.':'解答核对正确后，这里会切换为结果演示；仍不能确定的数据会继续注明为示意.');
   box.querySelectorAll('[data-motion-results]').forEach(el=>el.remove());
@@ -292,5 +311,5 @@ function mountTravel(host,problem,route,initialContext={}){
  const toggle=()=>{if(!box.open)stop();};box.addEventListener('toggle',toggle);setup();
  return {getState:()=>({progress,playing,variant:alternatives?Number(alternatives.value):0}),setProgress(v){stop();progress=clamp(v);paint();},updateContext(nextContext){context={...nextContext,route};const prior=model.mode;model=travelModel(problem,alternatives?Number(alternatives.value):0,context);if(model.mode!==prior){stop();progress=0;setup();}else paint();const fragment=host.ownerDocument.createElement('template');fragment.innerHTML=travelMarkup(problem,route,context);const next=fragment.content.querySelector('.wp-travel-quantities'),old=box.querySelector('.wp-travel-quantities');if(old)old.remove();if(next)box.append(next);},destroy(){if(disposed)return;stop();disposed=true;host.ownerDocument.removeEventListener('visibilitychange',visibility);box.removeEventListener('toggle',toggle);box.querySelector('[data-motion-events]').removeEventListener('click',eventsClick);}};
 }
-const api={mount,destroy,travelMarkup,travelModel,motionPicture,mountTravel};if(typeof module==='object'&&module.exports)module.exports=api;else root.RatioWordProblemDiagrams=api;
+const api={mount,destroy,travelMarkup,travelModel,motionPicture,travelledDistance,travelledLanes,mountTravel};if(typeof module==='object'&&module.exports)module.exports=api;else root.RatioWordProblemDiagrams=api;
 })(typeof window==='undefined'?globalThis:window);
