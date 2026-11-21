@@ -211,3 +211,14 @@ for(const [raw,context,expected] of [
 assert(E.equivalent('90-'+E.referenceExpression('40+x',{before:'90-'}),'90-(40+x)'));
 assert(E.equivalent('3*'+E.referenceExpression('x+7',{before:'3*'}),'3*(x+7)'));
 console.log('PASS quantity references: redundant parentheses removed, subtraction/product/division/power grouping retained');
+// Display compaction must not change precedence or the meaning of powers.
+assert.equal(E.format('((120))'), '120');
+assert.equal(E.format('(x)+(2)'), 'x+2');
+assert.equal(E.format('(5/3)*x'), '\\frac{5}{3}\\times x');
+assert.equal(E.format('((x+2))*3'), '\\left(x+2\\right)\\times 3');
+assert.equal(E.format('x-(x-2)'), 'x-\\left(x-2\\right)');
+assert.equal(E.format('(-3)^n'), '\\left(-3\\right)^{n}');
+assert.equal(E.format('(x^2)^3'), '\\left(x^{2}\\right)^{3}');
+assert.equal(E.format('(1/2)^2'), '\\left(\\frac{1}{2}\\right)^{2}');
+assert.equal(E.formatCalculation('x/(2*3)'), 'x\\div \\left(2\\times 3\\right)');
+console.log('PASS compact display: redundant groups removed; differences, divisors, negative and fractional power bases preserved');

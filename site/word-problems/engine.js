@@ -180,13 +180,20 @@
   }
   const precedence = node => node.kind === 'binary' ? (['+', '-'].includes(node.op) ? 1 : 2) : node.kind === 'unary' ? 3 : node.kind === 'power' ? 4 : 5;
   function latex(ast, calculation = false, parent = 0) {
+    // Render grouping only where the surrounding operation requires it.
+    // Keep the original AST for grading and for checking the data sources.
+    if (ast.kind === 'group') return latex(ast.value, calculation, parent);
     let out;
     if (ast.kind === 'number') out = ast.raw.startsWith('.') ? '0' + ast.raw : ast.raw;
     else if (ast.kind === 'variable') out = ast.name;
-    else if (ast.kind === 'group') out = '\\left(' + latex(ast.value, calculation) + '\\right)';
     else if (ast.kind === 'unary') out = ast.op + latex(ast.value, calculation, 3);
     else if (ast.kind === 'percent') out = latex(ast.value, calculation, 5) + '\\%';
-    else if (ast.kind === 'power') out = latex(ast.left, calculation, 4) + '^{' + latex(ast.right, calculation) + '}';
+    else if (ast.kind === 'power') {
+      let base = ast.left;
+      while (base.kind === 'group') base = base.value;
+      const fractionBase = base.kind === 'binary' && base.op === '/' && !calculation;
+      out = (fractionBase ? '\\left(' + latex(base, calculation) + '\\right)' : latex(base, calculation, 5)) + '^{' + latex(ast.right, calculation) + '}';
+    }
     else if (ast.op === '/' && !calculation) out = '\\frac{' + latex(ast.left, calculation) + '}{' + latex(ast.right, calculation) + '}';
     else {
       const pr = precedence(ast);
