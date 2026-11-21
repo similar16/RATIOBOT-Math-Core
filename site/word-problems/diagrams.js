@@ -246,30 +246,52 @@ function travelledLanes(model,progress){
  if(model.phases?.length)return model.phases.filter(p=>p.label!=='休息').map((p,i)=>({label:p.label,from:p.from,to:p.from+(p.to-p.from)*clamp((t-p.a)/(p.b-p.a)),color:motionColors[i%motionColors.length],active:t>=p.a&&t<p.b}));
  return model.actors.map((a,i)=>({label:a.name,from:a.position(0),to:a.position(t),color:motionColors[i],active:t>=a.start&&t<a.finish}));
 }
-function motionPicture(model,progress){
- const state=model.sample(progress),t=progress*model.duration,ink='#3E3540',lanes=travelledLanes(model,progress);let height=355;
+// Count physical visits to each part of the route. Reversing direction adds a
+// visit to the same interval; paint is capped at three layers, never distance.
+function traceCoverage(model,actorIndex,progress){
+ const t=clamp(progress)*model.duration,actor=model.actors[actorIndex],cuts=[0,...model.events.map(e=>e.t).filter(v=>v>0&&v<t),t].sort((a,b)=>a-b),intervals=[];
+ for(let i=1;i<cuts.length;i++){
+  const a=actor.position(cuts[i-1]),b=actor.position(cuts[i]),lo=Math.min(a,b),hi=Math.max(a,b);if(hi-lo<1e-9)continue;
+  if(model.circle){for(let k=Math.floor(lo/model.length);k<Math.ceil(hi/model.length);k++){const start=Math.max(lo,k*model.length)-k*model.length,end=Math.min(hi,(k+1)*model.length)-k*model.length;if(end-start>1e-9)intervals.push([start,end]);}}
+  else intervals.push([lo,hi]);
+ }
+ const boundaries=[...new Set(intervals.flat().map(n=>Math.round(n*1e8)/1e8))].sort((a,b)=>a-b),result=[];
+ for(let j=1;j<boundaries.length;j++){const start=boundaries[j-1],end=boundaries[j],mid=(start+end)/2,count=intervals.filter(([a,b])=>a<=mid&&b>=mid).length;if(!count)continue;result.push({start,end,visits:count,layers:Math.min(3,count)});}
+ return result;
+}
+function motionPicture(model,progress,{showLegend=true}={}){
+ const state=model.sample(progress),t=progress*model.duration,ink='#3E3540',lanes=model.actors.map((a,i)=>({label:a.name,color:motionColors[i]}));let height=355;
  const label=(x,y,v,color=ink,anchor='start',size=17)=>'<text x="'+x+'" y="'+y+'" text-anchor="'+anchor+'" font-size="'+size+'" fill="'+color+'">'+esc(v)+'</text>';
  const tag=(a,x,y,i)=>{const anchor=x>410?'end':'start',tx=x+(anchor==='end'?-12:12),ty=y-19;return label(tx,ty,a.name+' · '+a.speed,ink,anchor,16)+label(tx,y+25,a.status,ink,anchor,14);};
- const bar=(x,y,width,color,attrs='')=>'<rect data-wp-travelled-lane '+attrs+' x="'+x+'" y="'+y+'" width="'+Math.max(0,width)+'" height="13" rx="2" fill="'+color+'" fill-opacity="1"/>';
+ const bar=(x,y,width,color,attrs='')=>'<rect data-wp-travelled-lane="" '+attrs+' x="'+x+'" y="'+y+'" width="'+Math.max(0,width)+'" height="13" rx="2" fill="'+color+'" fill-opacity="0.3"/>';
  let body='';
  if(model.circle){
-  body='<circle cx="320" cy="185" r="100" fill="none" stroke="'+ink+'" stroke-width="3"/>'+label(320,38,'共同起点',ink,'middle')+'<circle cx="320" cy="85" r="4" fill="'+ink+'"/>';
-  state.forEach((a,i)=>{const r=100+(i?8:-8),distance=travelledDistance(model,i,progress),angle=a.position/model.length*2*Math.PI-Math.PI/2,x=320+r*Math.cos(angle),y=185+r*Math.sin(angle);if(distance>=model.length)body+='<circle data-wp-travelled-arc="'+i+'" cx="320" cy="185" r="'+r+'" fill="none" stroke="'+a.color+'" stroke-width="12" stroke-opacity="1"/>';else if(distance>0)body+='<path data-wp-travelled-arc="'+i+'" d="M320 '+(185-r)+' A'+r+' '+r+' 0 '+(distance/model.length>.5?1:0)+' '+(a.position>=0?1:0)+' '+x+' '+y+'" fill="none" stroke="'+a.color+'" stroke-width="12" stroke-opacity="1"/>';});
-  if(model.id==='C21-10'&&t>=5)body+='<circle cx="320" cy="285" r="6" fill="none" stroke="'+motionColors[1]+'" stroke-width="2"/>'+label(345,303,'首次相遇处',ink,'start',13);
-  state.forEach((a,i)=>{const angle=a.position/model.length*2*Math.PI-Math.PI/2,r=100+(i?8:-8),x=320+r*Math.cos(angle),y=185+r*Math.sin(angle),tx=clamp(x,180,460),ty=y+(i?48:-36);body+='<path d="M'+x+' '+y+'L'+tx+' '+ty+'" stroke="'+a.color+'" stroke-dasharray="3 3"/><circle data-wp-moving-actor="'+i+'" cx="'+x+'" cy="'+y+'" r="8" fill="'+a.color+'" stroke="white" stroke-width="2"/>'+label(tx,ty,a.name+' · '+a.speed,ink,'middle',15);const delta=progress<1?model.sample(Math.min(1,progress+.001))[i].position-a.position:a.position-model.sample(Math.max(0,progress-.001))[i].position,sign=delta<0?-1:1,dx=-Math.sin(angle)*sign,dy=Math.cos(angle)*sign;body+='<path d="M'+(x-dx*30)+' '+(y-dy*30)+'L'+(x-dx*12)+' '+(y-dy*12)+'" stroke="'+a.color+'" stroke-width="3"/>';});
-  let rowY=370;
-  state.forEach((a,i)=>{body+=label(40,rowY,a.name+'：每行表示一圈路程',ink,'start',15);rowY+=12;const distance=travelledDistance(model,i,progress),count=Math.max(1,Math.ceil((distance-1e-8)/model.length));for(let lap=0;lap<count;lap++){const fraction=clamp(distance/model.length-lap);body+=label(45,rowY+14,'第'+(lap+1)+'圈',ink,'start',14)+'<path d="M120 '+(rowY+7)+'H590" stroke="'+ink+'" stroke-width="1"/>'+bar(120,rowY,470*fraction,a.color,'data-wp-lap="'+lap+'" data-wp-actor="'+i+'"');rowY+=24;}rowY+=18;});
-  height=Math.max(440,rowY+5);
+  body='<circle cx="320" cy="190" r="135" fill="none" stroke="'+ink+'" stroke-width="3"/>'+label(320,20,'共同起点',ink,'middle')+'<circle cx="320" cy="55" r="4" fill="'+ink+'"/>';
+  state.forEach((a,i)=>{
+   const r=135+(i?8:-8);
+   for(const part of traceCoverage(model,i,progress))for(let layer=1;layer<=part.layers;layer++){
+    const attr='data-wp-travelled-arc="'+i+'" data-wp-trace-layer="'+layer+'" data-visits="'+part.visits+'"';
+    if(part.end-part.start>=model.length-1e-7)body+='<circle '+attr+' cx="320" cy="190" r="'+r+'" fill="none" stroke="'+a.color+'" stroke-width="13" stroke-opacity="0.3"/>';
+    else{const a1=part.start/model.length*2*Math.PI-Math.PI/2,a2=part.end/model.length*2*Math.PI-Math.PI/2;body+='<path '+attr+' d="M'+(320+r*Math.cos(a1))+' '+(190+r*Math.sin(a1))+' A'+r+' '+r+' 0 '+(part.end-part.start>model.length/2?1:0)+' 1 '+(320+r*Math.cos(a2))+' '+(190+r*Math.sin(a2))+'" fill="none" stroke="'+a.color+'" stroke-width="13" stroke-opacity="0.3"/>';}
+   }
+  });
+  if(model.id==='C21-10'&&t>=5)body+='<circle data-wp-first-meeting="" cx="320" cy="325" r="6" fill="none" stroke="'+motionColors[1]+'" stroke-width="2"><title>首次相遇处，小红在此转向</title></circle>';
+  state.forEach((a,i)=>{const angle=a.position/model.length*2*Math.PI-Math.PI/2,r=135+(i?8:-8),x=320+r*Math.cos(angle),y=190+r*Math.sin(angle),tx=clamp(x+(x>320?105:x<320?-105:i?105:-105),120,520),ty=clamp(y+(i?38:-30),50,338);body+='<path d="M'+x+' '+y+'L'+tx+' '+ty+'" stroke="'+a.color+'" stroke-dasharray="3 3"/><circle data-wp-moving-actor="'+i+'" cx="'+x+'" cy="'+y+'" r="8" fill="'+a.color+'" stroke="white" stroke-width="2"/>'+label(tx,ty,a.name+' · '+a.speed,ink,'middle',15);const delta=progress<1?model.sample(Math.min(1,progress+.001))[i].position-a.position:a.position-model.sample(Math.max(0,progress-.001))[i].position,sign=delta<0?-1:1,dx=-Math.sin(angle)*sign,dy=Math.cos(angle)*sign;body+='<path d="M'+(x-dx*30)+' '+(y-dy*30)+'L'+(x-dx*12)+' '+(y-dy*12)+'" stroke="'+a.color+'" stroke-width="3"/>';const tipX=x-dx*12,tipY=y-dy*12;body+='<path d="M'+(tipX-dx*6-dy*5)+' '+(tipY-dy*6+dx*5)+'L'+tipX+' '+tipY+'L'+(tipX-dx*6+dy*5)+' '+(tipY-dy*6-dx*5)+'" fill="none" stroke="'+a.color+'" stroke-width="2"/>';});
+  if(showLegend){body+=label(320,359,'同一路段重走会加深颜色（最多显示3层）',ink,'middle',15);
+  for(let count=1;count<=3;count++){const x=90+(count-1)*190;for(let layer=1;layer<=count;layer++)body+='<path data-wp-trace-legend="'+count+'" d="M'+x+' 386h100" fill="none" stroke="'+motionColors[1]+'" stroke-width="15" stroke-opacity="0.3"/>';body+=label(x+50,416,count===3?'3次及以上':count+'次',ink,'middle',14);}
+  body+=label(320,448,model.solved?state.map((a,i)=>a.name+'累计 '+clean(travelledDistance(model,i,progress))+'米').join('；'):'同一跑道分色显示；每层30%色深，叠色最多3层',ink,'middle',14);
+  }height=showLegend?466:350;
  }else{
   const x=p=>50+540*clamp(p/model.length),firstY=model.train?245:205,endY=firstY+(lanes.length-1)*42;
   height=Math.max(355,endY+112);
-  lanes.forEach((v,i)=>{const y=firstY+i*42,a=x(v.from),b=x(v.to),short=model.phases?.length?(model.id==='C21-11'?(i?'返程':'去程'):v.label):v.label;body+='<path d="M50 '+y+'H590" fill="none" stroke="'+ink+'" stroke-width="2"/>'+bar(Math.min(a,b),y-6,Math.abs(b-a),v.color,'data-wp-phase="'+i+'"')+label(50,y-13,short,ink,'start',14);});
+  lanes.forEach((v,i)=>{const y=firstY+i*42;body+='<path d="M50 '+y+'H590" fill="none" stroke="'+ink+'" stroke-width="2"/>'+label(50,y-13,v.label,ink,'start',14);for(const part of traceCoverage(model,i,progress))for(let layer=1;layer<=part.layers;layer++)body+=bar(x(part.start),y-6,x(part.end)-x(part.start),v.color,'data-wp-actor="'+i+'" data-wp-trace-layer="'+layer+'" data-visits="'+part.visits+'"');});
+
   body+=label(50,endY+34,model.scene.start)+label(590,endY+34,model.scene.end,ink,'end');
   model.landmarks.forEach((v,i)=>{body+='<path d="M'+x(v.pos)+' '+(endY-7)+'v14" stroke="'+ink+'"/>'+label(x(v.pos),endY+65+(i%2)*22,v.label,ink,'middle',15);});
   if(model.train){body+=model.landmarks.length===1?'<path d="M'+x(300)+' 40v160" stroke="'+motionColors[2]+'" stroke-width="3" stroke-dasharray="4 3"/>':'<path d="M'+x(300)+' 177H'+x(600)+'" stroke="'+ink+'" stroke-width="10" stroke-dasharray="4 3"/>';const head=x(state[0].position),tail=x(state[0].position-300);body+='<path d="M'+tail+' 195H'+head+'" stroke="'+motionColors[0]+'" stroke-width="16"/>'+label(head,152,'车头',motionColors[0],'end')+label(tail,152,'车尾',motionColors[0])+tag(state[0],head,90,0);}
-  else state.forEach((a,i)=>{const px=x(a.position),y=90+i*65;let lane=i;if(model.phases?.length){const active=lanes.findIndex(v=>v.active);lane=active>=0?active:(t>=model.duration?lanes.length-1:0);}const targetY=firstY+lane*42;body+='<path d="M'+px+' '+(y+9)+'V'+targetY+'" stroke="'+a.color+'" stroke-dasharray="4 4"/><circle data-wp-moving-actor="'+i+'" cx="'+px+'" cy="'+y+'" r="9" fill="'+a.color+'"/>'+tag(a,px,y,i);const next=model.sample(Math.min(1,progress+.001))[i].position,dir=next<a.position?-1:1;if(Math.abs(next-a.position)>1e-8)body+='<path d="M'+(px-dir*24)+' '+y+'h'+(dir*13)+'m'+(-dir*5)+' -5l'+(dir*5)+' 5l'+(-dir*5)+' 5" fill="none" stroke="'+a.color+'" stroke-width="2"/>';});
+  else state.forEach((a,i)=>{const px=x(a.position),y=90+i*65;const targetY=firstY+i*42;body+='<path d="M'+px+' '+(y+9)+'V'+targetY+'" stroke="'+a.color+'" stroke-dasharray="4 4"/><circle data-wp-moving-actor="'+i+'" cx="'+px+'" cy="'+y+'" r="9" fill="'+a.color+'"/>'+tag(a,px,y,i);const next=model.sample(Math.min(1,progress+.001))[i].position,dir=next<a.position?-1:1;if(Math.abs(next-a.position)>1e-8)body+='<path d="M'+(px-dir*24)+' '+y+'h'+(dir*13)+'m'+(-dir*5)+' -5l'+(dir*5)+' 5l'+(-dir*5)+' 5" fill="none" stroke="'+a.color+'" stroke-width="2"/>';});
   if(state.length===2&&!model.landmarks.length){const a=x(state[0].position),b=x(state[1].position);body+='<path d="M'+a+' '+(endY+86)+'H'+b+'M'+a+' '+(endY+81)+'v10M'+b+' '+(endY+81)+'v10" stroke="'+motionColors[2]+'" stroke-width="3"/>'+label(320,endY+64,Math.abs(a-b)<.01?'位置重合':'两者之间的距离',motionColors[2],'middle');}
-  if(model.phases?.length){const total=travelledDistance(model,0,progress),unit=model.scene.speedUnit.includes('千米')?'千米':'米';body+=label(320,height-12,model.solved?'累计走过的路程：'+clean(total)+unit:'实心色条表示已走路程；不同阶段换行保留，休息时不增长',ink,'middle',14);}
+  if(model.phases?.length){const total=travelledDistance(model,0,progress),unit=model.scene.speedUnit.includes('千米')?'千米':'米';body+=label(320,height-12,model.solved?'累计走过的路程：'+clean(total)+unit:'半透明色条记录已走路程；重走叠色，最多3层；休息时不增长',ink,'middle',14);}
  }
  const evt=[...model.events].reverse().find(e=>e.t<=t+1e-8)?.label||'';
  return svg(body,'行程运动演示',state.map(a=>a.name+'：'+a.speed+'，'+a.status).join('；')+'；'+evt,height);
@@ -294,7 +316,7 @@ function mountTravel(host,problem,route,initialContext={}){
  }
  function setup(){
   box.dataset.motionMode=model.mode;
-  box.querySelector('[data-motion-mode]').textContent=model.mode==='illustration'?'示意演示：展示一种可能的情形.图中位置和时间比例不作为题目数据，已知速度按原题标注.实心色条表示已走路程，返程或重复行程分行累计.':model.mode==='partial'?'已确认部分结果：仅使用可以确定的数据；未确定的速度或各段用时仍为示意.':'结果演示：根据原题条件和你已确认的解答进行演示.';
+  box.querySelector('[data-motion-mode]').textContent=model.mode==='illustration'?'示意演示：展示一种可能的情形.图中位置和时间比例不作为题目数据，已知速度按原题标注.每层30%色深记录已走路程，重走处叠加加深，最多显示3层.':model.mode==='partial'?'已确认部分结果：仅使用可以确定的数据；未确定的速度或各段用时仍为示意.':'结果演示：根据原题条件和你已确认的解答进行演示.';
   box.querySelector('[data-motion-events]').innerHTML=model.events.map(e=>'<button type="button" class="wp-secondary" data-motion-event="'+e.t/model.duration+'">'+esc(e.label)+'</button>').join('');
   box.querySelector('[data-motion-note]').textContent=(model.note?model.note+' ':'')+(model.scene.normalized?'全程按1表示，速度是每天或每小时行进的全程比例. ':'')+(model.solved?'可用这些结果回看各阶段，并核对原题条件.':'解答核对正确后，这里会切换为结果演示；仍不能确定的数据会继续注明为示意.');
   box.querySelectorAll('[data-motion-results]').forEach(el=>el.remove());
@@ -311,5 +333,5 @@ function mountTravel(host,problem,route,initialContext={}){
  const toggle=()=>{if(!box.open)stop();};box.addEventListener('toggle',toggle);setup();
  return {getState:()=>({progress,playing,variant:alternatives?Number(alternatives.value):0}),setProgress(v){stop();progress=clamp(v);paint();},updateContext(nextContext){context={...nextContext,route};const prior=model.mode;model=travelModel(problem,alternatives?Number(alternatives.value):0,context);if(model.mode!==prior){stop();progress=0;setup();}else paint();const fragment=host.ownerDocument.createElement('template');fragment.innerHTML=travelMarkup(problem,route,context);const next=fragment.content.querySelector('.wp-travel-quantities'),old=box.querySelector('.wp-travel-quantities');if(old)old.remove();if(next)box.append(next);},destroy(){if(disposed)return;stop();disposed=true;host.ownerDocument.removeEventListener('visibilitychange',visibility);box.removeEventListener('toggle',toggle);box.querySelector('[data-motion-events]').removeEventListener('click',eventsClick);}};
 }
-const api={mount,destroy,travelMarkup,travelModel,motionPicture,travelledDistance,travelledLanes,mountTravel};if(typeof module==='object'&&module.exports)module.exports=api;else root.RatioWordProblemDiagrams=api;
+const api={mount,destroy,travelMarkup,travelModel,motionPicture,travelledDistance,travelledLanes,traceCoverage,mountTravel};if(typeof module==='object'&&module.exports)module.exports=api;else root.RatioWordProblemDiagrams=api;
 })(typeof window==='undefined'?globalThis:window);

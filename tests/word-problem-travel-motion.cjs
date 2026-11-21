@@ -39,5 +39,9 @@ const v=problem('L8-P2-V1'),vr=v.routes[0];assert.equal(D.travelModel(v).sample(
 // Travelled distance counts both directions; station waits never lengthen a bar.
 const roundTrip=model('C21-11');near(D.travelledDistance(roundTrip,0,.4),200);near(D.travelledDistance(roundTrip,0,.48),200);near(D.travelledDistance(roundTrip,0,1),400);const completed=D.travelledLanes(roundTrip,1);assert.equal(completed.length,2);near(completed[0].to,200);near(completed[1].from,200);near(completed[1].to,0);
 const camps=model('S10');near(D.travelledDistance(camps,0,1),6);near(camps.sample(1)[0].position,7);
-const reversal=model('C21-10');near(D.travelledDistance(reversal,1,1),1250);const laps=new JSDOM(D.motionPicture(reversal,1));assert.equal(laps.window.document.querySelectorAll('[data-wp-actor="1"][data-wp-lap]').length,4);laps.window.close();
-console.log('PASS solid travel paths: opaque phase rows, two-way accumulation, stationary rest, camp origins and repeated circle laps');
+const reversal=model('C21-10');near(D.travelledDistance(reversal,1,1),1250);
+const red=D.traceCoverage(reversal,1,1);assert(red.some(p=>p.visits===4&&p.layers===3),'Fourth passage is capped at 3 visual layers');assert(red.some(p=>p.start===350&&p.layers===3),'Reversal adds a third visit to the previously twice-covered final section');assert(red.every(p=>p.layers<=3));
+const loop=new JSDOM(D.motionPicture(reversal,1));assert([...loop.window.document.querySelectorAll('[data-wp-travelled-arc]')].every(p=>p.getAttribute('stroke-opacity')==='0.3'&&Number(p.dataset.wpTraceLayer)<=3));loop.window.close();
+const beforeRest=D.traceCoverage(roundTrip,0,.4),duringRest=D.traceCoverage(roundTrip,0,.48);assert.deepEqual(beforeRest,duringRest);const returned=D.traceCoverage(roundTrip,0,1);assert(returned.every(p=>p.layers===2));
+for(const p of data.filter(p=>C.categoryFor(p)?.id==='travel')){const m=D.travelModel(p);for(let k=0;k<=25;k++)for(let i=0;i<m.actors.length;i++){const coverage=D.traceCoverage(m,i,k/25);const sum=coverage.reduce((s,v)=>s+(v.end-v.start)*v.visits,0);near(sum,D.travelledDistance(m,i,k/25));assert(coverage.every(v=>v.layers<=3));}}
+console.log('PASS repeated travel: 30% per layer, spatial overlap after reversal, 3-layer cap, unchanged rest, full distance retained, all travel models');
