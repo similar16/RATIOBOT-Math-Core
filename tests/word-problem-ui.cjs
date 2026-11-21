@@ -183,13 +183,13 @@ const token=refPractice.$('[data-wp-token]'),slot=refPractice.$('[data-wp-rel-sl
 refPractice.close();
 // Travel schematics sit below analysis, hide unconfirmed values, and use clean source captions.
 const travelSchematic=fixture(),travelP=travelSchematic.w.RatioWordProblemsData.find(p=>p.id==='C21-09'),travelR=travelP.routes[0];
-travelSchematic.app.start(travelP.id,true);assert(travelSchematic.$('.wp-stage [data-wp-travel-diagram]'));assert(!/文件名标注|PDF/.test(travelSchematic.$('.wp-citation').textContent));
+travelSchematic.app.start(travelP.id,true);assert(travelSchematic.$('.wp-stage [data-wp-travel-diagram]'));assert(!travelSchematic.$('.wp-context .wp-motion-reference,.wp-context .wp-observation,.wp-context [data-wp-source-figure]'));assert(travelSchematic.$('[data-motion-mode]').textContent.includes('可能的情形'));assert(!/文件名标注|PDF/.test(travelSchematic.$('.wp-citation').textContent));
 travelSchematic.confirmFacts();travelSchematic.checkAndNext(1,'Travel diagram setup');travelR.table.rows.forEach((row,i)=>row.cells.forEach((c,j)=>{if(!c.note&&!c.given)travelSchematic.setInput('t:'+i+':'+j,c.expr);}));travelSchematic.click('[data-wp-check]');travelSchematic.expectPassed(2,'Travel linked table');
 travelSchematic.$('[data-wp-travel-diagram]').open=false;travelSchematic.setInput('t:0:1','99999');assert(!travelSchematic.$('[data-wp-travel-diagram]').open);assert(!travelSchematic.$('[data-wp-travel-diagram]').textContent.includes('99999'));assert(travelSchematic.$('[data-wp-travel-diagram] .wp-travel-blank'));travelSchematic.close();
 const all=fixture();
 const data=all.w.RatioWordProblemsData;
 assert.equal(data.length,161);
-for(const problem of data)for(const route of problem.routes){all.canonicalRoute(problem,route);if(counts.routes%10===0)await new Promise(resolve=>setImmediate(resolve));}
+for(const problem of data)for(const route of problem.routes){all.canonicalRoute(problem,route);if(all.w.RatioWordProblemCatalog.categoryFor(problem)?.id==='travel'){assert(!all.$('.wp-context .wp-motion-reference,.wp-context .wp-observation,.wp-context [data-wp-source-figure]'));assert(all.$('[data-motion-results]'),problem.id+' has confirmed result replay after solving');assert.equal(all.$('[data-wp-travel-diagram]').dataset.motionMode,['C21-05','PEP-P039'].includes(problem.id)?'partial':'result');}if(counts.routes%10===0)await new Promise(resolve=>setImmediate(resolve));}
 assert.equal(counts.routes,data.reduce((sum,p)=>sum+p.routes.length,0));
 assert.equal(counts.completed,counts.routes);
 assert.equal(all.read().records.length,counts.routes);

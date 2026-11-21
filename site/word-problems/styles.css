@@ -420,20 +420,23 @@ input.wp-fact-number.is-correct,.wp-fact-number.is-correct input{background:var(
 
 .wp-travel-drawing{max-width:100%;overflow-x:auto}.wp-travel-drawing>svg{min-width:560px;max-width:740px;margin:12px auto}
 
-/* Movement is controlled by the learner; left reference shares its current event. */
-.wp-motion-controls{padding:16px;background:#F5F6F8;border-radius:12px;display:grid;gap:12px}
-.wp-motion-buttons,.wp-motion-events{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.wp-motion-controls button{font:inherit;cursor:pointer;border:1px solid #D6DADF;border-radius:8px;padding:8px 12px;background:#fff;color:#3E3540}
-.wp-motion-controls button[aria-pressed="true"]{background:#526B87;color:#fff}
-.wp-motion-controls select{font:inherit;max-width:100%;padding:6px;border:1px solid #D6DADF;border-radius:6px;background:white;color:#3E3540}
-.wp-motion-progress{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.wp-motion-progress input{flex:1;min-width:140px;accent-color:#526B87;touch-action:pan-y}
+
+/* Travel demonstration follows the same paper, ink, teal, coral and yellow tokens. */
+.wp-travel-diagram{background:var(--wp-paper);border:3px solid var(--wp-ink);border-radius:18px;padding:18px;box-shadow:var(--wp-shadow-small)}
+.wp-motion-controls{padding:16px;background:var(--wp-teal-soft);border:2px solid var(--wp-ink);border-radius:14px;display:grid;gap:12px}
+.wp-motion-buttons,.wp-motion-events{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.wp-motion-controls button{font:inherit;cursor:pointer;min-height:42px;font-weight:800}
+.wp-motion-controls button[aria-pressed="true"]{background:var(--wp-yellow);color:var(--wp-ink)}
+.wp-motion-controls select{font:inherit;max-width:100%;padding:7px;border:2px solid var(--wp-ink);border-radius:8px;background:var(--wp-paper);color:var(--wp-ink)}
+.wp-motion-progress{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-weight:700}
+.wp-motion-progress input{flex:1;min-width:120px;accent-color:var(--wp-coral);touch-action:pan-y}
 .wp-motion-progress output{min-width:3em;text-align:right;font-variant-numeric:tabular-nums}
-.wp-motion-event{color:#3E3540;font-weight:600;margin:6px 0;min-height:1.5em}
-.wp-motion-actor{display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap;margin:4px 12px 4px 0;color:var(--actor-color);font-size:14px}
-.wp-motion-actor i{width:10px;height:10px;border-radius:50%;background:var(--actor-color);flex:none}
-.wp-motion-reference{margin:18px 0;padding-top:12px;border-top:1px solid #E1E4E8}
-.wp-motion-reference summary{font-weight:600;cursor:pointer}
-.wp-motion-reference .wp-travel-drawing>svg{min-width:480px;width:100%;margin:8px auto}
-.wp-motion-reference .wp-motion-actor{display:flex}
+.wp-motion-event{color:var(--wp-ink);font-weight:800;margin:6px 0;min-height:1.5em}
+.wp-motion-actor{display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap;margin:4px 12px 4px 0;color:var(--wp-ink);font-size:14px;font-weight:700}
+.wp-motion-actor i{width:10px;height:10px;border-radius:50%;background:var(--actor-color);border:1px solid var(--wp-ink);flex:none}
 .wp-motion-variant{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.wp-motion-mode{padding:12px 14px;background:var(--wp-yellow-soft);border-radius:10px;color:var(--wp-ink);font-weight:700}
+[data-motion-mode="result"] .wp-motion-mode{background:var(--wp-teal-soft)}
+.wp-motion-results{padding:12px;background:var(--wp-paper);border:2px solid var(--wp-ink);border-radius:10px}
+[data-motion-time]{flex-basis:100%;font-size:14px}
+.wp-travel-quantities section{background:var(--wp-paper);border:2px solid var(--wp-ink)}
