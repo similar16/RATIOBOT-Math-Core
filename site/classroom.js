@@ -400,10 +400,99 @@ html+='</section></section></div>';
 app.innerHTML=html;
 if(current)viewContent(current,$('#previewBody'));
 }
+function openBoard(){
+ const items=filteredPages(published?.sections);
+ const dlg=document.createElement('dialog');
+ dlg.id='lesson-board';
+ dlg.innerHTML=`<style>
+ #lesson-board{inset:0;margin:0;width:100vw;height:100dvh;max-width:none;max-height:none;border:0;padding:0;background:#faf9f5;color:#263549;box-sizing:border-box}
+ #lesson-board[open]{display:grid;grid-template-rows:auto minmax(0,1fr) auto minmax(110px,32%)}
+ #lesson-board header,#lesson-board nav{display:flex;align-items:center;gap:6px;padding:5px 12px;overflow-x:auto;background:#edf0ef}
+ #lesson-board :is(button,select,input){min-height:44px;flex:none;padding:5px 12px;border:1px solid #bbc4ca;border-radius:8px;background:white;color:#243247;font:inherit;white-space:nowrap}
+ #lesson-board button[aria-pressed=true]{outline:2px solid currentColor;outline-offset:-3px;font-weight:bold}
+ #lesson-board article{overflow:auto;padding:1em 5vw;font-size:clamp(24px,3vw,54px)}
+ #lesson-board article img{max-width:95%;max-height:42vh}
+ #lesson-board .sheet{width:min(780px,96%);margin:auto;height:100%;overflow:auto;background:white;border:1px solid #c9d1d8}
+ #lesson-board svg{display:block;width:100%;touch-action:none;user-select:none}
+ #lesson-board .grid{background-image:linear-gradient(#dee5eb 1px,transparent 1px),linear-gradient(90deg,#dee5eb 1px,transparent 1px);background-size:20px 20px}
+ #lesson-board .lined{background:repeating-linear-gradient(white 0 23px,#dee5eb 23px 24px)}
+ #lesson-board.showing{grid-template-rows:auto minmax(0,20%) minmax(0,1fr)}
+ #lesson-board.showing nav{display:none}#lesson-board.showing .sheet{width:95%}
+ #lesson-board [data-hold]{touch-action:none;user-select:none;background:#233b55;color:white}
+ </style><header><button data-hold>长按展示本份</button><select aria-label="选择题目"></select><button data-project>独立投屏</button><button data-close>返回课堂</button></header><article></article>
+ <nav><button data-color="#20242a">● 黑笔</button><button data-color="#b73139">● 红笔</button><button data-color="#245db1">● 蓝笔</button>
+ <select data-tool aria-label="书写工具"><option>细笔</option><option>直线</option><option>刻度尺</option><option>圆规</option><option>表格</option></select>
+ <select data-paper aria-label="纸张"><option value="grid">方格纸</option><option value="lined">横线纸</option><option value="plain">白纸</option></select>
+ <button data-undo>撤销</button><button data-more>向下续纸</button><select data-record aria-label="答题记录"></select><button data-add>＋答题记录</button></nav>
+ <div class="sheet"><svg xmlns="http://www.w3.org/2000/svg" aria-label="手写答题纸"></svg></div>`;
+ document.body.append(dlg);
+ const get=s=>dlg.querySelector(s),svg=get('svg'),sheet=get('.sheet'),rec=get('[data-record]'),paperSelect=get('[data-paper]'),q=get('header select'),hold=get('[data-hold]');
+ const width=720,blank=()=>({height:420,paper:'grid',marks:[]});
+ let projection;
+ let records,index,key,color,stroke=null,active=null,clock,shown=false;
+ function record(){return records[index]}
+ function persist(){try{localStorage.setItem(key,JSON.stringify(records))}catch{hold.textContent='存储空间不足 · 当前记录仅本页保留'}}
+ function chooseColor(b){color=b.dataset.color;dlg.querySelectorAll('[data-color]').forEach(x=>{x.style.color=x.dataset.color;x.setAttribute('aria-pressed',String(x===b))})}
+ dlg.querySelectorAll('[data-color]').forEach(b=>b.onclick=()=>chooseColor(b));chooseColor(get('[data-color]'));
+ function node(tag,attrs){const el=document.createElementNS(svg.namespaceURI,tag);for(const [k,v] of Object.entries(attrs))el.setAttribute(k,v);return el}
+ function mark(m){
+ const [x,y]=m.points[0],[a,b]=m.points.at(-1),dx=a-x,dy=b-y,len=Math.hypot(dx,dy);
+ const line=(x,y,a,b)=>'M'+x+' '+y+'L'+a+' '+b;
+ let path=line(x,y,a,b);
+ if(m.tool==='细笔')path='M'+m.points.map(p=>p.join(' ')).join(' L')+' l0.01 0';
+ if(m.tool==='表格'){path='';for(let i=0;i<=3;i++)path+=line(x+dx*i/3,y,x+dx*i/3,b)+line(x,y+dy*i/3,a,y+dy*i/3)}
+ if(m.tool==='刻度尺'&&len){for(let t=0;t<=len;t+=10){const u=x+dx*t/len,v=y+dy*t/len,h=t%50?4:8;path+=line(u,v,u-dy*h/len,v+dx*h/len)}}
+ const el=m.tool==='圆规'?node('circle',{cx:x,cy:y,r:len}):node('path',{d:path});
+ el.setAttribute('stroke',m.color);el.setAttribute('stroke-width','1.6');el.setAttribute('stroke-linecap','round');el.setAttribute('stroke-linejoin','round');el.setAttribute('fill','none');return el
+ }
+ function render(){const r=record();svg.replaceChildren(...r.marks.map(mark));svg.setAttribute('viewBox','0 0 '+width+' '+r.height);svg.style.aspectRatio=width+'/'+r.height;svg.className.baseVal=r.paper;paperSelect.value=r.paper;
+ rec.replaceChildren(...records.map((_,i)=>new Option('作答 '+(i+1),i)));rec.value=index}
+ function loadQuestion(){
+ const p=items[Number(q.value)];key=['rb-board',classId,date,p?.id||'free'].join(':');
+ try{records=JSON.parse(localStorage.getItem(key))}catch{records=null}
+ if(!Array.isArray(records)||!records.length)records=[blank()];index=0;
+ const area=get('article');area.replaceChildren();if(p){const h=document.createElement('strong'),body=document.createElement('div');h.textContent=p.title;area.append(h,body);viewContent(p,body)}else{area.textContent='自由板演'}
+ render();sheet.scrollTop=0
+ }
+ (items.length?items:[{title:'自由板演'}]).forEach((p,i)=>q.add(new Option(p.title||'第 '+(i+1)+' 题',i)));q.value=Math.min(pageIndex,Math.max(0,items.length-1));q.onchange=()=>{loadQuestion();project()};loadQuestion();
+ rec.onchange=()=>{index=Number(rec.value);render();sheet.scrollTop=0};
+ get('[data-add]').onclick=()=>{const n=Number(prompt('新增几份答题记录？','1'));if(!Number.isInteger(n)||n<1||n>50)return;index=records.length;for(let i=0;i<n;i++)records.push(blank());render();persist();sheet.scrollTop=0};
+ paperSelect.onchange=()=>{record().paper=paperSelect.value;render();persist()};
+ get('[data-more]').onclick=()=>{const old=sheet.scrollHeight;record().height+=320;render();persist();sheet.scrollTop=old-sheet.clientHeight/3};
+ get('[data-undo]').onclick=()=>{record().marks.pop();render();persist()};
+ function point(e){const box=svg.getBoundingClientRect();return [Math.round((e.clientX-box.left)*width/box.width),Math.round((e.clientY-box.top)*record().height/box.height)]}
+ function move(e){if(e.pointerId!==active)return;const p=point(e);if(stroke.tool==='细笔')stroke.points.push(p);else stroke.points[1]=p;svg.lastChild.replaceWith(mark(stroke))}
+ svg.onpointerdown=e=>{if(shown||active!==null||e.button!==0)return;e.preventDefault();active=e.pointerId;svg.setPointerCapture(active);stroke={tool:get('[data-tool]').value,color,points:[point(e)]};svg.append(mark(stroke))};
+ svg.onpointermove=move;svg.onpointerup=e=>{if(e.pointerId!==active)return;move(e);record().marks.push(stroke);active=null;persist()};
+ svg.onpointercancel=()=>{active=null;render()};
+ function project(){
+ if(!projection||projection.closed)return;
+ const doc=projection.document,area=get('article').cloneNode(true);
+ area.style.cssText='font-size:clamp(28px,3vw,56px);padding:1rem 4vw;overflow:auto;max-height:'+(shown?'22vh':'90vh');
+ doc.body.replaceChildren(area);
+ if(shown){const answer=svg.cloneNode(true);answer.style.cssText='display:block;width:92%;margin:auto';doc.body.append(answer)}
+ }
+ get('[data-project]').onclick=()=>{
+ projection=window.open('','rb46projection','popup,width=1100,height=760');
+ if(!projection){alert('请允许打开投屏窗口');return}
+ const doc=projection.document;doc.title='课堂投屏';
+ doc.head.replaceChildren(...Array.from(document.querySelectorAll('link[rel=stylesheet]'),el=>el.cloneNode(true)));
+ const style=doc.createElement('style');style.textContent='body{background:white;margin:0}article img{max-width:95%;max-height:50vh}';doc.head.append(style);project()
+ };
+ function display(on){shown=on;dlg.classList.toggle('showing',on);q.disabled=on;render();hold.textContent=on?'收起展示':'长按展示本份';
+ if(on&&svg.childElementCount){const box=svg.getBBox(),w=Math.max(320,box.width+32),h=Math.max(100,box.height+32);svg.setAttribute('viewBox',[box.x-16,box.y-16,w,h].join(' '));svg.style.aspectRatio=w+'/'+h}
+ svg.style.touchAction=on?'pan-y':'none';sheet.scrollTop=0;project()}
+ hold.onpointerdown=e=>{if(shown){display(false);return}if(!record().marks.length)return;hold.setPointerCapture(e.pointerId);hold.textContent='继续按住…';clock=setTimeout(()=>display(true),900)};
+ function cancel(){clearTimeout(clock);if(!shown)hold.textContent='长按展示本份'}
+ hold.onpointerup=hold.onpointercancel=cancel;hold.oncontextmenu=e=>e.preventDefault();
+ dlg.addEventListener('keydown',e=>e.stopPropagation());get('[data-close]').onclick=()=>dlg.close();dlg.onclose=()=>{clearTimeout(clock);projection?.close();dlg.remove()};dlg.showModal()
+}
+
+
 function viewer(){
 let title=published?.title||'今日数学课',list=filteredPages(published?.sections),p=list[pageIndex]||null;
 let html=top(title,false)+'<div class="shell">'+sidebar()+'<section class="workspace"><div class="viewer-heading"><div><div class="eyebrow">DATE · '+esc(date)+'</div><h2>'+esc(title)+'</h2></div>'+
-'<div class="row"><button data-act="reload" class="smol">刷新课件</button><button data-act="fullscreen" class="smol">'+(full?'退出全屏':'全屏')+'</button></div></div>';
+'<div class="row"><button data-act="board" class="primary smol">学生板演</button><button data-act="reload" class="smol">刷新课件</button><button data-act="fullscreen" class="smol">'+(full?'退出全屏':'全屏')+'</button></div></div>';
 if(published){
  if(published.unlocked!==true){
  html+='<section class="classroom-lockbar" aria-label="课堂锁定状态">'+
@@ -521,6 +610,7 @@ pageStore().push(item);pageIndex=pages().length-1;mark();render();
 }
 async function clickAction(button){
 const act=button.dataset.act;
+if(act==='board'&&role==='viewer'){openBoard();return;}
 if(act==='stage'){stageSelect(button.dataset.id);return;}
 if(act==='toggleRecall'&&role==='viewer'){
  const selected=filteredPages(published?.sections)[pageIndex];
