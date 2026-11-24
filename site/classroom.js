@@ -493,6 +493,7 @@ function viewer(){
 let title=published?.title||'今日数学课',list=filteredPages(published?.sections),p=list[pageIndex]||null;
 let html=top(title,false)+'<div class="shell">'+sidebar()+'<section class="workspace"><div class="viewer-heading"><div><div class="eyebrow">DATE · '+esc(date)+'</div><h2>'+esc(title)+'</h2></div>'+
 '<div class="row"><button data-act="board" class="primary smol">学生板演</button><button data-act="reload" class="smol">刷新课件</button><button data-act="fullscreen" class="smol">'+(full?'退出全屏':'全屏')+'</button></div></div>';
+if(stage==='warmup') html+='<div class="row"><button data-act="equationWarmup" class="green">一元一次方程微练习</button></div>';
 if(published){
  if(published.unlocked!==true){
  html+='<section class="classroom-lockbar" aria-label="课堂锁定状态">'+
@@ -610,6 +611,18 @@ pageStore().push(item);pageIndex=pages().length-1;mark();render();
 }
 async function clickAction(button){
 const act=button.dataset.act;
+if(act==='equationWarmup'&&role==='viewer'&&stage==='warmup'){
+ const dialog=document.createElement('dialog');
+ dialog.setAttribute('aria-label','一元一次方程微练习');
+ dialog.style.cssText='inset:0;margin:0;width:100%;max-width:none;height:100%;max-height:none;padding:0;border:0;background:var(--cream)';
+ dialog.innerHTML='<header class="topbar"><strong class="brand">课前练习 · 一元一次方程</strong><span class="spacer"></span><button type="button">返回课堂</button></header><iframe title="方程微练习" src="./equation-warmup.html" style="border:0;width:100%;min-height:0;flex:1"></iframe>';
+ dialog.querySelector('button').onclick=()=>dialog.close();
+ dialog.addEventListener('close',()=>dialog.remove(),{once:true});
+ document.body.append(dialog);
+ dialog.showModal();
+ dialog.style.display='flex';dialog.style.flexDirection='column';
+ return;
+}
 if(act==='board'&&role==='viewer'){openBoard();return;}
 if(act==='stage'){stageSelect(button.dataset.id);return;}
 if(act==='toggleRecall'&&role==='viewer'){
