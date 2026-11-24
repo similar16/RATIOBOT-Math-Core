@@ -15,7 +15,7 @@ const byId = new Map(problems.map(p => [p.id, p]));
 const expectedIds = [
   'L7-P1','L7-P2','L7-P3','L7-T1','L7-T2','L7-H1','L7-H2','L7-H3',
   'L8-P1','L8-P1-V1','L8-P1-V2','L8-P1-V3',
-  'L8-P2-Q1','L8-P2-Q2','L8-P2-Q3','L8-P2-Q4','L8-P2-Q5',
+  'L8-P2-Q1','L8-P2-Q2','L8-P2-Q4','L8-P2-Q5',
   'L8-P2-V1','L8-P2-V2','L8-P2-V3','L8-T1','L8-T2','L8-H1','L8-H2','L8-H3',
   ...Array.from({length:10},(_,i)=>'G9-'+String(i+1).padStart(2,'0')),
   ...Array.from({length:10},(_,i)=>'G10-'+String(i+1).padStart(2,'0')),
@@ -23,9 +23,9 @@ const expectedIds = [
   ...manifest.items.filter(i=>i.coverage==='added').map(i=>i.moduleId),
   ...manifest.boundaryReferences.map(i=>i.moduleId)
 ];
-assert.equal(l7l8.length, 25);
+assert.equal(l7l8.length, 24);
 assert.equal(rest.length, 30);
-assert.equal(problems.length, 106);
+assert.equal(problems.length, 105);
 assert.equal(byId.size, problems.length, 'No duplicated source entry IDs');
 assert.deepEqual([...byId.keys()].sort(), expectedIds.sort());
 

@@ -5,7 +5,7 @@ const base=path.resolve(process.env.SITE_DIR||'site','word-problems');
 const data=fs.readdirSync(base).filter(f=>/^data-.*\.js$/.test(f)).flatMap(f=>require(path.join(base,f)));
 const E=require(path.join(base,'engine.js')),T=require(path.join(base,'table-alternatives.js'));
 const find=id=>data.find(p=>p.id===id);
-assert.equal(data.length,161);
+assert.equal(data.length,160);
 for(const p of data){
  assert(p.originalStem&&p.originalStem.length>12,p.id+' has a verified source prompt');
  assert(!p.originalStem.includes('。'),p.id+' keeps the requested period style');
@@ -66,4 +66,4 @@ app.start('G9-10',true,'A14');assert(!host.querySelector('[data-wp-source-figure
 const original=host.querySelector('.wp-stem').textContent;host.querySelector('[data-wp-restart]').click();host.querySelector('[data-wp-confirm-reset]').click();
 assert.equal(host.querySelector('.wp-stem').textContent,original,'Reset preserves the selected source text');
 app.destroy();dom.window.close();
-console.log('PASS original wording for 161 tasks, source-specific repeated prompts, transparent standalone figures, exact chess/match counts, and one-expression half-then-add modeling');
+console.log('PASS original wording for 160 tasks, source-specific repeated prompts, transparent standalone figures, exact chess/match counts, and one-expression half-then-add modeling');

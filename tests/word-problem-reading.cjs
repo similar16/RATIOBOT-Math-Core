@@ -50,7 +50,7 @@ assert.equal(R.build(single('两边相等。')).facts[0].fields.length,1);
 assert.equal(R.build(single('位置相同。')).facts[0].fields.length,0,'A nonnumeric fact is still available for explicit confirmation');
 
 let facts=0,fields=0,hanFields=0;
-assert.equal(data.length,106);
+assert.equal(data.length,105);
 for(const problem of data){
   const before=JSON.stringify(problem),model=R.build(problem),values=R.canonical(problem);
   assert.equal(model.facts.length,problem.facts.length);

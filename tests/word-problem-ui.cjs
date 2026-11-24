@@ -194,7 +194,7 @@ rec.click('[data-record-pdf]');assert(rec.$('[data-pdf-preview]').disabled);
 rec.click('.atlas-choice button');assert(rec.$('[data-wp-current-problem]'));rec.close();
 const all=fixture();
 const data=all.w.RatioWordProblemsData;
-assert.equal(data.length,161);
+assert.equal(data.length,160);
 for(const problem of data)for(const route of problem.routes){all.canonicalRoute(problem,route);if(all.w.RatioWordProblemCatalog.isMotionTask(problem.id)){assert(!all.$('.wp-context .wp-motion-reference,.wp-context .wp-observation,.wp-context [data-wp-source-figure]'));assert(all.$('[data-motion-results]'),problem.id+' has confirmed result replay after solving');assert.equal(all.$('[data-wp-travel-diagram]').dataset.motionMode,['C21-05','PEP-P039'].includes(problem.id)?'partial':'result');}if(counts.routes%10===0)await new Promise(resolve=>setImmediate(resolve));}
 assert.equal(counts.routes,data.reduce((sum,p)=>sum+p.routes.length,0));
 assert.equal(counts.completed,counts.routes);
@@ -517,7 +517,7 @@ catalogs.click('.wp-stage-top [data-wp-restart]');catalogs.click('[data-wp-confi
 assert.equal(catalogs.read().drafts['G10-01'].sourceLocation,'I00','Reset retains this repeated question\'s printed source position');
 assert.match(catalogs.$('.wp-citation').textContent,/105页.*章引入/);
 catalogs.click('[data-wp-catalog]');catalogs.click('[data-wp-book="guide"]');
-assert.equal(catalogs.host.querySelectorAll('[data-wp-problem]').length,82,'Supplement merges 27 guide, 44 PEP and 11 uploaded-chapter tasks');
+assert.equal(catalogs.host.querySelectorAll('[data-wp-problem]').length,81,'Supplement merges 26 guide, 44 PEP and 11 uploaded-chapter tasks');
 assert(!catalogs.host.textContent.includes('教学设计与指导'),'The learner catalog uses the requested supplement name');
 const textbookIds=new Set(catalogs.w.RatioWordProblemTextbookIndex.items.map(x=>x.problemId));
 for(const button of catalogs.host.querySelectorAll('[data-wp-problem]'))assert(!textbookIds.has(button.dataset.wpProblem),'No duplicate textbook exercise in supplements');
@@ -525,7 +525,7 @@ catalogs.click('[data-wp-problem="L7-P2"]');
 assert.match(catalogs.$('.wp-citation').textContent,/补充练习/,'Supplement entry has the learner-facing source label');
 assert(!catalogs.host.textContent.includes('教学设计与指导'));
 const draftField=catalogs.$('[data-wp-fact]');catalogs.textInput('[data-wp-fact="'+draftField.dataset.wpFact+'"]','12');
-catalogs.click('[data-wp-back]');assert.equal(catalogs.host.querySelectorAll('[data-wp-problem]').length,82,'Back retains the current source catalog');
+catalogs.click('[data-wp-back]');assert.equal(catalogs.host.querySelectorAll('[data-wp-problem]').length,81,'Back retains the current source catalog');
 catalogs.click('[data-wp-problem="L7-P2"]');assert.equal(catalogs.$('[data-wp-fact="'+draftField.dataset.wpFact+'"]').value,'12','Back saves the current reading draft');
 catalogs.click('[data-wp-back]');catalogs.click('[data-wp-back]');assert.equal(catalogs.redirects.at(-1),'home');
 catalogs.close();

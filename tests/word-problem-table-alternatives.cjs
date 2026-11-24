@@ -139,7 +139,7 @@ assert.deepEqual(A.options(jacket.problem, jacket.route, 0.5, 2), []);
 // Entire catalog traversal protects row ownership and exclusions. These ranges
 // need case-specific UI, open-model review, or only identity-preserving algebra.
 const noCrossConditionRoutes = [
-  ['L7-H1','son'], ['TB-I15','standard'], ['L8-P2-Q3','distance-gap'],
+  ['L7-H1','son'], ['TB-I15','standard'],
   ['L8-P2-Q4','both-orders'], ['L8-P2-V3','both-orders'], ['PEP-P050','main'],
   ['PEP-P052','main'], ['PEP-P053','main'], ['PEP-P054','main'], ['PEP-P064','main'],
   ['PEP-P066','main'], ['G10-04','time'], ['PEP-P068','main']

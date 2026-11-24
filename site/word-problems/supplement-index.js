@@ -2,8 +2,8 @@
 (function(root){
 const index={
   "title": "补充练习",
-  "originalTaskCount": 55,
-  "uniqueCount": 27,
+  "originalTaskCount": 54,
+  "uniqueCount": 26,
   "excludedCount": 28,
   "uniqueIds": [
     "L7-P2",
@@ -11,7 +11,6 @@ const index={
     "L8-P1-V2",
     "L8-P1-V3",
     "L8-P2-Q2",
-    "L8-P2-Q3",
     "L8-P2-Q4",
     "L8-P2-Q5",
     "L8-P2-V1",
@@ -445,7 +444,7 @@ const index={
       ]
     }
   ],
-  "retentionNote": "原有补充练习27题与人教版44道代表题合为71题，按题型导航.人教版80组中36组高度相似题已合并；完整来源与差异保留在核对记录.既有题号及进度不变，不互认不同变式的完成状态.",
+  "retentionNote": "原有补充练习26题与人教版44道代表题合为70题，按题型导航.人教版80组中36组高度相似题已合并；完整来源与差异保留在核对记录.既有题号及进度不变，不互认不同变式的完成状态.",
   "additionalIds": [
     "PEP-P002",
     "PEP-P003",
@@ -498,7 +497,6 @@ const index={
     "L8-P1-V2",
     "L8-P1-V3",
     "L8-P2-Q2",
-    "L8-P2-Q3",
     "L8-P2-Q4",
     "L8-P2-Q5",
     "L8-P2-V1",
@@ -576,7 +574,7 @@ const index={
     "C21-10",
     "C21-11"
   ],
-  "mergedUniqueCount": 82,
+  "mergedUniqueCount": 81,
   "peopleEducation": {
     "chapter": 5,
     "sourceGroups": 80,

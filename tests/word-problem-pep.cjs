@@ -10,8 +10,8 @@ const pep=['data-pep-foundations','data-pep-applications','data-pep-review'].fla
 const all=[...prior,...pep],byId=new Map(all.map(p=>[p.id,p]));
 const source=load('textbook-index'),supplement=load('supplement-index');
 const coverage=require('../content/word-problems/pep-ch5-coverage.json');
-assert.equal(prior.length,106,'All prior task IDs survive');
-assert.equal(pep.length,44);assert.equal(byId.size,150);
+assert.equal(prior.length,105,'All prior task IDs survive');
+assert.equal(pep.length,44);assert.equal(byId.size,149);
 assert.equal(coverage.items.length,93);assert.equal(coverage.page_audit.length,39);
 const applications=coverage.items.filter(p=>p.collection_category==='application');
 assert.equal(applications.length,80);
@@ -27,15 +27,15 @@ for(const item of coverage.items){
  if(item.implementation.status==='merged')assert.equal(item.implementation.transfer_completion,false,'A similar exercise cannot inherit completion');
 }
 assert.deepEqual(pep.map(p=>p.id).sort(),applications.filter(p=>p.implementation.status==='interactive').flatMap(p=>p.implementation.problem_ids).sort());
-assert.equal(supplement.uniqueCount,27,'Original guide accounting stays intact');
-assert.equal(supplement.uniqueIds.length,27);assert.equal(supplement.excludedCount,28);
-assert.equal(supplement.mergedUniqueCount,82);assert.equal(new Set(supplement.mergedUniqueIds).size,82);
+assert.equal(supplement.uniqueCount,26,'Original guide accounting stays intact');
+assert.equal(supplement.uniqueIds.length,26);assert.equal(supplement.excludedCount,28);
+assert.equal(supplement.mergedUniqueCount,81);assert.equal(new Set(supplement.mergedUniqueIds).size,81);
 
 const rows=C.build(all,source,supplement);
-assert.equal(C.categories.length,6);assert.equal(rows.length,150);
-assert.equal(new Set(rows.map(r=>r.problem.id)).size,150,'One task card regardless of repeated source positions');
+assert.equal(C.categories.length,6);assert.equal(rows.length,149);
+assert.equal(new Set(rows.map(r=>r.problem.id)).size,149,'One task card regardless of repeated source positions');
 assert.equal(C.select(rows,{book:'textbook'}).length,79);
-assert.equal(C.select(rows,{book:'guide'}).length,71);
+assert.equal(C.select(rows,{book:'guide'}).length,70);
 assert(pep.every(p=>C.select(rows,{book:'guide'}).some(r=>r.problem.id===p.id)));
 for(const p of all)assert(C.categoryFor(p),p.id+' has an explicit topic');
 assert(!C.categories.some(c=>/课时|第[一二三四五六七八九十\d]+讲/.test(c.label)));

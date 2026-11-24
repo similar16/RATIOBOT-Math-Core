@@ -49,9 +49,6 @@
   ['小亮行进时间','小明先行时间','小明行进时间']
  ],rate);
  copy('L8-P2-Q2','L8-P2-Q1');
- define('L8-P2-Q3',[
-  ['较小的距起点路程','两人间距离','较大的距起点路程']
- ],rate);
  define('L8-P2-Q4',[
   ['较小的距起点路程','两人间距离','较大的距起点路程'],['小亮行进时间','小明先行时间','小明行进时间']
  ],rate,['两种前后次序分别列式、检验；卡片中的“较大”“较小”要随情形确定.']);
@@ -356,7 +353,7 @@
   'L7-H3':{sum:[1]}, // Adding girls also changes the denominator (the whole group).
   'L8-P1':{product:[1]},'L8-P1-V1':{product:[1]},
   'L8-P1-V2':{sum:[1]},'L8-P1-V3':{sum:[0]},
-  'L8-P2-Q1':{sum:[0]},'L8-P2-Q2':{sum:[0]},'L8-P2-Q3':{sum:[0]},
+  'L8-P2-Q1':{sum:[0]},'L8-P2-Q2':{sum:[0]},
   'L8-P2-Q4':{sum:[0]},'L8-P2-Q5':{sum:[0]},
   'L8-P2-V1':{sum:[0]},'L8-P2-V2':{sum:[0]},'L8-P2-V3':{sum:[0]},
   'L8-T2':{sum:[0]}, // The faster runner has covered one extra lap.
