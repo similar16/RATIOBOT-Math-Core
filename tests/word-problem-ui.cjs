@@ -544,7 +544,7 @@ assert.equal(topics.host.querySelectorAll('[data-wp-category]').length,1);
 topics.click('[data-wp-problem="PEP-P054"]');topics.click('[data-wp-back]');
 assert.equal(topics.$('[data-wp-book="guide"]').getAttribute('aria-pressed'),'true');
 assert.equal(topics.$('[data-wp-filter="fees"]').getAttribute('aria-pressed'),'true');
-topics.click('[data-wp-filter="data"]');topics.click('[data-wp-problem="PEP-P049"]');
+topics.click('[data-wp-filter="integrated"]');topics.click('[data-wp-problem="PEP-P049"]');
 assert.equal(topics.host.querySelectorAll('.wp-source-table tbody tr').length,8,'All original basketball rows render');
 assert.match(topics.$('.wp-source-table').textContent,/前进|钢铁/);
 topics.app.start('PEP-P068',true);topics.confirmFacts();
