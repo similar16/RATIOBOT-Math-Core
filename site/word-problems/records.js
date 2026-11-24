@@ -7,16 +7,20 @@
   const catalog=window.RatioWordProblemCatalog, categories=catalog.categories;
   const stages=['读题','设元','找关系','列表','列方程','解方程','检验'];
   const abilities=['审题','关系分析','列方程','解方程','实际检验'], columns=[[0],[2,3],[4],[5],[6]];
-  const evidence=categories.map(()=>stages.map(()=>({yes:0,n:0})));
+  const evidence=categories.map(()=>stages.map(()=>({yes:0,n:0,hint:0,example:0})));
   const records=[...state.records].sort((a,b)=>String(a.at).localeCompare(String(b.at)));
   const seen=new Set();
   for(const r of records){
    const cat=categories.indexOf(catalog.categoryFor(r.problemId));
-   if(cat<0||r.status==='review')continue;
+   if(cat<0||r.status==='review'||r.problemId==='S04')continue;
    stages.forEach((_,i)=>{
     const key=r.problemId+'/'+i, value=r.values?.['atlas:'+i];
     if(seen.has(key)||!['yes','no','help'].includes(value))return;
-    seen.add(key);if(value==='help')return;
+    seen.add(key);
+    const aid=r.values?.['aid:'+i];
+    if(aid==='example')evidence[cat][i].example++;
+    else if(aid==='hint'||value==='help')evidence[cat][i].hint++;
+    if(value==='help')return;
     evidence[cat][i].n++;if(value==='yes')evidence[cat][i].yes++;
    });
   }
@@ -29,7 +33,7 @@
   function selectCell(t,a,button){
    box.querySelectorAll('td button').forEach(b=>b.setAttribute('aria-pressed',String(b===button)));
    const category=categories[t], tasks=data.filter(p=>category.problemIds.includes(p.id));
-   choice.innerHTML='<h3>自主选练</h3><strong>'+esc(category.label)+' · '+abilities[a]+'</strong><p>'+columns[a].map(i=>stages[i]+' '+fraction(evidence[t][i])).join('　')+'</p><label>选择题目 <select></select></label><p><button class="primary">进入本题分析 →</button></p>';
+   choice.innerHTML='<h3>自主选练</h3><strong>'+esc(category.label)+' · '+abilities[a]+'</strong><p>'+columns[a].map(i=>stages[i]+'：独立首答 '+fraction(evidence[t][i])+'，借助提示或参考 '+evidence[t][i].hint+' 题，看过示范 '+evidence[t][i].example+' 题').join('　')+'</p><label>选择题目 <select></select></label><p><button class="primary">进入本题分析 →</button></p>';
    const select=choice.querySelector('select');for(const p of tasks)select.add(new Option(p.title,p.id));
    choice.querySelector('button').onclick=()=>{if(ready())start(select.value);};
   }

@@ -37,7 +37,7 @@
    referenceRelations:Object.fromEntries(entries(d.referenceRelations,32).map(([key,answer])=>[key,Object.fromEntries(['sum','product'].map(kind=>[kind,(Array.isArray(answer?.[kind])?answer[kind]:[]).slice(0,60).map(row=>Array.from({length:Math.max(3,Math.min(8,Array.isArray(row)?row.length:0))},(_,i)=>text(Array.isArray(row)?row[i]:'',300)))]))])),
    derivationSources:Object.fromEntries(entries(d.derivationSources,60).map(([k,v])=>[k,list(v,20)])),
    derived:flags(d.derived,60,false),verdict:text(d.verdict,30),reflection:text(d.reflection,1600),customModel:text(d.customModel,1600),
-   discussion:text(d.discussion,2000),assisted:!!d.assisted||example||d.status==='assisted'||Object.values(hints).some(n=>n>0),example,
+   discussion:text(d.discussion,2000),assisted:Object.entries(object(d.values)).some(([k,v])=>k.startsWith('atlas:')&&v==='help')||!!d.assisted||example||d.status==='assisted'||Object.values(hints).some(n=>n>0),example,
    finished:d.finished===true,answersChecked:d.answersChecked===true,startedAt:stamp(d.startedAt),updatedAt:update?new Date().toISOString():stamp(d.updatedAt)};
  }
  function migrateDraft(raw,target=4){
@@ -95,6 +95,16 @@
    valueLabels:Object.fromEntries(entries(r.valueLabels,220).filter(([k])=>Object.hasOwn(d.values,k)).map(([k,v])=>[k,text(v,300)])),
    status:r.status==='review'||d.customModel?'review':d.example?'example':d.assisted?'assisted':'independent',...accuracy(d)};
  }
+ function mergeAid(a,b,latest){
+  const values={...latest.values};
+  for(let i=0;i<7;i++){
+   const key='aid:'+i,seen=[a.values?.[key],b.values?.[key]];
+   if(seen.includes('example'))values[key]='example';
+   else if(seen.includes('hint'))values[key]='hint';
+   if(values[key]&&!values['atlas:'+i]&&(a.values?.['atlas:'+i]||b.values?.['atlas:'+i]))values['atlas:'+i]='help';
+  }
+  return values;
+ }
  function mergeFlags(a,b){
   const firstPass={...a.firstPass,...b.firstPass};
   for(const k of Object.keys(firstPass))if(a.firstPass?.[k]===false||b.firstPass?.[k]===false)firstPass[k]=false;
@@ -112,7 +122,7 @@
   const target=Math.max(a.interactionVersion,b.interactionVersion);if(target>=3){if(a.interactionVersion>=2&&a.interactionVersion<target)a=migrateDraft(a,target);if(b.interactionVersion>=2&&b.interactionVersion<target)b=migrateDraft(b,target);}
   const latest=String(b.updatedAt||'')>=String(a.updatedAt||'')?b:a;
   // Keep latest expressions and unlocked steps; assistance evidence is irreversible within one run.
-  return {...latest,...mergeFlags(a,b),...(methods?{modelMethods:methods}:{})};
+  return {...latest,values:mergeAid(a,b,latest),...mergeFlags(a,b),...(methods?{modelMethods:methods}:{})};
  }
  function mergeRecord(a,b){
   if(a.problemId!==b.problemId||a.routeId!==b.routeId)return String(b.at||'')>=String(a.at||'')?b:a;
@@ -120,7 +130,7 @@
   if(b.interactionVersion>=4&&a.interactionVersion<4)a={...a,conditionFound:b.conditionFound,conditionUsed:b.conditionUsed};
   const target=Math.max(a.interactionVersion,b.interactionVersion);if(target>=3){if(a.interactionVersion>=2&&a.interactionVersion<target)a={...a,...migrateDraft(a,target)};if(b.interactionVersion>=2&&b.interactionVersion<target)b={...b,...migrateDraft(b,target)};}
   const latest=String(b.at||'')>=String(a.at||'')?b:a;
-  const methods=mergeModels(a,b),combined={...latest,...mergeFlags(a,b),...(methods?{modelMethods:methods}:{})};
+  const methods=mergeModels(a,b),combined={...latest,values:mergeAid(a,b,latest),...mergeFlags(a,b),...(methods?{modelMethods:methods}:{})};
   combined.status=a.status==='review'||b.status==='review'?'review':combined.example?'example':combined.assisted?'assisted':'independent';
   return {...combined,...accuracy(combined)};
  }
@@ -142,23 +152,28 @@
   const s=normalized(value),d=cleanDraft(draft);
   if(!d||!problem||!route||d.problemId!==problem.id||d.routeId!==route.id||!/^wp-[\w-]+$/.test(d.runId))throw Error('分析记录不完整，请返回当前题目重试.');
   if(d.contentRevision<integer(problem.contentRevision))throw Error('本题内容已更新，请重新分析后再保存.');
-  const analysisOnly=problem.kind==='open';
-  if(!(analysisOnly?[0,1,2,3,4]:[0,1,2,3,4,5,6]).every(i=>d.passed[i]===true))throw Error('请依次完成数量、列式、答案与检验，再保存完成记录.');
-  if((route.derivations||[]).some(x=>d.derived[x.id]!==true))throw Error('数据来源推导尚未全部核对，请返回检查.');
-  if(!analysisOnly&&(route.answers||[]).length&&!d.answersChecked)throw Error('求解结果尚未核对，请先完成求解与检验.');
-  if(!analysisOnly&&(route.verdictCases||[]).some((c,i)=>d.values['v:'+i]!==c.correct))throw Error('请分别完成每种情形的实际意义判断.');
-  // A relationship such as y=2x is a complete short record. Open analysis is
-  // saved for teacher review rather than graded by a prose-length threshold.
-  if(analysisOnly&&!d.discussion.trim())throw Error('请完成数量关系与模型的分析说明后保存.');
-  if(route.relationshipOnly){
-   const E=root.RatioWordProblemEngine||(typeof module==='object'&&module.exports?require('./engine.js'):null);
-   if(!E||route.table.rows.some((row,i)=>row.cells.some((cell,j)=>!cell.note&&!cell.given&&!E.checkTableCell(d.values['t:'+i+':'+j]||'',cell,route.variable).ok)))throw Error('请先确认框内各方向的日期表达式.');
-   if((route.sumExpressions||[]).some((item,i)=>!E.checkQuantitySum(d.values['e:'+i]||'',{...item,termSets:(item.rowIndexes||[]).map(index=>route.table.rows[index].cells.filter(cell=>cell.expr).map(cell=>cell.expr))},route.variable).ok))throw Error('请先确认三数框和十字框的完整 S 求和算式.');
-   if(!d.answersChecked||(route.sumExpressions||[]).some((item,i)=>!E.checkSimplifiedTerm(d.values['c:'+i]||'',item,route.variable).ok))throw Error('请先填写并确认合并同类项后的化简结果.');
-  }
-  if(d.interactionVersion>=2){
-   const F=reading();if(!F)throw Error('数量互动资源尚未准备好，请重试.');
-   if(!F.check(problem,d.values).ok||F.build(problem).facts.some(f=>!f.fields.length&&!d.seen.includes(f.id)))throw Error('请完成并核对读题数量填空.');
+  if(problem.id==='S04'){
+   const engine=root.RatioWordProblemEngine||(typeof module==='object'&&module.exports?require('./engine.js'):null);
+   if(!d.passed[0]||!engine?.equivalent(d.values['reply:0']||'',route.answers[0].expr))throw Error('请核对七月应付的电费.');
+  }else{
+   const analysisOnly=problem.kind==='open';
+   if(!(analysisOnly?[0,1,2,3,4]:[0,1,2,3,4,5,6]).every(i=>d.passed[i]===true))throw Error('请依次完成数量、列式、答案与检验，再保存完成记录.');
+   if((route.derivations||[]).some(x=>d.derived[x.id]!==true))throw Error('数据来源推导尚未全部核对，请返回检查.');
+   if(!analysisOnly&&(route.answers||[]).length&&!d.answersChecked)throw Error('求解结果尚未核对，请先完成求解与检验.');
+   if(!analysisOnly&&(route.verdictCases||[]).some((c,i)=>d.values['v:'+i]!==c.correct))throw Error('请分别完成每种情形的实际意义判断.');
+   // A relationship such as y=2x is a complete short record. Open analysis is
+   // saved for teacher review rather than graded by a prose-length threshold.
+   if(analysisOnly&&!d.discussion.trim())throw Error('请完成数量关系与模型的分析说明后保存.');
+   if(route.relationshipOnly){
+    const E=root.RatioWordProblemEngine||(typeof module==='object'&&module.exports?require('./engine.js'):null);
+    if(!E||route.table.rows.some((row,i)=>row.cells.some((cell,j)=>!cell.note&&!cell.given&&!E.checkTableCell(d.values['t:'+i+':'+j]||'',cell,route.variable).ok)))throw Error('请先确认框内各方向的日期表达式.');
+    if((route.sumExpressions||[]).some((item,i)=>!E.checkQuantitySum(d.values['e:'+i]||'',{...item,termSets:(item.rowIndexes||[]).map(index=>route.table.rows[index].cells.filter(cell=>cell.expr).map(cell=>cell.expr))},route.variable).ok))throw Error('请先确认三数框和十字框的完整 S 求和算式.');
+    if(!d.answersChecked||(route.sumExpressions||[]).some((item,i)=>!E.checkSimplifiedTerm(d.values['c:'+i]||'',item,route.variable).ok))throw Error('请先填写并确认合并同类项后的化简结果.');
+   }
+   if(d.interactionVersion>=2){
+    const F=reading();if(!F)throw Error('数量互动资源尚未准备好，请重试.');
+    if(!F.check(problem,d.values).ok||F.build(problem).facts.some(f=>!f.fields.length&&!d.seen.includes(f.id)))throw Error('请完成并核对读题数量填空.');
+   }
   }
   if(s.records.some(x=>x.runId===d.runId))return {state:s,record:null};
   const discussion=!!route.discussion||['open','boundary'].includes(problem.kind)||!!d.customModel;

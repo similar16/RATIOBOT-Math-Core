@@ -104,6 +104,13 @@ function fixture(autoRelations=true) {
  }
  function canonicalRoute(problem,route){
   app.start(problem.id,true);
+  if(problem.id==='S04'){
+   assert.equal(host.querySelectorAll('[data-wp-step]').length,1);
+   assert(!$('.wp-verification')&&!$('[data-wp-input="e:0"]'));
+   setInput('reply:0','170');click('[data-wp-check]');assert($('.wp-completion'),feedback());
+   const record=read().records[0];assert(!Object.keys(record.values).some(k=>k.startsWith('atlas:')));
+   counts.completed++;counts.routes++;return record;
+  }
   if(route.relationshipOnly){
    assert.equal(currentStep(),0);confirmFacts();assert.equal(currentStep(),1);assert(!$('.wp-stage textarea'));checkAndNext(1,'Calendar variable definition');
    route.table.rows.forEach((row,i)=>row.cells.forEach((cell,j)=>{if(cell.expr&&!cell.given)setInput('t:'+i+':'+j,cell.expr);}));
@@ -202,6 +209,16 @@ rec.click('.atlas tbody tr:nth-child(2) td:nth-child(3) button');
 assert(rec.$('.atlas-choice').textContent.includes('单价总价与销售盈亏'));
 rec.click('[data-record-pdf]');assert(rec.$('[data-pdf-preview]').disabled);
 rec.click('.atlas-choice button');assert(rec.$('[data-wp-current-problem]'));rec.close();
+for(const mode of ['independent','assisted','example']){
+ const f=fixture();f.app.start('S04',true);
+ if(mode==='assisted')f.click('[data-wp-hint]');
+ if(mode==='example')f.click('[data-wp-example]');
+ const field=f.$('[data-wp-input="reply:0"]');
+ assert.equal(field.value,mode==='example'?'170':'');
+ if(mode!=='example'){f.setInput('reply:0','150');f.click('[data-wp-check]');assert.equal(f.read().records.length,0);f.setInput('reply:0','170');}
+ f.click('[data-wp-check]');assert.equal(f.read().records[0].status,mode);
+ assert.deepEqual(Object.keys(f.read().records[0].passed),['0']);f.close();
+}
 const all=fixture();
 const data=all.w.RatioWordProblemsData;
 assert.equal(data.length,160);

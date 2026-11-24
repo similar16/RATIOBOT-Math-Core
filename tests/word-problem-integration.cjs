@@ -187,7 +187,7 @@ function fixture(){
  const completedProgress=completed.t.currentProfile().economy.modules.wordProblems;
  assert.equal(completedProgress.records.length,1);assert.equal(completedProgress.records[0].step,6);
  assert.equal(completedProgress.records[0].finished,true);assert.equal(completedProgress.records[0].reflection,'');
- assert.equal(completedProgress.records[0].scratchId,scratchDraft.scratchId);assert.equal(completedProgress.records[0].firstPass[5],false,'Earlier examples are retained as assistance evidence during answer confirmation');
+ assert.equal(completedProgress.records[0].scratchId,scratchDraft.scratchId);assert.equal(completedProgress.records[0].firstPass[5],true,'Independently confirmed answers keep their own first-pass evidence');
  assert.equal(completedProgress.records[0].firstPass[4],undefined);assert.equal(completedProgress.records[0].total,6);
  assert.deepEqual(clone(completedProgress.records[0].conditionFound),completedFactIds);
  assert.deepEqual(clone(completedProgress.records[0].conditionUsed),completedFactIds);
