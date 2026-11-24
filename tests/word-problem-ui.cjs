@@ -223,32 +223,23 @@ rec.click('.atlas tbody tr:nth-child(2) td:nth-child(3) button');
 assert(rec.$('.atlas-choice').textContent.includes('单价总价与销售盈亏'));
 rec.click('[data-record-pdf]');assert(rec.$('[data-pdf-preview]').disabled);
 rec.click('.atlas-choice button');assert(rec.$('[data-wp-current-problem]'));rec.close();
-for(const mode of ['independent','assisted','example']){
- const f=fixture();f.app.start('S04',true);
- if(mode==='assisted')f.click('[data-wp-hint]');
- if(mode==='example')f.click('[data-wp-example]');
- const field=f.$('[data-wp-input="reply:0"]');
- assert.equal(field.value,mode==='example'?'170':'');
- if(mode!=='example'){f.setInput('reply:0','150');f.click('[data-wp-check]');assert.equal(f.read().records.length,0);f.setInput('reply:0','170');}
- f.click('[data-wp-check]');assert.equal(f.read().records[0].status,mode);
- assert.deepEqual(Object.keys(f.read().records[0].passed),['0']);f.close();
-}
 const all=fixture();
 const data=all.w.RatioWordProblemProgress.activeProblems(all.w.RatioWordProblemsData);
-assert.equal(data.length,160);
+assert.equal(data.length,151);
+for(const id of ['S04', 'S05', 'S06', 'S08', 'S09', 'G9-02', 'G9-04', 'G9-05', 'G10-04'])assert(!data.some(p=>p.id===id));
 for(const problem of data)for(const route of problem.routes){all.canonicalRoute(problem,route);if(all.w.RatioWordProblemCatalog.isMotionTask(problem.id)){assert(!all.$('.wp-context .wp-motion-reference,.wp-context .wp-observation,.wp-context [data-wp-source-figure]'));assert(all.$('[data-motion-results]'),problem.id+' has confirmed result replay after solving');assert.equal(all.$('[data-wp-travel-diagram]').dataset.motionMode,['C21-05','PEP-P039'].includes(problem.id)?'partial':'result');}if(counts.routes%10===0)await new Promise(resolve=>setImmediate(resolve));}
 assert.equal(counts.routes,data.reduce((sum,p)=>sum+(p.kindLabel?.includes('选读')?0:p.routes.length),0));
 assert.equal(counts.completed,counts.routes);
 assert.equal(all.read().records.length,counts.routes);
 assert.equal(all.read().records.filter(r=>r.problemId==='L8-P2-Q4').length,1,'Both chase branches form one coherent analysis');
-assert.equal(all.read().records.find(r=>r.problemId==='S06').status,'review','Parameter classification remains teacher-reviewed discussion');
-assert.equal(all.read().records.find(r=>r.problemId==='G10-04').status,'review','Nonlinear boundary is not marked a solved linear exercise');
+
+assert.equal(all.read().records.find(r=>r.problemId==='PEP-P051').status,'review','Discussion remains teacher-reviewed');
 assert(all.read().records.every(r=>r.first===r.total),'Canonical independent routes pass on their first attempts');
 assert(all.read().records.every(r=>!Object.keys(r.values).some(k=>k.startsWith('r:'))),'All tasks complete without relationship-card answers');
 all.app.open();
 assert(all.host.querySelectorAll('.wp-problem-card.is-completed').length>0,'Completed tasks use a distinct card state');
 all.click('[data-wp-book="guide"]');
-assert(!all.$('[data-wp-problem="G10-04"]').classList.contains('is-completed'),'Boundary discussions remain distinct from graded tasks');
+assert(!all.$('[data-wp-problem="PEP-P051"]').classList.contains('is-completed'),'Boundary discussions remain distinct from graded tasks');
 // The progress layer must not create duplicate completions on replay/retry.
 const latest=all.read().records[0],latestProblem=data.find(p=>p.id===latest.problemId),latestRoute=latestProblem.routes.find(r=>r.id===latest.routeId);
 const duplicated=all.w.RatioWordProblemProgress.complete(all.read(),latest,latestProblem,latestRoute);
@@ -468,7 +459,7 @@ assert.equal(customDraft.finished,false);assert.notEqual(customDraft.runId,custo
 for(let step=1;step<7;step++)assert(!customDraft.passed[step],'Written model edit invalidates step '+step);
 assert.equal(customDraft.customModel,'y=6*x');customChange.close();
 
-const discussionChange=fixture(),discussionProblem=discussionChange.w.RatioWordProblemsData.find(p=>p.id==='G10-04');
+const discussionChange=fixture(),discussionProblem=discussionChange.w.RatioWordProblemsData.find(p=>p.id==='PEP-P051');
 discussionChange.canonicalRoute(discussionProblem,discussionProblem.routes[0]);discussionChange.click('[data-wp-step="2"]');
 assert(!discussionChange.$('[data-wp-discussion]'));
 discussionChange.click('[data-wp-step="3"]');discussionChange.textInput('[data-wp-discussion]','x*(x+5)=24');
@@ -558,7 +549,7 @@ catalogs.click('.wp-stage-top [data-wp-restart]');catalogs.click('[data-wp-confi
 assert.equal(catalogs.read().drafts['G10-01'].sourceLocation,'I00','Reset retains this repeated question\'s printed source position');
 assert.match(catalogs.$('.wp-citation').textContent,/105页.*章引入/);
 catalogs.click('[data-wp-catalog]');catalogs.click('[data-wp-book="guide"]');
-assert.equal(catalogs.host.querySelectorAll('[data-wp-problem]').length,81,'Supplement merges 26 guide, 44 PEP and 11 uploaded-chapter tasks');
+assert.equal(catalogs.host.querySelectorAll('[data-wp-problem]').length,72,'Supplement lists the current tasks');
 assert(!catalogs.host.textContent.includes('教学设计与指导'),'The learner catalog uses the requested supplement name');
 const textbookIds=new Set(catalogs.w.RatioWordProblemTextbookIndex.items.map(x=>x.problemId));
 for(const button of catalogs.host.querySelectorAll('[data-wp-problem]'))assert(!textbookIds.has(button.dataset.wpProblem),'No duplicate textbook exercise in supplements');
@@ -566,7 +557,7 @@ catalogs.click('[data-wp-problem="L7-P2"]');
 assert.match(catalogs.$('.wp-citation').textContent,/补充练习/,'Supplement entry has the learner-facing source label');
 assert(!catalogs.host.textContent.includes('教学设计与指导'));
 const draftField=catalogs.$('[data-wp-fact]');catalogs.textInput('[data-wp-fact="'+draftField.dataset.wpFact+'"]','12');
-catalogs.click('[data-wp-back]');assert.equal(catalogs.host.querySelectorAll('[data-wp-problem]').length,81,'Back retains the current source catalog');
+catalogs.click('[data-wp-back]');assert.equal(catalogs.host.querySelectorAll('[data-wp-problem]').length,72,'Back retains the current source catalog');
 catalogs.click('[data-wp-problem="L7-P2"]');assert.equal(catalogs.$('[data-wp-fact="'+draftField.dataset.wpFact+'"]').value,'12','Back saves the current reading draft');
 catalogs.click('[data-wp-back]');catalogs.click('[data-wp-back]');assert.equal(catalogs.redirects.at(-1),'home');
 catalogs.close();
