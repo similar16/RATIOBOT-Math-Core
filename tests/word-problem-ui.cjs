@@ -258,7 +258,9 @@ assert(all.read().records.every(r=>!Object.keys(r.values).some(k=>k.startsWith('
 all.app.open();
 assert(all.host.querySelectorAll('.wp-problem-card.is-completed').length>0,'Completed tasks use a distinct card state');
 all.click('[data-wp-book="guide"]');
-assert(!all.$('[data-wp-problem="PEP-P051"]').classList.contains('is-completed'),'Boundary discussions remain distinct from graded tasks');
+assert.equal(all.host.querySelectorAll('.wp-problem-card').length,66);
+for(const id of ['S07','PEP-P068','C21-06','PEP-P051','PEP-P048','C21-01'])assert(!all.$('[data-wp-problem="'+id+'"]'));
+assert(all.host.textContent.includes('情境分析（选读）'));
 // The progress layer must not create duplicate completions on replay/retry.
 const latest=all.read().records[0],latestProblem=data.find(p=>p.id===latest.problemId),latestRoute=latestProblem.routes.find(r=>r.id===latest.routeId);
 const duplicated=all.w.RatioWordProblemProgress.complete(all.read(),latest,latestProblem,latestRoute);

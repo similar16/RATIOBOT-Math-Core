@@ -213,6 +213,8 @@
     ]
   }
 };
+ const supplementReadOnly=new Set(["C21-01","PEP-P048","PEP-P051","S07","PEP-P068","C21-06"]);
+ function standalonePractice(p){return !supplementReadOnly.has(p.id);}
  const retired=new Set(['S04', 'S05', 'S06', 'S08', 'S09', 'G9-02', 'G9-04', 'G9-05', 'G10-04']);
  function activeProblems(items){const active=items.filter(p=>!retired.has(p.id));
   for(const p of active){const task=scenarios[p.id];if(task&&p.kindLabel!=='情境辨析'){p.title=task.title;p.kindLabel='情境辨析';p.contentRevision=(p.contentRevision||0)+1;}}
@@ -261,5 +263,5 @@
  }
  function summary(value){const r=normalized(value).records;return {completed:new Set(r.filter(x=>x.status!=='review').map(x=>x.problemId)).size,
   independent:new Set(r.filter(x=>x.status==='independent').map(x=>x.problemId)).size,review:r.filter(x=>x.status==='review').length,records:r};}
- const api={scenarios,activeProblems,matchesScenario,cleanDraft,migrateDraft,normalized,saveDraft,complete,merge,summary};if(typeof module==='object'&&module.exports)module.exports=api;else root.RatioWordProblemProgress=api;
+ const api={scenarios,standalonePractice,activeProblems,matchesScenario,cleanDraft,migrateDraft,normalized,saveDraft,complete,merge,summary};if(typeof module==='object'&&module.exports)module.exports=api;else root.RatioWordProblemProgress=api;
 })(typeof window==='undefined'?globalThis:window);

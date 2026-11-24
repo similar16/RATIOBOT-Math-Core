@@ -32,7 +32,7 @@
   const body=box.querySelector('tbody'),choice=box.querySelector('.atlas-choice');
   function selectCell(t,a,button){
    box.querySelectorAll('td button').forEach(b=>b.setAttribute('aria-pressed',String(b===button)));
-   const category=categories[t], tasks=data.filter(p=>category.problemIds.includes(p.id));
+   const category=categories[t], tasks=data.filter(p=>P.standalonePractice(p)&&category.problemIds.includes(p.id));
    choice.innerHTML='<h3>自主选练</h3><strong>'+esc(category.label)+' · '+abilities[a]+'</strong><p>'+columns[a].map(i=>stages[i]+'：独立首答 '+fraction(evidence[t][i])+'，借助提示或参考 '+evidence[t][i].hint+' 题，看过示范 '+evidence[t][i].example+' 题').join('　')+'</p><label>选择题目 <select></select></label><p><button class="primary">进入本题分析 →</button></p>';
    const select=choice.querySelector('select');for(const p of tasks)select.add(new Option(p.title,p.id));
    choice.querySelector('button').onclick=()=>{if(ready())start(select.value);};
