@@ -169,7 +169,7 @@ const combined=E.checkTableCell('19+(20-x)=39-x',readyCell('19+(20-x)'));
 assert(combined.ok);assert.equal(combined.expression,'39-x');assert.deepEqual(combined.sourceTrace,['19+(20-x)','39-x']);
 
 // A constant result still needs its own source calculation or completed derivation.
-assert.equal(E.checkTableCell('0.8',readyCell('8/10')).kind,'source');
+for(const value of ['0.8','4÷5','12/15',String.raw`\frac{16}{20}`])assert(E.checkTableCell(value,readyCell('8/10')).ok,value);
 assert(E.checkTableCell('8/10=0.8',readyCell('8/10')).ok);
 assert(E.checkTableCell('0.8',readyCell('8/10',{allowedNumbers:['0.8']})).ok);
 assert.equal(E.checkTableCell('1.25*x',{expr:'(1+25%)*x'}).kind,'source');

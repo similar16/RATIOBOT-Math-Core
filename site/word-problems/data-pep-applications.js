@@ -101,7 +101,9 @@
   ...basketball.map((row,i)=>F('team-'+i,row[0]+'队比赛'+row[1]+'场，胜'+row[2]+'场，负'+row[3]+'场，积分'+row[4]+'分.')),
   F('same-rule','同一次联赛，胜一场和负一场各按相同的对应规则计分.','property'),F('equal-score','讨论同一球队的胜场总积分与负场总积分能否相等.'),F('integer','比赛场次必须为非负整数，胜场与负场合计为总场数.','property')
  ],[R({label:'先推得计分规则，再设胜场数为x',meaning:'同一球队的胜场数',unit:'场',domain:'x为0至14之间的整数',
-  derivations:[D('loss-point','负一场的积分','14/14','1','team-7|same-rule','钢铁队14场全负，共14分，用总积分除以负场数.'),D('win-point','胜一场的积分','(24-4*(14/14))/10','2','team-0|loss-point|same-rule','前进队24分先减去4场负场的积分，再除以10场胜场.')],
+  derivations:[D('loss-point','负一场的积分','14/14','1','team-7|same-rule','钢铁队14场全负，共14分，用总积分除以负场数.'),{...D('win-point','胜一场的积分','(24-4*(14/14))/10','2','team-0|loss-point|same-rule','任选一支有胜场的队，用总积分减去负场所得积分，再除以胜场数.'),autoMatch:true,methods:basketball.filter(row=>row[2]>0).map(([name,total,wins,losses,points],i)=>({
+   id:'team-'+i,label:'用'+name+'队的记录',sources:['team-'+i,'loss-point','same-rule'],expr:'('+points+'-'+losses+'*(14/14))/'+wins
+  }))}],
   table:T(['比赛结果','每场积分/分','场数/场','该类总积分/分'],[
    ['胜场',C('(24-4*(14/14))/10','win-point',true),C('x','unknown',true),C('((24-4*(14/14))/10)*x','win-point|unknown')],
    ['负场',C('14/14','loss-point',true),C('14-x','team-0|unknown|integer'),C('(14/14)*(14-x)','loss-point|team-0|unknown')],

@@ -169,7 +169,11 @@
   function numeric(input) { try { const p = read(input).poly; return isConstant(p) ? rstring(coefficient(p, '')) : null; } catch { return null; } }
   // Numeric blanks accept exact notation, without evaluating arbitrary sums,
   // products, variables that cancel, or rounded recurring decimals.
-  function numericValue(input) { try { const p = read(input); return numericNotation(p.ast) ? rstring(coefficient(p.poly, '')) : null; } catch { return null; } }
+  function quotient(ast){
+    if(ast.kind==='group'||ast.kind==='unary')return quotient(ast.value);
+    return ast.kind==='binary'&&ast.op==='/';
+  }
+  function numericValue(input) { try { const p = read(input); return (numericNotation(p.ast)||quotient(p.ast)&&!details(p.ast).variables.length) ? rstring(coefficient(p.poly, '')) : null; } catch { return null; } }
   function equivalent(input, expected, variable = 'x') { try { return pEquals(read(input).poly, read(expected).poly); } catch { return false; } }
 
   function walk(ast, visit) { visit(ast); if (ast.value && typeof ast.value === 'object' && ast.value.kind) walk(ast.value, visit); if (ast.left) walk(ast.left, visit); if (ast.right) walk(ast.right, visit); }
@@ -275,7 +279,7 @@
     return numericNotation(ast) && available.has(rstring(coefficient(evaluate(ast), '')));
   }
   function unexplainedNumber(ast, allowed, available) {
-    if (knownNumber(ast, available)) return null;
+    if (knownNumber(ast, available) || (quotient(ast) && knownNumber(ast, allowed))) return null;
     // A verified fractional coefficient can surround a quantity: x*2/6 and
     // (1/3)*x have the same source. Keep unrelated cancelling arithmetic out.
     const scaled=available.size&&tableScaleNotation(ast,available);
@@ -319,9 +323,12 @@
       for (const expression of item.sourceExpressions || []) for (const literal of details(read(expression).ast).literals) allowed.add(literal.value);
       const derivedResults = new Set();
       for (const value of item.allowedNumbers || []) { const number = numeric(value); if (number != null) { allowed.add(number); derivedResults.add(number); } }
-      // Equivalent spellings of a proper fractional number are notation, not
-      // invented source data (1/2, 2/4, 0.5 and a stacked fraction).
-      if (numericNotation(expected.ast) && numericNotation(first.ast) && meta.operations>0) { const value=numeric(item.expr); if (value?.includes('/')) derivedResults.add(value); }
+      // A quotient has one exact rational value regardless of its displayed numerator and denominator.
+      if(numericNotation(first.ast)&&meta.operations>0&&(numericNotation(expected.ast)||item.allowQuotientResult&&quotient(expected.ast))){
+        const value=numeric(item.expr);if(value!=null)derivedResults.add(value);
+      }
+      if(item.allowQuotientResult&&quotient(expected.ast)&&numericNotation(first.ast)&&meta.operations===0)
+        return {ok:true,kind:'correct',expression:first.normalized,result:numeric(item.expr),message:'商的数值正确.'};
       // Only a complete, explicitly available result can replace the calculation;
       // original literal leaves alone do not establish that a derivation was done.
       const knownResult = knownNumber(first.ast, derivedResults);
@@ -444,7 +451,7 @@
           const pending = dependencies.filter(d => d?.completed !== true);
           failures.push({ok:false,kind:'source',message:'请先完成“'+(pending[0]?.label||pending[0]?.id||'这一格的数据来源')+'”的推导，再使用结果或等价简写.',pendingSources:pending.map(d=>d?.id).filter(Boolean)});continue;
         }
-        const strict = checkDerivation(input, { ...candidate, result:candidate.expr }, variable);
+        const strict = checkDerivation(input, { ...candidate, allowQuotientResult:Array.isArray(dependencies), result:candidate.expr }, variable);
         if (!strict.ok) {
           // A bare computed constant still needs its own calculation or an
           // already verified value. Only nonconstant algebra gets this route.

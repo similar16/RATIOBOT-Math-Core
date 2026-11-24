@@ -177,6 +177,24 @@ function fixture(autoRelations=true) {
 }
 
 (async()=>{
+// Check source selection through the same controls students use.
+for (const [id, step, expression, selected] of [
+ ['PEP-P078','wrongScore','94-19*5',['b']],
+ ['PEP-P078','wrongScore','(88-18*5)÷2',['c','rules','integer']],
+ ['PEP-P078','wrongScore','(64-14*5)/6',['d','correctScore']],
+ ['PEP-P078','wrongScore','(40-10*5)/10',['e']],
+ ['PEP-P049','win-point','(18-10)/4',['team-6','loss-point','same-rule']],
+ ['PEP-P060','rate','(85-40)÷(25-10)',['uniform','t10','t25']]
+]) {
+ const f=fixture();
+ f.app.start(id,true);f.confirmFacts();
+ const ds=f.w.RatioWordProblemsData.find(q=>q.id===id).routes[0].derivations;
+ for(const d of ds.slice(0,ds.findIndex(d=>d.id===step))){
+  f.fillDerivations({derivations:[{...d,sources:d.id==='correctScore'?['a','rules','integer']:d.sources}]});
+ }
+ f.fillDerivations({derivations:[{id:step,expr:expression,sources:selected}]});
+ f.close();
+}
 // Every authored normal, branching, arithmetic, open and boundary route reaches its appropriate saved record.
 // Quantity relations precede table construction: manual assembly, reveal, retry and resume.
 const refPractice=fixture(false),refProblem=refPractice.w.RatioWordProblemsData.find(p=>p.id==='L8-P1'),refRoute=refProblem.routes[0];

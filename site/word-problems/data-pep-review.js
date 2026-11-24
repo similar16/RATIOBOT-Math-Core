@@ -38,7 +38,11 @@
  '下表记录一次实验中的时间和温度，假设温度的变化是均匀的.（1）实验进行21分钟时的温度是多少？（2）实验进行多长时间的温度是34℃？',
  [fact('t0','实验0分钟时温度为10℃.'),fact('t5','实验5分钟时温度为25℃.'),fact('t10','实验10分钟时温度为40℃.'),fact('t15','实验15分钟时温度为55℃.'),fact('t20','实验20分钟时温度为70℃.'),fact('t25','实验25分钟时温度为85℃.'),fact('uniform','温度变化是均匀的.'),fact('forward','第（1）问要求21分钟时的温度.'),fact('target','第（2）问要求温度达到34℃时的时间.')],
  {meaning:'温度达到34℃时经过的时间',unit:'分钟',domain:'x≥0；第（1）问另按题给21分钟正向计算.',
-  derivations:[derive('rate','每分钟升温量','(25-10)/(5-0)','3',['t0','t5','uniform'],'先求这一时间段的温差，再除以经过的时间；3℃/分钟不是直接给出的数据.')],
+  derivations:[{...derive('rate','每分钟升温量','(25-10)/(5-0)','3',['t0','t5','uniform'],'任选两个不同的观测时刻，用温差除以对应的时间差.'),
+   autoMatch:true,methods:[0,5,10,15,20,25].flatMap((t,i,times)=>times.slice(i+1).map(u=>({
+    id:'t'+t+'-t'+u,label:t+'至'+u+'分钟',sources:['t'+t,'t'+u,'uniform'],
+    expr:'('+(10+3*u)+'-'+(10+3*t)+')/('+u+'-'+t+')'
+   })))}],
   table:{headers:['情形','初始温度/℃','每分钟升温/℃','经过时间/分钟','升高温度/℃','最终温度/℃'],rows:[
    row('第（1）问',cell('10',['t0'],true),cell('3',['rate'],true),cell('21',['forward'],true),cell('3*21',['rate','forward']),cell('10+3*21',['t0','rate','forward'])),
    row('第（2）问',cell('10',['t0'],true),cell('3',['rate'],true),cell('x',['unknown'],true),cell('3*x',['rate','unknown']),cell('10+3*x',['t0','rate','unknown']))]},
@@ -234,7 +238,15 @@
  [fact('rules','共20道选择题，各题分值相同，每题必答.'),fact('a','A答对20题，答错0题，得100分.'),fact('b','B答对19题，答错1题，得94分.'),fact('c','C答对18题，答错2题，得88分.'),fact('d','D答对14题，答错6题，得64分.'),fact('e','E答对10题，答错10题，得40分.'),fact('fScore','F得76分.'),fact('gScore','G声称得80分.'),fact('integer','答对、答错的题数都是非负整数，且不能超过总题数.','property')],
  {meaning:'F答对的题数',unit:'题',domain:'x为0至20之间的整数；另对G声称的80分设置代数候选y，再检验整数性.',
   additionalVariables:[{variable:'y',meaning:'假设G得80分时答对题数的代数候选',unit:'题',domain:'实际可行时应为0至20之间的整数'}],
-  derivations:[derive('correctScore','每答对一题的分数','100/20','5',['a'],'A全部答对，用总得分除以题数.'),derive('wrongScore','每答错一题计入的分数','94-19*(100/20)','-1',['b','correctScore'],'B只有一题答错，从总分扣除19题正确题的得分，得到每错一题计-1分.')],
+  derivations:[
+   {...derive('correctScore','每答对一题的分数','100/20','5',['a'],'A全部答对，用总得分除以题数.'),optionalSources:['rules','integer']},
+   {...derive('wrongScore','每答错一题计入的分数','94-19*(100/20)','-1',['b','correctScore'],'任选一位有错题的参赛者：从总分中减去答对题所得分数，再除以答错题数.'),
+    autoMatch:true,optionalSources:['rules','integer','correctScore'],supportingSources:['a','b','c','d','e'],
+    methods:[['b',94,19,1],['c',88,18,2],['d',64,14,6],['e',40,10,10]].map(([id,total,right,wrong])=>({
+     id,label:'用'+id.toUpperCase()+'的记录',sources:[id,'correctScore'],expr:wrong===1?'94-19*(100/20)':'('+total+'-'+right+'*5)/'+wrong,
+     explain:'从'+total+'分中减去'+right+'道正确题的得分，再除以'+wrong+'道错题.'
+    }))}
+  ],
   table:{headers:['参赛者','答对题数','答错题数','答对得分','答错计分','总得分'],rows:[
    row('F',cell('x',['unknown'],true),cell('20-x',['rules','unknown']),cell('5*x',['correctScore','unknown']),cell('(-1)*(20-x)',['wrongScore','rules','unknown']),cell('5*x-(20-x)',['correctScore','wrongScore','rules','unknown'])),
    row('G的代数候选',cell('y',['unknown'],true),cell('20-y',['rules','unknown']),cell('5*y',['correctScore','unknown']),cell('(-1)*(20-y)',['wrongScore','rules','unknown']),cell('5*y-(20-y)',['correctScore','wrongScore','rules','unknown']))]},
