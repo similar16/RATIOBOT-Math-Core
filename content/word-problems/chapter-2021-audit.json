@@ -6,9 +6,9 @@
   "sourcePositionCount": 82,
   "problemPositionCount": 81,
   "methodPositionCount": 1,
-  "retainedProblemCount": 11,
-  "retainedRouteCount": 22,
-  "existingOrSimilarProblemPositions": 70,
+  "retainedProblemCount": 12,
+  "retainedRouteCount": 23,
+  "existingOrSimilarProblemPositions": 69,
   "pageAudit": [
     {
       "pdfPage": 1,
@@ -1278,11 +1278,11 @@
       "title": "提价后九折的成本",
       "statement": "商品按成本提高20%标价，再九折出售，售价270元，成本多少？",
       "transcription": "条件完整的审校转录（部分说明句简写；原页仍为权威）",
-      "decision": "高度相似，不新增入口",
+      "decision": "保留为独立练习",
       "problemIds": [
-        "PEP-P048"
+        "C21-12"
       ],
-      "reason": "仅改变数据、场景或同一模型的所求，不新增高度重合入口；只作关联，不继承完成记录.",
+      "reason": "本题反求成本，区别于八折判断盈亏.独立建模与记录.",
       "visuallyChecked": true,
       "transferCompletion": false
     },

@@ -5,7 +5,7 @@ const base=path.resolve(process.env.SITE_DIR||'site','word-problems');
 const data=fs.readdirSync(base).filter(f=>/^data-.*\.js$/.test(f)).flatMap(f=>require(path.join(base,f)));
 const E=require(path.join(base,'engine.js')),T=require(path.join(base,'table-alternatives.js'));
 const find=id=>data.find(p=>p.id===id);
-assert.equal(data.length,160);
+assert.equal(data.length,161);
 for(const p of data){
  assert(p.originalStem&&p.originalStem.length>12,p.id+' has a verified source prompt');
  assert(!p.originalStem.includes('。'),p.id+' keeps the requested period style');

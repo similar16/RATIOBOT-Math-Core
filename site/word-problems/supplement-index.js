@@ -572,9 +572,10 @@ const index={
     "C21-08",
     "C21-09",
     "C21-10",
-    "C21-11"
+    "C21-11",
+    "C21-12"
   ],
-  "mergedUniqueCount": 81,
+  "mergedUniqueCount": 82,
   "peopleEducation": {
     "chapter": 5,
     "sourceGroups": 80,
@@ -1001,15 +1002,16 @@ const index={
       "C21-08",
       "C21-09",
       "C21-10",
-      "C21-11"
+      "C21-11",
+      "C21-12"
     ],
-    "retainedCount": 11,
+    "retainedCount": 12,
     "sourceAudit": "content/word-problems/chapter-2021-audit.json",
     "completionTransfer": false,
     "sourcePositionCount": 82,
     "problemPositionCount": 81,
     "methodPositionCount": 1,
-    "existingOrSimilarProblemPositions": 70,
+    "existingOrSimilarProblemPositions": 69,
     "mergedSources": [
       {
         "source": "《第四章 用一元一次方程解决问题》资料，第1页 · 4.1正文",
@@ -1376,16 +1378,6 @@ const index={
         "title": "印刷三册小说的时间",
         "problemIds": [
           "C21-05"
-        ],
-        "repeatSources": [],
-        "matchKind": "高度相似，不新增入口",
-        "transferCompletion": false
-      },
-      {
-        "source": "《第四章 用一元一次方程解决问题》资料，第16页 · 4.3（3）习题2",
-        "title": "提价后九折的成本",
-        "problemIds": [
-          "PEP-P048"
         ],
         "repeatSources": [],
         "matchKind": "高度相似，不新增入口",

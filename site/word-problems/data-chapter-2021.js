@@ -4369,7 +4369,226 @@ const data=[
       "originalVerified": true,
       "methodReview": "已检查不同设元与表格组织，保留量义或列式依据不同的自然方案，纯字母改名不另列."
     }
+  },
+{
+  "id": "C21-12",
+  "title": "九折出售反求成本",
+  "group": "销售与利润",
+  "source": "《第四章 用一元一次方程解决问题》资料，第16页 · 4.3（3）习题2",
+  "sourceCollectionId": "chapter2021-12",
+  "kind": "linear",
+  "stem": "一件商品先按成本提高20%标价，再以9折出售，售价为270元，这件商品的成本是多少元？",
+  "tags": [
+    "成本",
+    "标价",
+    "折扣"
+  ],
+  "facts": [
+    {
+      "id": "raise",
+      "text": "标价比成本价提高20%.",
+      "kind": "given"
+    },
+    {
+      "id": "discount",
+      "text": "按标价打九折销售.",
+      "kind": "given"
+    },
+    {
+      "id": "sale",
+      "text": "实际售价为270元.",
+      "kind": "given"
+    },
+    {
+      "id": "whole",
+      "text": "表示相对成本的倍数时，把原成本的一份记为1.",
+      "kind": "convention"
+    },
+    {
+      "id": "fold",
+      "text": "十折表示原价的全部；折数除以10就是对应的价格比例.",
+      "kind": "property"
+    }
+  ],
+  "routes": [
+    {
+      "id": "main",
+      "label": "设成本价为x元",
+      "variable": "x",
+      "unit": "元",
+      "domain": "x>0",
+      "derivations": [
+        {
+          "id": "markup",
+          "label": "标价相对成本价的倍数",
+          "expr": "1+20%",
+          "result": "1.2",
+          "sources": [
+            "whole",
+            "raise"
+          ],
+          "explain": "原成本的一份加提高的20%，得到标价倍数."
+        },
+        {
+          "id": "discount-rate",
+          "label": "九折：售价是标价的几倍",
+          "expr": "9/10",
+          "result": "0.9",
+          "sources": [
+            "discount",
+            "fold"
+          ],
+          "explain": "换算范例：九折→9÷10=0.9.意思是标价每10元，实际付9元；售价=标价×0.9.先写换算算式，再用这个倍数乘标价."
+        }
+      ],
+      "equations": [
+        {
+          "label": "折后售价为270元",
+          "left": "x*(1+20%)*(9/10)",
+          "right": "270",
+          "answerIndex": 0
+        }
+      ],
+      "answers": [
+        {
+          "label": "成本价",
+          "expr": "250",
+          "unit": "元"
+        }
+      ],
+      "checks": [
+        {
+          "text": "标价",
+          "expr": "250*(1+20%)",
+          "result": "300"
+        },
+        {
+          "text": "折后售价",
+          "expr": "300*(9/10)",
+          "result": "270"
+        }
+      ],
+      "steps": [
+        "x*(1+20%)*(9/10)=270",
+        "1.08x=270",
+        "x=250"
+      ],
+      "meaning": "商品的成本价",
+      "table": {
+        "headers": [
+          "状态",
+          "这一步乘的倍数",
+          "金额/元"
+        ],
+        "rows": [
+          {
+            "label": "成本",
+            "cells": [
+              {
+                "note": "设为基准量"
+              },
+              {
+                "expr": "x",
+                "sources": [
+                  "unknown"
+                ],
+                "given": true
+              }
+            ]
+          },
+          {
+            "label": "标价",
+            "cells": [
+              {
+                "expr": "1+20%",
+                "sources": [
+                  "markup"
+                ],
+                "given": true
+              },
+              {
+                "expr": "x*(1+20%)",
+                "sources": [
+                  "unknown",
+                  "markup"
+                ]
+              }
+            ]
+          },
+          {
+            "label": "打折后的售价",
+            "cells": [
+              {
+                "expr": "9/10",
+                "sources": [
+                  "discount-rate"
+                ],
+                "given": true
+              },
+              {
+                "expr": "x*(1+20%)*(9/10)",
+                "sources": [
+                  "unknown",
+                  "markup",
+                  "discount-rate"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "relationTriples": {
+        "sum": [
+          [
+            "成本价",
+            "提高的金额",
+            "标价"
+          ]
+        ],
+        "product": [
+          [
+            "成本价",
+            "提高比例",
+            "提高的金额"
+          ],
+          [
+            "标价",
+            "折扣比例",
+            "售价"
+          ]
+        ],
+        "notes": []
+      },
+      "closure": {
+        "sources": [
+          "sale"
+        ],
+        "text": "按提价和折扣关系表示出的售价，须等于题给270元."
+      },
+      "conclusion": "成本为250元，提高20%后标价300元，按九折售价为270元.",
+      "relations": {
+        "add": [
+          "成本价+提高的金额=标价"
+        ],
+        "multiply": [
+          "成本价×提高比例=提高的金额",
+          "标价×折扣比例=售价"
+        ]
+      },
+      "verdict": {
+        "correct": "valid",
+        "prompt": "结果是否完整并符合原题条件？",
+        "explain": "成本为250元，提高20%后标价300元，按九折售价为270元."
+      }
+    }
+  ],
+  "originalStem": "一件商品先按成本提高20%标价，再以9折出售，售价为270元，这件商品的成本是多少元？",
+  "sourceAudit": {
+    "pdfPage": 16,
+    "location": "4.3（3）习题2",
+    "originalVerified": true
   }
+}
 ];
 if(typeof module==='object'&&module.exports)module.exports=data;else root.RatioWordProblemsData=(root.RatioWordProblemsData||[]).concat(data);
 })(typeof window==='undefined'?globalThis:window);
