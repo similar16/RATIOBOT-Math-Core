@@ -536,7 +536,12 @@
   function checkDerived(id){
    if(!guard())return;const raw=(route.derivations||[]).find(x=>x.id===id);if(!raw)return;
    const chosen=derivationMethod(raw),methods=[chosen,...(raw.methods||[]).filter(m=>m.id!==chosen.methodId).map(m=>({...raw,...m,id:raw.id,methodId:m.id}))];let matched=null,firstFailure=null,hasCorrectCalculation=false;
-   for(const d of methods){
+   // Preserve the actual method when several valid records give the same quotient.
+   const entered=run.values['d:'+id]||'';
+   let calculation='';
+   try{calculation=E.normalize(entered).split('=')[0];}catch{}
+   const ordered=methods.filter(d=>E.normalize(d.expr)===calculation).concat(methods.filter(d=>E.normalize(d.expr)!==calculation));
+   for(const d of ordered){
     if((d.sources||[]).some(ref=>(route.derivations||[]).some(parent=>parent.id===ref)&&!run.derived[ref]))continue;
     const result=E.checkDerivation(run.values['d:'+id]||'',{...d,...derivationContext(d)},route.variable);
     if(!firstFailure)firstFailure=result;
