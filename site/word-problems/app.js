@@ -11,7 +11,7 @@
  const sourceCaption=s=>String(s??'').replace(/《教学设计与指导》/g,'补充练习').replace(/教学设计与指导/g,'补充练习').replace(/（文件名标注2021\.12）/g,'').replace(/PDF第/g,'第');
  const verdicts={valid:'符合题意',impossible:'实际不能实现',multiple:'有多个情形或答案',boundary:'超出一元一次方程',open:'开放问题，需要说明条件'};
  const replyTemplates={
-  "C21-01": "所列方程为 20−x＝[6](10−x)，书价为[8]元.",
+  "C21-01": "书价为[8]元.",
   "C21-02": "从甲组抽调了[3]人.",
   "C21-03": "实际生产小麦[11.2]吨，玉米[8.8]吨.",
   "C21-04": "批发番茄[30]千克、豆角[15]千克，全部卖完可盈利[63]元.",
@@ -95,7 +95,7 @@
   "PEP-P043": "两队同时施工，[8]天可以铺好管线.",
   "PEP-P047": "大书包的进价是[30]元，小书包的进价是[20]元.",
   "PEP-P048": "每件商品[亏损|盈利][6]元.",
-  "PEP-P049": "胜一场得[2]分，负一场得[1]分.总积分＝胜场数×[2]＋负场数×[1].胜场总积分与负场总积分[不能|能]相等.",
+  "PEP-P049": "胜一场得[2]分，负一场得[1]分.胜场总积分与负场总积分[不能|能]相等.",
   "PEP-P050": "得21分时，胜[6]场、平[3]场./在9场不败的条件下，胜场总积分与平场总积分[不能|能]相等.",
   "PEP-P051": "九年级文艺小组活动[2]次，科技小组活动[2]次.",
   "PEP-P052": "使用不足5年时，[3级空调|1级空调]综合费用较低./使用恰好5年时，两款综合费用相同，均为[4600]元./使用超过5年且不超过10年时，[1级空调|3级空调]综合费用较低.",
@@ -134,17 +134,17 @@
   "TB-I08": "每个小球重[4]克.",
   "TB-I09": "球队胜[8]场、负[4]场.",
   "TB-I10": "这个数是[133/8].",
-  "TB-I11": "原设法得到两个方程，x＋y＝[30]，5x＋2y＝[90]，每个方程都有[2]个未知数.",
+  "TB-I11": "原设法中，每个方程都有[2]个未知数.",
   "TB-I11/one-variable": "硬面抄买了[10]本，软面抄买了[20]本.",
   "TB-I12": "两城之间的铁路里程为[600]千米.",
   "TB-I13": "从第5年春天开始，经过[33]天可长到10米高.",
-  "TB-I14": "0至14岁人口数n与总人口的关系为 n÷84748016＝[15.21]%.",
+  "TB-I14": "0至14岁人口占总人口的[15.21]%.",
   "TB-I15": "小明今年[14]岁.",
   "TB-I16": "长方形的宽为[4]厘米，长为[8]厘米.",
   "TB-I17": "黑色皮块有[12]块，白色皮块有[20]块.",
-  "TB-I18": "所列方程是[一元一次方程|二元一次方程]，练习本每本[2]元.",
-  "TB-I19": "所列方程是[一元一次方程|二元一次方程]，每本书[30.5]元.",
-  "TB-I20": "所列方程是[一元一次方程|二元一次方程]，乘车路程为[7]千米.",
+  "TB-I18": "练习本每本[2]元.",
+  "TB-I19": "每本书[30.5]元.",
+  "TB-I20": "乘车路程为[7]千米.",
   "TB-R01": "三数框内日期之和是中间数的[3]倍，十字框内日期之和是中间数的[5]倍.",
   "TB-R03": "所挂物体的质量是[2.5]千克.",
   "TB-R04": "全书共有[50]页.",
@@ -169,11 +169,14 @@
  function replyParts(problemId, routeId){
   const text=replyTemplates[problemId+'/'+routeId]||replyTemplates[problemId];
   if(!text)return [];
+  // Keep existing answer keys when removing equation blanks so earlier drafts and exports still match.
+  const retained={'C21-01':[1],'PEP-P049':[0,1,4],'TB-I11':[2],'TB-I18':[1],'TB-I19':[1],'TB-I20':[1]};
+  const indices=retained[problemId+'/'+routeId]||(!replyTemplates[problemId+'/'+routeId]&&retained[problemId]);
   let index=0;
   return text.split('./').map(line=>line.split(/(\[[^\]]+\])/).filter(Boolean).map(part=>{
    if(!part.startsWith('['))return {text:part};
    const options=part.slice(1,-1).split('|');
-   return {key:'reply:'+index++,answer:options[0],choices:options.length>1?options:null};
+   const key='reply:'+(indices?indices[index]:index);index++;return {key,answer:options[0],choices:options.length>1?options:null};
   }));
  }
  let editorPromise;
@@ -191,6 +194,11 @@
   const relationshipOnly=()=>route?.relationshipOnly===true;
   const reverseModel=()=>route?.reverseModel===true;
   const analysisOnly=()=>problem?.kind==='open';
+  const readings={
+   'G9-04':{title:'白棋的颗数怎样随图案变化？',context:'每幅图都是正方形棋阵.首行、首列和主对角线上的棋子都是黑棋，其余为白棋.',steps:['先看第3幅，每边4颗，共16颗.沿三条线数黑棋，左上角那颗被数了三次，要减去多算的2次，所以有10颗黑棋、6颗白棋.','换成第n幅，每边有n＋1颗.黑棋有3(n＋1)−2颗，白棋有(n＋1)²−[3(n＋1)−2]＝n(n−1)颗.','例如想找有12颗白棋的图案，把n从1起依次代入，得到0、2、6、12，所以是第4幅.这里两个因数都随n变化.']},
+   'G9-05':{title:'100根小棒能恰好用完吗？',context:'下面是一种搭法：先放2根作为固定部分，再搭若干个相同单元，每个单元另用6根.',steps:['搭1个单元需要8根，搭2个需要14根.每多搭1个，只增加6根，起初的2根只数一次.','搭n个完整单元共用6n＋2根.若恰好用100根，就要满足6n＋2＝100.','先留出固定的2根，剩下98根.98÷6＝16余2，所以最多搭16个完整单元，余下2根.']}
+  };
+  const reading=()=>readings[problem?.id];
   const scene=()=>P.scenarios[problem?.id];
   const directAnswer=()=>problem?.id==='S04';
   const visibleFlow=()=>scene()||directAnswer()?[0]:analysisOnly()?(reverseModel()?[0,2,3]:[0,1,2,3]):relationshipOnly()?[0,1,2,3,6]:reverseModel()?[0,2,3,5,6]:flow;
@@ -200,7 +208,7 @@
   const manual=()=>!!route?.discussion||['open','boundary'].includes(problem?.kind);
   function guard(){if(ready())return true;destroy();B.go('account');return false;}
   function stateData(){return P.cleanDraft(run);}
-  function save(){clearTimeout(saveTimer);scratchUI?.flush();if(!ready()||!run)return;try{B.saveDraft(problem.id,stateData());}catch(e){const el=host.querySelector('[data-wp-save-status]');if(el)el.textContent='本机保存未完成：'+e.message;}}
+  function save(){clearTimeout(saveTimer);scratchUI?.flush();if(!ready()||!run||reading())return;try{B.saveDraft(problem.id,stateData());}catch(e){const el=host.querySelector('[data-wp-save-status]');if(el)el.textContent='本机保存未完成：'+e.message;}}
   function queueSave(){clearTimeout(saveTimer);saveTimer=setTimeout(save,600);}
   function invalidate(step,resetAnswers=true){if(step<=3){const model=(run.modelMethods||[]).find(m=>m.id===run.modelId);if(model){model.confirmed=false;model.updatedAt=new Date().toISOString();}}for(let i=step;i<7;i++){delete run.passed[i];}if(step<=5&&resetAnswers)run.answersChecked=false;if(run.finished){run.finished=false;run.runId='wp-'+Date.now()+'-'+Math.random().toString(36).slice(2,8);}feedback='';feedbackKind='';const status=host.querySelector('.wp-feedback');if(status){status.className='wp-feedback';status.textContent='';status.setAttribute('role','status');status.setAttribute('aria-live','polite');}host.querySelector('[data-wp-next]')?.setAttribute('disabled','');host.querySelectorAll('[data-wp-step]').forEach(b=>{const i=Number(b.dataset.wpStep);if(i>=step)b.querySelector('span').textContent=String(visibleFlow().indexOf(i)+1);if(i>step)b.disabled=true;});
    // Reopen a completed analysis without rerendering the active editor or losing its selection.
@@ -371,7 +379,7 @@
   }
   function scratchEquations(){return '<div class="wp-scratch-equations"><h4>已列出的方程</h4>'+((route.equations||[]).length&&!manual()?route.equations.map((q,i)=>'<div data-wp-scratch-equation="'+i+'"><small>'+esc(equationBasis(i).label)+'</small><div class="wp-math-line">'+math(run.values['e:'+i]||'')+'</div></div>').join(''):manual()?'<p>'+esc(run.discussion||run.customModel||'结合题目条件，写下计算或分析过程.')+'</p>':'<p>按照数量表中的关系，写下计算过程.</p>')+'</div>';}
   function mountScratch(){const box=host.querySelector('[data-wp-scratch-mount]');if(!box)return;const pad=root.RatioWordProblemScratchpad;if(!pad){box.innerHTML='<p class="wp-notice">手写草稿暂未加载，可先在纸上演算，再核对答案.</p>';return;}scratchUI=pad.mount(box,{key:JSON.stringify([owner,run.scratchId||run.runId,problem.id,route.id]),headingHTML:scratchEquations()});}
-  function checkLabel(){if(scene()||directAnswer())return '核对并保存';if(analysisOnly())return run.step===finalStep()?'确认分析并保存':'确认本步';if(relationshipOnly())return run.step===6?'确认并保存':'确认本步';return run.step===5?((route.answers||[]).length?'核对答案':'确认分析结果'):run.step===6?'检验并保存':'确认本步';}
+  function checkLabel(){if(scene()||directAnswer())return '核对并保存';if(analysisOnly())return run.step===finalStep()?'确认分析并保存':'确认本步';if(relationshipOnly())return run.step===6?'确认并保存':'确认本步';return run.step===5?((route.answers||[]).length?'核对答案':'确认分析结果'):run.step===6?'核对并保存答案':'确认本步';}
   function completion(){return run.finished?'<div class="wp-completion"><h4>本题分析已保存</h4><p>'+esc(!scene()&&(manual()||run.customModel)?'你的开放表达已保留，等待课堂讨论.':run.example?'本次记录为看过示范.':run.assisted?'本次记录为提示后完成.':'本次记录为独立完成.')+'</p><p data-wp-sync-status>本机已保存.</p><button type="button" class="wp-secondary" data-wp-restart aria-controls="wp-reset-confirm" aria-expanded="false">重置本题，重新分析</button></div>':'';}
   function verdictFields(){
    if((route.verdictCases||[]).length)return route.verdictCases.map((c,i)=>'<fieldset class="wp-verdict"><legend>'+esc(c.prompt||c.label)+'</legend>'+[['valid','符合本情形的要求'],['impossible','不符合本情形的要求']].map(([value,label])=>'<label><input type="radio" name="wp-case-'+i+'" data-wp-case="'+i+'" value="'+value+'" '+(run.values['v:'+i]===value?'checked':'')+'>'+esc(label)+'</label>').join('')+'</fieldset>').join('');
@@ -381,9 +389,9 @@
    const lines=replyParts(problem.id,route.id);
    if(!lines.length)return '';
    if(run.finished&&!Object.keys(run.values).some(k=>k.startsWith('reply:')))return '<section><h4>答</h4><p>这条历史记录没有保存答句.</p></section>';
-   return '<section class="wp-written-reply"><h4>答</h4>'+lines.map((parts,line)=>'<p>'+parts.map(part=>{
+   return '<section class="wp-written-reply"><h4>答</h4><p class="wp-reply-note" role="status">只填最终结果，单位已给出.</p>'+lines.map((parts,line)=>'<p>'+parts.map((part,partIndex)=>{
     if(part.text)return esc(part.text);
-    const label='答句第'+(line+1)+'行，第'+(Number(part.key.slice(6))+1)+'空';
+    const label='答句第'+(line+1)+'行，第'+parts.slice(0,partIndex+1).filter(p=>p.key).length+'空';
     if(part.choices)return '<select data-wp-reply-choice="'+part.key+'" aria-label="'+label+'"><option value="">请选择</option>'+[...part.choices].sort().map(value=>'<option'+(run.values[part.key]===value?' selected':'')+'>'+esc(value)+'</option>').join('')+'</select>';
     return '<input data-wp-input="'+part.key+'" aria-label="'+label+'" type="text" inputmode="text" maxlength="80" '+noCredential+' placeholder="填答案" value="'+esc(run.values[part.key]||'')+'">';
    }).join('')+(line<lines.length-1?'.':'')+'</p>').join('')+'</section>';
@@ -397,8 +405,10 @@
      if(value&&!correct&&!part.choices){try{correct=E.equivalent(value,part.answer,route.variable);}catch{}}
      if(correct)continue;
      const field=host.querySelector('[data-wp-input="'+part.key+'"],[data-wp-reply-choice="'+part.key+'"]');
-     field?.focus();field?.setAttribute('aria-invalid','true');
-     return fail('请'+(value?'核对':'填写')+'答句第'+(Number(part.key.slice(6))+1)+'空，再保存.');
+     if(value||directAnswer())fail(value?'请核对答句中标出的结果.':'请填写最终结果.');
+     const box=field?.closest('.wp-written-reply');
+     if(box){box.classList.add('is-current');box.querySelector('.wp-reply-note').textContent=value?'请核对这一空的最终结果.':directAnswer()?'请在答句中填入电费.':'检验已通过，请在答句中填入最终结果.';}
+     field?.setAttribute('aria-invalid',String(!!value));field?.focus({preventScroll:true});box?.scrollIntoView?.({block:'center'});return false;
     }
    }
    return finishAnalysis();
@@ -414,7 +424,7 @@
    if(run.step===2)return '<h3>把每个量放进数量表</h3><p>根据已得到的数量关系填写数量表.行写对象或阶段，列写具体数量；新数据先说明来源.</p>'+(manual()&&!reverseModel()?'<p class="wp-notice">先核对每个量的来源，再结合原题分析参数、整数条件或适用范围.</p>':'')+relationSummary()+'<section data-wp-quantity-table-stage><h4>根据数量关系列表分析</h4>'+table(manual()&&!reverseModel())+(route.tableNote?'<p class="wp-table-note">'+esc(route.tableNote)+'</p>':'')+'</section>';
    if(run.step===3)return '<h3>'+(reverseModel()?'根据数量表编写应用题':analysisOnly()?'分析数量关系与模型':'找等量关系并列方程')+'</h3><p>'+(reverseModel()?'结合数量表口头编写故事，说明对象、单价、数量、总价及所求问题；下框用关系式记录故事中的数量联系.':analysisOnly()?'结合原题分析数量之间的关系、未知数与参数.下框用字母和关系式记录，本次只做分析.':'同一个量可以有不同的表示.根据表中数量必须满足的关系，列出能确定未知量的等式；恒等式不能代替求解方程.')+'</p>'+relationSummary(true)+(manual()?'<p class="wp-notice">'+esc(route.closure?.text||route.discussion||'说明所需的条件.')+'</p>':'')+'<details class="wp-preview-table" open><summary>用数量表中的量列式</summary>'+table(true,!manual()&&(route.equations||[]).length>0)+'</details><section class="wp-equation-block"><h4>'+(manual()?esc(route.discussionTitle||'说明数量关系与模型'):'根据上面的关系列方程')+'</h4>'+(!manual()&&(route.equations||[]).length?'<p class="wp-take-help">（可以点击表格中的“取用此量”）</p>':'')+'<p data-wp-basis-summary>'+esc(closureGuidance())+'</p>'+(manual()?'<label class="wp-writing">'+esc('用关系式记录分析结果（这里只输入字母、数字和运算符）')+'<textarea'+noCredential+' data-wp-discussion maxlength="2000" placeholder="输入数量关系式，中文说明可在课堂交流">'+esc(run.discussion)+'</textarea></label>':(route.equations||[]).length?route.equations.map((q,i)=>'<div class="wp-equation-entry">'+input('e:'+i,equationEntryLabel(i),{placeholder:'填写完整等式'})+'</div>').join(''):'<p class="wp-good-note">这是正向数量计算，按表中关系计算即可.</p>')+(!manual()&&(route.equations||[]).length?'<p class="wp-take-help">先选中方程输入框，再点击表格中的“取用此量”.运算符和等号由你补上.</p>':'')+'</section>'+(analysisOnly()?completion():'');
    if(run.step===5)return '<h3>在草稿纸上解方程并确认答案</h3><p>'+(route.modelOnly?'原题要求列式，可在草稿上说明模型的含义，不必反推精确人数.':manual()?'在草稿上整理计算、整数筛选或判断理由，再确认所得结果.':'对照自己列出的方程演算，也可以在纸上完成.然后在本页填写答案并核对.')+'</p>'+(route.scratchPrompt?'<p class="wp-good-note" data-wp-scratch-prompt>'+esc(route.scratchPrompt)+'</p>':'')+'<div data-wp-scratch-mount></div><section class="wp-answer-confirm"><h4>确认解答</h4>'+((route.answers||[]).length?'<div class="wp-answer-grid">'+route.answers.map((a,i)=>input('a:'+i,a.label,{unit:a.unit,prefix:answerPrefix(route,i),placeholder:'填写演算得到的值'})).join('')+'</div>':'<p>本题在这里不要求填写数值答案，请确认上面的模型与论证，再进入原条件检验.</p>')+'</section>';
-   if(run.step===6)return '<h3>用原条件检验</h3><p>解答已在上一页确认.先检验原条件和实际意义，再把结论填入下方答句.</p>'+((route.answers||[]).length?'<details class="wp-confirmed-answers"><summary>回看已确认的解答</summary>'+route.answers.map((a,i)=>'<p>'+esc(a.label)+'：'+math(run.values['a:'+i]||a.expr)+' '+esc(a.unit||'')+'</p>').join('')+'</details>':'')+'<section class="wp-verification"><h4>代回题目检查</h4>'+(route.checks||[]).map(verificationRow).join('')+verdictFields()+'</section>'+replyForm()+completion()+modelComparison()+(run.passed[6]?solution():'');
+   if(run.step===6)return '<h3>用原条件检验</h3><p>解答已在上一页确认.先检验原条件和实际意义，再把结论填入下方答句.</p>'+((route.answers||[]).length?'<details class="wp-confirmed-answers"><summary>回看已确认的解答</summary>'+route.answers.map((a,i)=>'<p>'+esc(a.label)+'：'+math(run.values['a:'+i]||a.expr)+' '+esc(a.unit||'')+'</p>').join('')+'</details>':'')+'<section class="wp-verification"><h4>代回题目检查</h4>'+(route.checks||[]).map(verificationRow).join('')+verdictFields()+(!run.finished?'<button type="button" class="wp-secondary" data-wp-to-reply>核对检验，进入答句 ↓</button>':'')+'</section>'+replyForm()+completion()+modelComparison()+(run.passed[6]?solution():'');
    return "";
   }
   function solution(){return '<details class="wp-solution"'+(run.step===6?'':' open')+'><summary>完整推导与检验</summary>'+((route.derivations||[]).length?'<h4>数据怎样得到</h4>'+route.derivations.map(d=>'<p>'+esc(d.label)+'</p><div class="wp-math-line">'+math(derivedExpression(d),true)+' = '+math(d.result)+'</div>').join(''):'')+table(true)+'<h4>本次列式与依据</h4>'+scratchEquations()+'<details class="wp-original-solution"><summary>查看原设元的一种参考演算</summary>'+(route.steps||[]).map(s=>'<div class="wp-math-line">'+math(s)+'</div>').join('')+'</details>'+'<p>'+esc(route.conclusion)+'</p><p>'+esc(route.verdict?.explain)+'</p></details>';}
@@ -424,10 +434,11 @@
   function cancelReset(){if(!guard())return;const panel=host.querySelector('[data-wp-reset-confirm]');if(panel)panel.hidden=true;host.querySelectorAll('[data-wp-restart]').forEach(b=>b.setAttribute('aria-expanded','false'));if(resetTrigger?.isConnected)resetTrigger.focus({preventScroll:true});resetTrigger=null;}
   function resetAnalysis(){if(!guard()||!run)return;clearTimeout(saveTimer);const location=run.sourceLocation;run=newRun(problem,route);run.sourceLocation=location;feedback=scene()?'本题已重置，请重新选择情境.':directAnswer()?'本题已重置，请重新填写电费.':'本题已重置，请从读题找量重新开始.已提交的历史记录会保留.';feedbackKind='hint';observing=false;render();host.querySelector('h2')?.focus({preventScroll:true});}
   function render(){if(!guard()||!run)return;clearInputBindings();resetTrigger=null;scratchUI?.destroy();scratchUI=null;motionUI?.destroy();motionUI=null;referenceUIs.forEach(ui=>ui.destroy());referenceUIs=[];renderToken++;activeField=null;mathFields=[];
-   host.innerHTML=header()+'<nav class="wp-steps" aria-label="分析步骤">'+visibleFlow().map((step,i)=>'<button type="button" class="'+(run.passed[step]?'is-completed':'')+'" data-wp-step="'+step+'" '+(step>0&&!run.passed[step-1]?'disabled':'')+' aria-current="'+(run.step===step?'step':'false')+'"><span>'+(run.passed[step]?'✓':i+1)+'</span>'+stepLabel(step)+'</button>').join('')+'</nav><div class="wp-workspace">'+(scene()?'<aside class="wp-context"><h3>'+esc(scene().title)+'</h3><p>'+esc(scene().relation)+'</p></aside>':directAnswer()?'<aside class="wp-context" data-wp-current-problem="S04"><h3>'+esc(problem.title)+'</h3><p>'+esc(problem.stem)+'</p></aside>':problemPanel())+'<section class="wp-stage" aria-label="'+stepLabel(run.step)+'"><div class="wp-stage-top"><small>步骤 '+(visibleFlow().indexOf(run.step)+1)+' / '+visibleFlow().length+'</small><small data-wp-mode>'+esc(currentMode())+'</small><div class="wp-stage-tools"><span data-wp-save-status>'+(B.isTeacher()?'教师演示':'过程自动保存在当前账号')+'</span><button type="button" class="wp-text-button wp-reset-button" data-wp-restart aria-controls="wp-reset-confirm" aria-expanded="false">↺ 重置本题</button></div></div>'+resetConfirmation()+'<div data-wp-model-options-host data-wp-model-options-state="'+esc(modelOptionsState())+'">'+(scene()?'':moreModels())+'</div>'+stage()+(C.isMotionTask(problem.id)?root.RatioWordProblemDiagrams?.travelMarkup?.(problem,route,{step:run.step,tablePassed:!!run.passed[2],values:run.values,derived:run.derived,answersChecked:run.answersChecked,answerPassed:run.passed[5]===true})||'':'')+'<div class="wp-feedback '+esc(feedbackKind)+'" role="status" aria-live="polite">'+feedbackHTML()+'</div><div class="wp-actions"><div>'+(run.finished||run.step===5||relationshipOnly()&&run.step>=2?'':'<details class="wp-help-options"><summary>需要帮助</summary><button type="button" class="wp-text-button" data-wp-hint>只看思路提示</button><button type="button" class="wp-text-button" data-wp-example>查看示范并填入</button></details>')+'</div><div>'+(visibleFlow().indexOf(run.step)>0?'<button type="button" class="wp-secondary" data-wp-prev>上一步</button>':'')+(!run.finished||run.step===5?'<button type="button" class="wp-primary" data-wp-check>'+checkLabel()+'</button>':'')+(run.step!==finalStep()?'<button type="button" class="wp-primary" data-wp-next '+(!run.passed[run.step]?'disabled':'')+'>'+(run.step===5?'进入检验 →':'下一步 →')+'</button>':'<button type="button" class="wp-primary" data-wp-catalog>返回题目目录</button>')+'</div></div><div data-wp-keyboard-slot></div></section></div>';
+   if(reading()){const item=reading();host.innerHTML=header()+'<article class="wp-stage wp-reading"><h3>'+esc(item.title)+'</h3><p>'+esc(item.context)+'</p>'+originalFigure()+'<h4>情境分析</h4>'+item.steps.map(step=>'<p>'+esc(step)+'</p>').join('')+'<button type="button" class="wp-secondary" data-wp-catalog>返回题目目录</button></article>';bindHome();host.querySelector('[data-wp-catalog]').onclick=catalog;return;}
+   host.innerHTML=header()+'<nav class="wp-steps" aria-label="分析步骤">'+visibleFlow().map((step,i)=>'<button type="button" class="'+(run.passed[step]?'is-completed':'')+'" data-wp-step="'+step+'" '+(step>0&&!run.passed[step-1]?'disabled':'')+' aria-current="'+(run.step===step?'step':'false')+'"><span>'+(run.passed[step]?'✓':i+1)+'</span>'+stepLabel(step)+'</button>').join('')+'</nav><div class="wp-workspace">'+(scene()?'<aside class="wp-context"><h3>'+esc(scene().title)+'</h3><p>'+esc(scene().relation)+'</p></aside>':directAnswer()?'<aside class="wp-context" data-wp-current-problem="S04"><h3>'+esc(problem.title)+'</h3><p>'+esc(problem.stem)+'</p></aside>':problemPanel())+'<section class="wp-stage" aria-label="'+stepLabel(run.step)+'"><div class="wp-stage-top"><small>步骤 '+(visibleFlow().indexOf(run.step)+1)+' / '+visibleFlow().length+'</small><small data-wp-mode>'+esc(currentMode())+'</small><div class="wp-stage-tools"><span data-wp-save-status>'+(B.isTeacher()?'教师演示':'过程自动保存在当前账号')+'</span><button type="button" class="wp-text-button wp-reset-button" data-wp-restart aria-controls="wp-reset-confirm" aria-expanded="false">↺ 重置本题</button></div></div>'+resetConfirmation()+'<div data-wp-model-options-host data-wp-model-options-state="'+esc(modelOptionsState())+'">'+(scene()?'':moreModels())+'</div>'+stage()+(C.isMotionTask(problem.id)?root.RatioWordProblemDiagrams?.travelMarkup?.(problem,route,{step:run.step,tablePassed:!!run.passed[2],values:run.values,derived:run.derived,answersChecked:run.answersChecked,answerPassed:run.passed[5]===true})||'':'')+'<div class="wp-feedback '+esc(feedbackKind)+'" role="status" aria-live="polite">'+feedbackHTML()+'</div><div class="wp-actions"><div>'+(run.finished||run.step===5||relationshipOnly()&&run.step>=2?'':'<details class="wp-help-options"><summary>需要帮助</summary><button type="button" class="wp-text-button" data-wp-hint>只看思路提示</button><button type="button" class="wp-text-button" data-wp-example>查看示范并填入</button></details>')+'</div><div>'+(visibleFlow().indexOf(run.step)>0?'<button type="button" class="wp-secondary" data-wp-prev>上一步</button>':'')+(!run.finished||run.step===5?'<button type="button" class="wp-primary" data-wp-check>'+checkLabel()+'</button>':'')+(run.step!==finalStep()?'<button type="button" class="wp-primary" data-wp-next '+(!run.passed[run.step]?'disabled':'')+'>'+(run.step===5?'进入检验与作答 →':'下一步 →')+'</button>':'<button type="button" class="wp-primary" data-wp-catalog>返回题目目录</button>')+'</div></div><div data-wp-keyboard-slot></div></section></div>';
    bindHome();bind();motionUI=root.RatioWordProblemDiagrams?.mountTravel?.(host,problem,route,{step:run.step,tablePassed:!!run.passed[2],values:run.values,derived:run.derived,answersChecked:run.answersChecked,answerPassed:run.passed[5]===true})||null;mountReferenceRelations();bindTableValues();updateConditionPanel();mountScratch();if(host.querySelector('[data-wp-editor]')){host.querySelector('[data-wp-keyboard-slot]').innerHTML=keyboard();bindKeys();void installEditors(renderToken);}save();
   }
-  function bind(){host.querySelectorAll('[data-wp-scene]').forEach(input=>{input.onchange=()=>{if(!guard()||run.finished)return;const key='scene:'+input.dataset.wpScene;if(input.checked)run.values[key]='1';else delete run.values[key];invalidate(0);save();};});
+  function bind(){host.querySelector('[data-wp-to-reply]')?.addEventListener('click',checkStage);host.querySelectorAll('[data-wp-scene]').forEach(input=>{input.onchange=()=>{if(!guard()||run.finished)return;const key='scene:'+input.dataset.wpScene;if(input.checked)run.values[key]='1';else delete run.values[key];invalidate(0);save();};});
    host.querySelectorAll('[data-wp-catalog]').forEach(b=>b.onclick=catalog);host.querySelectorAll('[data-wp-step]').forEach(b=>b.onclick=()=>{const next=Number(b.dataset.wpStep);if(next>0&&!run.passed[next-1])return;save();run.step=next;feedback='';render();});
    host.querySelector('[data-wp-prev]')?.addEventListener('click',()=>{save();run.step=visibleFlow()[Math.max(0,visibleFlow().indexOf(run.step)-1)];feedback='';render();});host.querySelector('[data-wp-next]')?.addEventListener('click',()=>{if(!run.passed[run.step])return;run.step=visibleFlow()[visibleFlow().indexOf(run.step)+1];feedback='';render();host.querySelector('.wp-stage h3')?.scrollIntoView({block:'start',behavior:'smooth'});});
    host.querySelector('[data-wp-check]')?.addEventListener('click',checkStage);host.querySelector('[data-wp-hint]')?.addEventListener('click',hint);host.querySelector('[data-wp-example]')?.addEventListener('click',example);
@@ -478,7 +489,7 @@
    if(!matched){if(hasCorrectCalculation)return fail('计算过程正确.再核对这一步实际用到的条件或约定.','source');const result=firstFailure||{message:'先完成所选方法需要的推导.',kind:'source'};return fail(result.message,result.kind==='source'?'source':'error');}
    if(matched.methodId)run.values['dm:'+id]=matched.methodId;run.derived[id]=true;markConditions(matched.sources);feedback='来源和计算过程都正确.现在可以使用这个结果.';feedbackKind='success';render();
   }
-  function checkStage(){if(!guard()||!run)return;if(scene()){if(!P.matchesScenario(problem.id,run.values))return fail('再核对每个式子表示的数量，以及等号两边的关系.');return finishAnalysis();}if(directAnswer())return checkReply();const s=run.step;
+  function checkStage(event){if(!guard()||!run)return;if(scene()){if(!P.matchesScenario(problem.id,run.values))return fail('再核对每个式子表示的数量，以及等号两边的关系.');return finishAnalysis();}if(directAnswer())return checkReply();const s=run.step;
    if(relationshipOnly()){
     if((s>0&&!run.passed[0])||(s>1&&!run.passed[1]))return fail('请先完成读题找量和设元与推导.');
     if(s===3){if(!run.passed[2])return fail('请先确认数量表.');for(const [i,item] of (route.sumExpressions||[]).entries()){const result=E.checkQuantitySum(run.values['e:'+i]||'',calendarSumItem(item),route.variable);if(!result.ok)return fail(item.label+'的日期之和：'+result.message);}markConditions([...(route.closure?.sources||[]),'sum']);return pass('两种框的完整求和算式已核对.下一步合并同类项.');}
@@ -489,7 +500,9 @@
    if(s===2){if(!tableRelationsReady())return fail('请先确认原题数量关系，或点击“查看关系示范”，再根据关系列表.');if(manual()&&!reverseModel()){for(const row of route.table.rows)for(const c of row.cells)markConditions(c.sources);return pass('数量关系与说明已保留，下一页把关系连成等式.');}const used=[];for(let ri=0;ri<route.table.rows.length;ri++)for(let ci=0;ci<route.table.rows[ri].cells.length;ci++){const c=route.table.rows[ri].cells[ci];if(c.note)continue;if(c.given){used.push(...c.sources||[]);continue;}const result=checkCell(c,ri,ci);if(!result.ok)return fail(route.table.rows[ri].label+' · '+route.table.headers[ci+1]+'：'+result.message,result.kind==='source'?'source':'error');used.push(...result.sources||c.sources||[]);}for(const group of route.table.signedDifferences||[]){const signs=group.cells.map(([ri,ci])=>checkCell(route.table.rows[ri].cells[ci],ri,ci).differenceSign);if(new Set(signs).size>1)return fail(group.label+'的相减方向要一致：两行都用“'+group.forwardLabel+'”，或都用“'+group.reverseLabel+'”.');}markConditions(used);return pass('数量表已核对.等价写法及其来源会保留在表格中.');}
    if(s===3){if(manual()){if(!hasMathRecord(run.discussion))return fail('请用字母、数字和运算符写出数量关系.');markConditions(route.closure?.sources);if(analysisOnly()){run.passed[4]=true;return finishAnalysis();}return pass('模型说明已保留，继续演算与确认结果.');}for(let i=0;i<(route.equations||[]).length;i++){const q=route.equations[i],result=E.checkEquation(run.values['e:'+i]||'',q,q.variable||route.variable);if(!result.ok)return fail(equationEntryLabel(i)+'：'+result.message,result.kind==='source'?'source':'error');if(!equationHasSources(run.values['e:'+i]||'',q))return fail('等式关系正确，但出现了尚未说明来源的新数.请使用表中已确认的量列式.','source');}markConditions((route.equations||[]).flatMap((q,i)=>equationBasis(i).sources));return pass((route.equations||[]).length?'等量关系和方程已一起核对，可以开始演算.':'已明确计算关系，可以开始演算.');}
    if(s===5){if([0,1,2,3,4].some(i=>run.passed[i]!==true))return fail('请先完成前面的分析步骤.');scratchUI?.flush();for(let i=0;i<(route.answers||[]).length;i++){const a=route.answers[i];try{if(!E.equivalent(run.values['a:'+i]||'',a.expr,route.variable))return fail(a.label+'还不正确，请根据方程重新计算.');}catch(e){return fail(e.message);}}run.answersChecked=true;return pass('解答已确认.下一页检验原条件，并填写答句.');}
-   if(s===6){if([0,1,2,3,4,5].some(i=>run.passed[i]!==true)||!run.answersChecked)return fail('请先在上一页确认解答.');for(let i=0;i<(route.checks||[]).length;i++){const c=route.checks[i];try{if(!E.equivalent(run.values['c:'+i]||'',(c.input==='exponent'?c.exponent:c.result),route.variable))return fail('检验'+(i+1)+'的计算还不正确，请把结果代回原条件.');}catch(e){return fail(e.message);}}for(const [i,c] of (route.verdictCases||[]).entries()){if(run.values['v:'+i]!==c.correct)return fail(c.label+'：请分别核对这个情形的允许范围.');}if((route.verdictCases||[]).length)run.verdict=route.verdict?.correct||'multiple';if(run.verdict!==(route.verdict?.correct||'valid'))return fail('再检查整数、单位、取值范围、全部情形及条件是否充分.');return checkReply();}
+   if(s===6){if([0,1,2,3,4,5].some(i=>run.passed[i]!==true)||!run.answersChecked)return fail('请先在上一页确认解答.');for(let i=0;i<(route.checks||[]).length;i++){const c=route.checks[i];try{if(!E.equivalent(run.values['c:'+i]||'',(c.input==='exponent'?c.exponent:c.result),route.variable))return fail('检验'+(i+1)+'的计算还不正确，请把结果代回原条件.');}catch(e){return fail(e.message);}}for(const [i,c] of (route.verdictCases||[]).entries()){if(run.values['v:'+i]!==c.correct)return fail(c.label+'：请分别核对这个情形的允许范围.');}if((route.verdictCases||[]).length)run.verdict=route.verdict?.correct||'multiple';if(run.verdict!==(route.verdict?.correct||'valid'))return fail('再检查整数、单位、取值范围、全部情形及条件是否充分.');if(event?.currentTarget?.hasAttribute('data-wp-to-reply')){
+    const box=host.querySelector('.wp-written-reply');if(box){box.classList.add('is-current');box.querySelector('.wp-reply-note').textContent='检验已通过，请填写最终结果，再核对并保存答案.';const fields=[...box.querySelectorAll('input,select')];(fields.find(f=>!f.value)||fields[0])?.focus({preventScroll:true});box.scrollIntoView?.({block:'center'});return;}
+   }return checkReply();}
   }
   function hasMathRecord(value){const parts=String(value||'').split(/[=<>≤≥≠≈]/);return parts.length<=4&&parts.every(part=>{const result=E.inspect(part);return result.ok||result.kind==='unsupported';});}
   function exampleMathRecord(){const q=(route.equations||[])[0];return q?q.left+'='+q.right:route.table.rows.flatMap(row=>row.cells).find(cell=>cell.expr&&!cell.given)?.expr||route.variable;}

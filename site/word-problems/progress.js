@@ -213,7 +213,8 @@
     ]
   }
 };
- function activeProblems(items){const active=items.filter(p=>!['G9-04','G9-05'].includes(p.id));
+ function activeProblems(items){const active=items;
+  for(const p of active){if(p.id==='G9-04'||p.id==='G9-05')p.kindLabel='情境分析 · 选读';}
   for(const p of active){const task=scenarios[p.id];if(task&&p.kindLabel!=='情境辨析'){p.title=task.title;p.kindLabel='情境辨析';p.contentRevision=(p.contentRevision||0)+1;}}
   return active;}
  function matchesScenario(id,values){const task=scenarios[id];return task.options.every((_,i)=>(values['scene:'+i]==='1')===task.correct.includes(i));}

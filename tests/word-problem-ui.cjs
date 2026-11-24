@@ -104,6 +104,7 @@ function fixture(autoRelations=true) {
  }
  function canonicalRoute(problem,route){
   app.start(problem.id,true);
+  if(['G9-04','G9-05'].includes(problem.id)){assert($('.wp-reading'));assert(!$('.wp-reading input,[data-wp-check]'));return;}
   const task=w.RatioWordProblemProgress.scenarios[problem.id];
   if(task){assert.equal(host.querySelectorAll('[data-wp-step]').length,1);assert(!$('[data-wp-discussion]'));for(const i of task.correct)checkBox($('[data-wp-scene="'+i+'"]'));click('[data-wp-check]');assert($('.wp-completion'),feedback());counts.routes++;counts.completed++;return read().records[0];}
   if(problem.id==='S04'){
@@ -151,7 +152,11 @@ function fixture(autoRelations=true) {
   checkAndNext(3,problem.id+'/'+route.id+' condition and equation together');
   completeScratch(problem.id+'/'+route.id,route);
   fillVerification(route);
-  assert.equal($('[data-wp-check]')?.textContent,'检验并保存');
+  if(problem.id==='C21-01'){
+   const field=$('[data-wp-input="reply:1"]');assert.equal(host.querySelectorAll('.wp-written-reply input').length,1);setInput('reply:1','');
+   click('[data-wp-to-reply]');assert.equal(w.document.activeElement,field);assert(!$('.wp-completion'));assert.match($('.wp-reply-note').textContent,/检验已通过/);setInput('reply:1','8');
+  }
+  assert.equal($('[data-wp-check]')?.textContent,'核对并保存答案');
   assert(!$('.wp-verification').textContent.includes('不必算出结果'),'Verification still asks for calculated results');
   click('[data-wp-check]');
   assert($('.wp-completion'),problem.id+'/'+route.id+' must finish: '+feedback());
@@ -223,9 +228,9 @@ for(const mode of ['independent','assisted','example']){
 }
 const all=fixture();
 const data=all.w.RatioWordProblemProgress.activeProblems(all.w.RatioWordProblemsData);
-assert.equal(data.length,158);
+assert.equal(data.length,160);
 for(const problem of data)for(const route of problem.routes){all.canonicalRoute(problem,route);if(all.w.RatioWordProblemCatalog.isMotionTask(problem.id)){assert(!all.$('.wp-context .wp-motion-reference,.wp-context .wp-observation,.wp-context [data-wp-source-figure]'));assert(all.$('[data-motion-results]'),problem.id+' has confirmed result replay after solving');assert.equal(all.$('[data-wp-travel-diagram]').dataset.motionMode,['C21-05','PEP-P039'].includes(problem.id)?'partial':'result');}if(counts.routes%10===0)await new Promise(resolve=>setImmediate(resolve));}
-assert.equal(counts.routes,data.reduce((sum,p)=>sum+p.routes.length,0));
+assert.equal(counts.routes,data.reduce((sum,p)=>sum+(p.kindLabel?.includes('选读')?0:p.routes.length),0));
 assert.equal(counts.completed,counts.routes);
 assert.equal(all.read().records.length,counts.routes);
 assert.equal(all.read().records.filter(r=>r.problemId==='L8-P2-Q4').length,1,'Both chase branches form one coherent analysis');
@@ -376,7 +381,7 @@ assert.equal(revised.read().records.length,1,'An unsuccessful revision keeps the
 revised.setInput('a:0','('+revisedProblem.routes[0].answers[0].expr+')');
 revised.click('[data-wp-check]');revised.expectPassed(5,'Revised answer confirmation');revised.click('[data-wp-next]');assert(revised.$('.wp-verification'));
 revised.fillVerification(revisedProblem.routes[0]);
-assert.equal(revised.$('[data-wp-check]')?.textContent,'检验并保存');
+assert.equal(revised.$('[data-wp-check]')?.textContent,'核对并保存答案');
 revised.click('[data-wp-check]');assert(revised.$('.wp-completion'));
 const revisedRecord=revised.read().records.find(r=>r.runId!==originalRecord.runId);
 assert(revisedRecord,'A changed finished analysis receives a distinct revision identifier');
@@ -546,7 +551,7 @@ catalogs.click('.wp-stage-top [data-wp-restart]');catalogs.click('[data-wp-confi
 assert.equal(catalogs.read().drafts['G10-01'].sourceLocation,'I00','Reset retains this repeated question\'s printed source position');
 assert.match(catalogs.$('.wp-citation').textContent,/105页.*章引入/);
 catalogs.click('[data-wp-catalog]');catalogs.click('[data-wp-book="guide"]');
-assert.equal(catalogs.host.querySelectorAll('[data-wp-problem]').length,79,'Supplement merges 26 guide, 44 PEP and 11 uploaded-chapter tasks');
+assert.equal(catalogs.host.querySelectorAll('[data-wp-problem]').length,81,'Supplement merges 26 guide, 44 PEP and 11 uploaded-chapter tasks');
 assert(!catalogs.host.textContent.includes('教学设计与指导'),'The learner catalog uses the requested supplement name');
 const textbookIds=new Set(catalogs.w.RatioWordProblemTextbookIndex.items.map(x=>x.problemId));
 for(const button of catalogs.host.querySelectorAll('[data-wp-problem]'))assert(!textbookIds.has(button.dataset.wpProblem),'No duplicate textbook exercise in supplements');
@@ -554,7 +559,7 @@ catalogs.click('[data-wp-problem="L7-P2"]');
 assert.match(catalogs.$('.wp-citation').textContent,/补充练习/,'Supplement entry has the learner-facing source label');
 assert(!catalogs.host.textContent.includes('教学设计与指导'));
 const draftField=catalogs.$('[data-wp-fact]');catalogs.textInput('[data-wp-fact="'+draftField.dataset.wpFact+'"]','12');
-catalogs.click('[data-wp-back]');assert.equal(catalogs.host.querySelectorAll('[data-wp-problem]').length,79,'Back retains the current source catalog');
+catalogs.click('[data-wp-back]');assert.equal(catalogs.host.querySelectorAll('[data-wp-problem]').length,81,'Back retains the current source catalog');
 catalogs.click('[data-wp-problem="L7-P2"]');assert.equal(catalogs.$('[data-wp-fact="'+draftField.dataset.wpFact+'"]').value,'12','Back saves the current reading draft');
 catalogs.click('[data-wp-back]');catalogs.click('[data-wp-back]');assert.equal(catalogs.redirects.at(-1),'home');
 catalogs.close();
