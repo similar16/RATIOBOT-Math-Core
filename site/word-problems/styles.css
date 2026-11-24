@@ -462,3 +462,6 @@ input.wp-fact-number.is-correct,.wp-fact-number.is-correct input{background:var(
 #wordProblems .wp-written-reply .wp-reply-note{line-height:1.5;color:var(--wp-muted)}
 #wordProblems .wp-written-reply.is-current,#wordProblems .wp-written-reply:focus-within{box-shadow:3px 3px 0 var(--wp-yellow)}
 .wp-reading{max-width:56rem;margin:1.5rem auto}
+
+#wordProblems .wp-next-target{outline:3px solid var(--wp-teal,#408293);outline-offset:2px;background-color:var(--wp-yellow-soft,#fff1bc)}
+#wordProblems .wp-next-instruction{display:block;margin:.55rem 0 .45rem;padding:4px 8px;border-left:4px solid var(--wp-ink);background:var(--wp-yellow-soft,#fff1bc);color:var(--wp-ink);font-size:.88rem;font-weight:800;line-height:1.45;text-align:left}

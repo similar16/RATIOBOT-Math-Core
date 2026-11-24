@@ -194,6 +194,7 @@ for(const kind of ['sum','product'])for(const [ri,row] of refPractice.w.RatioWor
 }
 assert(!refPractice.$('.wp-quantity-table'),'Table waits for confirmation after manual assembly');
 refPractice.click('[data-wp-reference-check]');assert(refPractice.$('.wp-quantity-table'),'Confirmed relationships reveal the blank table');
+assert(refPractice.$('.wp-quantity-table .wp-next-target [data-wp-input]'),'Point to an editable table cell');
 assert([...refPractice.host.querySelectorAll('[data-wp-input]')].every(t=>!t.value),'Relations do not prefill expressions');
 refPractice.click('[data-wp-reference-clear]');assert(!refPractice.$('.wp-quantity-table'));
 refPractice.click('[data-wp-reference-reveal]');assert(refPractice.$('.wp-quantity-table'),'One-click display also enables table');
@@ -205,6 +206,12 @@ assert.equal(refPractice.host.querySelectorAll('[data-wp-rel-slot][data-filled="
 refPractice.click('[data-wp-reference-clear]');assert.equal(refPractice.host.querySelectorAll('[data-wp-rel-slot][data-filled="false"]').length,referenceModel.count*3);assert(!refPractice.$('.wp-quantity-table'),'Retry hides table again');
 const token=refPractice.$('[data-wp-token]'),slot=refPractice.$('[data-wp-rel-slot]');token.click();slot.click();assert.equal(refPractice.host.querySelectorAll('[data-wp-rel-slot][data-filled="true"]').length,1);
 refPractice.close();
+const guided=fixture(),guidedProblem=guided.w.RatioWordProblemsData.find(p=>p.id==='L8-P1'),guidedRoute=guidedProblem.routes[0];
+guided.app.start(guidedProblem.id,true);guided.confirmFacts();guided.fillDerivations(guidedRoute);guided.checkAndNext(1,'Guided table');
+guidedRoute.table.rows.forEach((row,i)=>row.cells.forEach((cell,j)=>{if(cell.expr&&!cell.given)guided.setInput('t:'+i+':'+j,cell.expr);}));
+guided.click('[data-wp-check]');await new Promise(resolve=>setTimeout(resolve,1000));
+assert.equal(guided.currentStep(),3);assert(guided.$('.wp-equation-entry .wp-next-target'));guided.close();
+
 // Travel schematics sit below analysis, hide unconfirmed values, and use clean source captions.
 const travelSchematic=fixture(),travelP=travelSchematic.w.RatioWordProblemsData.find(p=>p.id==='C21-09'),travelR=travelP.routes[0];
 travelSchematic.app.start(travelP.id,true);assert(travelSchematic.$('.wp-stage [data-wp-travel-diagram]'));assert(!travelSchematic.$('.wp-context .wp-motion-reference,.wp-context .wp-observation,.wp-context [data-wp-source-figure]'));assert(travelSchematic.$('[data-motion-mode]').textContent.includes('可能的情形'));assert(!/文件名标注|PDF/.test(travelSchematic.$('.wp-citation').textContent));
