@@ -104,6 +104,8 @@ function fixture(autoRelations=true) {
  }
  function canonicalRoute(problem,route){
   app.start(problem.id,true);
+  const task=w.RatioWordProblemProgress.scenarios[problem.id];
+  if(task){assert.equal(host.querySelectorAll('[data-wp-step]').length,1);assert(!$('[data-wp-discussion]'));for(const i of task.correct)checkBox($('[data-wp-scene="'+i+'"]'));click('[data-wp-check]');assert($('.wp-completion'),feedback());counts.routes++;counts.completed++;return read().records[0];}
   if(problem.id==='S04'){
    assert.equal(host.querySelectorAll('[data-wp-step]').length,1);
    assert(!$('.wp-verification')&&!$('[data-wp-input="e:0"]'));
@@ -128,7 +130,7 @@ function fixture(autoRelations=true) {
   const manual=!!route.discussion||['open','boundary'].includes(problem.kind);
   const variantsAvailable=problem.routes.some(r=>r.id!==route.id&&!r.discussion)||(route.table.signedDifferences||[]).length||route.table.rows.some((row,i)=>row.cells.some((c,j)=>!c.given&&!c.note&&((c.alternatives||[]).length||w.RatioWordProblemTableAlternatives.options(problem,route,i,j).length)));
   if(!manual&&variantsAvailable){assert.equal($('.wp-more-models')?.tagName,'SECTION',problem.id+'/'+route.id+' has a visible options entry while filling the table');assert($('.wp-quantity-table'),problem.id+'/'+route.id+' table is displayed after relationships: '+$('.wp-stage').textContent.slice(0,400));assert($('.wp-more-models').compareDocumentPosition($('.wp-quantity-table'))&w.Node.DOCUMENT_POSITION_FOLLOWING,'Options appear above the table');}
-  if(manual&&!route.reverseModel)textInput('[data-wp-discussion]',route.table.rows.flatMap(row=>row.cells).find(c=>c.expr&&!c.given)?.expr||route.variable);
+  if(manual&&!route.reverseModel)assert(!$('[data-wp-discussion]'));
   else route.table.rows.forEach((row,ri)=>row.cells.forEach((cell,ci)=>{
    if(cell.expr&&!cell.given){setInput('t:'+ri+':'+ci,cell.expr);counts.writableCells++;}
   }));
@@ -220,8 +222,8 @@ for(const mode of ['independent','assisted','example']){
  assert.deepEqual(Object.keys(f.read().records[0].passed),['0']);f.close();
 }
 const all=fixture();
-const data=all.w.RatioWordProblemsData;
-assert.equal(data.length,160);
+const data=all.w.RatioWordProblemProgress.activeProblems(all.w.RatioWordProblemsData);
+assert.equal(data.length,158);
 for(const problem of data)for(const route of problem.routes){all.canonicalRoute(problem,route);if(all.w.RatioWordProblemCatalog.isMotionTask(problem.id)){assert(!all.$('.wp-context .wp-motion-reference,.wp-context .wp-observation,.wp-context [data-wp-source-figure]'));assert(all.$('[data-motion-results]'),problem.id+' has confirmed result replay after solving');assert.equal(all.$('[data-wp-travel-diagram]').dataset.motionMode,['C21-05','PEP-P039'].includes(problem.id)?'partial':'result');}if(counts.routes%10===0)await new Promise(resolve=>setImmediate(resolve));}
 assert.equal(counts.routes,data.reduce((sum,p)=>sum+p.routes.length,0));
 assert.equal(counts.completed,counts.routes);
@@ -455,12 +457,11 @@ assert.equal(customDraft.customModel,'y=6*x');customChange.close();
 
 const discussionChange=fixture(),discussionProblem=discussionChange.w.RatioWordProblemsData.find(p=>p.id==='G10-04');
 discussionChange.canonicalRoute(discussionProblem,discussionProblem.routes[0]);discussionChange.click('[data-wp-step="2"]');
-discussionChange.textInput('[data-wp-discussion]','x*(x+5)=24');
-assert(discussionChange.$('[data-wp-next]').disabled);
-discussionChange.click('[data-wp-step="3"]');assert.equal(discussionChange.currentStep(),2,'A revised table discussion cannot bypass its dependent explanation');
+assert(!discussionChange.$('[data-wp-discussion]'));
+discussionChange.click('[data-wp-step="3"]');discussionChange.textInput('[data-wp-discussion]','x*(x+5)=24');
 discussionChange.click('[data-wp-catalog]');
 const discussionDraft=discussionChange.read().drafts[discussionProblem.id];
-assert.equal(discussionDraft.finished,false);for(let step=2;step<7;step++)assert(!discussionDraft.passed[step]);
+assert.equal(discussionDraft.finished,false);for(let step=3;step<7;step++)assert(!discussionDraft.passed[step]);
 assert.equal(discussionDraft.discussion,'x*(x+5)=24');discussionChange.close();
 
 // Revising the practical verdict keeps the checked numerical answers but reopens verification.
@@ -544,7 +545,7 @@ catalogs.click('.wp-stage-top [data-wp-restart]');catalogs.click('[data-wp-confi
 assert.equal(catalogs.read().drafts['G10-01'].sourceLocation,'I00','Reset retains this repeated question\'s printed source position');
 assert.match(catalogs.$('.wp-citation').textContent,/105页.*章引入/);
 catalogs.click('[data-wp-catalog]');catalogs.click('[data-wp-book="guide"]');
-assert.equal(catalogs.host.querySelectorAll('[data-wp-problem]').length,81,'Supplement merges 26 guide, 44 PEP and 11 uploaded-chapter tasks');
+assert.equal(catalogs.host.querySelectorAll('[data-wp-problem]').length,79,'Supplement merges 26 guide, 44 PEP and 11 uploaded-chapter tasks');
 assert(!catalogs.host.textContent.includes('教学设计与指导'),'The learner catalog uses the requested supplement name');
 const textbookIds=new Set(catalogs.w.RatioWordProblemTextbookIndex.items.map(x=>x.problemId));
 for(const button of catalogs.host.querySelectorAll('[data-wp-problem]'))assert(!textbookIds.has(button.dataset.wpProblem),'No duplicate textbook exercise in supplements');
@@ -552,7 +553,7 @@ catalogs.click('[data-wp-problem="L7-P2"]');
 assert.match(catalogs.$('.wp-citation').textContent,/补充练习/,'Supplement entry has the learner-facing source label');
 assert(!catalogs.host.textContent.includes('教学设计与指导'));
 const draftField=catalogs.$('[data-wp-fact]');catalogs.textInput('[data-wp-fact="'+draftField.dataset.wpFact+'"]','12');
-catalogs.click('[data-wp-back]');assert.equal(catalogs.host.querySelectorAll('[data-wp-problem]').length,81,'Back retains the current source catalog');
+catalogs.click('[data-wp-back]');assert.equal(catalogs.host.querySelectorAll('[data-wp-problem]').length,79,'Back retains the current source catalog');
 catalogs.click('[data-wp-problem="L7-P2"]');assert.equal(catalogs.$('[data-wp-fact="'+draftField.dataset.wpFact+'"]').value,'12','Back saves the current reading draft');
 catalogs.click('[data-wp-back]');catalogs.click('[data-wp-back]');assert.equal(catalogs.redirects.at(-1),'home');
 catalogs.close();
@@ -638,23 +639,10 @@ football.setInput(footballKey,footballCorrect);football.checkAndNext(2,'Football
 assert(!football.$('[data-wp-relation-mount]'));assert(!football.$('.wp-relation-reference')?.open,'Football equation references remain folded');
 football.close();
 
-// The inverse story task first decomposes the equation, then requires real table entries.
-const story=fixture(),storyProblem=story.w.RatioWordProblemsData.find(p=>p.id==='S01'),storyRoute=storyProblem.routes[0];
-story.app.start('S01',true);
-assert.deepEqual([...story.host.querySelectorAll('.wp-steps button')].slice(0,2).map(b=>b.textContent),['1拆表','2填写数量表']);
-assert(story.$('.wp-equation-parts'));story.click('[data-wp-example]');story.checkAndNext(0,'Inverse story decomposition');
-assert.equal(story.currentStep(),2);assert(!story.$('[data-wp-discussion]'));assert(!story.$('.wp-stage').textContent.includes('这张表表达了哪些关系'));
-assert.equal(story.host.querySelectorAll('[data-wp-input]').length,3,'The story quantity table is writable');
-story.click('[data-wp-check]');assert(story.$('[data-wp-next]').disabled,'The table cannot pass with empty entries');
-story.click('[data-wp-example]');story.checkAndNext(2,'Inverse story quantity table');
-assert.match(story.$('.wp-stage h3').textContent,/编写应用题/);assert(story.$('[data-wp-discussion]'));story.close();
-
-// Open tasks save at analysis, reopen there, and can still be revised/reset.
-const openOnly=fixture(),openProblem=openOnly.w.RatioWordProblemsData.find(p=>p.id==='S01');
-const openRecord=openOnly.canonicalRoute(openProblem,openProblem.routes[0]);
-assert.equal(openRecord.step,3);openOnly.remount().start('S01');assert.equal(openOnly.currentStep(),3);assert(openOnly.$('.wp-completion'));assert(!openOnly.$('[data-wp-next]'));
-openOnly.textInput('[data-wp-discussion]','3*x+2*(12-x)=32');assert(!openOnly.$('.wp-completion'));openOnly.click('[data-wp-check]');assert(openOnly.$('.wp-completion'));assert.equal(openOnly.read().records.length,2,'Editing preserves the submitted historical analysis');
-openOnly.click('.wp-stage-top [data-wp-restart]');openOnly.click('[data-wp-confirm-reset]');assert.equal(openOnly.currentStep(),0);assert.equal(openOnly.read().records.length,2);openOnly.close();
+const story=fixture();
+story.app.start('S01',true);story.checkBox(story.$('[data-wp-scene="0"]'));story.click('[data-wp-check]');assert(!story.$('.wp-completion'));
+story.click('[data-wp-hint]');assert(!story.$('[data-wp-scene="2"]').checked);story.checkBox(story.$('[data-wp-scene="2"]'));story.click('[data-wp-check]');assert.equal(story.read().records[0].status,'assisted');
+story.app.start('S07',true);story.click('[data-wp-example]');story.click('[data-wp-check]');assert.equal(story.read().records[0].status,'example');story.close();
 
 // Explanations are optional; showing one records help without filling the answer.
 const hiddenHelp=fixture(),work=hiddenHelp.w.RatioWordProblemsData.find(p=>p.id==='PEP-P043');

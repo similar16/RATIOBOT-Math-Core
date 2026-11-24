@@ -148,11 +148,82 @@
   const s=normalized(value),d=cleanDraft(draft);if(!d||d.problemId!==id||!keyOK(id))return s;
   s.drafts=draftList({...s.drafts,[id]:s.drafts[id]?mergeDraft(s.drafts[id],d):d});return s;
  }
+ const scenarios={
+  "S01": {
+    "title": "辨认总价关系",
+    "relation": "3x+2(12−x)=32",
+    "options": [
+      "两种笔记本共12本，3元一本的买了x本，其余每本2元，共付32元.",
+      "两种笔记本共12本，2元一本的买了x本，其余每本3元，共付32元.",
+      "两队共答对12题，甲队答对x题，每题得3分；乙队每题得2分.两队共得32分."
+    ],
+    "correct": [
+      0,
+      2
+    ]
+  },
+  "S07": {
+    "title": "辨认费用差",
+    "relation": "3(28−x)−2x=34",
+    "options": [
+      "两人共买28本书，小丽买x本，每本2元；小明买其余的，每本3元.两人共花34元.",
+      "两人共买28本书，小丽买x本，每本2元；小明买其余的，每本3元.小明多花34元.",
+      "两人共买28本书，小丽买x本，每本2元；小明买其余的，每本3元.小丽多花34元."
+    ],
+    "correct": [
+      1
+    ]
+  },
+  "C21-06": {
+    "title": "辨认同一个数量的两种表示",
+    "relation": "2x+5=3x−1",
+    "options": [
+      "甲有2盒各x支的笔和5支散笔，乙有3盒各x支的笔，送出1支后与甲同样多.",
+      "甲有2盒各x支的笔和5支散笔，乙有3盒各x支的笔，又收到1支后与甲同样多.",
+      "甲每天走x千米，走2天后再走5千米.乙走3天，每天也走x千米.甲的总路程比乙少1千米."
+    ],
+    "correct": [
+      0,
+      2
+    ]
+  },
+  "TB-R22": {
+    "title": "辨认付款与找零",
+    "relation": "50−6x=8.6",
+    "options": [
+      "梨每斤6元，买x斤，付50元，找回8.6元.",
+      "梨每斤6元，买x斤，付50元，花了8.6元.",
+      "一条50米长的绳子，剪下6段，每段x米，还剩8.6米."
+    ],
+    "correct": [
+      0,
+      2
+    ]
+  },
+  "PEP-P068": {
+    "title": "辨认木杆平衡条件",
+    "relation": "nx=l/2",
+    "options": [
+      "长l厘米的均匀木杆在中点支起.左边n个相同重物距支点x厘米，右边1个同样的重物距支点l/4厘米，两边平衡.",
+      "长l厘米的均匀木杆在中点支起.左边n个相同重物距支点x厘米，右端挂1个同样的重物，两边平衡.",
+      "长l厘米的均匀木杆在中点支起.左端挂n个相同重物，右边1个同样的重物距支点x厘米，两边平衡."
+    ],
+    "correct": [
+      1
+    ]
+  }
+};
+ function activeProblems(items){const active=items.filter(p=>!['G9-04','G9-05'].includes(p.id));
+  for(const p of active){const task=scenarios[p.id];if(task&&p.kindLabel!=='情境辨析'){p.title=task.title;p.kindLabel='情境辨析';p.contentRevision=(p.contentRevision||0)+1;}}
+  return active;}
+ function matchesScenario(id,values){const task=scenarios[id];return task.options.every((_,i)=>(values['scene:'+i]==='1')===task.correct.includes(i));}
  function complete(value,draft,problem,route){
   const s=normalized(value),d=cleanDraft(draft);
   if(!d||!problem||!route||d.problemId!==problem.id||d.routeId!==route.id||!/^wp-[\w-]+$/.test(d.runId))throw Error('分析记录不完整，请返回当前题目重试.');
   if(d.contentRevision<integer(problem.contentRevision))throw Error('本题内容已更新，请重新分析后再保存.');
-  if(problem.id==='S04'){
+  if(scenarios[problem.id]){
+   if(!d.passed[0]||!matchesScenario(problem.id,d.values))throw Error('请重新核对所选情境.');
+  }else if(problem.id==='S04'){
    const engine=root.RatioWordProblemEngine||(typeof module==='object'&&module.exports?require('./engine.js'):null);
    if(!d.passed[0]||!engine?.equivalent(d.values['reply:0']||'',route.answers[0].expr))throw Error('请核对七月应付的电费.');
   }else{
@@ -176,7 +247,7 @@
    }
   }
   if(s.records.some(x=>x.runId===d.runId))return {state:s,record:null};
-  const discussion=!!route.discussion||['open','boundary'].includes(problem.kind)||!!d.customModel;
+  const discussion=!scenarios[problem.id]&&(!!route.discussion||['open','boundary'].includes(problem.kind)||!!d.customModel);
   const record={...d,finished:true,title:problem.title,source:[...new Set([(problem.textbookSources||[]).find(s=>s.id===d.sourceLocation)?.source,problem.source,...(problem.textbookSources||[]).map(s=>s.source)].filter(Boolean))].join('；'),routeLabel:route.label,valueLabels:valueLabels(route,d.values,problem,d.modelMethods.find(m=>m.id===d.modelId&&m.confirmed)),at:new Date().toISOString(),
    status:discussion?'review':d.example?'example':d.assisted?'assisted':'independent',...accuracy(d)};
   s.records=recordList([record,...s.records]);s.drafts=draftList({...s.drafts,[problem.id]:{...d,finished:true}});return {state:s,record};
@@ -188,5 +259,5 @@
  }
  function summary(value){const r=normalized(value).records;return {completed:new Set(r.filter(x=>x.status!=='review').map(x=>x.problemId)).size,
   independent:new Set(r.filter(x=>x.status==='independent').map(x=>x.problemId)).size,review:r.filter(x=>x.status==='review').length,records:r};}
- const api={cleanDraft,migrateDraft,normalized,saveDraft,complete,merge,summary};if(typeof module==='object'&&module.exports)module.exports=api;else root.RatioWordProblemProgress=api;
+ const api={scenarios,activeProblems,matchesScenario,cleanDraft,migrateDraft,normalized,saveDraft,complete,merge,summary};if(typeof module==='object'&&module.exports)module.exports=api;else root.RatioWordProblemProgress=api;
 })(typeof window==='undefined'?globalThis:window);

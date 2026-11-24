@@ -16,7 +16,7 @@
   return result.sort((a,b)=>String(b.at||'').localeCompare(String(a.at||''))||a.id.localeCompare(b.id));
  }
  function filterEntries(entries,f={}){const q=String(f.query||'').trim().toLowerCase();return entries.filter(e=>(!q||[e.title,e.problem?.tags?.join(' '),e.record.source,e.problem?.source,e.routeLabel].join(' ').toLowerCase().includes(q))&&(!f.status||e.status===f.status)&&(!f.from||e.day&&e.day>=f.from)&&(!f.to||e.day&&e.day<=f.to));}
- function original(entry){const p=entry.problem;if(!p)return '<p>当前题库中无此原题，已保留练习概览.</p>';const indexes=[...(root.RatioWordProblemTextbookIndex?.items||[]),...(root.RatioWordProblemTextbookIndex?.references||[])],location=indexes.find(s=>s.id===entry.record.sourceLocation&&s.problemId===p.id);const stem=p.originalStems?.[location?.id]||p.originalStem||p.stem;
+ function original(entry){const p=entry.problem;if(!p)return '<p>当前题库中无此原题，已保留练习概览.</p>';const task=root.RatioWordProblemProgress?.scenarios?.[p.id];if(task&&Object.keys(entry.record.values||{}).some(k=>k.startsWith('scene:')))return '<p>'+esc(task.relation)+'，选出所有符合的情境.</p><ol>'+task.options.map(option=>'<li>'+esc(option)+'</li>').join('')+'</ol>';const indexes=[...(root.RatioWordProblemTextbookIndex?.items||[]),...(root.RatioWordProblemTextbookIndex?.references||[])],location=indexes.find(s=>s.id===entry.record.sourceLocation&&s.problemId===p.id);const stem=p.originalStems?.[location?.id]||p.originalStem||p.stem;
   let out='<p class="pdf-stem">'+esc(stem)+'</p>';
   if(p.sourceFigure){const url=new URL(p.sourceFigure.file,figureBase).href;if(url)out+='<figure class="pdf-figure"><img src="'+esc(url)+'" alt="'+esc(p.sourceFigure.alt||'原题配图')+'"></figure>';}
   const t=p.sourceTable;if(t){const headers=t.headers||t.columns||[];out+='<table class="pdf-table"><caption>'+esc(t.caption||'原题数据表')+'</caption>'+(headers.length?'<thead><tr>'+headers.map(h=>'<th>'+esc(h)+'</th>').join('')+'</tr></thead>':'')+'<tbody>'+t.rows.map(row=>'<tr>'+row.map((v,i)=>(i===0?'<th>':'<td>')+(v==null?'□':esc(v))+(i===0?'</th>':'</td>')).join('')+'</tr>').join('')+'</tbody></table>';}
@@ -26,6 +26,7 @@
  function block(title,body){return body?'<section class="pdf-block"><h3>'+esc(title)+'</h3>'+body+'</section>':'';}
  function process(entry){
   const r=entry.record,p=entry.problem,route=entry.route,v=r.values||{};let out='',body='';
+  const task=root.RatioWordProblemProgress?.scenarios?.[r.problemId];if(task&&Object.keys(r.values||{}).some(k=>k.startsWith('scene:')))return block('情境辨析','<p>'+esc(task.relation)+'</p>'+task.options.map((text,i)=>r.values['scene:'+i]==='1'?'<p>'+esc(text)+'</p>':'').join(''));
   if(p){const reading=root.RatioWordProblemReading.build(p);for(const f of reading.facts){if(f.fields.length){if(!f.fields.some(x=>present(v[x.key])))continue;body+='<li>'+f.parts.map(part=>part.type==='text'?esc(part.text):present(v[part.field.key])?math(v[part.field.key]):'□').join('')+'</li>';}else if((r.seen||[]).includes(f.id))body+='<li>'+esc(f.text)+'</li>';}}
   out+=block('读题找量',body?'<ul>'+body+'</ul>':'');body='';
   if(route&&(r.passed?.[0]||r.step>=1||Object.keys(v).some(k=>/^(d|t|e|a):/.test(k))))body+='<p>当前设 '+math(route.variable)+' 表示'+esc(route.meaning)+(route.unit?'（'+esc(route.unit)+'）':'')+'.</p>';
@@ -44,6 +45,7 @@
    const lines=root.RatioWordProblemApp?.replyParts(r.problemId,r.routeId)||[];
    out+=block('答',lines.map((parts,i)=>'<p>'+parts.map(part=>esc(part.text||v[part.key]||'□')).join('')+(i<lines.length-1?'.':'')+'</p>').join(''));
   }
+
   body=[['分析说明',r.discussion],['补充记录',r.reflection]].filter(([,value])=>present(value)).map(([label,value])=>'<p>'+esc(label)+'：'+math(value)+'</p>').join('');out+=block('课堂交流与补充',body);
   if(!route)out+=block('保存的表达式',Object.entries(v).filter(([k,value])=>!k.startsWith('dm:')&&present(value)).map(([k,value])=>'<p>'+esc(r.valueLabels?.[k]||'分析记录')+'：'+math(value)+'</p>').join(''));
   return out||'<p class="pdf-source">本次尚未保存可导出的分析过程.</p>';
