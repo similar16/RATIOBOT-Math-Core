@@ -10,6 +10,172 @@
  const sourceKinds={given:'题目条件',property:'已学性质',convention:'建模约定',example:'编题示例'};
  const sourceCaption=s=>String(s??'').replace(/《教学设计与指导》/g,'补充练习').replace(/教学设计与指导/g,'补充练习').replace(/（文件名标注2021\.12）/g,'').replace(/PDF第/g,'第');
  const verdicts={valid:'符合题意',impossible:'实际不能实现',multiple:'有多个情形或答案',boundary:'超出一元一次方程',open:'开放问题，需要说明条件'};
+ const replyTemplates={
+  "C21-01": "所列方程为 20−x＝[6](10−x)，书价为[8]元.",
+  "C21-02": "从甲组抽调了[3]人.",
+  "C21-03": "实际生产小麦[11.2]吨，玉米[8.8]吨.",
+  "C21-04": "批发番茄[30]千克、豆角[15]千克，全部卖完可盈利[63]元.",
+  "C21-05": "甲、乙两地相距[24]千米.",
+  "C21-07": "扩建前操场的周长为[280]米.",
+  "C21-08": "全班共有[48]名学生.",
+  "C21-09": "快车出发[3]小时后两车相遇.",
+  "C21-10": "小红的速度为[200]米/分，爷爷的速度为[120]米/分.转向后再经过[5/4]分钟，两人再次相遇.",
+  "C21-11": "甲、乙两城相距[200]千米.",
+  "L7-P1": "能制作[7]套茶具.",
+  "L7-P2": "苹果买了[4]千克，橘子买了[2]千克.",
+  "L7-P3": "再过[3]年，小明的年龄是王老师的三分之一.",
+  "L7-T1": "小丽今年[12]岁.",
+  "L7-T2": "合唱组增加了[17]人.",
+  "L7-H1": "小明今年[13]岁.",
+  "L7-H2": "甲仓原有[18]吨蔬菜，乙仓原有[42]吨.",
+  "L7-H3": "航模小组原有[12]人.",
+  "L8-P1": "这件羽绒服的进价是[480]元.",
+  "L8-P1-V1": "这件羽绒服的进价是[600]元.",
+  "L8-P1-V2": "这件羽绒服的进价是[160]元.",
+  "L8-P1-V3": "这件羽绒服的进价是[400]元.",
+  "L8-P2-Q1": "小亮出发[15]分钟后追上小明.",
+  "L8-P2-Q2": "追上时，小明已出发[45]分钟.",
+  "L8-P2-Q4": "追上前，小亮出发[9]分钟时两人相距1千米./追上后，小亮出发[21]分钟时两人再次相距1千米.",
+  "L8-P2-Q5": "小亮出发[1]小时后，其路程是小明的2倍.",
+  "L8-P2-V1": "小亮的速度为[15]千米/小时.",
+  "L8-P2-V2": "小明先行了[0.5]小时.",
+  "L8-P2-V3": "小明仍在前时，小明先行了[42]分钟./小亮已在前时，小明先行了[18]分钟.",
+  "L8-T1": "自行车的标价是[460]元.",
+  "L8-T2": "小红的速度是[200]米/分，爷爷的速度是[120]米/分.",
+  "L8-H1": "两件衬衫合计[亏损|盈利][32]元.",
+  "L8-H2": "两村相距[5]千米.",
+  "L8-H3": "这条山路的单程长度为[3.75]千米.",
+  "G9-01": "三个内角从小到大依次为[36]°、[54]°和[90]°，这是[直角|锐角|钝角]三角形.",
+  "G9-02": "三边比为2∶3∶5时，[不能|能]围成三角形./三边比为3∶4∶5时，[能|不能]围成三角形.",
+  "G9-03": "幅数必须是正整数，因此[不存在|存在]恰有50颗黑棋的图案.",
+  "G9-06": "梯形的下底长为[18]（与上底使用同一长度单位）.",
+  "G9-07": "能搭[23]条完整的小鱼.",
+  "G9-08": "三个连续奇数从小到大依次为[3]、[5]、[7].",
+  "G9-09": "第[13]幅图共有25个菱形.",
+  "G9-10": "顶层有[3]盏灯.",
+  "G10-01": "鸡有[23]只，兔有[12]只.",
+  "G10-02": "还需合作[4]小时.",
+  "G10-03": "乙单独完成任务需要[12]小时.",
+  "G10-04": "以一队的独做时间为未知数，去分母后得到[二次|一次]方程，超出本章的直接求解范围.",
+  "G10-05": "乙车出发[4]小时后两车相遇.",
+  "G10-06": "余款恰好可以买[4]套文具组合.",
+  "G10-07": "共有[21]人，羊价是[150]钱.",
+  "G10-08": "乙队还需独做[10]天.",
+  "G10-09": "野鸭和大雁经过[63/16]天相遇.",
+  "G10-10": "合印下册还需[6]小时.",
+  "S02": "共有[9]人，鸡价为[70]钱.按每人9钱筹款时，求鸡价应从筹款总额中[减去|加上]多出的11钱.",
+  "S03": "普通公路用时[1.5]小时，高速公路用时[2.5]小时，全程[300]千米.",
+  "S04": "七月应付电费[170]元.",
+  "S05": "五月用电[100]度，六月用电[400]度.",
+  "S06": "当270＜m＜300时，五月在[第一档|第二档]，六月在[第二档|第一档]./当m＝270时，两个月的档次[不能唯一确定|能唯一确定]./当m＜270或m≥300时，[没有|有]符合题设的用电方案.",
+  "S08": "七月应付电费[325]元.",
+  "S09": "五月用电[100]度，六月用电[700]度.",
+  "S10": "甲队出发[5]小时后追上乙队.",
+  "PEP-P002": "大水杯每个[20]元，小水杯每个[15]元.",
+  "PEP-P003": "全校有[2000]名学生.",
+  "PEP-P005": "截下的电线长[25]米.",
+  "PEP-P012": "十位上的数字为[3].",
+  "PEP-P014": "这三个相邻数按原数列顺序依次是[-243]、[729]、[-2187].",
+  "PEP-P015": "2021年的产值是[100]万元.",
+  "PEP-P018": "旧工艺排放废水[500]吨，新工艺排放废水[200]吨.",
+  "PEP-P020": "两人采摘了[0.5]小时.",
+  "PEP-P021": "上半年平均每月用电[13500]千瓦时.",
+  "PEP-P022": "船在静水中的平均速度为[27]千米/小时.",
+  "PEP-P023": "原长方形的宽为[4]厘米.",
+  "PEP-P025": "王家庄距翠湖[230]千米.",
+  "PEP-P031": "这个两位数为[72].",
+  "PEP-P032": "漫灌用水[300]吨，喷灌用水[75]吨，滴灌用水[45]吨.",
+  "PEP-P035": "甲车速度为[94]千米/小时，乙车速度为[74]千米/小时.",
+  "PEP-P037": "可以，从上到下三个日期依次是[3]日、[10]日、[17]日.",
+  "PEP-P038": "每个房间需要粉刷的墙面面积为[52]平方米.",
+  "PEP-P039": "A、B两地相距[27]千米.",
+  "PEP-P040": "火车长[300]米.",
+  "PEP-P041": "应安排[10]人生产螺栓，[12]人生产螺母.",
+  "PEP-P042": "应先安排[2]人整理图书.",
+  "PEP-P043": "两队同时施工，[8]天可以铺好管线.",
+  "PEP-P047": "大书包的进价是[30]元，小书包的进价是[20]元.",
+  "PEP-P048": "每件商品[亏损|盈利][6]元.",
+  "PEP-P049": "胜一场得[2]分，负一场得[1]分.总积分＝胜场数×[2]＋负场数×[1].胜场总积分与负场总积分[不能|能]相等.",
+  "PEP-P050": "得21分时，胜[6]场、平[3]场./在9场不败的条件下，胜场总积分与平场总积分[不能|能]相等.",
+  "PEP-P051": "九年级文艺小组活动[2]次，科技小组活动[2]次.",
+  "PEP-P052": "使用不足5年时，[3级空调|1级空调]综合费用较低./使用恰好5年时，两款综合费用相同，均为[4600]元./使用超过5年且不超过10年时，[1级空调|3级空调]综合费用较低.",
+  "PEP-P053": "复印1至20页时，两店收费[不会|会]相同./超过20页时，复印[60]页，两店收费相同，均为[6]元.",
+  "PEP-P054": "每月乘11至13次，选[第一种|第二种]更省./乘14次，两种费用相同，均为[300]元./乘15至20次，选[第二种|第一种]更省./超过20次，选[第二种|第一种]更省，每月少付[150]元.",
+  "PEP-P055": "用[10]立方米木材制作桌面、[2]立方米制作桌腿，最多可配成[200]张桌子.",
+  "PEP-P060": "实验进行21分钟时，温度为[73]℃./温度达到34℃时，实验已进行[8]分钟.",
+  "PEP-P062": "李明的速度为[16]千米/小时，刘伟的速度为[4]千米/小时.相遇后刘伟再经过[96]分钟到达A地.",
+  "PEP-P063": "销售量要比原来增加[25]%.",
+  "PEP-P064": "两组人均实际完成量相等时，人均定额为[45]件./甲组人均比乙组多2件时，人均定额为[35]件./甲组人均比乙组少2件时，人均定额为[55]件.",
+  "PEP-P066": "原价大于0元且不足100元时，选[六折|满减]./原价从100元起、不足125元时，选[满减|六折]./原价恰为125元时，两种方式均付[75]元./原价超过125元时，选[六折|满减].",
+  "PEP-P072": "中国代表团获得了[9]枚金牌.",
+  "PEP-P074": "A基金购买了[9000]元，B基金购买了[11000]元.",
+  "PEP-P075": "出发[1.5]分钟后首次相遇，再经过[1.5]分钟两人再次相遇.",
+  "PEP-P076": "原有[27]只鸽子、[4]个鸽笼.",
+  "PEP-P077": "女儿现在[28]岁.",
+  "PEP-P078": "F答对[16]道题，G得到80分[不可能|有可能].",
+  "PEP-P080": "去年种植油菜[20]公顷，今年种植[17]公顷.",
+  "TB-A03": "输入的数是[8].",
+  "TB-A10": "这个订单共有[240]万册书.",
+  "TB-A18": "冲刺阶段用了[10]秒.",
+  "TB-A21": "每个面包[3.8]元.",
+  "TB-A25": "去年该校七年级有[320]人入学.",
+  "TB-A29": "两人出发[2]小时后相遇.",
+  "TB-A30": "车站距家1800米时，[能|不能]在到站前追上，追上时为7时[50]分./车站距家960米时，[不能|能]在到站前追上.",
+  "TB-A32": "易拉罐的容积约为[848]立方厘米.",
+  "TB-A34": "小亮家全年用水[285]立方米.",
+  "TB-A37": "丢番图活了[84]岁，结婚时[33]岁.",
+  "TB-I01": "高铁的平均速度是[300]千米/小时.",
+  "TB-I02": "需要盐[50]克、水[500]克.",
+  "TB-I03": "每个小球重[2]克.",
+  "TB-I04": "每个小球重[3]克.",
+  "TB-I05": "这个数是[6].",
+  "TB-I06": "每段短绳长[7]米.",
+  "TB-I07": "能搭[33]个连排正方形.",
+  "TB-I08": "每个小球重[4]克.",
+  "TB-I09": "球队胜[8]场、负[4]场.",
+  "TB-I10": "这个数是[133/8].",
+  "TB-I11": "原设法得到两个方程，x＋y＝[30]，5x＋2y＝[90]，每个方程都有[2]个未知数.",
+  "TB-I11/one-variable": "硬面抄买了[10]本，软面抄买了[20]本.",
+  "TB-I12": "两城之间的铁路里程为[600]千米.",
+  "TB-I13": "从第5年春天开始，经过[33]天可长到10米高.",
+  "TB-I14": "0至14岁人口数n与总人口的关系为 n÷84748016＝[15.21]%.",
+  "TB-I15": "小明今年[14]岁.",
+  "TB-I16": "长方形的宽为[4]厘米，长为[8]厘米.",
+  "TB-I17": "黑色皮块有[12]块，白色皮块有[20]块.",
+  "TB-I18": "所列方程是[一元一次方程|二元一次方程]，练习本每本[2]元.",
+  "TB-I19": "所列方程是[一元一次方程|二元一次方程]，每本书[30.5]元.",
+  "TB-I20": "所列方程是[一元一次方程|二元一次方程]，乘车路程为[7]千米.",
+  "TB-R01": "三数框内日期之和是中间数的[3]倍，十字框内日期之和是中间数的[5]倍.",
+  "TB-R03": "所挂物体的质量是[2.5]千克.",
+  "TB-R04": "全书共有[50]页.",
+  "TB-R05": "海洋面积约为[3.6]亿平方千米，陆地面积约为[1.5]亿平方千米.",
+  "TB-R06": "甲团有[55]人，乙团有[25]人.",
+  "TB-R07": "成人票售出[1040]张，学生票售出[640]张.",
+  "TB-R08": "跑步用了[4]分钟.",
+  "TB-R09": "甲药材需要[240]克，乙药材需要[360]克，丙药材需要[840]克.",
+  "TB-R10": "全班有[48]人.",
+  "TB-R11": "木窗高[1.8]米、宽[1.2]米.",
+  "TB-R12": "小丽投中[5]个球.",
+  "TB-R13": "两支蜡烛的原高都是[24]厘米.",
+  "TB-R14": "还需合做[6]天.",
+  "TB-R15": "面粉有[450]克，牛肉有[150]克.",
+  "TB-R16": "甲走了[2]小时，两地相距[20]千米.",
+  "TB-R17": "需要[18]张桌子.",
+  "TB-R18": "两个锐角从小到大依次为[25]°、[65]°.",
+  "TB-R19": "绳长[36]尺，井深[8]尺.",
+  "TB-R20": "铁丝原长为[14]米.",
+  "TB-R21": "每件服装的标价为[200]元，成本为[120]元.要保证不亏本，最低可打[6]折."
+};
+ function replyParts(problemId, routeId){
+  const text=replyTemplates[problemId+'/'+routeId]||replyTemplates[problemId];
+  if(!text)return [];
+  let index=0;
+  return text.split('./').map(line=>line.split(/(\[[^\]]+\])/).filter(Boolean).map(part=>{
+   if(!part.startsWith('['))return {text:part};
+   const options=part.slice(1,-1).split('|');
+   return {key:'reply:'+index++,answer:options[0],choices:options.length>1?options:null};
+  }));
+ }
  let editorPromise;
  function loadEditor(){if(root.MathfieldElement)return Promise.resolve();return editorPromise||(editorPromise=new Promise((resolve,reject)=>{const s=document.createElement('script');s.src=new URL('assets/mathlive/0.111.4/mathlive.min.js',scriptBase);s.onload=()=>{root.MathfieldElement.fontsDirectory=new URL('assets/mathlive/0.111.4/fonts',scriptBase).href;root.MathfieldElement.soundsDirectory=null;root.MathfieldElement.computeEngine=null;resolve();};s.onerror=()=>{editorPromise=null;reject(Error('公式键盘暂未加载，仍可直接输入算式.'));};document.head.append(s);}));}
  function mount(host,B){
@@ -173,7 +339,7 @@
   }
   function basicRelations(){return '<h3>用中心数表示框内各方向的日期</h3><p>设每个框的中心数为 '+math(route.variable)+'，请填写左、右、上、下的日期表达式.每行单独选一个框.</p><div class="wp-calendar-table">'+table()+'</div><p class="wp-table-note">'+esc(route.tableNote)+'</p>';}
   function calendarSumItem(item){return {...item,termSets:(item.rowIndexes||[]).map(index=>route.table.rows[index].cells.filter(cell=>cell.expr).map(cell=>cell.expr))};}
-  function basicComparison(){return '<h3>合并同类项，找出和与中间数的关系</h3><p>对照自己列出的完整算式，分别填写合并同类项后的化简结果.</p><div class="wp-calendar-simplifications">'+(route.sumExpressions||[]).map((item,i)=>'<article class="wp-derivation"><h4>'+esc(item.label)+'</h4><p>已列的完整算式</p><div class="wp-math-line">'+math('S='+run.values['e:'+i])+'</div>'+input('c:'+i,item.label+'合并同类项后的结果',{prefix:'S',placeholder:'填写化简结果'})+'</article>').join('')+'</div>'+(run.finished?'<section class="wp-basic-summary wp-calendar-conclusion"><h4>结论</h4><p>三数框和十字框中，有中间数时，用中间数乘框内数的个数求和.</p><p><b>框内数之和＝中间数×框内数的个数.</b></p>'+(route.sumExpressions||[]).map((item,i)=>'<p>'+esc(item.label)+'：'+math('S='+run.values['c:'+i])+'</p>').join('')+'</section>':'')+completion();}
+  function basicComparison(){return '<h3>合并同类项，找出和与中间数的关系</h3><p>对照自己列出的完整算式，分别填写合并同类项后的化简结果.</p><div class="wp-calendar-simplifications">'+(route.sumExpressions||[]).map((item,i)=>'<article class="wp-derivation"><h4>'+esc(item.label)+'</h4><p>已列的完整算式</p><div class="wp-math-line">'+math('S='+run.values['e:'+i])+'</div>'+input('c:'+i,item.label+'合并同类项后的结果',{prefix:'S',placeholder:'填写化简结果'})+'</article>').join('')+'</div>'+(run.finished?'<section class="wp-basic-summary wp-calendar-conclusion"><h4>结论</h4><p>三数框和十字框中，有中间数时，用中间数乘框内数的个数求和.</p><p><b>框内数之和＝中间数×框内数的个数.</b></p>'+(route.sumExpressions||[]).map((item,i)=>'<p>'+esc(item.label)+'：'+math('S='+run.values['c:'+i])+'</p>').join('')+'</section>':'')+replyForm()+completion();}
   function basicEquations(){return '<h3>用表中的日期列出完整求和算式</h3><p>先选中下面的空，再点击表格中的“取用此量”，用加号连接框内各个日期.三数框可选横框或竖框；这一步保留完整算式，下一步再合并同类项.</p><details class="wp-preview-table" open><summary>点击数量表中的表达式取用</summary><div class="wp-calendar-table">'+table(true,true)+'</div></details><section class="wp-equation-block">'+(route.sumExpressions||[]).map((item,i)=>'<div class="wp-equation-entry">'+input('e:'+i,item.label+'的完整求和算式',{prefix:'S',placeholder:'把框内各日期逐项相加'})+'</div>').join('')+'</section>';}
 
   function verificationRow(c,i){
@@ -209,6 +375,32 @@
    if((route.verdictCases||[]).length)return route.verdictCases.map((c,i)=>'<fieldset class="wp-verdict"><legend>'+esc(c.prompt||c.label)+'</legend>'+[['valid','符合本情形的要求'],['impossible','不符合本情形的要求']].map(([value,label])=>'<label><input type="radio" name="wp-case-'+i+'" data-wp-case="'+i+'" value="'+value+'" '+(run.values['v:'+i]===value?'checked':'')+'>'+esc(label)+'</label>').join('')+'</fieldset>').join('');
    return '<fieldset class="wp-verdict"><legend>'+esc(route.verdict?.prompt||'结合数量范围和题意，怎样判断？')+'</legend>'+Object.entries(verdicts).map(([v,l])=>'<label><input type="radio" name="wp-verdict" value="'+v+'" '+(run.verdict===v?'checked':'')+'>'+l+'</label>').join('')+'</fieldset>';
   }
+  function replyForm(){
+   const lines=replyParts(problem.id,route.id);
+   if(!lines.length)return '';
+   if(run.finished&&!Object.keys(run.values).some(k=>k.startsWith('reply:')))return '<section><h4>答</h4><p>这条历史记录没有保存答句.</p></section>';
+   return '<section class="wp-written-reply"><h4>答</h4>'+lines.map((parts,line)=>'<p>'+parts.map(part=>{
+    if(part.text)return esc(part.text);
+    const label='答句第'+(line+1)+'行，第'+(Number(part.key.slice(6))+1)+'空';
+    if(part.choices)return '<select data-wp-reply-choice="'+part.key+'" aria-label="'+label+'"><option value="">请选择</option>'+[...part.choices].sort().map(value=>'<option'+(run.values[part.key]===value?' selected':'')+'>'+esc(value)+'</option>').join('')+'</select>';
+    return '<input data-wp-input="'+part.key+'" aria-label="'+label+'" type="text" inputmode="text" maxlength="80" '+noCredential+' placeholder="填答案" value="'+esc(run.values[part.key]||'')+'">';
+   }).join('')+(line<lines.length-1?'.':'')+'</p>').join('')+'</section>';
+  }
+  function checkReply(){
+   for(const parts of replyParts(problem.id,route.id)){
+    for(const part of parts){
+     if(!part.key)continue;
+     const value=run.values[part.key]||'';
+     let correct=value===part.answer;
+     if(value&&!correct&&!part.choices){try{correct=E.equivalent(value,part.answer,route.variable);}catch{}}
+     if(correct)continue;
+     const field=host.querySelector('[data-wp-input="'+part.key+'"],[data-wp-reply-choice="'+part.key+'"]');
+     field?.focus();field?.setAttribute('aria-invalid','true');
+     return fail('请'+(value?'核对':'填写')+'答句第'+(Number(part.key.slice(6))+1)+'空，再保存.');
+    }
+   }
+   return finishAnalysis();
+  }
   function stage(){
    if(relationshipOnly()&&run.step>=2)return run.step===2?basicRelations():run.step===3?basicEquations():basicComparison();
    if(run.step===0&&reverseModel())return '<h3>拆表：从给定方程找出数量</h3><p>把方程拆成两类对象各自的总价，再找出单价、数量和总价.笔记本是本次采用的一种示例.</p><div class="wp-math-line">'+math('3*x+2*(12-x)=32')+'</div><div class="wp-equation-parts"><p>'+math('3*x')+'：甲类单价 × 甲类数量</p><p>'+math('2*(12-x)')+'：乙类单价 × 乙类数量</p><p>'+math('32')+'：两类总价</p></div>'+readingCards();
@@ -218,7 +410,7 @@
    if(run.step===2)return '<h3>把每个量放进数量表</h3><p>根据已得到的数量关系填写数量表.行写对象或阶段，列写具体数量；新数据先说明来源.</p>'+(manual()&&!reverseModel()?'<p class="wp-notice">先核对每个量的来源，再结合原题分析参数、整数条件或适用范围.下框只输入对应的关系式.</p>':'')+relationSummary()+'<section data-wp-quantity-table-stage><h4>根据数量关系列表分析</h4>'+table(manual()&&!reverseModel())+(route.tableNote?'<p class="wp-table-note">'+esc(route.tableNote)+'</p>':'')+(manual()&&!reverseModel()?'<label class="wp-writing">用关系式记录表中数量的联系<textarea'+noCredential+' data-wp-discussion maxlength="2000" placeholder="只输入字母、数字和运算符">'+esc(run.discussion)+'</textarea></label>':'')+'</section>';
    if(run.step===3)return '<h3>'+(reverseModel()?'根据数量表编写应用题':analysisOnly()?'分析数量关系与模型':'找等量关系并列方程')+'</h3><p>'+(reverseModel()?'结合数量表口头编写故事，说明对象、单价、数量、总价及所求问题；下框用关系式记录故事中的数量联系.':analysisOnly()?'结合原题分析数量之间的关系、未知数与参数.下框用字母和关系式记录，本次只做分析.':'同一个量可以有不同的表示.根据表中数量必须满足的关系，列出能确定未知量的等式；恒等式不能代替求解方程.')+'</p>'+relationSummary(true)+(manual()?'<p class="wp-notice">'+esc(route.closure?.text||route.discussion||'说明所需的条件.')+'</p>':'')+'<details class="wp-preview-table" open><summary>用数量表中的量列式</summary>'+table(true,!manual()&&(route.equations||[]).length>0)+'</details><section class="wp-equation-block"><h4>'+(manual()?esc(route.discussionTitle||'说明数量关系与模型'):'根据上面的关系列方程')+'</h4>'+(!manual()&&(route.equations||[]).length?'<p class="wp-take-help">（可以点击表格中的“取用此量”）</p>':'')+'<p data-wp-basis-summary>'+esc(closureGuidance())+'</p>'+(manual()?'<label class="wp-writing">'+esc('用关系式记录分析结果（这里只输入字母、数字和运算符）')+'<textarea'+noCredential+' data-wp-discussion maxlength="2000" placeholder="输入数量关系式，中文说明可在课堂交流">'+esc(run.discussion)+'</textarea></label>':(route.equations||[]).length?route.equations.map((q,i)=>'<div class="wp-equation-entry">'+input('e:'+i,equationEntryLabel(i),{placeholder:'填写完整等式'})+'</div>').join(''):'<p class="wp-good-note">这是正向数量计算，按表中关系计算即可.</p>')+(!manual()&&(route.equations||[]).length?'<p class="wp-take-help">先选中方程输入框，再点击表格中的“取用此量”.运算符和等号由你补上.</p>':'')+'</section>'+(analysisOnly()?completion():'');
    if(run.step===5)return '<h3>在草稿纸上解方程并确认答案</h3><p>'+(route.modelOnly?'原题要求列式，可在草稿上说明模型的含义，不必反推精确人数.':manual()?'在草稿上整理计算、整数筛选或判断理由，再确认所得结果.':'对照自己列出的方程演算，也可以在纸上完成.然后在本页填写答案并核对.')+'</p>'+(route.scratchPrompt?'<p class="wp-good-note" data-wp-scratch-prompt>'+esc(route.scratchPrompt)+'</p>':'')+'<div data-wp-scratch-mount></div><section class="wp-answer-confirm"><h4>确认解答</h4>'+((route.answers||[]).length?'<div class="wp-answer-grid">'+route.answers.map((a,i)=>input('a:'+i,a.label,{unit:a.unit,prefix:answerPrefix(route,i),placeholder:'填写演算得到的值'})).join('')+'</div>':'<p>本题在这里不要求填写数值答案，请确认上面的模型与论证，再进入原条件检验.</p>')+'</section>';
-   if(run.step===6)return '<h3>用原条件检验</h3><p>解答已在上一页确认.本页只检查原条件、数量范围、单位和各个情形.</p>'+((route.answers||[]).length?'<details class="wp-confirmed-answers"><summary>回看已确认的解答</summary>'+route.answers.map((a,i)=>'<p>'+esc(a.label)+'：'+math(run.values['a:'+i]||a.expr)+' '+esc(a.unit||'')+'</p>').join('')+'</details>':'')+'<section class="wp-verification"><h4>代回题目检查</h4>'+(route.checks||[]).map(verificationRow).join('')+verdictFields()+'</section>'+completion()+modelComparison()+(run.passed[6]?solution():'');
+   if(run.step===6)return '<h3>用原条件检验</h3><p>解答已在上一页确认.先检验原条件和实际意义，再把结论填入下方答句.</p>'+((route.answers||[]).length?'<details class="wp-confirmed-answers"><summary>回看已确认的解答</summary>'+route.answers.map((a,i)=>'<p>'+esc(a.label)+'：'+math(run.values['a:'+i]||a.expr)+' '+esc(a.unit||'')+'</p>').join('')+'</details>':'')+'<section class="wp-verification"><h4>代回题目检查</h4>'+(route.checks||[]).map(verificationRow).join('')+verdictFields()+'</section>'+replyForm()+completion()+modelComparison()+(run.passed[6]?solution():'');
    return "";
   }
   function solution(){return '<details class="wp-solution"'+(run.step===6?'':' open')+'><summary>完整推导与检验</summary>'+((route.derivations||[]).length?'<h4>数据怎样得到</h4>'+route.derivations.map(d=>'<p>'+esc(d.label)+'</p><div class="wp-math-line">'+math(derivedExpression(d),true)+' = '+math(d.result)+'</div>').join(''):'')+table(true)+'<h4>本次列式与依据</h4>'+scratchEquations()+'<details class="wp-original-solution"><summary>查看原设元的一种参考演算</summary>'+(route.steps||[]).map(s=>'<div class="wp-math-line">'+math(s)+'</div>').join('')+'</details>'+'<p>'+esc(route.conclusion)+'</p><p>'+esc(route.verdict?.explain)+'</p></details>';}
@@ -238,11 +430,12 @@
    host.querySelectorAll('[data-wp-fact]').forEach(input=>{bindMathInput(input,{numberOnly:true,inputMode:input.getAttribute('inputmode')==='text'?'url':'decimal',onChange:value=>{if(!guard())return;run.values[input.dataset.wpFact]=value;input.removeAttribute('aria-invalid');invalidate(0);updateConditionPanel();queueSave();}});input.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();checkStage();}};});
    host.querySelectorAll('[data-wp-seen]').forEach(c=>c.onchange=()=>{run.seen=Array.from(host.querySelectorAll('[data-wp-seen]:checked')).map(x=>x.dataset.wpSeen);invalidate(0);updateConditionPanel();queueSave();});
    bindModelActions();
-   host.querySelectorAll('[data-wp-input]').forEach(i=>{bindMathInput(i,{variables,...(i.hasAttribute('data-wp-number-only')?{numberOnly:true,inputMode:'numeric'}:{}),onChange:value=>changed(i.dataset.wpInput,value),onFocus:()=>{activeField=i;updateKeyboardPreview();}});});
+   host.querySelectorAll('[data-wp-input]').forEach(i=>{bindMathInput(i,{variables,...(i.hasAttribute('data-wp-number-only')?{numberOnly:true,inputMode:'numeric'}:{}),onChange:value=>{i.removeAttribute('aria-invalid');changed(i.dataset.wpInput,value);},onFocus:()=>{activeField=i;updateKeyboardPreview();}});});
    host.querySelectorAll('[data-wp-derived-source]').forEach(c=>c.onchange=()=>{const id=c.dataset.wpDerivedSource;run.derivationSources[id]=Array.from(host.querySelectorAll('[data-wp-derived-source]')).filter(x=>x.dataset.wpDerivedSource===id&&x.checked).map(x=>x.value);invalidateDerived(id);invalidate(1);queueSave();});
    host.querySelectorAll('[data-wp-derivation-hint]').forEach(details=>details.addEventListener('toggle',()=>{if(!details.isConnected||!details.open||run.step!==1||!guard())return;run.assisted=true;run.hints[1]=Math.max(1,run.hints[1]||0);queueSave();}));
    host.querySelectorAll('[data-wp-derivation-method]').forEach(field=>field.onchange=()=>{if(!guard())return;const id=field.dataset.wpDerivationMethod;run.values['dm:'+id]=field.value;delete run.values['d:'+id];run.derivationSources[id]=[];invalidateDerived(id);invalidate(1);render();});
    host.querySelectorAll('[data-wp-check-derived]').forEach(b=>b.onclick=()=>checkDerived(b.dataset.wpCheckDerived));
+   host.querySelectorAll('[data-wp-reply-choice]').forEach(field=>field.onchange=()=>{field.removeAttribute('aria-invalid');changed(field.dataset.wpReplyChoice,field.value);});
    host.querySelectorAll('[data-wp-case]').forEach(c=>c.onchange=()=>{run.values['v:'+c.dataset.wpCase]=c.value;invalidate(6,false);queueSave();});
    host.querySelectorAll('[name="wp-verdict"]').forEach(c=>c.onchange=()=>{if(!guard())return;run.verdict=c.value;invalidate(6,false);queueSave();});
    for(const [selector,key]of [['[data-wp-custom]','customModel'],['[data-wp-discussion]','discussion']]){const el=host.querySelector(selector);if(el)bindMathInput(el,{variables,onChange:value=>{if(!guard())return;run[key]=value;invalidate(run.step);queueSave();}});}
@@ -283,14 +476,14 @@
    if(relationshipOnly()){
     if((s>0&&!run.passed[0])||(s>1&&!run.passed[1]))return fail('请先完成读题找量和设元与推导.');
     if(s===3){if(!run.passed[2])return fail('请先确认数量表.');for(const [i,item] of (route.sumExpressions||[]).entries()){const result=E.checkQuantitySum(run.values['e:'+i]||'',calendarSumItem(item),route.variable);if(!result.ok)return fail(item.label+'的日期之和：'+result.message);}markConditions([...(route.closure?.sources||[]),'sum']);return pass('两种框的完整求和算式已核对.下一步合并同类项.');}
-    if(s===6){if(!run.passed[2]||!run.passed[3])return fail('请先完成数量表和完整求和算式.');for(const [i,item] of (route.sumExpressions||[]).entries()){const result=E.checkSimplifiedTerm(run.values['c:'+i]||'',item,route.variable);if(!result.ok)return fail(item.label+'的化简结果：'+result.message);}run.answersChecked=true;return finishAnalysis();}
+    if(s===6){if(!run.passed[2]||!run.passed[3])return fail('请先完成数量表和完整求和算式.');for(const [i,item] of (route.sumExpressions||[]).entries()){const result=E.checkSimplifiedTerm(run.values['c:'+i]||'',item,route.variable);if(!result.ok)return fail(item.label+'的化简结果：'+result.message);}run.answersChecked=true;return checkReply();}
    }
    if(s===0){const reading=F.check(problem,run.values);if(!reading.ok){fail(reading.message,'source');const input=Array.from(host.querySelectorAll('[data-wp-fact]')).find(x=>x.dataset.wpFact===reading.key);input?.setAttribute('aria-invalid','true');input?.focus({preventScroll:true});return;}if(F.build(problem).facts.some(f=>!f.fields.length&&!run.seen.includes(f.id)))return fail('还有不含数值的条件没有确认，请读懂后勾选.','source');run.seen=problem.facts.map(f=>f.id);discoverConditions();return pass('题目中的数量已填写正确，条件已固定在左侧.');}
    if(s===1){if((route.derivations||[]).some(d=>!run.derived[d.id]))return fail('先逐项完成数据推导，并选择使用的依据.','source');for(const d of route.derivations||[])markConditions(derivationMethod(d).sources);if(relationshipOnly())markConditions(['center']);return pass('未知量和需要的数据已准备好.');}
    if(s===2){if(!tableRelationsReady())return fail('请先确认原题数量关系，或点击“一键显示”，再根据关系列表.');if(manual()&&!reverseModel()){if(!hasMathRecord(run.discussion))return fail('请用字母、数字和运算符记录表中数量的关系式.');for(const row of route.table.rows)for(const c of row.cells)markConditions(c.sources);return pass('数量关系与说明已保留，下一页把关系连成等式.');}const used=[];for(let ri=0;ri<route.table.rows.length;ri++)for(let ci=0;ci<route.table.rows[ri].cells.length;ci++){const c=route.table.rows[ri].cells[ci];if(c.note)continue;if(c.given){used.push(...c.sources||[]);continue;}const result=checkCell(c,ri,ci);if(!result.ok)return fail(route.table.rows[ri].label+' · '+route.table.headers[ci+1]+'：'+result.message,result.kind==='source'?'source':'error');used.push(...result.sources||c.sources||[]);}for(const group of route.table.signedDifferences||[]){const signs=group.cells.map(([ri,ci])=>checkCell(route.table.rows[ri].cells[ci],ri,ci).differenceSign);if(new Set(signs).size>1)return fail(group.label+'的相减方向要一致：两行都用“'+group.forwardLabel+'”，或都用“'+group.reverseLabel+'”.');}markConditions(used);return pass('数量表已核对.等价写法及其来源会保留在表格中.');}
    if(s===3){if(manual()){if(!hasMathRecord(run.discussion))return fail('请用字母、数字和运算符写出数量关系.');markConditions(route.closure?.sources);if(analysisOnly()){run.passed[4]=true;return finishAnalysis();}return pass('模型说明已保留，继续演算与确认结果.');}for(let i=0;i<(route.equations||[]).length;i++){const q=route.equations[i],result=E.checkEquation(run.values['e:'+i]||'',q,q.variable||route.variable);if(!result.ok)return fail(equationEntryLabel(i)+'：'+result.message,result.kind==='source'?'source':'error');if(!equationHasSources(run.values['e:'+i]||'',q))return fail('等式关系正确，但出现了尚未说明来源的新数.请使用表中已确认的量列式.','source');}markConditions((route.equations||[]).flatMap((q,i)=>equationBasis(i).sources));return pass((route.equations||[]).length?'等量关系和方程已一起核对，可以开始演算.':'已明确计算关系，可以开始演算.');}
-   if(s===5){if([0,1,2,3,4].some(i=>run.passed[i]!==true))return fail('请先完成前面的分析步骤.');scratchUI?.flush();for(let i=0;i<(route.answers||[]).length;i++){const a=route.answers[i];try{if(!E.equivalent(run.values['a:'+i]||'',a.expr,route.variable))return fail(a.label+'还不正确，请根据方程重新计算.');}catch(e){return fail(e.message);}}run.answersChecked=true;return pass('解答已确认.下一页只做原条件与实际意义的检验.');}
-   if(s===6){if([0,1,2,3,4,5].some(i=>run.passed[i]!==true)||!run.answersChecked)return fail('请先在上一页确认解答.');for(let i=0;i<(route.checks||[]).length;i++){const c=route.checks[i];try{if(!E.equivalent(run.values['c:'+i]||'',(c.input==='exponent'?c.exponent:c.result),route.variable))return fail('检验'+(i+1)+'的计算还不正确，请把结果代回原条件.');}catch(e){return fail(e.message);}}for(const [i,c] of (route.verdictCases||[]).entries()){if(run.values['v:'+i]!==c.correct)return fail(c.label+'：请分别核对这个情形的允许范围.');}if((route.verdictCases||[]).length)run.verdict=route.verdict?.correct||'multiple';if(run.verdict!==(route.verdict?.correct||'valid'))return fail('再检查整数、单位、取值范围、全部情形及条件是否充分.');return finishAnalysis();}
+   if(s===5){if([0,1,2,3,4].some(i=>run.passed[i]!==true))return fail('请先完成前面的分析步骤.');scratchUI?.flush();for(let i=0;i<(route.answers||[]).length;i++){const a=route.answers[i];try{if(!E.equivalent(run.values['a:'+i]||'',a.expr,route.variable))return fail(a.label+'还不正确，请根据方程重新计算.');}catch(e){return fail(e.message);}}run.answersChecked=true;return pass('解答已确认.下一页检验原条件，并填写答句.');}
+   if(s===6){if([0,1,2,3,4,5].some(i=>run.passed[i]!==true)||!run.answersChecked)return fail('请先在上一页确认解答.');for(let i=0;i<(route.checks||[]).length;i++){const c=route.checks[i];try{if(!E.equivalent(run.values['c:'+i]||'',(c.input==='exponent'?c.exponent:c.result),route.variable))return fail('检验'+(i+1)+'的计算还不正确，请把结果代回原条件.');}catch(e){return fail(e.message);}}for(const [i,c] of (route.verdictCases||[]).entries()){if(run.values['v:'+i]!==c.correct)return fail(c.label+'：请分别核对这个情形的允许范围.');}if((route.verdictCases||[]).length)run.verdict=route.verdict?.correct||'multiple';if(run.verdict!==(route.verdict?.correct||'valid'))return fail('再检查整数、单位、取值范围、全部情形及条件是否充分.');return checkReply();}
   }
   function hasMathRecord(value){const parts=String(value||'').split(/[=<>≤≥≠≈]/);return parts.length<=4&&parts.every(part=>{const result=E.inspect(part);return result.ok||result.kind==='unsupported';});}
   function exampleMathRecord(){const q=(route.equations||[])[0];return q?q.left+'='+q.right:route.table.rows.flatMap(row=>row.cells).find(cell=>cell.expr&&!cell.given)?.expr||route.variable;}
@@ -301,11 +494,11 @@
    if(run.step===1){for(const d of route.derivations||[]){if(d.methods?.length)run.values['dm:'+d.id]=d.methods[0].id;run.values['d:'+d.id]=E.format(d.expr);run.derivationSources[d.id]=d.sources||[];run.derived[d.id]=true;}}
    if(run.step===2){if(needsTableRelations()){run.referenceRelations=run.referenceRelations||{};run.referenceRelations[route.id]=R.canonical(R.reference(problem,route));}route.table.rows.forEach((r,ri)=>r.cells.forEach((c,ci)=>{if(c.expr&&!c.given)run.values['t:'+ri+':'+ci]=E.format(c.expr);}));if(manual())run.discussion=exampleMathRecord();}
    if(run.step===3){const plan=equationPlan();(route.equations||[]).forEach((q,i)=>{const current=plan.entries[i]?.recommended||q;run.values['e:'+i]=E.format(current.left)+'='+E.format(current.right);});if(manual())run.discussion=exampleMathRecord();}
-   if(run.step===6){(route.checks||[]).forEach((c,i)=>run.values['c:'+i]=E.format(c.input==='exponent'?c.exponent:c.result));run.verdict=route.verdict?.correct||'valid';(route.verdictCases||[]).forEach((c,i)=>{run.values['v:'+i]=c.correct;});}
+   if(run.step===6){for(const part of replyParts(problem.id,route.id).flat())if(part.key)run.values[part.key]=part.answer;(route.checks||[]).forEach((c,i)=>run.values['c:'+i]=E.format(c.input==='exponent'?c.exponent:c.result));run.verdict=route.verdict?.correct||'valid';(route.verdictCases||[]).forEach((c,i)=>{run.values['v:'+i]=c.correct;});}
    feedback='本步已显示示范.本次会记录为看过示范，你仍可回到目录重新独立分析.';feedbackKind='hint';render();
   }
   function destroy(){closeRecords();save();clearInputBindings();scratchUI?.destroy();scratchUI=null;motionUI?.destroy();motionUI=null;referenceUIs.forEach(ui=>ui.destroy());referenceUIs=[];alive=false;renderToken++;clearTimeout(saveTimer);clearTimeout(searchTimer);mathFields=[];activeField=null;}
   return {open:catalog,start,destroy};
  }
- root.RatioWordProblemApp={mount};
+ root.RatioWordProblemApp={mount,replyParts};
 })(window);

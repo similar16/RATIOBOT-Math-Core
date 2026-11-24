@@ -40,6 +40,10 @@
   out+=block('填写的解答'+(r.answersChecked?'（已确认）':''),body);body='';
   for(const [key,value]of Object.entries(v)){if(!present(value))continue;if(key.startsWith('c:')){const i=Number(key.slice(2)),label=r.valueLabels?.[key]||route?.sumExpressions?.[i]?.label||route?.checks?.[i]?.text||'检验结果';body+='<p>'+esc(label)+'：'+math(value)+'</p>';}if(key.startsWith('v:')){const i=Number(key.slice(2));body+='<p>'+esc(r.valueLabels?.[key]||route?.verdictCases?.[i]?.label||'分情形判断')+'：'+esc(({valid:'符合本情形要求',impossible:'不符合本情形要求'})[value]||value)+'</p>';}}
   if(present(r.verdict))body+='<p>实际意义判断：'+esc(({valid:'符合题意',impossible:'实际不能实现',multiple:'有多个情形或答案',boundary:'超出一元一次方程',open:'开放问题，需说明条件'})[r.verdict]||r.verdict)+'</p>';out+=block(route?.relationshipOnly?'化简与结论':'原条件与实际意义检验',body);
+  if(Object.keys(v).some(key=>key.startsWith('reply:'))){
+   const lines=root.RatioWordProblemApp?.replyParts(r.problemId,r.routeId)||[];
+   out+=block('答',lines.map((parts,i)=>'<p>'+parts.map(part=>esc(part.text||v[part.key]||'□')).join('')+(i<lines.length-1?'.':'')+'</p>').join(''));
+  }
   body=[['分析说明',r.discussion],['补充记录',r.reflection]].filter(([,value])=>present(value)).map(([label,value])=>'<p>'+esc(label)+'：'+math(value)+'</p>').join('');out+=block('课堂交流与补充',body);
   if(!route)out+=block('保存的表达式',Object.entries(v).filter(([k,value])=>!k.startsWith('dm:')&&present(value)).map(([k,value])=>'<p>'+esc(r.valueLabels?.[k]||'分析记录')+'：'+math(value)+'</p>').join(''));
   return out||'<p class="pdf-source">本次尚未保存可导出的分析过程.</p>';

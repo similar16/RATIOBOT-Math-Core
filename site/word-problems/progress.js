@@ -77,6 +77,7 @@
    let label='补充表达';
    if(key.startsWith('f:'))label=(factLabels.get(key)||'题目数量')+'（读题填空）';
    else if(key.startsWith('r:')){const m=key.match(/^r:(sum|product):(\d+):([012])$/);if(m){const i=relations()?.practice(problem,route)[m[1]].findIndex(row=>row.sourceIndex===Number(m[2]));label=(m[1]==='sum'?'加和关系':'乘积关系')+'第'+((i>=0?i:Number(m[2]))+1)+'行 · '+(m[3]==='2'?'结果':'第'+(Number(m[3])+1)+'个量');}}
+   else if(key.startsWith('reply:'))label='答句第'+(Number(key.slice(6))+1)+'空';
    else if(key.startsWith('d:'))label=((route.derivations||[]).find(d=>d.id===key.slice(2))?.label||'数据推导')+'（来源推导）';
    else if(key.startsWith('dm:'))label=((route.derivations||[]).find(d=>d.id===key.slice(3))?.label||'数据推导')+'（推导方法）';
    else {const m=key.match(/^(t|e|a|c|v):(\d+)(?::(\d+))?$/);if(m){const i=Number(m[2]),j=Number(m[3]);

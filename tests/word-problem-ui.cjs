@@ -69,7 +69,17 @@ function fixture(autoRelations=true) {
   assert(!$('[data-wp-next]')&&!$('[data-wp-reflection]'));
   assert(!$('[data-wp-input="a:0"]'),'The final page has no answer-confirmation input');
  }
+ function fillReply(route){
+  const problemId=$('[data-wp-current-problem]').dataset.wpCurrentProblem;
+  for(const part of w.RatioWordProblemApp.replyParts(problemId,route.id).flat()){
+   if(!part.key)continue;
+   if(!part.choices){setInput(part.key,part.answer);continue;}
+   const select=$('[data-wp-reply-choice="'+part.key+'"]');
+   select.value=part.answer;select.dispatchEvent(new w.Event('change',{bubbles:true}));
+  }
+ }
  function fillVerification(route){
+  fillReply(route);
   (route.checks||[]).forEach((check,i)=>setInput('c:'+i,check.input==='exponent'?check.exponent:check.result));
   if((route.verdictCases||[]).length)for(const [i,c]of route.verdictCases.entries())checkBox(host.querySelector('[data-wp-case="'+i+'"][value="'+c.correct+'"]'));
   else checkBox([...host.querySelectorAll('[name="wp-verdict"]')].find(x=>x.value===route.verdict.correct));
@@ -99,7 +109,7 @@ function fixture(autoRelations=true) {
    route.table.rows.forEach((row,i)=>row.cells.forEach((cell,j)=>{if(cell.expr&&!cell.given)setInput('t:'+i+':'+j,cell.expr);}));
    checkAndNext(2,'Calendar directions');assert(!$('.wp-stage textarea'));
    route.sumExpressions.forEach((item,i)=>setInput('e:'+i,route.table.rows[item.rowIndexes[0]].cells.filter(cell=>cell.expr).map(cell=>'('+cell.expr+')').join('+')));checkAndNext(3,'Calendar complete sums');route.sumExpressions.forEach((item,i)=>setInput('c:'+i,item.expr));
-   assert(!$('.wp-stage textarea'));click('[data-wp-check]');assert($('.wp-completion'));if(!teacher)counts.completed++;counts.routes++;return read().records[0];
+   assert(!$('.wp-stage textarea'));fillReply(route);click('[data-wp-check]');assert($('.wp-completion'));if(!teacher)counts.completed++;counts.routes++;return read().records[0];
   }
   assert.equal(currentStep(),0);
   assert($('[data-wp-next]').disabled,'No advancing before source step passes');
@@ -917,7 +927,7 @@ assert(!calendarSimple.$('.wp-calendar-conclusion'),'The conclusion follows conf
 calendarSimple.setInput('c:0','x+x+x');calendarSimple.setInput('c:1','5*x');calendarSimple.click('[data-wp-check]');assert(!calendarSimple.$('.wp-completion'),'The final step requires combined like terms');
 calendarSimple.setInput('c:0','3*x');
 assert(!calendarSimple.$('[data-wp-scratch-mount]'));assert.equal(calendarSimple.$('[data-wp-check]').textContent,'确认并保存');
-calendarSimple.click('[data-wp-check]');assert(calendarSimple.$('.wp-completion'));assert.equal(calendarSimple.read().records[0].status,'independent');
+calendarSimple.click('[data-wp-check]');assert(!calendarSimple.$('.wp-completion'));calendarSimple.setInput('reply:0','3');calendarSimple.setInput('reply:1','5');calendarSimple.click('[data-wp-check]');assert(calendarSimple.$('.wp-completion'));assert.equal(calendarSimple.read().records[0].status,'independent');
 assert.match(calendarSimple.$('.wp-calendar-conclusion').textContent,/中间数.*框内数的个数/);assert.equal(calendarSimple.read().records[0].values['e:0'],firstCalendarSum);assert.equal(calendarSimple.read().records[0].values['c:0'],'3*x');
 const calendarRecord=clone(calendarSimple.read().records[0]);calendarSimple.remount();calendarSimple.app.start('TB-R01');assert(calendarSimple.$('.wp-completion'));assert.deepEqual(clone(calendarSimple.read().records[0]),calendarRecord);
 calendarSimple.click('[data-wp-step="2"]');calendarSimple.setInput('t:0:0','x+1');assert(calendarSimple.$('[data-wp-next]').disabled);calendarSimple.remount();calendarSimple.app.start('TB-R01');assert(!calendarSimple.read().drafts['TB-R01'].passed[3]);
