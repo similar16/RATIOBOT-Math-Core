@@ -20,7 +20,7 @@
     evidence[cat][i].n++;if(value==='yes')evidence[cat][i].yes++;
    });
   }
-  const box=document.createElement('section');box.className='atlas';landing.append(box);
+  const box=document.createElement('section');box.className='atlas';landing.querySelector('.page-heading').after(box);
   const sum=parts=>parts.reduce((a,b)=>({yes:a.yes+b.yes,n:a.n+b.n}),{yes:0,n:0});
   const fraction=v=>v.n?v.yes+'/'+v.n:'—';
   const totals=stages.map((_,i)=>sum(evidence.map(row=>row[i])));
