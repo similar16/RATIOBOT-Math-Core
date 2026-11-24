@@ -243,6 +243,7 @@
     if(!d.answersChecked||(route.sumExpressions||[]).some((item,i)=>!E.checkSimplifiedTerm(d.values['c:'+i]||'',item,route.variable).ok))throw Error('请先填写并确认合并同类项后的化简结果.');
    }
    if(d.interactionVersion>=2){
+    if(problem.id==='TB-I20'&&d.values['fare:band']!=='extra')throw Error('请先判断出租车的计费档次.');
     const F=reading();if(!F)throw Error('数量互动资源尚未准备好，请重试.');
     if(!F.check(problem,d.values).ok||F.build(problem).facts.some(f=>!f.fields.length&&!d.seen.includes(f.id)))throw Error('请完成并核对读题数量填空.');
    }

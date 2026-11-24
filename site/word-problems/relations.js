@@ -324,7 +324,7 @@
   ['购买金额','找回金额','付款金额']
  ],[['单价','质量','购买金额']],['本组关系针对题中给定方程的买梨解释；另编故事仍需逐一解释数量和单位.']);
 
- const normalizeToken=value=>value==='加价后倍数'?'加价倍数':value;
+ const normalizeToken=value=>value==='最大允许排量'?'环保限制的最大量':value==='加价后倍数'?'加价倍数':value;
  function rows(raw){return raw.map((triple,i)=>{if(!Array.isArray(triple)||triple.length!==3||triple.some(s=>typeof s!=='string'||!s.trim()))throw Error('Invalid authored relation at '+i);return {terms:triple.slice(0,2),result:triple[2]};});}
  function build(problem,route){
   const key=String(problem?.id||'')+'/'+String(route?.id||''),raw=route?.relationTriples||problem?.relationTriples||catalog[key]||catalog[problem?.id];

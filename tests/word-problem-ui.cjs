@@ -86,6 +86,7 @@ function fixture(autoRelations=true) {
  }
  function confirmFacts(){
   const problem=w.RatioWordProblemsData.find(p=>p.id===$('[data-wp-current-problem]').dataset.wpCurrentProblem);
+  if(problem.id==='TB-I20'){assert(!$('.wp-read-facts'));checkBox($('[data-wp-fare-band][value="extra"]'));assert($('.wp-read-facts'));}
   for(const [key,value]of Object.entries(w.RatioWordProblemReading.canonical(problem)))textInput('[data-wp-fact="'+key+'"]',value);
   host.querySelectorAll('[data-wp-seen]').forEach(checkBox);checkAndNext(0,'Read source facts');
  }

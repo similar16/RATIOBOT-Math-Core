@@ -12,7 +12,7 @@
   const seen=new Set();
   for(const r of records){
    const cat=categories.indexOf(catalog.categoryFor(r.problemId));
-   if(cat<0||r.status==='review'||r.problemId==='S04')continue;
+   if(cat<0||r.problemId==='S04')continue;
    stages.forEach((_,i)=>{
     const key=r.problemId+'/'+i, value=r.values?.['atlas:'+i];
     if(seen.has(key)||!['yes','no','help'].includes(value))return;
