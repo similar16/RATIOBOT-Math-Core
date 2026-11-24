@@ -4,7 +4,7 @@ const base=path.resolve(process.env.SITE_DIR||'site','word-problems'),D=require(
 const data=fs.readdirSync(base).filter(f=>/^data-.*\.js$/.test(f)).flatMap(f=>require(path.join(base,f)));
 const problem=id=>data.find(p=>p.id===id),model=(id,v=0)=>D.travelModel(problem(id),v),near=(a,b)=>assert(Math.abs(a-b)<1e-7,`${a} ≠ ${b}`);
 let routes=0;
-for(const p of data.filter(p=>C.categoryFor(p)?.id==='travel'))for(const r of p.routes){const m=D.travelModel(p);assert(m,p.id);assert(m.events.length>=2,p.id);assert(m.duration>0&&m.length>0);for(let i=0;i<=100;i++)for(const a of m.sample(i/100))assert(Number.isFinite(a.position),p.id);assert(D.travelMarkup(p,r).includes('<svg'));routes++;}
+for(const p of data.filter(p=>C.isMotionTask(p.id)))for(const r of p.routes){const m=D.travelModel(p);assert(m,p.id);assert(m.events.length>=2,p.id);assert(m.duration>0&&m.length>0);for(let i=0;i<=100;i++)for(const a of m.sample(i/100))assert(Number.isFinite(a.position),p.id);assert(D.travelMarkup(p,r).includes('<svg'));routes++;}
 // Both moving objects really share a position at every authored meeting event.
 for(const id of ['C21-09','TB-A29','PEP-P035','G10-09','G10-05','PEP-P062','L8-P2-Q1','L8-P2-Q4','S10','PEP-P039']){const m=model(id);for(const e of m.events.filter(e=>/两者相遇|两人相遇|追上小明|甲在途中追上/.test(e.label))){const a=m.sample(e.t/m.duration);near(a[0].position,a[1].position);}}
 // Arrival is clamped, rest consumes time with no displacement, reversal begins at the meeting point.
@@ -33,7 +33,7 @@ console.log('PASS travel motion: '+routes+' route models; meetings, waits, rever
 
 // Every result-mode route must pass the real expression checker first; ambiguous motion stays marked partial.
 globalThis.RatioWordProblemEngine=require(path.join(base,'engine.js'));
-for(const p of data.filter(p=>C.categoryFor(p)?.id==='travel'))for(const r of p.routes){const context={route:r,answersChecked:true,answerPassed:true,values:Object.fromEntries(r.answers.map((a,i)=>['a:'+i,a.expr]))};const m=D.travelModel(p,0,context);assert.equal(m.mode,['C21-05','PEP-P039'].includes(p.id)?'partial':'result',p.id+'/'+r.id);}
+for(const p of data.filter(p=>C.isMotionTask(p.id)))for(const r of p.routes){const context={route:r,answersChecked:true,answerPassed:true,values:Object.fromEntries(r.answers.map((a,i)=>['a:'+i,a.expr]))};const m=D.travelModel(p,0,context);assert.equal(m.mode,['C21-05','PEP-P039'].includes(p.id)?'partial':'result',p.id+'/'+r.id);}
 const v=problem('L8-P2-V1'),vr=v.routes[0];assert.equal(D.travelModel(v).sample(.5)[1].speed,'速度待求');assert.equal(D.travelModel(v,0,{route:vr,answersChecked:true,answerPassed:true,values:{'a:0':'30/2'}}).sample(.8)[1].speed,'15千米/小时');
 
 // Travelled distance counts both directions; station waits never lengthen a bar.
@@ -43,5 +43,5 @@ const reversal=model('C21-10');near(D.travelledDistance(reversal,1,1),1250);
 const red=D.traceCoverage(reversal,1,1);assert(red.some(p=>p.visits===4&&p.layers===3),'Fourth passage is capped at 3 visual layers');assert(red.some(p=>p.start===350&&p.layers===3),'Reversal adds a third visit to the previously twice-covered final section');assert(red.every(p=>p.layers<=3));
 const loop=new JSDOM(D.motionPicture(reversal,1));assert([...loop.window.document.querySelectorAll('[data-wp-travelled-arc]')].every(p=>p.getAttribute('stroke-opacity')==='0.3'&&Number(p.dataset.wpTraceLayer)<=3));loop.window.close();
 const beforeRest=D.traceCoverage(roundTrip,0,.4),duringRest=D.traceCoverage(roundTrip,0,.48);assert.deepEqual(beforeRest,duringRest);const returned=D.traceCoverage(roundTrip,0,1);assert(returned.every(p=>p.layers===2));
-for(const p of data.filter(p=>C.categoryFor(p)?.id==='travel')){const m=D.travelModel(p);for(let k=0;k<=25;k++)for(let i=0;i<m.actors.length;i++){const coverage=D.traceCoverage(m,i,k/25);const sum=coverage.reduce((s,v)=>s+(v.end-v.start)*v.visits,0);near(sum,D.travelledDistance(m,i,k/25));assert(coverage.every(v=>v.layers<=3));}}
+for(const p of data.filter(p=>C.isMotionTask(p.id))){const m=D.travelModel(p);for(let k=0;k<=25;k++)for(let i=0;i<m.actors.length;i++){const coverage=D.traceCoverage(m,i,k/25);const sum=coverage.reduce((s,v)=>s+(v.end-v.start)*v.visits,0);near(sum,D.travelledDistance(m,i,k/25));assert(coverage.every(v=>v.layers<=3));}}
 console.log('PASS repeated travel: 30% per layer, spatial overlap after reversal, 3-layer cap, unchanged rest, full distance retained, all travel models');

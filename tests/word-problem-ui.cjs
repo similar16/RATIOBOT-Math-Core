@@ -5,7 +5,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { JSDOM } = require('jsdom');
 const base = path.resolve(process.env.SITE_DIR || 'site', 'word-problems');
-const files = ['engine.js','math-input.js','progress.js','data-l7-l8.js','data-l9-review.js','data-textbook-intro.js','data-textbook-applications.js','data-textbook-review.js','data-pep-foundations.js','data-pep-applications.js','data-pep-review.js','data-chapter-2021.js','catalog.js','table-alternatives.js','table-equations.js','textbook-index.js','supplement-index.js','reading.js','relations.js','relation-builder.js','scratchpad.js','diagrams.js','app.js'];
+const files = ['engine.js','math-input.js','progress.js','data-l7-l8.js','data-l9-review.js','data-textbook-intro.js','data-textbook-applications.js','data-textbook-review.js','data-pep-foundations.js','data-pep-applications.js','data-pep-review.js','data-chapter-2021.js','catalog.js','table-alternatives.js','table-equations.js','textbook-index.js','supplement-index.js','reading.js','relations.js','relation-builder.js','scratchpad.js','diagrams.js','record-export.js','records.js','app.js'];
 const sources = files.map(file => ({ file, text:fs.readFileSync(path.join(base,file),'utf8') }));
 const clone = v => JSON.parse(JSON.stringify(v));
 const counts = { routes:0, sourceSteps:0, writableCells:0, equations:0, completed:0 };
@@ -186,10 +186,16 @@ const travelSchematic=fixture(),travelP=travelSchematic.w.RatioWordProblemsData.
 travelSchematic.app.start(travelP.id,true);assert(travelSchematic.$('.wp-stage [data-wp-travel-diagram]'));assert(!travelSchematic.$('.wp-context .wp-motion-reference,.wp-context .wp-observation,.wp-context [data-wp-source-figure]'));assert(travelSchematic.$('[data-motion-mode]').textContent.includes('可能的情形'));assert(!/文件名标注|PDF/.test(travelSchematic.$('.wp-citation').textContent));
 travelSchematic.confirmFacts();travelSchematic.checkAndNext(1,'Travel diagram setup');travelR.table.rows.forEach((row,i)=>row.cells.forEach((c,j)=>{if(!c.note&&!c.given)travelSchematic.setInput('t:'+i+':'+j,c.expr);}));travelSchematic.click('[data-wp-check]');travelSchematic.expectPassed(2,'Travel linked table');
 travelSchematic.$('[data-wp-travel-diagram]').open=false;travelSchematic.setInput('t:0:1','99999');assert(!travelSchematic.$('[data-wp-travel-diagram]').open);assert(!travelSchematic.$('[data-wp-travel-diagram]').textContent.includes('99999'));assert(travelSchematic.$('[data-wp-travel-diagram] .wp-travel-blank'));travelSchematic.close();
+const rec=fixture();rec.app.open();rec.click('[data-wp-records]');
+assert.equal(rec.host.querySelectorAll('.atlas td button').length,30);
+rec.click('.atlas tbody tr:nth-child(2) td:nth-child(3) button');
+assert(rec.$('.atlas-choice').textContent.includes('单价总价与销售盈亏'));
+rec.click('[data-record-pdf]');assert(rec.$('[data-pdf-preview]').disabled);
+rec.click('.atlas-choice button');assert(rec.$('[data-wp-current-problem]'));rec.close();
 const all=fixture();
 const data=all.w.RatioWordProblemsData;
 assert.equal(data.length,161);
-for(const problem of data)for(const route of problem.routes){all.canonicalRoute(problem,route);if(all.w.RatioWordProblemCatalog.categoryFor(problem)?.id==='travel'){assert(!all.$('.wp-context .wp-motion-reference,.wp-context .wp-observation,.wp-context [data-wp-source-figure]'));assert(all.$('[data-motion-results]'),problem.id+' has confirmed result replay after solving');assert.equal(all.$('[data-wp-travel-diagram]').dataset.motionMode,['C21-05','PEP-P039'].includes(problem.id)?'partial':'result');}if(counts.routes%10===0)await new Promise(resolve=>setImmediate(resolve));}
+for(const problem of data)for(const route of problem.routes){all.canonicalRoute(problem,route);if(all.w.RatioWordProblemCatalog.isMotionTask(problem.id)){assert(!all.$('.wp-context .wp-motion-reference,.wp-context .wp-observation,.wp-context [data-wp-source-figure]'));assert(all.$('[data-motion-results]'),problem.id+' has confirmed result replay after solving');assert.equal(all.$('[data-wp-travel-diagram]').dataset.motionMode,['C21-05','PEP-P039'].includes(problem.id)?'partial':'result');}if(counts.routes%10===0)await new Promise(resolve=>setImmediate(resolve));}
 assert.equal(counts.routes,data.reduce((sum,p)=>sum+p.routes.length,0));
 assert.equal(counts.completed,counts.routes);
 assert.equal(all.read().records.length,counts.routes);

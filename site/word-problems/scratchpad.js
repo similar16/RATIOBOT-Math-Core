@@ -186,5 +186,17 @@
   const observer=typeof win.ResizeObserver==='function'?new win.ResizeObserver(scheduleResize):null;observer?.observe(wrap);
   canvas.dataset.tool=mode;statusText();controls();resize();scheduleResize();return controller;
  }
- return {mount};
+ // A read-only image of the same saved page, used by practice-record exports.
+ async function exportImage(options={}){
+  const doc=options.document,win=doc?.defaultView,key=options.key;if(!win||typeof key!=='string'||!key)return null;
+  const e=entryFor(win,key);await e.ready;await e.chain.catch(()=>{});
+  const actions=e.state.strokes.slice(e.state.strokes.findLastIndex(a=>a.mode==='clear')+1),pens=actions.filter(a=>a.mode==='pen'&&a.points.length);if(!pens.length)return null;
+  const canvas=doc.createElement('canvas');canvas.width=WIDTH;canvas.height=HEIGHT;const ctx=canvas.getContext('2d');if(!ctx)return null;
+  let left=WIDTH,right=0,top=HEIGHT,bottom=0;
+  for(const action of actions){if(!action.points.length)continue;ctx.globalCompositeOperation=action.mode==='erase'?'destination-out':'source-over';ctx.strokeStyle='#352d35';ctx.lineCap='round';ctx.lineJoin='round';ctx.lineWidth=action.mode==='erase'?40:5;ctx.beginPath();ctx.moveTo(...action.points[0]);for(const point of action.points.slice(1))ctx.lineTo(...point);if(action.points.length===1)ctx.lineTo(action.points[0][0]+.01,action.points[0][1]+.01);ctx.stroke();if(action.mode==='pen')for(const [x,y]of action.points){left=Math.min(left,x);right=Math.max(right,x);top=Math.min(top,y);bottom=Math.max(bottom,y);}}
+  left=Math.max(0,Math.floor(left-24));top=Math.max(0,Math.floor(top-24));right=Math.min(WIDTH,Math.ceil(right+24));bottom=Math.min(HEIGHT,Math.ceil(bottom+24));
+  const crop=doc.createElement('canvas');crop.width=Math.max(1,right-left);crop.height=Math.max(1,bottom-top);const output=crop.getContext('2d');if(!output)return null;output.fillStyle='#fff';output.fillRect(0,0,crop.width,crop.height);output.drawImage(canvas,left,top,crop.width,crop.height,0,0,crop.width,crop.height);
+  return {dataUrl:crop.toDataURL('image/png'),width:crop.width,height:crop.height};
+ }
+ return {mount,exportImage};
 });

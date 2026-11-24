@@ -32,7 +32,7 @@ assert.equal(supplement.uniqueIds.length,27);assert.equal(supplement.excludedCou
 assert.equal(supplement.mergedUniqueCount,82);assert.equal(new Set(supplement.mergedUniqueIds).size,82);
 
 const rows=C.build(all,source,supplement);
-assert.equal(C.categories.length,13);assert.equal(rows.length,150);
+assert.equal(C.categories.length,6);assert.equal(rows.length,150);
 assert.equal(new Set(rows.map(r=>r.problem.id)).size,150,'One task card regardless of repeated source positions');
 assert.equal(C.select(rows,{book:'textbook'}).length,79);
 assert.equal(C.select(rows,{book:'guide'}).length,71);

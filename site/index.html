@@ -2967,6 +2967,12 @@ window.addEventListener('message',ev=>{const d=ev.data;if(!d||d.type!=='ratiobot
     isTeacher:wordProblemTeacher,
     progress:()=>wordProblemTeacher()?{}:currentProfile()?.economy?.modules?.wordProblems||{},
     go,
+    mergeRecords(incoming){
+      if(!cloudStudentReady()||wordProblemTeacher())throw Error('请登录学生账号。');
+      const p=currentProfile();
+      p.economy.modules.wordProblems=window.RatioWordProblemProgress.merge(p.economy.modules.wordProblems,incoming);
+      saveCurrentProfile(p);
+    },
     saveDraft(id,draft){
       if(wordProblemTeacher())return;
       if(!cloudStudentReady()||draft.problemId!==id)throw Error('请先登录当前学生账号。');
