@@ -235,7 +235,8 @@ assert(all.read().records.every(r=>r.first===r.total),'Canonical independent rou
 assert(all.read().records.every(r=>!Object.keys(r.values).some(k=>k.startsWith('r:'))),'All tasks complete without relationship-card answers');
 all.app.open();
 assert(all.host.querySelectorAll('.wp-problem-card.is-completed').length>0,'Completed tasks use a distinct card state');
-assert(all.host.querySelectorAll('.wp-problem-card.is-completed').length<all.host.querySelectorAll('.wp-problem-card').length,'Open discussions remain distinct from finished tasks');
+all.click('[data-wp-book="guide"]');
+assert(!all.$('[data-wp-problem="G10-04"]').classList.contains('is-completed'),'Boundary discussions remain distinct from graded tasks');
 // The progress layer must not create duplicate completions on replay/retry.
 const latest=all.read().records[0],latestProblem=data.find(p=>p.id===latest.problemId),latestRoute=latestProblem.routes.find(r=>r.id===latest.routeId);
 const duplicated=all.w.RatioWordProblemProgress.complete(all.read(),latest,latestProblem,latestRoute);
@@ -575,9 +576,9 @@ assert.equal(topics.$('[data-wp-filter="fees"]').getAttribute('aria-pressed'),'t
 topics.click('[data-wp-filter="integrated"]');topics.click('[data-wp-problem="PEP-P049"]');
 assert.equal(topics.host.querySelectorAll('.wp-source-table tbody tr').length,8,'All original basketball rows render');
 assert.match(topics.$('.wp-source-table').textContent,/前进|钢铁/);
-topics.app.start('PEP-P068',true);topics.confirmFacts();
-assert.match(topics.$('.wp-variable-definition').textContent,/已知参数/);
-assert.match(topics.$('.wp-context-title').textContent,/实验与参数建模/);
+topics.app.start('PEP-P068',true);
+assert.match(topics.$('.wp-context').textContent,/nx=l\/2/);
+assert.equal(topics.host.querySelectorAll('[data-wp-scene]').length,3);
 topics.app.start('S10',true);
 assert.match(topics.$('.wp-source-locations').textContent,/合并题目与出处/);
 assert.match(topics.host.textContent,/人教版，110页/);
