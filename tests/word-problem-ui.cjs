@@ -570,7 +570,7 @@ catalogs.click('.wp-stage-top [data-wp-restart]');catalogs.click('[data-wp-confi
 assert.equal(catalogs.read().drafts['G10-01'].sourceLocation,'I00','Reset retains this repeated question\'s printed source position');
 assert.match(catalogs.$('.wp-citation').textContent,/105页.*章引入/);
 catalogs.click('[data-wp-catalog]');catalogs.click('[data-wp-book="guide"]');
-assert.equal(catalogs.host.querySelectorAll('[data-wp-problem]').length,72,'Supplement lists the current tasks');
+assert.equal(catalogs.host.querySelectorAll('[data-wp-problem]').length,66,'Supplement lists the current tasks');
 assert(!catalogs.host.textContent.includes('教学设计与指导'),'The learner catalog uses the requested supplement name');
 const textbookIds=new Set(catalogs.w.RatioWordProblemTextbookIndex.items.map(x=>x.problemId));
 for(const button of catalogs.host.querySelectorAll('[data-wp-problem]'))assert(!textbookIds.has(button.dataset.wpProblem),'No duplicate textbook exercise in supplements');
@@ -578,7 +578,7 @@ catalogs.click('[data-wp-problem="L7-P2"]');
 assert.match(catalogs.$('.wp-citation').textContent,/补充练习/,'Supplement entry has the learner-facing source label');
 assert(!catalogs.host.textContent.includes('教学设计与指导'));
 const draftField=catalogs.$('[data-wp-fact]');catalogs.textInput('[data-wp-fact="'+draftField.dataset.wpFact+'"]','12');
-catalogs.click('[data-wp-back]');assert.equal(catalogs.host.querySelectorAll('[data-wp-problem]').length,72,'Back retains the current source catalog');
+catalogs.click('[data-wp-back]');assert.equal(catalogs.host.querySelectorAll('[data-wp-problem]').length,66,'Back retains the current source catalog');
 catalogs.click('[data-wp-problem="L7-P2"]');assert.equal(catalogs.$('[data-wp-fact="'+draftField.dataset.wpFact+'"]').value,'12','Back saves the current reading draft');
 catalogs.click('[data-wp-back]');catalogs.click('[data-wp-back]');assert.equal(catalogs.redirects.at(-1),'home');
 catalogs.close();
