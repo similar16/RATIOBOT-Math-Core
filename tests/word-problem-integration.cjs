@@ -182,7 +182,7 @@ function fixture(){
  assert(!completedHost.querySelector('.wp-answer-grid')&&!completedHost.querySelector('[data-wp-scratch-mount]'),'The final page only verifies the already confirmed answer');
  assert(!completedHost.querySelector('[data-wp-reflection]')&&!completedHost.querySelector('[data-wp-next]'));
  completedHost.querySelector('[data-wp-example]').click();
- assert(completedHost.querySelector('.wp-verification'));assert.equal(completedHost.querySelector('[data-wp-check]').textContent,'检验并保存');
+ assert(completedHost.querySelector('.wp-verification'));assert.equal(completedHost.querySelector('[data-wp-check]').textContent,'核对并保存答案');
  completedHost.querySelector('[data-wp-check]').click();assert(completedHost.querySelector('.wp-completion'));
  const completedProgress=completed.t.currentProfile().economy.modules.wordProblems;
  assert.equal(completedProgress.records.length,1);assert.equal(completedProgress.records[0].step,6);
