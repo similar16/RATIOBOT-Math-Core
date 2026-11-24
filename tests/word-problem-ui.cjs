@@ -892,7 +892,7 @@ assert(sequenceMethods.$('.wp-fact-line sup'),'The term in the cloze condition a
 sequenceMethods.confirmFacts();
 sequenceMethods.setInput('d:ratio','-6/2');
 for(const id of ['sequence','law'])sequenceMethods.checkBox(sequenceMethods.$('[data-wp-derived-source="ratio"][value="'+id+'"]'));
-sequenceMethods.click('[data-wp-check-derived="ratio"]');assert(!sequenceMethods.$('[data-wp-derivation="ratio"] .wp-success-tag'),'Unexplained numbers remain blocked');
+sequenceMethods.click('[data-wp-check-derived="ratio"]');assert(sequenceMethods.$('[data-wp-derivation="ratio"] .wp-success-tag'),'An equivalent negative quotient is accepted with the selected basis');
 // A pupil may type another supported quotient without first switching its radio button.
 confirmSequenceDerivation(sequenceRoute.derivations[0],sequenceRoute.derivations[0].methods[1]);
 confirmSequenceDerivation(sequenceRoute.derivations[1],sequenceRoute.derivations[1].methods[0]);
