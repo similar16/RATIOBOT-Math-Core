@@ -431,8 +431,8 @@ function openBoard(){
  #lesson-board .board-extra[open]{display:flex;flex-wrap:wrap;gap:6px}
  </style><header><button data-hold>长按展示本份</button><select aria-label="选择题目"></select><button data-project>独立投屏</button><button data-close>返回课堂</button></header><article></article>
  <nav><button data-color="#20242a">● 黑笔</button><button data-color="#b73139">● 红笔</button><button data-color="#245db1">● 蓝笔</button>
- <select data-tool aria-label="书写工具"><option>细笔</option><option>直线</option><option>虚线</option><option value="圆规">圆</option><option>刻度尺</option><option>表格</option></select>
- <button data-erase aria-pressed="false">橡皮</button><button data-ruler aria-pressed="false">尺子</button><button data-undo>↶ 撤销</button><button data-options aria-expanded="false">更多</button></nav><aside class="board-extra" hidden><select data-paper aria-label="纸张"><option value="grid">方格纸</option><option value="lined">横线纸</option><option value="plain">白纸</option></select>
+ <select data-tool aria-label="书写工具"><option>细笔</option><option>荧光笔</option><option>直线</option><option>虚线</option><option value="圆规">圆</option><option>刻度尺</option><option>表格</option></select>
+ <button data-erase aria-pressed="false">橡皮</button><button data-ruler aria-pressed="false">尺子</button><button data-undo>↶ 撤销</button><button data-options aria-expanded="false">更多</button></nav><aside class="board-extra" hidden><label>笔宽 <select data-width><option value="1">标准</option><option value=".65">细</option><option value="1.6">粗</option></select></label><select data-paper aria-label="纸张"><option value="grid">方格纸</option><option value="lined">横线纸</option><option value="plain">白纸</option></select>
  <button data-up>上移纸面</button><button data-down>下移纸面</button><button data-more>向下续纸</button><select data-record aria-label="答题记录"></select><button data-add>＋答题记录</button></aside>
  <div class="sheet"><svg xmlns="http://www.w3.org/2000/svg" aria-label="手写答题纸"></svg></div>`;
  document.body.append(dlg);
@@ -460,11 +460,12 @@ function openBoard(){
  function eraseAt(p){
  const start=lastErase||p,steps=Math.max(1,Math.ceil(Math.hypot(p[0]-start[0],p[1]-start[1])/5));lastErase=p;
  const nodes=Array.from(svg.children).filter(el=>el!==guide);
- for(let i=nodes.length-1;i>=0;i--){const el=nodes[i];el.setAttribute('stroke-width','15');let hit=false;
+ for(let i=nodes.length-1;i>=0;i--){const el=nodes[i],original=el.getAttribute('stroke-width');el.setAttribute('stroke-width',Math.max(15,Number(original)));let hit=false;
  for(let j=1;j<=steps&&!hit;j++)hit=el.isPointInStroke(new DOMPoint(start[0]+(p[0]-start[0])*j/steps,start[1]+(p[1]-start[1])*j/steps));
- el.setAttribute('stroke-width','1.6');if(hit){record().marks.splice(i,1);el.remove()}}
+ el.setAttribute('stroke-width',original);if(hit){record().marks.splice(i,1);el.remove()}}
  }
- function onEdge(p){const rad=ruler.angle*Math.PI/180,c=Math.cos(rad),v=Math.sin(rad),dx=p[0]-ruler.x,dy=p[1]-ruler.y,t=dx*c+dy*v;return {distance:Math.abs(-dx*v+dy*c),t,point:[ruler.x+t*c,ruler.y+t*v]}}
+ let edgeOffset=0;
+ function onEdge(p,locked=false){const rad=ruler.angle*Math.PI/180,c=Math.cos(rad),v=Math.sin(rad),dx=p[0]-ruler.x,dy=p[1]-ruler.y,t=dx*c+dy*v;const normal=-dx*v+dy*c,offset=locked?edgeOffset:(normal>16?32:0);return {offset,distance:Math.abs(normal-offset),t,point:[ruler.x+t*c-offset*v,ruler.y+t*v+offset*c]}}
 
  function persist(){try{localStorage.setItem(key,JSON.stringify(records))}catch{hold.textContent='存储空间不足 · 当前记录仅本页保留'}}
  function chooseColor(b){setErase(false);color=b.dataset.color;dlg.querySelectorAll('[data-color]').forEach(x=>{x.style.color=x.dataset.color;x.setAttribute('aria-pressed',String(x===b))})}
@@ -474,12 +475,12 @@ function openBoard(){
  const [x,y]=m.points[0],[a,b]=m.points.at(-1),dx=a-x,dy=b-y,len=Math.hypot(dx,dy);
  const line=(x,y,a,b)=>'M'+x+' '+y+'L'+a+' '+b;
  let path=line(x,y,a,b);
- if(m.tool==='细笔')path='M'+m.points.map(p=>p.join(' ')).join(' L')+' l0.01 0';
+ if(['细笔','荧光笔'].includes(m.tool))path='M'+m.points.map(p=>p.join(' ')).join(' L')+' l0.01 0';
  if(m.tool==='表格'){path='';for(let i=0;i<=3;i++)path+=line(x+dx*i/3,y,x+dx*i/3,b)+line(x,y+dy*i/3,a,y+dy*i/3)}
  if(m.tool==='刻度尺'&&len){for(let t=0;t<=len;t+=10){const u=x+dx*t/len,v=y+dy*t/len,h=t%50?4:8;path+=line(u,v,u-dy*h/len,v+dx*h/len)}}
  const el=m.tool==='圆规'?node('circle',{cx:x,cy:y,r:len}):node('path',{d:path});
  if(m.tool==='虚线')el.setAttribute('stroke-dasharray','7 5');
- el.setAttribute('stroke',m.color);el.setAttribute('stroke-width','1.6');el.setAttribute('stroke-linecap','round');el.setAttribute('stroke-linejoin','round');el.setAttribute('fill','none');return el
+ if(m.tool==='荧光笔')el.setAttribute('opacity','.32');el.setAttribute('stroke',m.color);el.setAttribute('stroke-width',m.width||1.6);el.setAttribute('stroke-linecap','round');el.setAttribute('stroke-linejoin','round');el.setAttribute('fill','none');return el
  }
  function render(){const r=record();svg.replaceChildren(...r.marks.map(mark));svg.setAttribute('viewBox','0 0 '+width+' '+r.height);svg.style.aspectRatio=width+'/'+r.height;svg.className.baseVal=r.paper;paperSelect.value=r.paper;
  rec.replaceChildren(...records.map((_,i)=>new Option('作答 '+(i+1),i)));rec.value=index;setGuide()}
@@ -505,13 +506,13 @@ function openBoard(){
  function move(e){if(e.pointerId!==active)return;let p=point(e);
  if(gesture==='erase'){eraseAt(p);return}
  if(gesture==='move'||gesture==='turn'){if(gesture==='turn')ruler.angle=Math.atan2(p[1]-ruler.y,p[0]-ruler.x)*180/Math.PI-before.offset;else{ruler.x=p[0]-before.x;ruler.y=p[1]-before.y}setGuide();return}
- if(gesture==='edge')p=onEdge(p).point;
- if(stroke.tool==='细笔')stroke.points.push(p);else stroke.points[1]=p;svg.lastChild.replaceWith(mark(stroke))}
+ if(gesture==='edge')p=onEdge(p,true).point;
+ if(gesture!=='edge'&&['细笔','荧光笔'].includes(stroke.tool))stroke.points.push(p);else stroke.points[1]=p;svg.lastChild.replaceWith(mark(stroke))}
  svg.onpointerdown=e=>{if(shown||active!==null||e.button!==0)return;e.preventDefault();box=svg.getBoundingClientRect();active=e.pointerId;svg.setPointerCapture(active);const p=point(e);gesture='draw';before=record().marks.slice();
  if(erasing){gesture='erase';lastErase=null;eraseAt(p);return}
  if(guide?.contains(e.target)){gesture=e.target.hasAttribute('data-turn')?'turn':'move';before={x:p[0]-ruler.x,y:p[1]-ruler.y,offset:Math.atan2(p[1]-ruler.y,p[0]-ruler.x)*180/Math.PI-ruler.angle};return}
- const edge=ruler&&onEdge(p);if(edge&&edge.distance<=15&&Math.abs(edge.t)<=133&&['细笔','直线','虚线'].includes(tool.value))gesture='edge';
- stroke={tool:gesture==='edge'&&tool.value==='细笔'?'直线':tool.value,color,points:[gesture==='edge'?edge.point:p]};svg.append(mark(stroke))};
+ const edge=ruler&&onEdge(p);if(edge&&edge.distance<=15&&Math.abs(edge.t)<=133&&['细笔','荧光笔','直线','虚线'].includes(tool.value)){gesture='edge';edgeOffset=edge.offset}
+ stroke={tool:gesture==='edge'&&tool.value==='细笔'?'直线':tool.value,color:tool.value==='荧光笔'&&color==='#20242a'?'#efbd31':color,width:(tool.value==='荧光笔'?18:1.6)*Number(get('[data-width]').value),points:[gesture==='edge'?edge.point:p]};svg.append(mark(stroke))};
  svg.onpointermove=move;svg.onpointerup=e=>{if(e.pointerId!==active)return;move(e);if(gesture==='draw'||gesture==='edge'){remember(before);record().marks.push(stroke)}else if(gesture==='erase'&&record().marks.length!==before.length)remember(before);active=null;persist()};
  svg.onpointercancel=svg.onlostpointercapture=e=>{if(e.pointerId===active){if(gesture==='erase')record().marks=before;active=null;render()}};
  function project(){
