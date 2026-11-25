@@ -21,6 +21,15 @@ function inlineControls(v){return esc(v).replace(/\[(ANS|OPT|PROOF):([A-Za-z0-9_
   return opening?opening+space+array:space+'\\['+array+'\\]';
  });
 }
+function nativeTables(source, tables){
+ return source.replace(/\\begin\{tabular\}\s*(?:\[[tbc]\]\s*)?\{([clr|\s]+)\}([\s\S]*?)\\end\{tabular\}/g,(_,spec,body)=>{
+  const align={c:'center',l:'left',r:'right'};
+  const columns=spec.replace(/[|\s]/g,'');
+  const rows=body.replace(/\\(?:hline|toprule|midrule|bottomrule)\b/g,'').trim().split(/\\\\(?:\[[^\]]*\])?/).filter(row=>row.trim());
+  const html=rows.map(row=>'<tr>'+row.split(/(?<!\\)&/).map((cell,j)=>'<td style="text-align:'+ (align[columns[j]]||'left') +'">'+inlineControls(cell.trim().replace(/\\&/g,'&'))+'</td>').join('')+'</tr>').join('');
+  return '\n[NATIVETABLE:'+ (tables.push('<div class="qb-table-scroll"><table class="qb-table"><tbody>'+html+'</tbody></table></div>')-1) +']\n';
+ });
+}
 function content(value,imageList=[]){
  const tikzBlocks=[];
  const markTikz=code=>{const index=tikzBlocks.push(code)-1;return '\n[TIKZ:'+index+']\n';};
@@ -28,8 +37,9 @@ function content(value,imageList=[]){
  const normalized=String(value||'')
    .replace(/```(?:tikz|tikzjax)\s*\r?\n([\s\S]*?)\r?\n```/gi,(_,code)=>markTikz(code))
    .replace(/\\begin\s*\{tikzpicture\}[\s\S]*?\\end\s*\{tikzpicture\}/g,code=>markTikz(code));
- const lines=latexTables(normalized).split('\n'),out=[];let text=[],tableRowHeight=42,tableColWidth=90;const flush=()=>{if(text.length){out.push('<div class="qb-text">'+inlineControls(text.join('\n'))+'</div>');text=[];}};const cells=line=>line.trim().replace(/^\|/,'').replace(/\|$/,'').split(/(?<!\\)\|/).map(x=>x.trim().replace(/\\\|/g,'|'));
- for(let i=0;i<lines.length;i++){const line=lines[i],tz=line.trim().match(/^\[TIKZ:(\d+)\]$/i),g=line.trim().match(/^\[GGB:([A-Za-z0-9]{5,32})\]$/i),im=line.trim().match(/^\[IMG:(\d+)(?:@(\d{1,3}))?\]$/i),ts=line.trim().match(/^\[TABLE:(\d+),(\d+)\]$/i);if(ts){tableRowHeight=Math.max(30,Math.min(90,Number(ts[1])||42));tableColWidth=Math.max(60,Math.min(220,Number(ts[2])||90));continue;}if(tz){flush();const source=tikzBlocks[Number(tz[1])];if(source)out.push('<figure class="qb-tikz" aria-label="TikZ 数学绘图"><pre class="language-tikz">'+esc(source)+'</pre></figure>');continue;}if(g){flush();out.push(`<div class="qb-ggb" data-ggb="${g[1]}"><button type="button" class="ghost">打开交互图形</button><a href="https://www.geogebra.org/m/${g[1]}" target="_blank" rel="noopener noreferrer">在 GeoGebra 中打开 ↗</a><p class="qb-note">图形操作用于探索，请在作答区另行提交结论；加载需要网络。</p></div>`);continue;}
+ const tables=[];
+ const lines=latexTables(nativeTables(normalized,tables)).split('\n'),out=[];let text=[],tableRowHeight=42,tableColWidth=90;const flush=()=>{if(text.length){out.push('<div class="qb-text">'+inlineControls(text.join('\n'))+'</div>');text=[];}};const cells=line=>line.trim().replace(/^\|/,'').replace(/\|$/,'').split(/(?<!\\)\|/).map(x=>x.trim().replace(/\\\|/g,'|'));
+ for(let i=0;i<lines.length;i++){const line=lines[i],tz=line.trim().match(/^\[TIKZ:(\d+)\]$/i),g=line.trim().match(/^\[GGB:([A-Za-z0-9]{5,32})\]$/i),im=line.trim().match(/^\[IMG:(\d+)(?:@(\d{1,3}))?\]$/i),ts=line.trim().match(/^\[TABLE:(\d+),(\d+)\]$/i);const nt=line.trim().match(/^\[NATIVETABLE:(\d+)\]$/);if(nt && tables[nt[1]]){flush();out.push(tables[nt[1]]);continue;}if(ts){tableRowHeight=Math.max(30,Math.min(90,Number(ts[1])||42));tableColWidth=Math.max(60,Math.min(220,Number(ts[2])||90));continue;}if(tz){flush();const source=tikzBlocks[Number(tz[1])];if(source)out.push('<figure class="qb-tikz" aria-label="TikZ 数学绘图"><pre class="language-tikz">'+esc(source)+'</pre></figure>');continue;}if(g){flush();out.push(`<div class="qb-ggb" data-ggb="${g[1]}"><button type="button" class="ghost">打开交互图形</button><a href="https://www.geogebra.org/m/${g[1]}" target="_blank" rel="noopener noreferrer">在 GeoGebra 中打开 ↗</a><p class="qb-note">图形操作用于探索，请在作答区另行提交结论；加载需要网络。</p></div>`);continue;}
  if(im){flush();const src=Array.isArray(imageList)?imageList[Number(im[1])-1]:null,w=imageWidth(im[2]);if(safeImage(src))out.push(`<figure class="qb-inline-image" style="--qb-image-w:${w}%">${images([src])}</figure>`);else out.push(`<div class="qb-note">配图 ${esc(im[1])} 未找到</div>`);continue;}
  if(line.trim().startsWith('|')&&i+1<lines.length&&cells(lines[i+1]).every(x=>/^:?-{3,}:?$/.test(x))){flush();const head=cells(line),rows=[];i+=2;while(i<lines.length&&lines[i].trim().startsWith('|')){rows.push(cells(lines[i]));i++;}i--;const rh=tableRowHeight,cw=tableColWidth;out.push('<div class="qb-table-scroll qb-sized-table" style="--qb-row-h:'+rh+'px;--qb-col-w:'+cw+'px"><table class="qb-table"><thead><tr>'+head.map(x=>'<th scope="col">'+inlineControls(x)+'</th>').join('')+'</tr></thead><tbody>'+rows.map(row=>'<tr>'+head.map((_,j)=>'<td>'+inlineControls(row[j]||'')+'</td>').join('')+'</tr>').join('')+'</tbody></table></div>');tableRowHeight=42;tableColWidth=90;continue;}
  text.push(line);
