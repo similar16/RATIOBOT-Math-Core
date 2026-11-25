@@ -426,7 +426,7 @@ function openBoard(){
  #lesson-board [data-hold]{touch-action:none;user-select:none;background:var(--yellow)}
  </style><header><button data-hold>长按展示本份</button><select aria-label="选择题目"></select><button data-project>独立投屏</button><button data-close>返回课堂</button></header><article></article>
  <nav><button data-color="#20242a">● 黑笔</button><button data-color="#b73139">● 红笔</button><button data-color="#245db1">● 蓝笔</button>
- <select data-tool aria-label="书写工具"><option>细笔</option><option>直线</option><option>刻度尺</option><option>圆规</option><option>表格</option></select>
+ <select data-tool aria-label="书写工具"><option>细笔</option><option>直线</option><option>虚线</option><option value="圆规">圆</option><option>刻度尺</option><option>表格</option></select>
  <select data-paper aria-label="纸张"><option value="grid">方格纸</option><option value="lined">横线纸</option><option value="plain">白纸</option></select>
  <button data-undo>撤销</button><button data-up>上移纸面</button><button data-down>下移纸面</button><button data-more>向下续纸</button><select data-record aria-label="答题记录"></select><button data-add>＋答题记录</button></nav>
  <div class="sheet"><svg xmlns="http://www.w3.org/2000/svg" aria-label="手写答题纸"></svg></div>`;
@@ -448,6 +448,7 @@ function openBoard(){
  if(m.tool==='表格'){path='';for(let i=0;i<=3;i++)path+=line(x+dx*i/3,y,x+dx*i/3,b)+line(x,y+dy*i/3,a,y+dy*i/3)}
  if(m.tool==='刻度尺'&&len){for(let t=0;t<=len;t+=10){const u=x+dx*t/len,v=y+dy*t/len,h=t%50?4:8;path+=line(u,v,u-dy*h/len,v+dx*h/len)}}
  const el=m.tool==='圆规'?node('circle',{cx:x,cy:y,r:len}):node('path',{d:path});
+ if(m.tool==='虚线')el.setAttribute('stroke-dasharray','7 5');
  el.setAttribute('stroke',m.color);el.setAttribute('stroke-width','1.6');el.setAttribute('stroke-linecap','round');el.setAttribute('stroke-linejoin','round');el.setAttribute('fill','none');return el
  }
  function render(){const r=record();svg.replaceChildren(...r.marks.map(mark));svg.setAttribute('viewBox','0 0 '+width+' '+r.height);svg.style.aspectRatio=width+'/'+r.height;svg.className.baseVal=r.paper;paperSelect.value=r.paper;
