@@ -84,22 +84,26 @@ function branchTabs(sections){
  }).join('')+'</nav>';
 }
 function note(text,bad){const el=$('#msg');if(el){el.textContent=text;el.style.color=bad?'#b45046':'#537866';}else console.log(text);}
+function mapRecallBlanks(text,format){
+ // Preserve delimited math and complete table environments during oral cloze review.
+ return text.replace(/\\begin\{(tabular|array)\}[\s\S]*?\\end\{\1\}|\$\$[\s\S]*?\$\$|\\\[[\s\S]*?\\\]|\\\([\s\S]*?\\\)|(?<!\\)\$(?:\\.|[^$\n])+\$|\{([^{}]+)\}/g,(match,env,answer)=>answer===undefined?match:format(answer));
+}
 function recallTemplate(p){
  if(p?.branch!=='recall')return '';
  const text=String(p?.body||'');
  // The teacher may mark additional oral blanks manually with {关键词}.
- if(/\{[^{}]+\}/.test(text))return text;
+ if(mapRecallBlanks(text,()=> '')!==text)return text;
  const bank=(window.KnowledgeReview?.bank||[]).find(x=>x.id===p.knowledgeId);
  const original=String(p.clozeTemplate||bank?.text||'');
  // Never overwrite an edited definition with text from the knowledge bank.
- if(original&&original.replace(/\{([^{}]+)\}/g,'$1').trim()===text.trim())return original;
+ if(original&&mapRecallBlanks(original,answer=>answer).trim()===text.trim())return original;
  return '';
 }
 function recallDisplayText(p,showAnswer=false){
  const raw=recallTemplate(p);
  if(!raw)return String(p?.body||'');
- if(showAnswer)return raw.replace(/\{([^{}]+)\}/g,'$1');
- return raw.replace(/\{([^{}]+)\}/g,(_,answer)=>'＿'.repeat(Math.min(9,Math.max(3,Math.ceil(Array.from(answer).length*0.8)))));
+ if(showAnswer)return mapRecallBlanks(raw,answer=>answer);
+ return mapRecallBlanks(raw,answer=>'＿'.repeat(Math.min(9,Math.max(3,Math.ceil(Array.from(answer).length*0.8)))));
 }
 function classroomMathSize(source){
  // Classroom projection only: keep the teacher's mathematical source unchanged.
