@@ -5,14 +5,13 @@
   const setCount = 50;
   const questionCount = 5;
   const topics = [
-    { id: 'one-step', code: 'D1', name: '一步解方程', pages: '4.2 · 第113—115页', goal: '一步求解：移项或把系数化为1。' },
-    { id: 'two-step', code: 'D2', name: '两步解方程', pages: '4.2 · 第113—115页', goal: '先移项并整理，再把系数化为1。' },
-    { id: 'move', code: 'D3', name: '移项', pages: '4.2 · 第114—115页', goal: '把含未知数的项和常数项分开，留意移项变号。' },
-    { id: 'expand', code: 'D4', name: '去括号', pages: '4.2 · 第116—117页', goal: '从单侧括号到两侧括号，练习负因数的分配。' },
-    { id: 'clear', code: 'D5', name: '去分母', pages: '4.2 · 第117—120页', goal: '等式两边的每一项都乘同一个数，包括整数项。' },
-    { id: 'mixed', code: 'D6', name: '混合训练', pages: '4.2 · 第118—120页', goal: '独立判断从哪一步开始，完成整道题。' },
+    { id: 'clear', code: 'D1', name: '去分母', pages: '4.2 · 解一元一次方程', goal: '写出去分母后的方程。' },
+    { id: 'expand', code: 'D2', name: '去括号', pages: '4.2 · 解一元一次方程', goal: '写出去括号后的方程。' },
+    { id: 'move', code: 'D3', name: '移项', pages: '4.2 · 解一元一次方程', goal: '写出移项后的方程。' },
+    { id: 'combine', code: 'D4', name: '合并同类项', pages: '4.2 · 解一元一次方程', goal: '写出合并同类项后的方程。' },
+    { id: 'unit', code: 'D5', name: '系数化为一', pages: '4.2 · 解一元一次方程', goal: '写出系数化为一后的方程。' },
+    { id: 'mixed', code: 'D6', name: '混合练习', pages: '4.2 · 解一元一次方程', goal: '按顺序完成五步变形。' },
   ];
-
   function gcd(a, b) {
     a = a < 0n ? -a : a;
     b = b < 0n ? -b : b;
@@ -227,267 +226,32 @@
     };
   }
 
-  function makeQuestion(topic, index, rng) {
-    const pick = options => options[Math.floor(rng() * options.length)];
-    const signed = [-5, -4, -3, -2, 2, 3, 4, 5];
-    const nonzero = [-5, -4, -3, -2, -1, 1, 2, 3, 4, 5];
-    const small = [-4, -3, -2, -1, 0, 1, 2, 3, 4];
-    const variable = rng() < .82 ? 'x' : 'y';
-    const solution = pick(small);
-    const coefficient = pick(signed);
-    const constant = pick(nonzero);
-
-    if (topic === 'simple') {
-      if (index === 0) return question([[plain(coefficient, 0)], [plain(0, coefficient * solution)]], variable, 'answer');
-      if (index === 2) {
-        const right = constant + pick(nonzero.filter(n => n % coefficient !== 0));
-        return question([[plain(coefficient, constant)], [plain(0, right)]], variable, 'isolate');
-      }
-      if (index === 3 || index === 4) {
-        const isDecimal = index === 3;
-        const a = rational(isDecimal ? coefficient : pick(signed.filter(n => n % 3 !== 0)), isDecimal ? 10 : 3);
-        const b = isDecimal ? rational(constant, 10) : zero;
-        const right = add(times(a, rational(solution)), b);
-        return question([[plain(a, b, isDecimal)], [plain(0, right, isDecimal)]], variable, b.n ? 'isolate' : 'answer');
-      }
-      return question([[plain(coefficient, constant)], [plain(0, coefficient * solution + constant)]], variable, 'isolate');
-    }
-
-    if (topic === 'move') {
-      const a = pick(nonzero.filter(n => n !== -coefficient && Math.abs(n + coefficient) < 8));
-      const right = constant + coefficient * solution + (index === 4 ? 1 : 0);
-      const split = index === 3 ? pick(signed.filter(n => n !== a + coefficient)) : 0;
-      return question([
-        [plain(a + coefficient - split, constant), plain(split, 0)],
-        [plain(a, right)],
-      ], variable, 'move');
-    }
-
-    if (topic === 'expand') {
-      const factor = index === 0 ? -Math.abs(coefficient) : coefficient;
-      const leftGroup = bracket(factor, 1, constant);
-      const rightFactor = index >= 2 ? pick(signed.filter(n => n !== factor)) : 1;
-      const rightConstant = (factor - rightFactor) * solution + factor * constant;
-      const left = [leftGroup];
-      if (index === 0) left.unshift(plain(0, 2));
-      const right = index >= 2
-        ? [bracket(rightFactor, 1, pick(nonzero))]
-        : [plain(rightFactor, rightConstant + (index === 0 ? 2 : 0))];
-      if (index >= 2) right.push(plain(0, rightConstant - Number(fullSide(right).b.n)));
-      return question([left, right], variable, 'expand');
-    }
-
-    if (topic === 'clear') {
-      if (index === 4) {
-        const sign = pick([-1, 1]);
-        return question([
-          [fraction(1, rational(4, 10), 1, rational(constant, 10), 1)],
-          [fraction(sign, rational(5, 10), 1, rational(pick(nonzero), 10), 1), plain(0, pick(nonzero))],
-        ], variable, 'clear');
-      }
-      const [d1, d2] = pick(index < 2 ? [[2, 3], [3, 4]] : [[2, 3], [2, 5], [3, 4], [4, 6]]);
-      const a = pick([1, 2, 3].filter(n => n % d2 !== 0));
-      const sign = index % 2 ? -1 : 1;
-      const first = fraction(1, d1, 1, constant);
-      const second = fraction(sign, d2, a, pick(nonzero.filter(n => gcd(BigInt(a), gcd(BigInt(n), BigInt(d2))) === 1n)));
-      return question(index % 2
-        ? [[plain(0, pick(nonzero)), first], [second]]
-        : [[first], [second, plain(0, pick(nonzero))]], variable, 'clear');
-    }
-    throw Error('未知训练类型。');
-  }
-
-  function makeSet(topic, rng) {
-    const seen = new Set();
-    const order = topic === 'mixed' ? ['simple', 'move', 'expand', 'clear', 'clear'] : Array(questionCount).fill(topic);
-    if (topic === 'mixed') {
-      for (let i = order.length - 1; i > 0; i--) {
-        const j = Math.floor(rng() * (i + 1));
-        [order[i], order[j]] = [order[j], order[i]];
-      }
-    }
-    let clearCount = 0;
-    return order.map((kind, index) => {
-      const variant = topic !== 'mixed' ? index
-        : kind === 'clear' ? (clearCount++ ? 4 : 2) : 2 + Math.floor(rng() * 3);
-      for (let attempt = 0; attempt < 500; attempt++) {
-        const q = makeQuestion(kind, variant, rng);
-        if (!q) continue;
-        if (abs(q.answer).n > 24n * q.answer.d || q.answer.d > 24n || seen.has(q.tex)) continue;
-        seen.add(q.tex);
-        return q;
-      }
-      throw Error('题库生成失败，请刷新后重试。');
-    });
-  }
-
-  // Each row is a fixed set. Entries are [variable, numerator, denominator, left constant,
-  // right constant, right coefficient (optional), constant first on the right (optional)].
-  const basicSets = {
-    D1: [
-      [["x",1,1,4,-7],["x",3,1,0,12],["m",1,1,-5,1],["t",1,3,0,-2],["a",-2,1,0,10]],
-      [["x",4,1,0,-12],["x",1,1,-6,-8],["a",1,1,7,3],["m",-3,1,0,-15],["t",1,1,-2,7]],
-      [["x",1,1,8,2],["a",-1,4,0,2],["m",5,1,0,-10],["t",1,1,-4,-1],["y",-4,1,0,-8]],
-      [["x",1,1,-3,-8],["x",2,1,0,14],["m",1,1,6,0],["t",1,2,0,4],["a",1,1,-7,-3]],
-      [["x",-6,1,0,24],["m",2,1,0,12],["t",1,4,0,1],["x",1,1,8,3],["y",1,1,-2,-1]],
-      [["x",5,1,0,5],["m",1,1,8,4],["x",1,1,-4,-2],["a",1,1,-4,-11],["a",5,1,0,15]],
-      [["t",1,1,2,-3],["x",3,1,0,24],["x",1,1,8,-2],["x",4,1,0,20],["y",-3,1,0,24]],
-      [["y",4,1,0,-4],["m",3,1,0,6],["a",1,1,3,4],["x",1,1,-1,4],["a",1,1,5,1]],
-      [["a",6,1,0,-18],["a",1,1,3,6],["m",1,3,0,-3],["x",1,1,6,12],["x",2,1,0,16]],
-      [["y",1,1,-9,-1],["m",1,3,0,2],["y",1,5,0,1],["x",1,1,4,3],["m",1,1,1,1]],
-      [["a",1,1,-2,5],["t",1,1,5,6],["a",-5,1,0,5],["m",-1,5,0,1],["a",-5,1,0,-20]],
-      [["t",1,1,2,4],["t",1,5,0,2],["a",1,1,2,-2],["x",1,1,-10,-1],["y",1,2,0,-1]],
-      [["y",-2,1,0,14],["x",-5,1,0,-5],["t",1,1,1,3],["x",1,1,-3,5],["x",3,1,0,-24]],
-      [["x",1,1,8,0],["x",1,1,2,-1],["m",2,1,0,8],["a",-1,2,0,-1],["m",1,1,-2,-11]],
-      [["x",1,1,-3,-1],["m",1,1,-8,-11],["y",2,1,0,-16],["y",4,1,0,-8],["t",-1,5,0,-2]],
-      [["x",-6,1,0,-18],["a",1,1,10,-1],["x",1,1,-3,-5],["y",1,1,-2,6],["m",-2,1,0,-10]],
-      [["m",-3,1,0,9],["t",-2,1,0,-8],["y",1,1,6,2],["x",1,1,4,-4],["a",-1,3,0,-1]],
-      [["x",3,1,0,9],["m",1,1,-1,1],["t",1,1,-6,-2],["a",1,1,10,2],["x",4,1,0,24]],
-      [["m",-7,1,0,14],["m",1,1,-2,-9],["x",-4,1,0,-4],["m",2,1,0,-2],["x",1,1,8,10]],
-      [["y",1,1,7,-2],["x",1,1,4,-3],["x",1,2,0,2],["x",-1,2,0,2],["x",1,1,-6,3]],
-      [["m",1,1,9,7],["m",4,1,0,16],["x",-3,1,0,3],["x",7,1,0,7],["x",1,1,-6,-3]],
-      [["a",1,1,2,12],["a",1,1,-3,-11],["m",1,1,-1,3],["t",-4,1,0,24],["x",-4,1,0,-24]],
-      [["x",-1,2,0,-2],["t",1,1,9,-1],["x",3,1,0,-15],["y",1,1,-7,1],["y",-3,1,0,12]],
-      [["x",1,1,-1,-5],["m",-1,4,0,-2],["x",1,1,2,-9],["m",1,1,2,2],["x",-2,1,0,2]],
-      [["t",1,1,1,-4],["x",-6,1,0,-12],["m",1,1,-3,-12],["t",7,1,0,-21],["a",-3,1,0,21]],
-      [["x",1,1,8,1],["x",1,1,-6,-10],["a",3,1,0,-3],["x",-2,1,0,-12],["x",1,1,-3,0]],
-      [["y",-6,1,0,-24],["x",-6,1,0,18],["x",1,1,-4,7],["a",1,1,-1,-3],["x",4,1,0,-24]],
-      [["y",1,1,-9,0],["a",1,1,-8,-3],["t",7,1,0,-14],["t",3,1,0,-9],["x",1,1,3,-4]],
-      [["a",1,1,1,2],["x",-3,1,0,-21],["a",1,1,5,-3],["x",-1,4,0,1],["y",-1,4,0,-3]],
-      [["x",1,1,-1,7],["a",7,1,0,-7],["a",-3,1,0,-18],["a",1,1,-9,-7],["m",1,1,-3,-2]],
-      [["x",1,5,0,-2],["t",2,1,0,-14],["x",7,1,0,14],["x",1,1,-9,2],["a",1,1,-4,-6]],
-      [["x",1,1,6,1],["a",1,1,-6,4],["x",-1,3,0,-2],["m",-3,1,0,18],["y",1,1,3,2]],
-      [["a",2,1,0,2],["y",1,1,-4,3],["x",1,1,-5,-7],["a",-5,1,0,-10],["m",-3,1,0,-24]],
-      [["t",1,1,-5,-1],["t",1,1,-7,-2],["x",6,1,0,-6],["x",1,1,-5,4],["m",3,1,0,3]],
-      [["x",3,1,0,-21],["x",-4,1,0,12],["a",1,1,1,12],["x",1,1,2,-4],["x",-1,5,0,2]],
-      [["x",1,1,-6,-4],["x",1,1,-3,1],["x",6,1,0,-12],["y",-6,1,0,-6],["x",1,1,7,12]],
-      [["a",1,1,-7,0],["y",-5,1,0,10],["x",2,1,0,-6],["a",1,1,2,1],["x",1,4,0,-2]],
-      [["y",-1,2,0,1],["m",1,1,4,-6],["x",1,1,-9,-10],["x",1,1,-6,5],["x",-2,1,0,-14]],
-      [["x",1,1,-9,-12],["t",-5,1,0,-15],["x",6,1,0,24],["a",1,1,-1,-9],["y",-5,1,0,20]],
-      [["t",5,1,0,-5],["a",1,1,-3,9],["a",-2,1,0,6],["x",1,1,-2,-2],["x",1,1,3,11]],
-      [["y",4,1,0,-20],["y",-1,3,0,2],["x",1,1,10,11],["x",-4,1,0,8],["x",1,1,1,-2]],
-      [["a",1,1,-8,2],["a",4,1,0,12],["t",1,1,7,9],["t",1,1,-6,2],["a",-4,1,0,16]],
-      [["y",-3,1,0,6],["x",1,1,-3,-9],["a",-7,1,0,21],["a",6,1,0,18],["a",1,1,1,-8]],
-      [["a",2,1,0,10],["m",-2,1,0,-2],["x",1,1,6,5],["x",1,1,5,-7],["x",1,1,-4,2]],
-      [["t",-3,1,0,-9],["x",-3,1,0,-6],["x",1,1,-9,-8],["y",2,1,0,-10],["y",1,1,10,1]],
-      [["x",1,1,6,4],["a",1,2,0,1],["t",1,1,6,10],["x",1,5,0,-1],["y",1,1,8,9]],
-      [["t",1,1,-1,8],["a",-4,1,0,20],["x",1,1,4,-8],["m",-1,3,0,1],["a",-4,1,0,-16]],
-      [["m",1,1,-8,-2],["t",1,1,9,4],["t",-6,1,0,12],["x",1,1,-7,-8],["x",-1,4,0,-1]],
-      [["x",-1,2,0,3],["t",1,1,-4,-3],["x",1,1,-4,-5],["x",-2,1,0,8],["m",-1,3,0,3]],
-      [["y",1,1,10,3],["x",1,1,-2,2],["m",1,1,-1,-2],["x",1,2,0,-3],["x",6,1,0,12]],
-    ],
-    D2: [
-      [["x",2,1,3,11],["m",3,1,-2,7],["x",8,1,0,-6,6],["t",1,3,-2,0],["a",-4,1,1,9]],
-      [["x",2,1,2,12],["t",-3,1,-4,-10],["a",10,1,0,-8,6],["y",3,1,-1,2],["x",-1,4,1,0]],
-      [["y",3,1,-3,15],["m",11,1,0,-16,7,false],["x",2,1,-5,5],["a",-4,1,5,-11],["x",1,4,1,4]],
-      [["m",-1,2,-3,0],["y",-4,1,6,10],["a",3,1,3,-3],["x",7,1,0,-8,11,false],["a",2,1,6,18]],
-      [["y",3,1,-4,2],["t",1,2,-3,-4],["t",2,1,1,13],["t",-2,1,-3,-5],["y",5,1,0,-10,3,false]],
-      [["m",-4,1,2,10],["m",-4,1,1,-15],["y",3,1,5,-7],["t",1,3,1,4],["x",6,1,0,15,3]],
-      [["x",1,3,3,4],["t",-2,1,3,13],["t",2,1,-2,-8],["a",10,1,0,-12,7],["t",3,1,-3,12]],
-      [["x",10,1,0,16,6],["x",2,1,-6,6],["y",-3,1,2,8],["x",-1,3,2,4],["m",-5,1,1,16]],
-      [["a",-2,1,4,8],["a",1,3,1,-2],["y",3,1,3,-15],["x",5,1,0,-15,8],["x",3,1,-1,8]],
-      [["x",3,1,-2,-11],["y",2,1,-6,-16],["x",-2,1,-1,-3],["t",10,1,0,-12,8,false],["x",1,2,3,6]],
-      [["y",2,1,3,-5],["m",4,1,0,18,7,false],["x",1,3,-1,0],["m",2,1,-6,-12],["y",5,1,-3,7]],
-      [["x",2,1,4,6],["x",-2,1,6,0],["y",1,2,-3,0],["t",9,1,0,-4,7,false],["m",2,1,-6,-14]],
-      [["a",10,1,0,-6,8],["t",-1,2,1,4],["x",6,1,-4,-10],["x",3,1,1,16],["x",-5,1,-2,-7]],
-      [["a",2,1,-1,-13],["x",-2,1,-2,8],["x",-4,1,5,-3],["x",1,4,3,0],["m",10,1,0,-4,8,false]],
-      [["a",-2,1,4,10],["a",-1,3,1,-2],["m",3,1,5,2],["t",2,1,0,6,5],["x",2,1,-4,-14]],
-      [["x",-1,3,3,6],["x",2,1,2,14],["t",6,1,-3,15],["a",7,1,0,-9,4,false],["y",-3,1,-6,-12]],
-      [["x",3,1,5,-1],["y",2,1,-5,-17],["y",12,1,0,-2,10],["a",2,1,5,13],["m",-1,3,-1,-3]],
-      [["t",4,1,0,2,6],["a",4,1,1,9],["x",-1,4,-2,-3],["x",5,1,1,-14],["x",4,1,3,-13]],
-      [["t",3,1,5,11],["a",2,1,0,-6,4,false],["x",-2,1,-4,-6],["x",-1,4,-2,0],["t",3,1,-4,-7]],
-      [["a",-2,1,4,6],["a",4,1,1,-11],["a",12,1,0,-15,9,false],["a",2,1,-6,4],["y",-1,2,1,2]],
-      [["a",6,1,-1,-7],["m",-2,1,3,-1],["m",-1,2,-3,-2],["x",2,1,4,-2],["m",10,1,0,6,8,false]],
-      [["y",-1,3,-2,1],["y",-5,1,-6,-16],["x",-5,1,-4,6],["x",3,1,2,-16],["x",10,1,0,-12,12]],
-      [["x",5,1,4,9],["y",2,1,0,2,4,false],["y",-1,3,2,1],["x",-5,1,-5,20],["m",4,1,-1,15]],
-      [["x",-4,1,-3,5],["m",-3,1,-6,6],["x",3,1,-6,6],["t",-1,2,-2,-3],["a",3,1,0,-24,7]],
-      [["m",-5,1,-6,-21],["x",12,1,0,-8,10],["a",-3,1,4,-11],["m",6,1,6,-24],["x",1,4,-3,-2]],
-      [["x",-4,1,-2,6],["y",1,4,-1,2],["x",-4,1,6,-18],["m",-4,1,-1,-9],["m",12,1,0,3,9]],
-      [["t",6,1,3,9],["t",4,1,-6,10],["x",-1,2,2,3],["x",4,1,-2,6],["x",12,1,0,-4,8,false]],
-      [["y",6,1,0,-6,3,false],["x",3,1,1,10],["x",3,1,-6,-15],["x",1,4,-2,0],["t",-2,1,5,15]],
-      [["a",-1,3,-2,-1],["t",-2,1,5,17],["x",6,1,4,10],["x",-5,1,-2,23],["t",7,1,0,8,9]],
-      [["x",-5,1,-2,18],["t",-5,1,3,13],["x",3,1,-6,0],["x",1,3,1,2],["x",6,1,0,-16,10]],
-      [["x",-4,1,2,22],["y",3,1,4,7],["x",2,1,5,-7],["t",7,1,0,-2,5],["x",-1,3,2,3]],
-      [["t",3,1,-2,-14],["m",-1,3,-1,-4],["x",3,1,2,-4],["x",8,1,0,12,5,false],["a",3,1,-5,-23]],
-      [["m",1,3,2,1],["x",3,1,3,-9],["m",10,1,0,10,12],["m",-3,1,-1,-16],["y",-3,1,6,24]],
-      [["m",-3,1,-6,-21],["x",3,1,0,-4,7,false],["x",-1,3,1,3],["x",2,1,-6,2],["x",6,1,1,13]],
-      [["x",-3,1,5,-4],["a",6,1,0,-8,4,false],["y",-3,1,4,-8],["a",1,2,-2,1],["t",-2,1,-4,8]],
-      [["a",-1,2,3,2],["x",-4,1,-3,-7],["y",6,1,2,-10],["x",7,1,0,12,4],["x",3,1,-3,-21]],
-      [["m",-4,1,-3,-15],["x",-1,3,-1,0],["m",2,1,2,6],["m",8,1,0,12,6,false],["x",-5,1,-5,0]],
-      [["m",2,1,0,3,5],["y",3,1,2,8],["x",-1,2,3,1],["t",-2,1,-5,-11],["a",-2,1,4,-8]],
-      [["t",3,1,-6,-12],["x",3,1,0,-9,6,false],["x",-3,1,1,-5],["m",3,1,-1,-16],["t",1,2,-2,-5]],
-      [["x",-4,1,1,-19],["x",8,1,0,6,11],["x",3,1,-3,-6],["x",-4,1,4,-4],["x",-1,4,-3,-6]],
-      [["t",4,1,1,21],["x",-2,1,-5,-9],["a",-5,1,-2,13],["x",9,1,0,4,11],["x",-1,4,2,0]],
-      [["x",2,1,6,8],["a",-3,1,-2,16],["a",3,1,0,-6,5,false],["x",-1,4,-1,-4],["m",4,1,-3,21]],
-      [["a",9,1,0,3,12],["x",-2,1,1,-9],["y",1,4,1,2],["x",4,1,-5,3],["m",4,1,-3,-19]],
-      [["x",1,4,-1,1],["a",2,1,3,-7],["m",2,1,-6,-18],["x",2,1,4,8],["m",2,1,0,4,6]],
-      [["a",4,1,0,-6,7],["t",-4,1,-1,-5],["m",1,3,-2,1],["x",3,1,5,-13],["x",4,1,-5,19]],
-      [["y",5,1,6,-19],["a",3,1,-5,-2],["x",3,1,-5,-11],["y",12,1,0,15,9,false],["m",1,3,-3,0]],
-      [["y",-2,1,4,0],["x",1,3,2,-1],["y",3,1,-3,-15],["a",4,1,-4,0],["x",10,1,0,-2,8]],
-      [["t",2,1,-2,0],["m",3,1,-5,-20],["y",5,1,-4,-24],["y",-1,3,-3,-5],["a",4,1,0,4,8,false]],
-      [["m",-3,1,-5,13],["x",9,1,0,8,7],["x",-1,4,2,3],["m",-4,1,-4,16],["x",-4,1,-4,-16]],
-      [["x",6,1,6,-6],["y",-1,4,1,3],["t",6,1,0,18,3,false],["x",5,1,3,23],["m",-5,1,-4,-9]],
-    ],
-  };
-
-  function basicQuestion(code, [variable, numerator, denominator, constant, right, rightA = 0, constantFirst = true]) {
-    const rightTerms = [plain(0, right), plain(rightA, 0)];
-    if (!constantFirst) rightTerms.reverse();
-    const sides = [[plain(rational(numerator, denominator), constant)], rightTerms];
-    const q = question(sides, variable, code === 'D1' ? 'answer' : rightA ? 'move' : 'isolate');
-    const [left, rightSide] = q.isolated;
-    const solution = { label: '系数化为1', tex: variable + '=' + numericTex(q.answer) };
-    if (code === 'D1') {
-      q.lines = [constant ? { ...solution, label: '移项' } : solution];
-    } else {
-      q.lines = [{ label: rightA ? '移项，合并同类项' : '移项，整理', tex: eqTex([[plain(left.a, 0)], [plain(0, rightSide.b)]], variable) }, solution];
-    }
-    return q;
-  }
-
-  // Each seed identifies one fixed set in both deployments.
-  const setSeeds = {
-    D3: [
-      0xf3730205, 0x9e910ba0, 0x370e4a7f, 0x003e55d2, 0x774cfb09, 0xc877718e, 0x189c4b95, 0x240927f0, 0x9d3f9a8f, 0xa835c6a2,
-      0xd2ef2d3b, 0xa95cc15e, 0xad5e3925, 0x29999840, 0x6a252e9f, 0x6dd19d9c, 0x9975452e, 0x8271cab5, 0xfea75c90, 0xb8900442,
-      0xab2cad81, 0xda5dfcfe, 0x7ad00045, 0x5cd122bf, 0xaf96688d, 0x17a252fa, 0x79cf066b, 0x88f3e8ce, 0xc70ee130, 0x2d886236,
-      0x916a3c57, 0x48cc7b8c, 0x1c905765, 0x0c06c6b2, 0x6c439083, 0xd9dd2331, 0xcadb5c6e, 0x02740eef, 0x2ca9f73d, 0xa7c73f6a,
-      0xcc79039b, 0x3026e43e, 0x8a931e20, 0xaa0acba6, 0xc25ffa87, 0x4b91a815, 0x1532bfb3, 0x2ade8818, 0xad7b1ce1, 0xa4be8fde,
-    ],
-    D4: [
-      0x941cb5a5, 0xef60eac0, 0xeea35f1f, 0xbca821f2, 0x1f2118a9, 0x697189f4, 0x89ac572f, 0x68831ac2, 0x64b29b39, 0xabea8b44,
-      0x04791dd3, 0xa2128916, 0x16cf01c9, 0x2d9492e3, 0x17abdae6, 0x49d6b50d, 0x36be5308, 0xb28bd97a, 0xfa818bf3, 0xa748e09d,
-      0xb3f5e958, 0x247cdcd7, 0x67c2d44a, 0x4390bd32, 0x0e14302d, 0x68cc22e7, 0x4d43c31a, 0x362637b1, 0xa6d94d5c, 0xa4185884,
-      0xdf252cf7, 0xfa0b9c41, 0xd1a0c8ac, 0x8a59ac1b, 0xcc3272be, 0x0a082a26, 0x72fc64d1, 0xb8e1d32b, 0x393cce8e, 0x8ab00495,
-      0xc3fa8a98, 0x98c8fb4c, 0x35443225, 0x027d3d40, 0x3e728f9f, 0x60561d29, 0x0ba1222e, 0x1309a7af, 0x6cd33142, 0xb83abfb9,
-    ],
-    D5: [
-      0xb8df65c4, 0x92773653, 0x7a3cc796, 0x26b0d9fd, 0xf3f9d338, 0xcabefd37, 0x5b64b92a, 0x176d1681, 0x50f519fe, 0x8b0a7945,
-      0x8ee703bf, 0xa6de9b14, 0x555a4630, 0xbba1bee2, 0xd9c5b0d9, 0x44d7e473, 0x9e174d1d, 0x142c6bd8, 0x7dc07d57, 0xb4762ba1,
-      0xf831a59e, 0x4699c1b4, 0xafcdb906, 0x8a49899a, 0xb4dd9ad0, 0x142431f9, 0x1c42503d, 0x6fed0c6a, 0x9873732c, 0x8e8b013e,
-      0xf36f1bff, 0x01b247a3, 0x300f9bab, 0xafba3f70, 0x13a9fe76, 0x2154ad97, 0x9ea4ee0a, 0x42d4aea5, 0x538efef4, 0x5a1b1dc3,
-      0x8990e2ed, 0xe9d2b671, 0x81f7f82f, 0x958815b8, 0xe49ea86c, 0xb9dc2c60, 0xc60097e6, 0x5c724e0d, 0xc456dfeb, 0x5d4e344f,
-    ],
-    D6: [
-      0xa604214a, 0x4a30bb0c, 0xe1b9d786, 0x9825806f, 0x574c0d84, 0x0e408556, 0xc4a316f8, 0x017b72ea, 0xb8570541, 0xf79755a0,
-      0x77dc0c7f, 0xd3c9e726, 0x027ed44d, 0xdd2dfc07, 0xdc1aec24, 0xb002948a, 0x4a95d04c, 0x4803f09f, 0x31d53974, 0xf8f4935a,
-      0xb75a4af1, 0xd0923e4b, 0x2e00ff2e, 0x66e0be37, 0x7ee8f245, 0x2787bee0, 0xf840e4bf, 0xaf23cf49, 0xab6a3c63, 0xdf881811,
-      0x0dcf4bd5, 0x7a8b9964, 0x0f679573, 0xee5c258c, 0xec9ae8df, 0x8912f606, 0xc701d5ad, 0x949a6cdc, 0x432d50ef, 0x5582b8a3,
-      0xbd9ea0cd, 0xc593cbc8, 0x0ea9fc87, 0x89065a0e, 0x85011a15, 0x891fee97, 0x6b30a7a5, 0xa2e86546, 0xfe6bfbed, 0x9e7adf71,
-    ],
-  };
-
   function getSet(code, number) {
-    const topic = topics.find(item => item.code === code);
-    if (!topic) throw Error('未知训练类型。');
+    const stage = topics.findIndex(topic => topic.code === code);
+    if (stage < 0) throw Error('未知训练类型。');
     if (!Number.isInteger(number) || number < 1 || number > setCount) throw Error('套号超出范围。');
-    if (basicSets[code]) return basicSets[code][number - 1].map(row => basicQuestion(code, row));
-    let seed = setSeeds[code][number - 1];
-    const next = () => {
-      seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
-      return seed / 2 ** 32;
-    };
-    return makeSet(topic.id, next);
+    return Array.from({ length: questionCount }, (_, index) => {
+      const n = (number - 1) * questionCount + index;
+      const v = ['x','m','y','a','t'][index];
+      const den = [2,3,4,5,6][n % 5];
+      const other = [5,4,3,2,5][n % 5];
+      const common = den * other;
+      const a = 3 + Math.floor(n / 5) % 5;
+      const b = 1 + Math.floor(n / 25);
+      const c = 2 + n % 7;
+      const sides = [
+        [fraction(1, den, a, b), plain(0, -c)],
+        [fraction(1, common, 3, -2), fraction(-1, other, 2, 3)],
+      ];
+      const q = question(sides, v, topics[stage].id);
+      const original = q.tex;
+      const stages = q.lines.map((line, i, lines) => ({
+        focus: topics[i].id, variable: v, label: topics[i].name,
+        tex: i ? lines[i - 1].tex : original, target: line.tex,
+      }));
+      const chosen = stages[stage];
+      return { ...q, ...(chosen || {}), stages, lines: chosen ? [{ label: chosen.label, tex: chosen.target }] : q.lines };
+    });
   }
 
   function checkNumber(text, target, variable) {
@@ -539,6 +303,18 @@
   function checkStep(q, leftInput, rightInput) {
     const left = readSide(leftInput, q.variable);
     const right = readSide(rightInput, q.variable);
+    if (q.target) {
+      const parts = q.target.replace(/\\(?:left|right)/g, '').replace(/\\frac\{(\d+)\}\{(\d+)\}/g, '$1/$2').split('=');
+      const signature = term => [term.a.n, term.a.d, term.b.n, term.b.d].join(':');
+      function matches(actual, expected) {
+        const ref = readSide(expected, q.variable);
+        const terms = side => side.terms.map(signature).sort().join('|');
+        return actual.groupedSum === ref.groupedSum && terms(actual) === terms(ref) &&
+          (q.focus === 'unit' || !actual.hasDivision);
+      }
+      return { ok: matches(left, parts[0]) && matches(right, parts[1]),
+        message: '请只完成' + q.label + '这一步，检查每一项的符号和系数。' };
+    }
     const expected = [q.left, q.right];
     if (q.focus === 'clear') {
       const hasFraction = [left, right].some(side => side.hasDivision ||

@@ -22,13 +22,6 @@
     const setLabel = (topic, number) => topic.code + '-' + String(number).padStart(2, '0');
     const backLabel = onBack ? '返回专项目录' : '选题型';
 
-    const prompts = {
-      isolate: '先移走含未知数的一边的常数项，写出变形后的方程。',
-      move: '先移项，把含未知数的项放在一边，常数项放在另一边。',
-      expand: '先去括号，写出展开后的方程。',
-      clear: '先去分母，写出变形后的方程。可以保留括号。',
-    };
-
     function clearDrafts() {
       if (run) run.questions.forEach((_, i) => ink.pages.delete('equations:' + run.id + ':' + i));
     }
@@ -107,8 +100,12 @@
       };
     }
 
-    function needsStep(q, index) {
-      return run.topic.id !== 'mixed' && index < 2 && q.focus !== 'answer';
+    function parts(q) {
+      return q.focus === 'mixed' ? q.stages.map(stage => stage.focus) : [q.focus];
+    }
+
+    function stageFor(q, part) {
+      return q.stages.find(stage => stage.focus === part);
     }
 
     function field(name, label, hideLabel = false) {
@@ -119,19 +116,13 @@
     }
 
     function stepFields(q) {
-      return '<p class="equation-prompt">' + prompts[q.focus] + '</p><div class="equation-fields two">' +
-          field('left', '等号左边') + '<span class="equation-symbol" aria-hidden="true">' + math('=') +
-          '</span>' + field('right', '等号右边') + '</div>';
-    }
-
-    function solutionField(q) {
-      return '<p class="equation-prompt">写出未知数的值。</p>' +
-        '<div class="equation-fields solution"><span class="equation-symbol" aria-hidden="true">' +
-        math(q.variable + '=') + '</span>' + field('value', q.variable + ' 的值', true) + '</div>';
+      return '<p class="equation-prompt">' + '写出' + q.label + '后的方程。' + '</p><div class="equation-fields two">' +
+          field(q.focus + 'Left', '等号左边') + '<span class="equation-symbol" aria-hidden="true">' + math('=') +
+          '</span>' + field(q.focus + 'Right', '等号右边') + '</div>';
     }
 
     function formBody(q) {
-      return (needsStep(q, run.index) ? stepFields(q) : '') + solutionField(q);
+      return parts(q).map(part => stepFields(stageFor(q, part))).join('');
     }
 
     function steps(q) {
@@ -213,23 +204,19 @@
 
     function checkedPart(question, part, answer) {
       try {
-        if (part === 'step') return E.checkStep(question, answer.left || '', answer.right || '');
-        return { ok: E.checkNumber(answer.value || '', question.answer, question.variable),
-          message: '把求出的值代回原方程，再检查等号两边是否相等.' };
+        return E.checkStep(stageFor(question, part), answer[part + 'Left'] || '', answer[part + 'Right'] || '');
       } catch (error) {
         return { ok: false, message: error.message };
       }
     }
 
-    const stepNames = { isolate: '移项', move: '移项', expand: '去括号', clear: '去分母' };
     function partName(question, part) {
-      return part === 'step' ? (stepNames[question.focus] || '方程变形') : '方程的解';
+      return stageFor(question, part).label;
     }
 
     function inspectAnswers() {
       return run.questions.map((q, i) => {
-        const parts = needsStep(q, i) ? ['step', 'value'] : ['value'];
-        return parts.map(part => {
+        return parts(q).map(part => {
           const firstCorrect = checkedPart(q, part, run.answers[i]).ok;
           const repair = run.correction.repairs[i]?.[part];
           const corrected = !firstCorrect && !!repair && checkedPart(q, part, repair).ok;
@@ -240,7 +227,7 @@
 
     function results() {
       run.correction = {
-        kind: 'equation', runId: run.attemptId, code: run.topic.code, number: run.number,
+        kind: 'equation', curriculum: 2, runId: run.attemptId, code: run.topic.code, number: run.number,
         answers: run.answers, drafts: run.drafts, repairs: {},
         elapsed: Math.max(0, Math.ceil(performance.now() - (run.started ?? performance.now()))), at: Date.now(),
       };
@@ -258,7 +245,7 @@
       const answer = useRepair ? run.correction.repairs[item.index][item.part] : run.answers[item.index];
       const tex = useRepair ? answer.tex : run.drafts[item.index];
       const show = key => tex?.[key] || entry.toLatex(answer[key] || '');
-      return math(item.part === 'step' ? show('left') + '=' + show('right') : q.variable + '=' + show('value'));
+      return math(show(item.part + 'Left') + '=' + show(item.part + 'Right'));
     }
 
     function correctionSummary(rows) {
@@ -292,7 +279,7 @@
         (i + 1) + ' 题 · ' + partName(q, current.part) + '</h2><div class="core-formula">' + math(q.tex, true) +
         '</div><p class="equation-first-entry">首答有误 ' + previousExpression(current) + '</p>' + context +
         '<form class="equation-form" id="equation-repair-form">' +
-        (current.part === 'step' ? stepFields(q) : solutionField(q)) +
+        stepFields(stageFor(q, current.part)) +
         '<div class="equation-note error" role="alert" id="equation-repair-feedback"></div>' +
         '<div class="equation-actions"><button class="btn" type="submit" id="equation-repair-check">核对这一步</button></div></form>' +
         '</section><aside id="equation-ink"></aside></div>';
@@ -351,14 +338,13 @@
         '</div><ol class="equation-results-list">' +
         run.questions.map((q, i) => {
           const checks = rows[i].map(item => item.firstCorrect);
-          const { left, right, value } = run.drafts[i] || run.answers[i];
           const status = checks.length === 2
             ? '步骤' + (checks[0] ? '正确' : '有误') + ' · 答案' + (checks[1] ? '正确' : '有误')
             : (checks[0] ? '正确' : '有误');
           return '<li><details><summary><span>第 ' + (i + 1) + ' 题</span>' +
             math(q.tex) + '<small>' + (checks.every(Boolean) ? status : '已订正 · 首答' + status) +
             '</small></summary><p>首次作答 ' +
-            (left ? math(left + '=' + right) + '，' : '') + math(q.variable + '=' + value) +
+            rows[i].map(item => previousExpression(item)).join('，') +
             '</p>' + rows[i].filter(item => item.corrected).map(item => '<p>✓ ' + partName(q, item.part) +
               '已订正 ' + previousExpression(item, true) + '</p>').join('') + '<p>参考步骤</p>' + steps(q) + '</details></li>';
         }).join('') + '</ol></section>';
@@ -378,9 +364,9 @@
     app.addEventListener('click', requireSession, true);
     app.addEventListener('submit', requireSession, true);
     const saved = correctionStore?.read();
-    const savedTopic = saved?.kind === 'equation' && E.topics.find(topic => topic.code === saved.code);
+    const savedTopic = saved?.kind === 'equation' && saved.curriculum === 2 && E.topics.find(topic => topic.code === saved.code);
     if (savedTopic && Number.isInteger(saved.number) && saved.number >= 1 && saved.number <= E.setCount &&
-        Array.isArray(saved.answers) && saved.answers.length === E.questionCount && saved.answers.every(answer => answer && typeof answer.value === 'string')) {
+        Array.isArray(saved.answers) && saved.answers.length === E.questionCount && saved.answers.every(answer => answer && typeof answer === 'object')) {
       run = {
         id: ++sequence, topic: savedTopic, number: saved.number, questions: E.getSet(savedTopic.code, saved.number),
         index: 0, answers: saved.answers, drafts: saved.drafts || [], keyboardOpen: true,

@@ -56,66 +56,22 @@ assert.equal(E.questionCount, 5);
 assert.throws(() => E.getSet('D0', 1), /未知训练类型/);
 assert.throws(() => E.getSet('D1', 0), /套号超出范围/);
 assert.throws(() => E.getSet('D6', 51), /套号超出范围/);
-assert.deepEqual(E.topics.slice(0, 2).map(topic => topic.name), ['一步解方程', '两步解方程']);
+assert.deepEqual(E.topics.map(t => t.name), ['去分母','去括号','移项','合并同类项','系数化为一','混合练习']);
 for (let set = 1; set <= E.setCount; set++) {
-  const oneStep = E.getSet('D1', set);
-  const twoStep = E.getSet('D2', set);
-  assert(oneStep.some(q => q.lines[0].label === '移项'));
-  assert(oneStep.some(q => q.lines[0].label === '系数化为1'));
-  for (const q of oneStep) {
-    assert.equal(q.lines.length, 1);
-    assert.equal(q.answer.d, 1n);
-    assert.equal(q.right.a.n, 0n);
-    assert((q.left.b.n === 0n) !== (q.left.a.n === q.left.a.d));
-  }
-  assert.equal(twoStep.filter(q => q.left.a.d > 1n).length, 1);
-  assert.equal(twoStep.filter(q => q.right.a.n !== 0n).length, 1);
-  for (const q of twoStep) {
-    assert.equal(q.lines.length, 2);
-    assert.equal(q.answer.d, 1n);
-    assert(q.left.b.n || q.right.a.n);
-    assert.notEqual(q.isolated[0].a.n, q.isolated[0].a.d);
-  }
-}
-const seen = new Set();
-const catalogue = [];
-for (const { code } of E.topics) {
-  for (let set = 1; set <= E.setCount; set++) {
-    const qs = E.getSet(code, set);
-    assert.equal(qs.length, E.questionCount);
-    for (const q of qs) {
-      assert(!seen.has(q.tex), code + '-' + set + ': ' + q.tex);
-      seen.add(q.tex);
-      catalogue.push([code, set, q.tex, q.focus, E.numericTex(q.answer), q.candidate ? E.numericTex(q.candidate) : null]);
-      assert(satisfies(q), q.tex);
-      const last = q.lines.at(-1)?.tex || q.tex;
-      const [unknown, value] = last.split('=');
-      assert.equal(unknown, q.variable, q.tex);
-      assert(E.checkNumber(toInput(value), q.answer, q.variable));
-      const label = { clear: '去分母', expand: '去括号', isolate: '移项', move: '移项' }[q.focus];
-      if (label) {
-        const example = q.lines.find(line => line.label.startsWith(label));
-        const [left, right] = example.tex.split('=').map(toInput);
-        assert(E.checkStep(q, left, right).ok, q.tex + ' -> ' + example.tex);
-      }
-      if (q.focus === 'verify') {
-        const [left, right] = q.values.map(value => toInput(E.numericTex(value)));
-        const verdict = left === right ? 'yes' : 'no';
-        assert(E.checkVerification(q, left, right, verdict).ok);
-        assert(!E.checkVerification(q, left, right, verdict === 'yes' ? 'no' : 'yes').ok);
-      }
-      if (q.focus === 'property') {
-        const value = q.operand.a.n ? q.variable : toInput(E.numericTex(q.operand.b));
-        assert(E.checkProperty(q, q.operation, value));
-        if (q.operation === 'divide') assert.throws(() => E.checkProperty(q, 'divide', '0'), /不能为0/);
-      }
+  const mixed = E.getSet('D6', set);
+  for (const [i,topic] of E.topics.slice(0,5).entries()) {
+    for (const [j,q] of E.getSet(topic.code,set).entries()) {
+      assert(satisfies(q));
+      assert.equal(q.tex,mixed[j].stages[i].tex);
+      assert.equal(q.target,mixed[j].lines[i].tex);
+      assert(E.checkStep(q,...q.target.split('=').map(toInput)).ok);
     }
   }
 }
-assert.equal(seen.size, 1500);
-assert.equal(createHash('sha256').update(JSON.stringify(catalogue)).digest('hex'),
-  '752bda51a7d913f60450e022357e6177cb60aa18d43a0a26fe3641161eabf805');
-console.log('PASS D1–D6, 300 fixed sets, 1,500 unique questions, exact answers and steps');
+const sample = E.getSet('D1',1)[0];
+assert(E.checkStep(sample,'5(3x+1)-10*2','(3x-2)-2(2x+3)').ok);
+assert(!E.checkStep(sample,'5(3x+1)-2','(3x-2)-2(2x+3)').ok);
+assert(!E.checkStep(E.getSet('D3',1)[0],'16x','7').ok);
 
 const { JSDOM } = require('jsdom');
 
@@ -219,13 +175,9 @@ async function exerciseNavigation() {
     assert.equal(keypad.querySelector('summary').textContent, '显示公式键盘');
 
     function fillQuestion(q) {
-      const step = q.lines.find(line => /^(移项|去括号|去分母)/.test(line.label));
-      if (get('#eq-left-math')) {
-        const [left, right] = step.tex.split('=');
-        get('#eq-left-math').value = left;
-        get('#eq-right-math').value = right;
-      }
-      get('#eq-value-math').value = E.numericTex(q.answer);
+      const [left,right] = q.target.split('=');
+      get('#eq-'+q.focus+'Left-math').value = left;
+      get('#eq-'+q.focus+'Right-math').value = right;
     }
     async function finishSet(number, start = 0, code = 'D5') {
       const questions = E.getSet(code, number);
@@ -241,14 +193,14 @@ async function exerciseNavigation() {
     get('#equation-next').click();
     assert.equal(get('.equation-progress span').textContent, '第 1 / 5 题');
     fillQuestion(question);
-    get('#eq-value-math').value = '999';
+    get('#eq-unitRight-math').value = '999';
     get('#equation-next').click();
     await tick();
     assert.equal(get('.equation-results-list'), null, 'no grading after a wrong answer until the full set is submitted');
     assert.equal(get('.keypad-disclosure').open, false);
     get('#equation-previous').click();
     await tick();
-    assert.equal(get('#eq-value-math').value, '999');
+    assert.equal(get('#eq-unitRight-math').value, '999');
     w.confirm = () => false;
     chooseSet(49);
     assert.equal(get('#equation-set').value, '50', 'cancelling a set switch keeps work');
@@ -257,15 +209,14 @@ async function exerciseNavigation() {
     await finishSet(50, 1);
     assert.match(get('.equation-result strong').textContent, /4 \/ 5/);
     assert.match(get('.equation-result').textContent, /用时 0\.00 秒/);
-    assert.match(get('.equation-error-list').textContent, /去分母 首答正确/);
-    assert.match(get('.equation-error-list').textContent, /方程的解 ✗ 待订正/);
+    assert.match(get('.equation-error-list').textContent, /系数化为一 ✗ 待订正/);
     assert.match(get('.equation-title').textContent, /D5-50/);
     assert.equal(get('#equation-again'), null, 'Next set is unavailable until the error is corrected');
     assert.equal(get('#equation-set'), null);
-    assert.equal(get('#eq-value-math').value, '', 'The wrong value is entered afresh');
+    assert.equal(get('#eq-unitRight-math').value, '', 'The wrong value is entered afresh');
     assert.equal(get('#eq-left-math'), null, 'An already-correct transformation is retained');
     assert.equal(attempts.length, 0, 'An unresolved attempt is not complete');
-    get('#eq-value-math').value = E.numericTex(question.answer);
+    fillQuestion(question);
     get('#equation-repair-check').click();
     assert.match(get('.equation-title').textContent, /错步已全部订正/);
     assert.equal(attempts.length, 1);

@@ -43,12 +43,8 @@ async function studentFlow(resumed) {
     await waitFor('#equation-form');
     const E = window.MathIsleEquationEngine, questions = E.getSet('D2',1);
     for (const [i,question] of questions.entries()) {
-      const answers = {value:i === 0 ? '91' : E.numericTex(question.answer)};
-      if (i < 2) {
-        const [left,right] = question.lines[0].tex.split('=');
-        answers.left = i === 0 ? '1' : left;
-        answers.right = i === 0 ? '1' : right;
-      }
+      const [left,right] = question.target.split('=');
+      const answers = { expandLeft:left, expandRight:i < 2 ? '91' : right };
       note('entering D2 question '+(i+1));
       await enterWithSystemKeyboard(answers);
       select('#equation-next').click();
@@ -57,7 +53,7 @@ async function studentFlow(resumed) {
     assert(document.querySelectorAll('.needs-repair').length === 2, 'Mark both the transformation and the solution');
     assert(!select('#equation-again') && !select('#equation-set'), 'Next set must wait for both corrections');
     const [left,right] = questions[0].lines[0].tex.split('=');
-    await enterWithSystemKeyboard({left,right});
+    await enterWithSystemKeyboard({expandLeft:left,expandRight:right});
     select('#equation-repair-check').click();
     assert(document.querySelectorAll('.needs-repair').length === 1, 'Only the solution should remain');
     assert(!sessionStorage.getItem('completed'), 'Partial correction cannot complete the set');
@@ -66,14 +62,15 @@ async function studentFlow(resumed) {
   }
   await waitFor('#equation-repair-form');
   assert(document.querySelectorAll('.needs-repair').length === 1 && !select('#eq-left'), 'Restore only the remaining solution step');
-  assert(select('.equation-accepted').textContent.includes('已订正'), 'Keep the checked transformation after refresh');
+  assert(select('.equation-correction-summary').textContent.includes('已订正'), 'Keep the corrected question after refresh');
   const E = window.MathIsleEquationEngine;
-  await enterWithSystemKeyboard({value:E.numericTex(E.getSet('D2',1)[0].answer)});
+  const [left,right] = E.getSet('D2',1)[1].target.split('=');
+  await enterWithSystemKeyboard({expandLeft:left,expandRight:right});
   select('#equation-repair-check').click();
   await waitFor('#equation-again');
   assert(select('h1').textContent.includes('已全部订正'), 'Completion feedback missing');
   const completed = JSON.parse(sessionStorage.getItem('completed') || '[]');
-  assert(completed.length === 1 && completed[0].correct === 4 && completed[0].code === 'D2', 'Keep the first score and complete once');
+  assert(completed.length === 1 && completed[0].correct === 3 && completed[0].code === 'D2', 'Keep the first score and complete once');
   note('completed once with the first score');
 }
 
