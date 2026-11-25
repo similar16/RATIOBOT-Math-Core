@@ -151,7 +151,13 @@
     return joinTerms(side.flatMap(piece => {
       const { body, factor, form, useDecimal, denominator, decimalPlaces } = piece;
       if (form === 'plain') return sideTerms(scale(body, factor), variable, useDecimal);
-      const inside = joinTerms(sideTerms(body, variable, !!decimalPlaces));
+      if (form === 'fraction' && piece.display === 'coefficient') {
+        const coefficient = '\\frac{1}{' + numericTex(denominator) + '}';
+        const inside = joinTerms(sideTerms(body, variable));
+        return [{ negative: factor.n < 0n, tex: coefficient + (body.b.n ? '\\left(' + inside + '\\right)' : inside) }];
+      }
+      const terms = sideTerms(body, variable, !!decimalPlaces);
+      const inside = joinTerms(piece.constantFirst ? terms.reverse() : terms);
       const tex = form === 'fraction'
         ? '\\frac{' + inside + '}{' + numericTex(denominator, !!decimalPlaces) + '}'
         : (same(abs(factor), one) ? '' : numericTex(abs(factor))) + '\\left(' + inside + '\\right)';
@@ -230,27 +236,51 @@
     const stage = topics.findIndex(topic => topic.code === code);
     if (stage < 0) throw Error('未知训练类型。');
     if (!Number.isInteger(number) || number < 1 || number > setCount) throw Error('套号超出范围。');
-    return Array.from({ length: questionCount }, (_, index) => {
-      const n = (number - 1) * questionCount + index;
-      const v = ['x','m','y','a','t'][index];
-      const den = [2,3,4,5,6][n % 5];
-      const other = [5,4,3,2,5][n % 5];
-      const common = den * other;
-      const a = 3 + Math.floor(n / 5) % 5;
-      const b = 1 + Math.floor(n / 25);
-      const c = 2 + n % 7;
-      const sides = [
-        [fraction(1, den, a, b), plain(0, -c)],
-        [fraction(1, common, 3, -2), fraction(-1, other, 2, 3)],
-      ];
-      const q = question(sides, v, topics[stage].id);
-      const original = q.tex;
-      const stages = q.lines.map((line, i, lines) => ({
-        focus: topics[i].id, variable: v, label: topics[i].name,
-        tex: i ? lines[i - 1].tex : original, target: line.tex,
-      }));
-      const chosen = stages[stage];
-      return { ...q, ...(chosen || {}), stages, lines: chosen ? [{ label: chosen.label, tex: chosen.target }] : q.lines };
+    function build(index, offset = 0) {
+      const slot = (number - 1) * 4 + index + offset;
+      const family = index === 4 ? 6 : slot % 6;
+      const variant = index === 4 ? number - 1 : Math.floor(slot / 6);
+      const v = ['x','m','y','a','t'][Math.floor(variant / 8) % 5];
+      const k = 1 + variant % 5, h = Math.floor(variant / 5);
+      const constant = n => plain(0,n);
+      const coeff = (d,a,b,sign=1) => ({...fraction(sign,d,a,b),display:'coefficient'});
+      let sides;
+      switch (family) {
+        case 0: sides = [[constant(5+h),fraction(-1,5+k-1,1,k)],[plain(1,0)]]; break;
+        case 1: sides = [[coeff(2+h,1,0),constant(-2-k)],[coeff(5+h+k-1,1,0)]]; break;
+        case 2: sides = [[fraction(1,3+h,2,-k)],[fraction(1,2*(3+h),2,k),constant(-1-h)]]; break;
+        case 3: sides = [[fraction(1,2+h,1,k),constant(-k)],[{...fraction(1,3+h,-3,k+1),constantFirst:true}]]; break;
+        case 4: sides = [[coeff(3+h,1,k)],[coeff(7+2*h,2,2+k)]]; break;
+        case 5: sides = [[coeff(2+h,1,-k)],[constant(2+h),coeff(5+h,1,k+1,-1)]]; break;
+        case 6: {
+          const d = 4 + variant % 4, e = d + 1 + h % 2;
+          sides = [[fraction(1,rational(d,10),1,rational(-3-h,10),1)],
+            [fraction(1,rational(e,10),1,rational(k,10),1),constant(2+h)]];
+          break;
+        }
+      }
+      const q = question(sides,v,topics[stage].id);
+      let previous = q.tex;
+      const stages = [];
+      for (const line of q.lines) {
+        if (line.label.startsWith('分子和分母')) continue;
+        const topic = topics.find(t => line.label.startsWith(t.name) ||
+          (t.id === 'unit' && line.label === '系数化为1'));
+        stages.push({focus:topic.id, variable:v, label:topic.name, tex:previous,
+          target:line.tex, decimalRoute:family === 6, original:q.tex});
+        previous = line.tex;
+      }
+      // A coefficient-only equation may skip expansion. Select a sibling that actually exercises it.
+      const chosen = stages.find(row => row.focus === topics[stage].id);
+      if (!chosen && stage < 5) return build(index,offset ? offset + 1 : 4 - index);
+      return {...q,...(chosen || {}),stages,lines:chosen ? [{label:chosen.label,tex:chosen.target}] : stages.map(t=>({label:t.label,tex:t.target}))};
+    }
+    const seen = new Set();
+    return Array.from({length:questionCount},(_,i)=>{
+      let q = build(i);
+      for (let offset = 6; seen.has(q.tex); offset += 6) q = build(i,offset);
+      seen.add(q.tex);
+      return q;
     });
   }
 
@@ -311,6 +341,34 @@
         const terms = side => side.terms.map(signature).sort().join('|');
         return actual.groupedSum === ref.groupedSum && terms(actual) === terms(ref) &&
           (q.focus === 'unit' || !actual.hasDivision);
+      }
+      if (q.decimalRoute && q.focus !== 'unit') {
+        // Compare signed terms at a single common scale on both sides. This
+        // covers fraction-preserving rewrites and multiplication of the equation.
+        const refs = parts.map(part => readSide(part,q.variable));
+        const [u,w] = refs.map(side => side.value);
+        const scaleBy = u.a.n ? divide(left.value.a,u.a) : divide(right.value.b,w.b);
+        const key = (side, factor) => side.terms.map(term=>signature(scale(term,factor))).sort().join('|');
+        const sameTerms = scaleBy.n !== 0n && [left,right].every((side,i)=>key(side,one)===key(refs[i],scaleBy));
+        const clear = q.focus === 'clear';
+        const raw = [leftInput,rightInput].join('=').normalize('NFKC').replace(/\s/g,'');
+        // Merely retyping the decimal fractions, even with extra parentheses, is not a step.
+        const decimalDenominator = /[\/÷]\(*[+-]?(?:\d*\.\d+)/.test(raw);
+        const originalMultiplier = q.original.match(/\\frac\{[^}]*\}\{([\d.]+)\}/g);
+        const denominators = originalMultiplier.map(t=>decimal(t.match(/\{([\d.]+)\}$/)[1]));
+        const common = denominators.map(t=>times(t,rational(10)).n).reduce(lcm);
+        const unchangedScale = same(scaleBy,rational(1,common));
+        const wholeSide = (input, side, ref) => {
+          const text = String(input).normalize('NFKC').replace(/\s|[×*·]/g,'');
+          return /^[-+]?(?:\d+(?:\.\d+)?|\.\d+)\(.+\)$/.test(text) &&
+            pairEquals(side.value,scale(ref.value,scaleBy));
+        };
+        const commonProduct = clear && !unchangedScale && scaleBy.n !== 0n &&
+          [left,right].every((side,i)=>key(side,one)===key(refs[i],scaleBy) ||
+            wholeSide([leftInput,rightInput][i],side,refs[i]));
+        return {ok:(sameTerms || commonProduct) && (clear ? !(unchangedScale && decimalDenominator) :
+          !left.groupedSum && !right.groupedSum && !left.hasDivision && !right.hasDivision),
+          message:'检查分子、分母和方程外的常数是否按所选方法一起变形。'};
       }
       return { ok: matches(left, parts[0]) && matches(right, parts[1]),
         message: '请只完成' + q.label + '这一步，检查每一项的符号和系数。' };

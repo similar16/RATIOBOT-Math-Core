@@ -116,7 +116,7 @@
     }
 
     function stepFields(q) {
-      return '<p class="equation-prompt">' + '写出' + q.label + '后的方程。' + '</p><div class="equation-fields two">' +
+      return '<p class="equation-prompt">' + (q.decimalRoute && q.focus === 'clear' ? '写出下一行方程。可以先把小数分母化为整数，也可以给方程两边同乘一个数。' : '写出' + q.label + '后的方程。') + '</p><div class="equation-fields two">' +
           field(q.focus + 'Left', '等号左边') + '<span class="equation-symbol" aria-hidden="true">' + math('=') +
           '</span>' + field(q.focus + 'Right', '等号右边') + '</div>';
     }
@@ -227,7 +227,7 @@
 
     function results() {
       run.correction = {
-        kind: 'equation', curriculum: 2, runId: run.attemptId, code: run.topic.code, number: run.number,
+        kind: 'equation', curriculum: 3, runId: run.attemptId, code: run.topic.code, number: run.number,
         answers: run.answers, drafts: run.drafts, repairs: {},
         elapsed: Math.max(0, Math.ceil(performance.now() - (run.started ?? performance.now()))), at: Date.now(),
       };
@@ -364,7 +364,7 @@
     app.addEventListener('click', requireSession, true);
     app.addEventListener('submit', requireSession, true);
     const saved = correctionStore?.read();
-    const savedTopic = saved?.kind === 'equation' && saved.curriculum === 2 && E.topics.find(topic => topic.code === saved.code);
+    const savedTopic = saved?.kind === 'equation' && saved.curriculum === 3 && E.topics.find(topic => topic.code === saved.code);
     if (savedTopic && Number.isInteger(saved.number) && saved.number >= 1 && saved.number <= E.setCount &&
         Array.isArray(saved.answers) && saved.answers.length === E.questionCount && saved.answers.every(answer => answer && typeof answer === 'object')) {
       run = {

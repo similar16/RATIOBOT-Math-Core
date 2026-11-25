@@ -62,17 +62,23 @@ for (let set = 1; set <= E.setCount; set++) {
   for (const [i,topic] of E.topics.slice(0,5).entries()) {
     for (const [j,q] of E.getSet(topic.code,set).entries()) {
       assert(satisfies(q));
-      assert.equal(q.tex,mixed[j].stages[i].tex);
-      assert.equal(q.target,mixed[j].lines[i].tex);
+      const counterpart=mixed[j].stages.find(step=>step.focus===topic.id);
+      if(counterpart) assert.equal(q.target,counterpart.target);
+      assert.equal(q.decimalRoute,j===4);
       assert(E.checkStep(q,...q.target.split('=').map(toInput)).ok);
     }
   }
 }
-const sample = E.getSet('D1',1)[0];
-assert(E.checkStep(sample,'5(3x+1)-10*2','(3x-2)-2(2x+3)').ok);
-assert(!E.checkStep(sample,'5(3x+1)-2','(3x-2)-2(2x+3)').ok);
-assert(!E.checkStep(E.getSet('D3',1)[0],'16x','7').ok);
-
+const sample = E.getSet('D1',1)[4];
+for(const [left,right] of [
+ ['(10x-3)/4','(10x+1)/5+2'], ['5(10x-3)','4(10x+1)+40'],
+ ['5(x-0.3)','4(x+0.1)+4'], ['(x-0.3)/4','(x+0.1)/5+0.2'],
+ ['(10x-3)/0.4','(10x+1)/0.5+20'], ['10*((x-0.3)/0.4)','10*((x+0.1)/0.5+2)']
+]) assert(E.checkStep(sample,left,right).ok,left+'='+right);
+for(const [left,right] of [
+ ['(x-0.3)/0.4','(x+0.1)/0.5+2'], ['(10x-3)/4','(10x+1)/5+20'],
+ ['5(x-0.3)','4(x+0.1)+2']
+]) assert(!E.checkStep(sample,left,right).ok);
 const { JSDOM } = require('jsdom');
 
 async function exerciseNavigation() {

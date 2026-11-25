@@ -28,7 +28,7 @@ function addEquationCards(grid){
  const E=window.MathIsleEquationEngine;
  grid.insertAdjacentHTML('beforeend',E.topics.map(({code,name})=>
   '<button type="button" class="sp-category" data-equation-code="'+code+'">'+
-  '<span class="sp-tag" style="--sp-color:#167582">'+code+'</span><b>'+esc(name)+'</b>'+
+  '<span class="sp-tag" style="--sp-color:#B9DCD3">'+code+'</span><b>'+esc(name)+'</b>'+
   '<small>'+E.setCount+'套 · 每套'+E.questionCount+'题</small></button>'
  ).join(''));
  grid.querySelectorAll('[data-equation-code]').forEach(button=>{
@@ -122,7 +122,7 @@ function readPending(account) {
  }
  for (const item of attempts.values()) {
   if (item?.kind === 'card' && cards.some(card => card.id === item.cardId)) return item;
-  if (item?.kind === 'equation' && item.curriculum === 2 && /^D[1-6]$/.test(item.code)) return item;
+  if (item?.kind === 'equation' && item.curriculum === 3 && /^D[1-6]$/.test(item.code)) return item;
  }
  return null;
 }
