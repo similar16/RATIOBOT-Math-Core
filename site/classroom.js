@@ -405,25 +405,30 @@ function openBoard(){
  const dlg=document.createElement('dialog');
  dlg.id='lesson-board';
  dlg.innerHTML=`<style>
- #lesson-board{inset:0;margin:0;width:100vw;height:100dvh;max-width:none;max-height:none;border:0;padding:0;background:#faf9f5;color:#263549;box-sizing:border-box}
- #lesson-board[open]{display:grid;grid-template-rows:auto minmax(0,1fr) auto minmax(110px,32%)}
- #lesson-board header,#lesson-board nav{display:flex;align-items:center;gap:6px;padding:5px 12px;overflow-x:auto;background:#edf0ef}
- #lesson-board :is(button,select,input){min-height:44px;flex:none;padding:5px 12px;border:1px solid #bbc4ca;border-radius:8px;background:white;color:#243247;font:inherit;white-space:nowrap}
- #lesson-board button[aria-pressed=true]{outline:2px solid currentColor;outline-offset:-3px;font-weight:bold}
- #lesson-board article{overflow:auto;padding:1em 5vw;font-size:clamp(24px,3vw,54px)}
+
+ html.board-open,html.board-open body{overflow:hidden;overscroll-behavior:none}
+ html.board-open body{position:fixed;inset-inline:0;top:var(--board-body-top)}
+ #lesson-board{position:fixed;inset:0;margin:0;width:100%;height:100vh;height:100svh;max-width:none;max-height:none;border:0;padding:0;overflow:hidden;overscroll-behavior:none;background:var(--cream);color:var(--ink);font-family:inherit}
+ #lesson-board[open]{display:grid;grid-template: auto minmax(0,1fr) auto minmax(0,32%) / minmax(0,1fr)}
+ #lesson-board header,#lesson-board nav{display:flex;align-items:center;gap:8px;padding:6px 12px;overflow-x:auto;overscroll-behavior:contain}
+ #lesson-board header{background:#fff8e9;border-bottom:3px solid var(--ink)}
+ #lesson-board nav{background:var(--cream);border-top:2px solid var(--line)}
+ #lesson-board :is(button,select){min-height:44px;flex:none;width:auto;max-width:48vw;font-size:16px;white-space:nowrap}
+ #lesson-board [aria-pressed=true]{background:var(--yellow);box-shadow:2px 2px 0 var(--ink)}
+ #lesson-board article{overflow:auto;overscroll-behavior:contain;padding:1em 4vw;margin:10px 2vw;background:var(--paper);border:2px solid var(--ink);border-radius:16px;box-shadow:var(--shadow);font-size:clamp(24px,3vw,54px)}
  #lesson-board article img{max-width:95%;max-height:42vh}
- #lesson-board .sheet{width:min(780px,96%);margin:auto;height:100%;overflow:auto;background:white;border:1px solid #c9d1d8}
- #lesson-board svg{display:block;width:100%;touch-action:none;user-select:none}
- #lesson-board .grid{background-image:linear-gradient(#dee5eb 1px,transparent 1px),linear-gradient(90deg,#dee5eb 1px,transparent 1px);background-size:20px 20px}
- #lesson-board .lined{background:repeating-linear-gradient(white 0 23px,#dee5eb 23px 24px)}
+ #lesson-board .sheet{width:min(780px,96%);margin:0 auto;height:100%;overflow:hidden;contain:layout paint;overscroll-behavior:none;touch-action:none;background:var(--paper);border:2px solid var(--ink);border-radius:12px}
+ #lesson-board .sheet>svg{display:block;width:100%;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+ #lesson-board .grid{background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);background-size:20px 20px}
+ #lesson-board .lined{background:repeating-linear-gradient(var(--paper) 0 23px,var(--line) 23px 24px)}
  #lesson-board.showing{grid-template-rows:auto minmax(0,20%) minmax(0,1fr)}
- #lesson-board.showing nav{display:none}#lesson-board.showing .sheet{width:95%}
- #lesson-board [data-hold]{touch-action:none;user-select:none;background:#233b55;color:white}
+ #lesson-board.showing nav{display:none}#lesson-board.showing .sheet{width:95%;overflow:auto;touch-action:pan-y}
+ #lesson-board [data-hold]{touch-action:none;user-select:none;background:var(--yellow)}
  </style><header><button data-hold>长按展示本份</button><select aria-label="选择题目"></select><button data-project>独立投屏</button><button data-close>返回课堂</button></header><article></article>
  <nav><button data-color="#20242a">● 黑笔</button><button data-color="#b73139">● 红笔</button><button data-color="#245db1">● 蓝笔</button>
  <select data-tool aria-label="书写工具"><option>细笔</option><option>直线</option><option>刻度尺</option><option>圆规</option><option>表格</option></select>
  <select data-paper aria-label="纸张"><option value="grid">方格纸</option><option value="lined">横线纸</option><option value="plain">白纸</option></select>
- <button data-undo>撤销</button><button data-more>向下续纸</button><select data-record aria-label="答题记录"></select><button data-add>＋答题记录</button></nav>
+ <button data-undo>撤销</button><button data-up>上移纸面</button><button data-down>下移纸面</button><button data-more>向下续纸</button><select data-record aria-label="答题记录"></select><button data-add>＋答题记录</button></nav>
  <div class="sheet"><svg xmlns="http://www.w3.org/2000/svg" aria-label="手写答题纸"></svg></div>`;
  document.body.append(dlg);
  const get=s=>dlg.querySelector(s),svg=get('svg'),sheet=get('.sheet'),rec=get('[data-record]'),paperSelect=get('[data-paper]'),q=get('header select'),hold=get('[data-hold]');
@@ -460,11 +465,16 @@ function openBoard(){
  paperSelect.onchange=()=>{record().paper=paperSelect.value;render();persist()};
  get('[data-more]').onclick=()=>{const old=sheet.scrollHeight;record().height+=320;render();persist();sheet.scrollTop=old-sheet.clientHeight/3};
  get('[data-undo]').onclick=()=>{record().marks.pop();render();persist()};
- function point(e){const box=svg.getBoundingClientRect();return [Math.round((e.clientX-box.left)*width/box.width),Math.round((e.clientY-box.top)*record().height/box.height)]}
+ get('[data-up]').onclick=()=>sheet.scrollBy(0,-Math.max(1,sheet.clientHeight-32));
+ get('[data-down]').onclick=()=>sheet.scrollBy(0,Math.max(1,sheet.clientHeight-32));
+ const blockWritingGesture=e=>{if(!shown&&(active!==null||sheet.contains(e.target))&&e.cancelable)e.preventDefault()};
+ for(const event of ['touchmove','gesturestart','gesturechange'])dlg.addEventListener(event,blockWritingGesture,{passive:false,capture:true});
+ let box;
+ function point(e){return [Math.round((e.clientX-box.left)*width/box.width),Math.round((e.clientY-box.top)*record().height/box.height)]}
  function move(e){if(e.pointerId!==active)return;const p=point(e);if(stroke.tool==='细笔')stroke.points.push(p);else stroke.points[1]=p;svg.lastChild.replaceWith(mark(stroke))}
- svg.onpointerdown=e=>{if(shown||active!==null||e.button!==0)return;e.preventDefault();active=e.pointerId;svg.setPointerCapture(active);stroke={tool:get('[data-tool]').value,color,points:[point(e)]};svg.append(mark(stroke))};
+ svg.onpointerdown=e=>{if(shown||active!==null||e.button!==0)return;e.preventDefault();box=svg.getBoundingClientRect();active=e.pointerId;svg.setPointerCapture(active);stroke={tool:get('[data-tool]').value,color,points:[point(e)]};svg.append(mark(stroke))};
  svg.onpointermove=move;svg.onpointerup=e=>{if(e.pointerId!==active)return;move(e);record().marks.push(stroke);active=null;persist()};
- svg.onpointercancel=()=>{active=null;render()};
+ svg.onpointercancel=svg.onlostpointercapture=e=>{if(e.pointerId===active){active=null;render()}};
  function project(){
  if(!projection||projection.closed)return;
  const doc=projection.document,area=get('article').cloneNode(true);
@@ -485,7 +495,9 @@ function openBoard(){
  hold.onpointerdown=e=>{if(shown){display(false);return}if(!record().marks.length)return;hold.setPointerCapture(e.pointerId);hold.textContent='继续按住…';clock=setTimeout(()=>display(true),900)};
  function cancel(){clearTimeout(clock);if(!shown)hold.textContent='长按展示本份'}
  hold.onpointerup=hold.onpointercancel=cancel;hold.oncontextmenu=e=>e.preventDefault();
- dlg.addEventListener('keydown',e=>e.stopPropagation());get('[data-close]').onclick=()=>dlg.close();dlg.onclose=()=>{clearTimeout(clock);projection?.close();dlg.remove()};dlg.showModal()
+ const root=document.documentElement,scrollY=window.scrollY;
+ root.style.setProperty('--board-body-top',-scrollY+'px');root.classList.add('board-open');
+ dlg.addEventListener('keydown',e=>e.stopPropagation());get('[data-close]').onclick=()=>dlg.close();dlg.onclose=()=>{clearTimeout(clock);projection?.close();dlg.remove();root.classList.remove("board-open");root.style.removeProperty("--board-body-top");window.scrollTo(0,scrollY)};dlg.showModal()
 }
 
 
