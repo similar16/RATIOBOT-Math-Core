@@ -424,20 +424,50 @@ function openBoard(){
  #lesson-board.showing{grid-template-rows:auto minmax(0,20%) minmax(0,1fr)}
  #lesson-board.showing nav{display:none}#lesson-board.showing .sheet{width:95%;overflow:auto;touch-action:pan-y}
  #lesson-board [data-hold]{touch-action:none;user-select:none;background:var(--yellow)}
+ #lesson-board nav{justify-self:center;max-width:98%;margin:4px auto;padding:5px 9px;background:var(--paper);border:1px solid var(--line);border-radius:22px;box-shadow:var(--shadow)}
+ #lesson-board nav :is(button,select){border:0;border-radius:14px;background:transparent;font-weight:700}
+ #lesson-board nav [aria-pressed=true]{background:#f9e7b6;box-shadow:none}
+ #lesson-board .board-extra{position:absolute;z-index:2;right:2%;bottom:calc(32% + 59px);max-width:94%;padding:10px;border:1px solid var(--line);border-radius:16px;background:var(--paper);box-shadow:var(--shadow)}
+ #lesson-board .board-extra[open]{display:flex;flex-wrap:wrap;gap:6px}
  </style><header><button data-hold>长按展示本份</button><select aria-label="选择题目"></select><button data-project>独立投屏</button><button data-close>返回课堂</button></header><article></article>
  <nav><button data-color="#20242a">● 黑笔</button><button data-color="#b73139">● 红笔</button><button data-color="#245db1">● 蓝笔</button>
  <select data-tool aria-label="书写工具"><option>细笔</option><option>直线</option><option>虚线</option><option value="圆规">圆</option><option>刻度尺</option><option>表格</option></select>
- <select data-paper aria-label="纸张"><option value="grid">方格纸</option><option value="lined">横线纸</option><option value="plain">白纸</option></select>
- <button data-undo>撤销</button><button data-up>上移纸面</button><button data-down>下移纸面</button><button data-more>向下续纸</button><select data-record aria-label="答题记录"></select><button data-add>＋答题记录</button></nav>
+ <button data-erase aria-pressed="false">橡皮</button><button data-ruler aria-pressed="false">尺子</button><button data-undo>↶ 撤销</button><button data-options aria-expanded="false">更多</button></nav><aside class="board-extra" hidden><select data-paper aria-label="纸张"><option value="grid">方格纸</option><option value="lined">横线纸</option><option value="plain">白纸</option></select>
+ <button data-up>上移纸面</button><button data-down>下移纸面</button><button data-more>向下续纸</button><select data-record aria-label="答题记录"></select><button data-add>＋答题记录</button></aside>
  <div class="sheet"><svg xmlns="http://www.w3.org/2000/svg" aria-label="手写答题纸"></svg></div>`;
  document.body.append(dlg);
  const get=s=>dlg.querySelector(s),svg=get('svg'),sheet=get('.sheet'),rec=get('[data-record]'),paperSelect=get('[data-paper]'),q=get('header select'),hold=get('[data-hold]');
  const width=720,blank=()=>({height:420,paper:'grid',marks:[]});
  let projection;
  let records,index,key,color,stroke=null,active=null,clock,shown=false;
+ let erasing=false,ruler=null,guide=null,gesture=null,before=null,lastErase=null;
+ const history=new WeakMap(),tool=get('[data-tool]');
  function record(){return records[index]}
+ function setErase(on){erasing=on;get('[data-erase]').setAttribute('aria-pressed',String(on))}
+ function setGuide(){
+ guide?.remove();guide=null;if(!ruler||shown)return;
+ guide=node('g',{'data-guide':'',transform:'translate('+ruler.x+' '+ruler.y+') rotate('+ruler.angle+')'});
+ guide.append(node('rect',{x:-125,y:0,width:250,height:32,rx:4,fill:'#f4ce71','fill-opacity':.65,stroke:'#8d7343'}));
+ let ticks='';for(let x=-115;x<=115;x+=5)ticks+='M'+x+' 0v'+(x%25===0?12:6);
+ guide.append(node('path',{d:ticks,stroke:'#76603b','pointer-events':'none'}),node('circle',{cx:106,cy:19,r:12,fill:'#fff6df',stroke:'#76603b','data-turn':''}));
+ svg.prepend(guide)
+ }
+ get('[data-ruler]').onclick=()=>{setErase(false);ruler=ruler?null:{x:360,y:(sheet.scrollTop+sheet.clientHeight/2)*width/svg.clientWidth,angle:0};get('[data-ruler]').setAttribute('aria-pressed',String(!!ruler));setGuide()};
+ get('[data-erase]').onclick=()=>setErase(!erasing);
+ tool.onchange=()=>setErase(false);
+ const extra=get('.board-extra');get('[data-options]').onclick=()=>{extra.hidden=!extra.hidden;extra.toggleAttribute('open',!extra.hidden);get('[data-options]').setAttribute('aria-expanded',String(!extra.hidden))};
+ function remember(snapshot){let h=history.get(record());if(!h){h=[];history.set(record(),h)}h.push(snapshot);if(h.length>40)h.shift()}
+ function eraseAt(p){
+ const start=lastErase||p,steps=Math.max(1,Math.ceil(Math.hypot(p[0]-start[0],p[1]-start[1])/5));lastErase=p;
+ const nodes=Array.from(svg.children).filter(el=>el!==guide);
+ for(let i=nodes.length-1;i>=0;i--){const el=nodes[i];el.setAttribute('stroke-width','15');let hit=false;
+ for(let j=1;j<=steps&&!hit;j++)hit=el.isPointInStroke(new DOMPoint(start[0]+(p[0]-start[0])*j/steps,start[1]+(p[1]-start[1])*j/steps));
+ el.setAttribute('stroke-width','1.6');if(hit){record().marks.splice(i,1);el.remove()}}
+ }
+ function onEdge(p){const rad=ruler.angle*Math.PI/180,c=Math.cos(rad),v=Math.sin(rad),dx=p[0]-ruler.x,dy=p[1]-ruler.y,t=dx*c+dy*v;return {distance:Math.abs(-dx*v+dy*c),t,point:[ruler.x+t*c,ruler.y+t*v]}}
+
  function persist(){try{localStorage.setItem(key,JSON.stringify(records))}catch{hold.textContent='存储空间不足 · 当前记录仅本页保留'}}
- function chooseColor(b){color=b.dataset.color;dlg.querySelectorAll('[data-color]').forEach(x=>{x.style.color=x.dataset.color;x.setAttribute('aria-pressed',String(x===b))})}
+ function chooseColor(b){setErase(false);color=b.dataset.color;dlg.querySelectorAll('[data-color]').forEach(x=>{x.style.color=x.dataset.color;x.setAttribute('aria-pressed',String(x===b))})}
  dlg.querySelectorAll('[data-color]').forEach(b=>b.onclick=()=>chooseColor(b));chooseColor(get('[data-color]'));
  function node(tag,attrs){const el=document.createElementNS(svg.namespaceURI,tag);for(const [k,v] of Object.entries(attrs))el.setAttribute(k,v);return el}
  function mark(m){
@@ -452,7 +482,7 @@ function openBoard(){
  el.setAttribute('stroke',m.color);el.setAttribute('stroke-width','1.6');el.setAttribute('stroke-linecap','round');el.setAttribute('stroke-linejoin','round');el.setAttribute('fill','none');return el
  }
  function render(){const r=record();svg.replaceChildren(...r.marks.map(mark));svg.setAttribute('viewBox','0 0 '+width+' '+r.height);svg.style.aspectRatio=width+'/'+r.height;svg.className.baseVal=r.paper;paperSelect.value=r.paper;
- rec.replaceChildren(...records.map((_,i)=>new Option('作答 '+(i+1),i)));rec.value=index}
+ rec.replaceChildren(...records.map((_,i)=>new Option('作答 '+(i+1),i)));rec.value=index;setGuide()}
  function loadQuestion(){
  const p=items[Number(q.value)];key=['rb-board',classId,date,p?.id||'free'].join(':');
  try{records=JSON.parse(localStorage.getItem(key))}catch{records=null}
@@ -465,17 +495,25 @@ function openBoard(){
  get('[data-add]').onclick=()=>{const n=Number(prompt('新增几份答题记录？','1'));if(!Number.isInteger(n)||n<1||n>50)return;index=records.length;for(let i=0;i<n;i++)records.push(blank());render();persist();sheet.scrollTop=0};
  paperSelect.onchange=()=>{record().paper=paperSelect.value;render();persist()};
  get('[data-more]').onclick=()=>{const old=sheet.scrollHeight;record().height+=320;render();persist();sheet.scrollTop=old-sheet.clientHeight/3};
- get('[data-undo]').onclick=()=>{record().marks.pop();render();persist()};
+ get('[data-undo]').onclick=()=>{const old=history.get(record())?.pop();if(old)record().marks=old;else record().marks.pop();render();persist()};
  get('[data-up]').onclick=()=>sheet.scrollBy(0,-Math.max(1,sheet.clientHeight-32));
  get('[data-down]').onclick=()=>sheet.scrollBy(0,Math.max(1,sheet.clientHeight-32));
  const blockWritingGesture=e=>{if(!shown&&(active!==null||sheet.contains(e.target))&&e.cancelable)e.preventDefault()};
  for(const event of ['touchmove','gesturestart','gesturechange'])dlg.addEventListener(event,blockWritingGesture,{passive:false,capture:true});
  let box;
  function point(e){return [Math.round((e.clientX-box.left)*width/box.width),Math.round((e.clientY-box.top)*record().height/box.height)]}
- function move(e){if(e.pointerId!==active)return;const p=point(e);if(stroke.tool==='细笔')stroke.points.push(p);else stroke.points[1]=p;svg.lastChild.replaceWith(mark(stroke))}
- svg.onpointerdown=e=>{if(shown||active!==null||e.button!==0)return;e.preventDefault();box=svg.getBoundingClientRect();active=e.pointerId;svg.setPointerCapture(active);stroke={tool:get('[data-tool]').value,color,points:[point(e)]};svg.append(mark(stroke))};
- svg.onpointermove=move;svg.onpointerup=e=>{if(e.pointerId!==active)return;move(e);record().marks.push(stroke);active=null;persist()};
- svg.onpointercancel=svg.onlostpointercapture=e=>{if(e.pointerId===active){active=null;render()}};
+ function move(e){if(e.pointerId!==active)return;let p=point(e);
+ if(gesture==='erase'){eraseAt(p);return}
+ if(gesture==='move'||gesture==='turn'){if(gesture==='turn')ruler.angle=Math.atan2(p[1]-ruler.y,p[0]-ruler.x)*180/Math.PI-before.offset;else{ruler.x=p[0]-before.x;ruler.y=p[1]-before.y}setGuide();return}
+ if(gesture==='edge')p=onEdge(p).point;
+ if(stroke.tool==='细笔')stroke.points.push(p);else stroke.points[1]=p;svg.lastChild.replaceWith(mark(stroke))}
+ svg.onpointerdown=e=>{if(shown||active!==null||e.button!==0)return;e.preventDefault();box=svg.getBoundingClientRect();active=e.pointerId;svg.setPointerCapture(active);const p=point(e);gesture='draw';before=record().marks.slice();
+ if(erasing){gesture='erase';lastErase=null;eraseAt(p);return}
+ if(guide?.contains(e.target)){gesture=e.target.hasAttribute('data-turn')?'turn':'move';before={x:p[0]-ruler.x,y:p[1]-ruler.y,offset:Math.atan2(p[1]-ruler.y,p[0]-ruler.x)*180/Math.PI-ruler.angle};return}
+ const edge=ruler&&onEdge(p);if(edge&&edge.distance<=15&&Math.abs(edge.t)<=133&&['细笔','直线','虚线'].includes(tool.value))gesture='edge';
+ stroke={tool:gesture==='edge'&&tool.value==='细笔'?'直线':tool.value,color,points:[gesture==='edge'?edge.point:p]};svg.append(mark(stroke))};
+ svg.onpointermove=move;svg.onpointerup=e=>{if(e.pointerId!==active)return;move(e);if(gesture==='draw'||gesture==='edge'){remember(before);record().marks.push(stroke)}else if(gesture==='erase'&&record().marks.length!==before.length)remember(before);active=null;persist()};
+ svg.onpointercancel=svg.onlostpointercapture=e=>{if(e.pointerId===active){if(gesture==='erase')record().marks=before;active=null;render()}};
  function project(){
  if(!projection||projection.closed)return;
  const doc=projection.document,area=get('article').cloneNode(true);
@@ -490,7 +528,7 @@ function openBoard(){
  doc.head.replaceChildren(...Array.from(document.querySelectorAll('link[rel=stylesheet]'),el=>el.cloneNode(true)));
  const style=doc.createElement('style');style.textContent='body{background:white;margin:0}article img{max-width:95%;max-height:50vh}';doc.head.append(style);project()
  };
- function display(on){shown=on;dlg.classList.toggle('showing',on);q.disabled=on;render();hold.textContent=on?'收起展示':'长按展示本份';
+ function display(on){extra.hidden=true;extra.removeAttribute('open');get('[data-options]').setAttribute('aria-expanded','false');shown=on;dlg.classList.toggle('showing',on);q.disabled=on;render();hold.textContent=on?'收起展示':'长按展示本份';
  if(on&&svg.childElementCount){const box=svg.getBBox(),w=Math.max(320,box.width+32),h=Math.max(100,box.height+32);svg.setAttribute('viewBox',[box.x-16,box.y-16,w,h].join(' '));svg.style.aspectRatio=w+'/'+h}
  svg.style.touchAction=on?'pan-y':'none';sheet.scrollTop=0;project()}
  hold.onpointerdown=e=>{if(shown){display(false);return}if(!record().marks.length)return;hold.setPointerCapture(e.pointerId);hold.textContent='继续按住…';clock=setTimeout(()=>display(true),900)};
