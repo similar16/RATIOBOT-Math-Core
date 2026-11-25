@@ -434,12 +434,19 @@ function openBoard(){
  #lesson-board [data-scroll]{position:absolute;right:5px;top:3%;height:94%;width:24px;writing-mode:vertical-lr;direction:ltr;touch-action:none}
  #lesson-board.showing [data-scroll]{display:none}
  #lesson-board nav{justify-self:stretch;flex-wrap:wrap;justify-content:center;max-width:100%}
- </style><header><button data-hold>展示本份</button><select aria-label="选择题目"></select><select data-record aria-label="答题记录"></select><input data-number type="number" min="1" max="999" placeholder="学号" aria-label="输入学号并按回车" style="width:5em"><button data-project>独立投屏</button><button data-close>返回课堂</button></header><article></article>
+ </style><header><button data-hold>展示本份</button><button data-multiple>选择多份</button><select aria-label="选择题目"></select><select data-record aria-label="答题记录"></select><input data-number type="number" min="1" max="999" placeholder="学号" aria-label="输入学号并按回车" style="width:5em"><button data-project>独立投屏</button><button data-close>返回课堂</button></header><article></article>
  <nav><button data-pen aria-pressed="true">细笔</button><button data-highlight aria-pressed="false">荧光笔</button><label>笔宽 <select data-width><option value="1">标准</option><option value=".65">细</option><option value="1.6">粗</option></select></label><button data-color="#20242a">● 黑笔</button><button data-color="#b73139">● 红笔</button><button data-color="#245db1">● 蓝笔</button>
  <select data-tool aria-label="画笔与作图工具"><option>细笔</option><option>荧光笔</option><option>直线</option><option>虚线</option><option value="圆规">圆</option><option>刻度尺</option><option>表格</option></select>
  <button data-erase aria-pressed="false">橡皮</button><button data-ruler aria-pressed="false">尺子</button><button data-undo>↶ 撤销</button><button data-options aria-expanded="false">更多</button></nav><aside class="board-extra" hidden><select data-paper aria-label="纸张"><option value="grid">方格纸</option><option value="lined">横线纸</option><option value="plain">白纸</option></select>
  </aside>
  <div class="paper-area"><div class="sheet"><svg xmlns="http://www.w3.org/2000/svg" aria-label="手写答题纸"></svg></div><input data-scroll type="range" min="0" value="0" aria-label="纸面滚动条"></div>`;
+ const picker=document.createElement('dialog');
+ picker.innerHTML='<h3>选择要展示的作答</h3><div data-list></div><button data-confirm>展示所选</button> <button data-back>取消</button>';
+ picker.style.cssText='max-height:70vh;overflow:auto';
+ dlg.append(picker);
+ const gallery=document.createElement('div');
+ gallery.style.cssText='display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));align-content:start;align-items:start;gap:12px;padding:12px;overflow:auto;min-height:0';
+ let selected=[];
  document.body.append(dlg);
  const get=s=>dlg.querySelector(s),svg=get('svg'),sheet=get('.sheet'),rec=get('[data-record]'),paperSelect=get('[data-paper]'),q=get('header select'),hold=get('[data-hold]');
  const width=720,blank=()=>({height:840,paper:'grid',marks:[]});
@@ -525,12 +532,34 @@ function openBoard(){
  stroke={tool:gesture==='edge'&&tool.value==='细笔'?'直线':tool.value,color:tool.value==='荧光笔'&&color==='#20242a'?'#efbd31':color,width:(tool.value==='荧光笔'?18:1.6)*Number(get('[data-width]').value),points:[gesture==='edge'?edge.point:p]};svg.append(mark(stroke))};
  svg.onpointermove=move;svg.onpointerup=e=>{if(e.pointerId!==active)return;move(e);if(gesture==='draw'||gesture==='edge'){remember(before);record().marks.push(stroke)}else if(gesture==='erase'&&record().marks.length!==before.length)remember(before);active=null;persist()};
  svg.onpointercancel=svg.onlostpointercapture=e=>{if(e.pointerId===active){if(gesture==='erase')record().marks=before;active=null;render()}};
+ function buildGallery(){
+ gallery.replaceChildren();
+ for(const i of selected){
+ const card=document.createElement('section'),label=document.createElement('strong');
+ label.textContent='学生 '+(records[i].student||i+1);
+ const drawing=node('svg',{'aria-label':label.textContent+'的作答'});
+ drawing.style.cssText='display:block;width:100%;background:white';
+ card.append(label,drawing);gallery.append(card);drawing.append(...records[i].marks.map(mark));
+ const bounds=drawing.getBBox(),w=Math.max(150,bounds.width+32),h=Math.max(64,bounds.height+32);
+ drawing.setAttribute('viewBox',[bounds.x-16,bounds.y-16,w,h].join(' '));
+ }
+ }
+ const multiple=get('[data-multiple]'),list=picker.querySelector('[data-list]'),confirmSelection=picker.querySelector('[data-confirm]');
+ function choices(){return Array.from(list.querySelectorAll('input:checked'),input=>Number(input.value))}
+ multiple.onclick=()=>{
+ list.replaceChildren();
+ records.forEach((r,i)=>{const label=document.createElement('label'),check=document.createElement('input');check.type='checkbox';check.value=i;check.checked=i===index;label.style.cssText='display:inline-flex;align-items:center;padding:10px';label.append(check,'学生 '+(r.student||i+1));list.append(label)});
+ confirmSelection.disabled=!choices().length;picker.showModal()
+ };
+ list.onchange=()=>confirmSelection.disabled=!choices().length;
+ picker.querySelector('[data-back]').onclick=()=>picker.close();
+ confirmSelection.onclick=()=>{selected=choices();picker.close();display(true)};
  function project(){
  if(!projection||projection.closed)return;
  const doc=projection.document,area=get('article').cloneNode(true);
  area.style.cssText='font-size:clamp(28px,3vw,56px);padding:1rem 4vw;overflow:auto;max-height:'+(shown?'22vh':'90vh');
  doc.body.replaceChildren(area);
- if(shown){const answer=svg.cloneNode(true);answer.style.cssText='display:block;width:92%;margin:auto';doc.body.append(answer)}
+ if(shown&&selected.length){doc.body.append(gallery.cloneNode(true))}else if(shown){const answer=svg.cloneNode(true);answer.style.cssText='display:block;width:92%;margin:auto';doc.body.append(answer)}
  }
  get('[data-project]').onclick=()=>{
  projection=window.open('','rb46projection','popup,width=1100,height=760');
@@ -541,8 +570,13 @@ function openBoard(){
  };
  function display(on){extra.hidden=true;extra.removeAttribute('open');get('[data-options]').setAttribute('aria-expanded','false');shown=on;rec.disabled=on;number.disabled=on;dlg.classList.toggle('showing',on);q.disabled=on;render();hold.textContent=on?'收起展示':'展示本份';
  if(on&&svg.childElementCount){const box=svg.getBBox(),w=Math.max(320,box.width+32),h=Math.max(100,box.height+32);svg.setAttribute('viewBox',[box.x-16,box.y-16,w,h].join(' '));svg.style.aspectRatio=w+'/'+h}
- svg.style.touchAction=on?'pan-y':'none';sheet.scrollTop=0;project()}
- hold.onclick=()=>display(!shown);
+ svg.style.touchAction=on?'pan-y':'none';sheet.scrollTop=0;
+ multiple.hidden=on;
+ const paperArea=get('.paper-area');paperArea.hidden=Boolean(on&&selected.length);
+ gallery.remove();
+ if(paperArea.hidden){dlg.append(gallery);buildGallery()}
+ project()}
+ hold.onclick=()=>{selected=[];display(!shown)};
  const root=document.documentElement,scrollY=window.scrollY;
  root.style.setProperty('--board-body-top',-scrollY+'px');root.classList.add('board-open');
  dlg.addEventListener('keydown',e=>e.stopPropagation());get('[data-close]').onclick=()=>dlg.close();dlg.onclose=()=>{clearTimeout(clock);sizeObserver.disconnect();projection?.close();dlg.remove();root.classList.remove("board-open");root.style.removeProperty("--board-body-top");window.scrollTo(0,scrollY)};dlg.showModal()
