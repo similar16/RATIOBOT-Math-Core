@@ -122,7 +122,7 @@ function readPending(account) {
  }
  for (const item of attempts.values()) {
   if (item?.kind === 'card' && cards.some(card => card.id === item.cardId)) return item;
-  if (item?.kind === 'equation' && /^D[1-6]$/.test(item.code)) return item;
+  if (item?.kind === 'equation' && item.curriculum === 2 && /^D[1-6]$/.test(item.code)) return item;
  }
  return null;
 }
